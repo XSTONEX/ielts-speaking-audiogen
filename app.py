@@ -213,5 +213,10 @@ def has_part2_question():
     exists = os.path.exists(question_file)
     return jsonify({'exists': exists})
 
+@app.route('/get_password')
+def get_password():
+    password = os.getenv('PASSWORD')
+    return jsonify({'password': password})
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001)
