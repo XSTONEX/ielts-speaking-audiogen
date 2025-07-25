@@ -1,3 +1,4 @@
 audio_files/
 .DS_Store
 .env
+.venv/
