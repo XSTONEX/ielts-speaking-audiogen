@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Audio TTS Generator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #e0e7ff 0%, #f4f6fa 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 700px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            padding: 36px 28px 32px 28px;
+            position: relative;
+        }
+        h2 {
+            color: #3b4a6b;
+            letter-spacing: 1px;
+            margin-bottom: 18px;
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin-top: 22px;
+            font-weight: 600;
+            color: #4a5a7a;
+            letter-spacing: 0.5px;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 12px 14px;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1.5px solid #d1d5db;
+            background: #f8fafc;
+            font-size: 16px;
+            transition: border 0.2s, box-shadow 0.2s;
+            box-sizing: border-box;
+            outline: none;
+        }
+        input[type="text"]:focus, textarea:focus {
+            border: 1.5px solid #4a90e2;
+            box-shadow: 0 0 0 2px #e0e7ff;
+            background: #fff;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+            max-height: 200px;
+        }
+        .actions {
+            margin-top: 22px;
+            display: flex;
+            gap: 18px;
+            justify-content: flex-start;
+        }
+        button {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(90deg, #4a90e2 60%, #6a82fb 100%);
+            color: #fff;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.08);
+            transition: background 0.2s, transform 0.1s;
+        }
+        button:hover {
+            background: linear-gradient(90deg, #357ab8 60%, #4a90e2 100%);
+            transform: translateY(-2px) scale(1.03);
+        }
+        button[style*="background:#e94e77"] {
+            background: linear-gradient(90deg, #e94e77 60%, #f77062 100%) !important;
+        }
+        button[style*="background:#e94e77"]:hover {
+            background: linear-gradient(90deg, #d72660 60%, #e94e77 100%) !important;
+        }
+        .audio-list {
+            margin-top: 44px;
+        }
+        .audio-list h3 {
+            color: #3b4a6b;
+            margin-bottom: 18px;
+            font-size: 22px;
+            border-bottom: 1.5px solid #e0e7ff;
+            padding-bottom: 6px;
+        }
+        .audio-folder {
+            background: #f4f8ff;
+            border-radius: 10px;
+            margin-bottom: 22px;
+            padding: 16px 18px 10px 18px;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.04);
+        }
+        .audio-folder strong {
+            color: #4a90e2;
+            font-size: 17px;
+            letter-spacing: 0.5px;
+        }
+        .audio-file {
+            margin-left: 0;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 7px 0;
+            border-bottom: 1px solid #e0e7ff;
+        }
+        .audio-file:last-child {
+            border-bottom: none;
+        }
+        audio {
+            outline: none;
+            height: 32px;
+        }
+        .audio-file span {
+            color: #6b7280;
+            font-size: 15px;
+            word-break: break-all;
+        }
+        .folder-header {
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            font-size: 17px;
+            font-weight: 600;
+            color: #4a90e2;
+            margin-bottom: 6px;
+        }
+        .folder-header .arrow {
+            display: inline-block;
+            margin-right: 8px;
+            transition: transform 0.2s;
+        }
+        .folder-header.collapsed .arrow {
+            transform: rotate(-90deg);
+        }
+        .audio-file .view-text-btn {
+            background: #f4f8ff;
+            color: #4a90e2;
+            border: 1px solid #4a90e2;
+            border-radius: 5px;
+            padding: 3px 10px;
+            margin-left: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+        .audio-file .view-text-btn:hover {
+            background: #4a90e2;
+            color: #fff;
+        }
+        #textModal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0; top: 0; right: 0; bottom: 0;
+            background: rgba(60,70,90,0.25);
+            align-items: center;
+            justify-content: center;
+        }
+        #textModal .modal-content {
+            background: #fff;
+            border-radius: 10px;
+            padding: 28px 24px;
+            max-width: 90vw;
+            max-height: 70vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
+            position: relative;
+        }
+        #textModal .close-btn {
+            position: absolute;
+            right: 18px;
+            top: 12px;
+            font-size: 22px;
+            color: #888;
+            cursor: pointer;
+        }
+        #textModal pre {
+            white-space: pre-wrap;
+            font-size: 16px;
+            color: #333;
+            margin: 0;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 22px;
+            height: 22px;
+            border: 3px solid #4a90e2;
+            border-top: 3px solid #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-left: 12px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg);}
+            100% { transform: rotate(360deg);}
+        }
+        .audio-text-content {
+            background: #f8fafc;
+            border: 1px solid #e0e7ff;
+            border-radius: 7px;
+            margin: 8px 0 0 0;
+            padding: 12px 14px;
+            font-size: 15px;
+            color: #333;
+            display: none;
+            white-space: pre-wrap;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.04);
+            transition: max-height 0.2s;
+        }
+        .audio-text-content.active {
+            display: block;
+        }
+        .audio-question {
+            background: #e3f0ff;
+            border-left: 5px solid #4a90e2;
+            border-radius: 7px;
+            margin: 0 0 8px 0;
+            padding: 10px 14px;
+            color: #225;
+            font-size: 15px;
+            font-weight: 500;
+            box-shadow: 0 1px 4px rgba(74, 144, 226, 0.07);
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 16px 4vw 18px 4vw;
+            }
+            h2 {
+                font-size: 22px;
+            }
+            .audio-list h3 {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Audio TTS Generator</h2>
+    <label for="text">Enter English Text:</label>
+    <textarea id="text" rows="4" placeholder="Type your English text here..."></textarea>
+    <label for="folder">Audio Folder Name:</label>
+    <input type="text" id="folder" list="folderList" placeholder="e.g. Lesson_7" oninput="onFolderInput()">
+    <datalist id="folderList"></datalist>
+    <div id="part2-question-wrap" style="display:none;margin-top:12px;">
+        <label for="part2-question" style="color:#ad8b00;">PART2 问题（只需填写一次）:</label>
+        <textarea id="part2-question" rows="6" placeholder="请输入该话题的问题" style="width:100%;padding:10px 12px;border-radius:7px;border:1.5px solid #ffe58f;background:#fffbe6;font-size:15px;min-height:60px;resize:vertical;"></textarea>
+    </div>
+    <div class="actions">
+        <button id="submitBtn" onclick="submitText()">Submit</button>
+        <button onclick="resetForm()" style="background:#e94e77;">Reset</button>
+        <button id="manageBtn" onclick="toggleManageMode()" style="background:#fbbf24;color:#333;">管理</button>
+    </div>
+    <div class="audio-list" id="audioList"></div>
+    <!-- 不再需要弹窗 -->
+</div>
+<script>
+let categoryState = {}; // 记录每个分类是否展开
+let folderState = {}; // 记录每个文件夹是否展开
+let openTextKey = null; // 当前展开的文本唯一key
+let isLoading = false;
+let manageMode = false; // 是否处于管理模式
+let lastPlayingAudio = null; // 在全局添加一个变量记录上一个播放的audio
+
+function onFolderInput() {
+    const folder = document.getElementById('folder').value.trim();
+    const part2Wrap = document.getElementById('part2-question-wrap');
+    if (/^P2\b/i.test(folder)) {
+        // 检查文件夹和 question.txt 是否存在
+        fetch('/list_folders')
+        .then(res => res.json())
+        .then(data => {
+            const exists = (data.folders || []).includes(folder);
+            if (!exists) {
+                part2Wrap.style.display = '';
+                return;
+            }
+            // 文件夹存在，查 question.txt
+            fetch(`/has_part2_question?folder=${encodeURIComponent(folder)}`)
+            .then(res => res.json())
+            .then(data2 => {
+                if (data2.exists) {
+                    part2Wrap.style.display = 'none';
+                    document.getElementById('part2-question').value = '';
+                } else {
+                    part2Wrap.style.display = '';
+                }
+            });
+        });
+    } else {
+        part2Wrap.style.display = 'none';
+        document.getElementById('part2-question').value = '';
+    }
+}
+function resetForm() {
+    document.getElementById('text').value = '';
+    document.getElementById('folder').value = '';
+    document.getElementById('part2-question').value = '';
+    document.getElementById('part2-question-wrap').style.display = 'none';
+}
+function setLoading(loading) {
+    isLoading = loading;
+    const submitBtn = document.getElementById('submitBtn');
+    let spinner = document.getElementById('loadingSpinner');
+    if (loading) {
+        if (!spinner) {
+            spinner = document.createElement('span');
+            spinner.id = 'loadingSpinner';
+            spinner.className = 'loading-spinner';
+            submitBtn.parentNode.insertBefore(spinner, submitBtn.nextSibling);
+        }
+        submitBtn.disabled = true;
+    } else {
+        if (spinner) spinner.remove();
+        submitBtn.disabled = false;
+    }
+    // 管理按钮也禁用
+    document.getElementById('manageBtn').disabled = loading;
+}
+function submitText() {
+    const text = document.getElementById('text').value.trim();
+    const folder = document.getElementById('folder').value.trim();
+    const part2Question = document.getElementById('part2-question').value.trim();
+    const part2Wrap = document.getElementById('part2-question-wrap');
+    if (!text || !folder) {
+        alert('Please enter both text and folder name.');
+        return;
+    }
+    // 只有在输入框可见时才校验和提交
+    let body = {text, folder};
+    if (/^P2\b/i.test(folder) && part2Wrap.style.display !== 'none') {
+        if (!part2Question) {
+            alert('PART2 话题请填写问题');
+            return;
+        }
+        body.question = part2Question;
+    }
+    setLoading(true);
+    fetch('/generate_audio', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(body)
+    })
+    .then(res => res.json())
+    .then(data => {
+        setLoading(false);
+        if (data.error) alert(data.error);
+        else {
+            alert('Audio generated!');
+            loadAudioList();
+            loadFolderList();
+            resetForm();
+        }
+    }).catch(() => setLoading(false));
+}
+function toggleManageMode() {
+    manageMode = !manageMode;
+    document.getElementById('manageBtn').textContent = manageMode ? '退出管理' : '管理';
+    loadAudioList();
+}
+function loadAudioList() {
+    fetch('/list_audio')
+    .then(res => res.json())
+    .then(data => {
+        let html = '<h3>Audio Files</h3>';
+        const categories = [
+            {key: 'Part1', label: 'Part1'},
+            {key: 'Part2', label: 'Part2'},
+            {key: 'Part3', label: 'Part3'},
+            {key: '其他', label: '其他'}
+        ];
+        categories.forEach(cat => {
+            const foldersArr = data[cat.key] || [];
+            // 统计话题数和音频数
+            const topicCount = foldersArr.length;
+            let audioCount = 0;
+            foldersArr.forEach(folderObj => {
+                audioCount += (folderObj.files || []).length;
+            });
+            const isCatOpen = categoryState[cat.key] || false;
+            html += `<div class="audio-folder">
+                <div class="folder-header${isCatOpen ? '' : ' collapsed'}" onclick="toggleCategory('${cat.key}')">
+                    <span class="arrow" style="transform:${isCatOpen ? 'rotate(0deg)' : 'rotate(-90deg)'}">&#9654;</span>
+                    <span>${cat.label} <span style='color:#888;font-size:15px;font-weight:400;'>( ${topicCount}个话题, ${audioCount}个音频 )</span></span>
+                </div>
+                <div class="folder-files" id="cat-${cat.key}" style="display:${isCatOpen ? 'block' : 'none'};">`;
+            foldersArr.forEach(folderObj => {
+                const folder = folderObj.folder;
+                const files = folderObj.files;
+                const isOpen = folderState[folder] || false;
+                // PART2 显示文件夹级别 question
+                if (cat.key === 'Part2') {
+                    html += `<div class="audio-folder" style="background:#f8fafc;margin-bottom:12px;">
+                        <div class="folder-header${isOpen ? '' : ' collapsed'}" onclick="toggleFolder('${folder}')">
+                            <span class="arrow" style="transform:${isOpen ? 'rotate(0deg)' : 'rotate(-90deg)'}">&#9654;</span>
+                            <span>${folder}</span>
+                            ${manageMode ? `<button onclick=\"event.stopPropagation();editPart2Question('${folder}', '${folderObj.question ? folderObj.question.replace(/'/g, "\\'") : ''}')\" style=\"margin-left:16px;background:#fbbf24;color:#333;padding:3px 12px;font-size:14px;border-radius:5px;\">编辑问题</button>` : ''}
+                            ${manageMode ? `<button onclick=\"event.stopPropagation();deleteFolder('${folder}')\" style=\"margin-left:8px;background:#e94e77;color:#fff;padding:3px 10px;font-size:14px;border-radius:5px;\">删除文件夹</button>` : ''}
+                        </div>`;
+                    if (isOpen) {
+                        html += `<div style='margin:10px 0 10px 8px;padding:8px 12px;background:#fffbe6;border-radius:6px;border:1px solid #ffe58f;color:#ad8b00;'>
+                            <b>问题：</b> <span id='part2-question-${folder}' style='white-space:pre-line;'>${folderObj.question ? folderObj.question : '<span style=\'color:#bbb\'>（未填写）</span>'}</span>
+                        </div>`;
+                    }
+                    html += `<div class="folder-files" id="files-${folder}" style="display:${isOpen ? 'block' : 'none'};">`;
+                    files.forEach(fileObj => {
+                        const file = fileObj.name;
+                        const textKey = `${folder}__${file}`;
+                        html += `<div class="audio-file" style="flex-direction:column;align-items:stretch;">
+                            <div style="display:flex;align-items:center;">
+                                <audio controls preload="none" src="/audio/${folder}/${file}"></audio>
+                                <span style="margin-left:12px;">${file}</span>
+                                <button class="view-text-btn" onclick="event.stopPropagation();toggleText('${folder}','${file}')">
+                                    ${openTextKey === textKey ? '收起文本' : '查看文本'}
+                                </button>
+                                ${manageMode ? `<button onclick=\"event.stopPropagation();deleteAudio('${folder}','${file}')\" style=\"margin-left:8px;background:#e94e77;color:#fff;padding:3px 10px;font-size:14px;border-radius:5px;\">删除音频</button>` : ''}
+                            </div>
+                            <div class="audio-text-content${openTextKey === textKey ? ' active' : ''}" id="text-${textKey}"></div>
+                        </div>`;
+                    });
+                    html += `</div></div>`;
+                } else {
+                    // PART1/PART3/其他
+                    html += `<div class="audio-folder" style="background:#f8fafc;margin-bottom:12px;">
+                        <div class="folder-header${isOpen ? '' : ' collapsed'}" onclick="toggleFolder('${folder}')">
+                            <span class="arrow" style="transform:${isOpen ? 'rotate(0deg)' : 'rotate(-90deg)'}">&#9654;</span>
+                            <span>${folder}</span>
+                            ${manageMode ? `<button onclick=\"event.stopPropagation();deleteFolder('${folder}')\" style=\"margin-left:16px;background:#e94e77;color:#fff;padding:3px 12px;font-size:14px;border-radius:5px;\">删除文件夹</button>` : ''}
+                        </div>
+                        <div class="folder-files" id="files-${folder}" style="display:${isOpen ? 'block' : 'none'};">`;
+                    files.forEach(fileObj => {
+                        const file = fileObj.name;
+                        const textKey = `${folder}__${file}`;
+                        // 只在 PART1 和 PART3 显示题目
+                        let questionHtml = '';
+                        if (cat.key === 'Part1' || cat.key === 'Part3') {
+                            questionHtml = fileObj.question ? `<div class='audio-question'>${fileObj.question}</div>` : '';
+                        }
+                        html += `<div class="audio-file" style="flex-direction:column;align-items:stretch;">
+                            ${questionHtml}
+                            <div style="display:flex;align-items:center;">
+                                <audio controls preload="none" src="/audio/${folder}/${file}"></audio>
+                                <span style="margin-left:12px;">${file}</span>
+                                <button class="view-text-btn" onclick="event.stopPropagation();toggleText('${folder}','${file}')">
+                                    ${openTextKey === textKey ? '收起文本' : '查看文本'}
+                                </button>
+                                ${manageMode ? `<button onclick=\"event.stopPropagation();deleteAudio('${folder}','${file}')\" style=\"margin-left:8px;background:#e94e77;color:#fff;padding:3px 10px;font-size:14px;border-radius:5px;\">删除音频</button>` : ''}
+                            </div>
+                            <div class="audio-text-content${openTextKey === textKey ? ' active' : ''}" id="text-${textKey}"></div>
+                        </div>`;
+                    });
+                    html += `</div></div>`;
+                }
+            });
+            html += `</div></div>`;
+        });
+        document.getElementById('audioList').innerHTML = html;
+        setupAudioExclusivePlay();
+        // 如果有展开的文本，加载内容
+        if (openTextKey) {
+            const [folder, file] = openTextKey.split('__');
+            fetchText(folder, file);
+        }
+    });
+}
+function toggleCategory(catKey) {
+    categoryState[catKey] = !categoryState[catKey];
+    loadAudioList();
+}
+function toggleFolder(folder) {
+    folderState[folder] = !folderState[folder];
+    loadAudioList();
+}
+function toggleText(folder, file) {
+    const textKey = `${folder}__${file}`;
+    if (openTextKey === textKey) {
+        openTextKey = null;
+        loadAudioList();
+    } else {
+        openTextKey = textKey;
+        loadAudioList();
+    }
+}
+function fetchText(folder, file) {
+    const textKey = `${folder}__${file}`;
+    const textDiv = document.getElementById('text-' + textKey);
+    if (!textDiv) return;
+    textDiv.textContent = '加载中...';
+    fetch(`/text/${folder}/${file}`)
+    .then(res => res.json())
+    .then(data => {
+        if (data.error) {
+            textDiv.textContent = 'Text not found.';
+        } else {
+            textDiv.textContent = data.text;
+        }
+    });
+}
+function deleteFolder(folder) {
+    if (!confirm(`确定要删除整个文件夹“${folder}”及其所有音频吗？`)) return;
+    setLoading(true);
+    fetch('/delete_folder', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({folder})
+    })
+    .then(res => res.json())
+    .then(data => {
+        setLoading(false);
+        if (data.success) {
+            alert('文件夹已删除');
+            loadAudioList();
+        } else {
+            alert(data.error || '删除失败');
+        }
+    }).catch(() => setLoading(false));
+}
+function deleteAudio(folder, file) {
+    if (!confirm(`确定要删除音频“${file}”及其文本吗？`)) return;
+    setLoading(true);
+    fetch('/delete_audio', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({folder, filename: file})
+    })
+    .then(res => res.json())
+    .then(data => {
+        setLoading(false);
+        if (data.success) {
+            alert('音频已删除');
+            loadAudioList();
+        } else {
+            alert(data.error || '删除失败');
+        }
+    }).catch(() => setLoading(false));
+}
+// 编辑 PART2 问题
+function editPart2Question(folder, oldQuestion) {
+    const newQ = prompt('请输入该话题的问题：', oldQuestion || '');
+    if (newQ === null) return;
+    fetch('/set_part2_question', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({folder, question: newQ})
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('问题已保存');
+            loadAudioList();
+        } else {
+            alert(data.error || '保存失败');
+        }
+    });
+}
+window.onload = function() {
+    loadFolderList();
+    loadAudioList();
+}
+
+function loadFolderList() {
+    fetch('/list_folders')
+    .then(res => res.json())
+    .then(data => {
+        const datalist = document.getElementById('folderList');
+        datalist.innerHTML = '';
+        (data.folders || []).forEach(folder => {
+            const option = document.createElement('option');
+            option.value = folder;
+            datalist.appendChild(option);
+        });
+    });
+}
+
+function setupAudioExclusivePlay() {
+    document.querySelectorAll('.audio-file audio').forEach(audio => {
+        audio.addEventListener('play', function() {
+            if (lastPlayingAudio && lastPlayingAudio !== audio) {
+                lastPlayingAudio.pause();
+            }
+            lastPlayingAudio = audio;
+        });
+        // 如果用户手动暂停，清空lastPlayingAudio
+        audio.addEventListener('pause', function() {
+            if (lastPlayingAudio === audio && audio.paused) {
+                lastPlayingAudio = null;
+            }
+        });
+    });
+}
+</script>
+</body>
+</html>
