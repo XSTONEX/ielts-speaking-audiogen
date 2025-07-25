@@ -10,6 +10,8 @@
 - 支持自定义 Part2 问题文本的额外保存。
 - 提供批量管理（删除音频/文件夹）等功能。
 - 附带命令行脚本 `curl_openai_ttx.py`，可直接调用 API 生成音频。
+<img width="880" height="924" alt="image" src="https://github.com/user-attachments/assets/c0438d37-eedb-4eb2-9e6c-e5d3d072af4e" />
+
 
 ## 快速开始
 
