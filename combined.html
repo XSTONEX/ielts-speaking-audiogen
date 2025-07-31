@@ -104,26 +104,70 @@
         }
         .folder-card {
             background: #f8fafc;
-            border-radius: 12px;
-            padding: 20px 18px;
-            box-shadow: 0 4px 16px rgba(74, 144, 226, 0.08);
+            border-radius: 16px;
+            padding: 24px 20px;
+            box-shadow: 0 8px 24px rgba(74, 144, 226, 0.08);
             border-left: 4px solid #4a90e2;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .folder-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #4a90e2, #6a82fb, #8b5cf6);
+            opacity: 0;
+            transition: opacity 0.3s;
         }
         .folder-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 24px rgba(74, 144, 226, 0.12);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(74, 144, 226, 0.15);
+        }
+        .folder-card:hover::before {
+            opacity: 1;
+        }
+        .folder-card.has-combined {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-left-color: #0ea5e9;
+        }
+        .folder-card.has-combined::before {
+            background: linear-gradient(90deg, #0ea5e9, #06b6d4, #8b5cf6);
         }
         .folder-name {
-            font-size: 18px;
-            font-weight: 600;
-            color: #3b4a6b;
+            font-size: 19px;
+            font-weight: 700;
+            color: #1e293b;
             margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .folder-name .status-badge {
+            font-size: 11px;
+            font-weight: 500;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background: #10b981;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         .folder-info {
             font-size: 14px;
-            color: #6b7280;
-            margin-bottom: 16px;
+            color: #64748b;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .folder-info .info-icon {
+            width: 16px;
+            height: 16px;
+            opacity: 0.7;
         }
         .folder-actions {
             display: flex;
@@ -131,33 +175,73 @@
             flex-wrap: wrap;
         }
         .folder-btn {
-            padding: 8px 16px;
+            padding: 12px 20px;
             border: none;
-            border-radius: 6px;
+            border-radius: 10px;
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             flex: 1;
-            min-width: 80px;
+            min-width: 100px;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .folder-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        .folder-btn:hover::before {
+            left: 100%;
         }
         .generate-btn {
-            background: linear-gradient(90deg, #10b981 60%, #34d399 100%);
+            background: linear-gradient(135deg, #10b981 0%, #059669 50%, #34d399 100%);
             color: #fff;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         }
         .generate-btn:hover {
-            background: linear-gradient(90deg, #059669 60%, #10b981 100%);
+            background: linear-gradient(135deg, #059669 0%, #047857 50%, #10b981 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+        }
+        .regenerate-btn {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #fbbf24 100%);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+        .regenerate-btn:hover {
+            background: linear-gradient(135deg, #d97706 0%, #b45309 50%, #f59e0b 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4);
         }
         .play-btn {
-            background: linear-gradient(90deg, #4a90e2 60%, #6a82fb 100%);
+            background: linear-gradient(135deg, #4a90e2 0%, #357ab8 50%, #6a82fb 100%);
             color: #fff;
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
         }
         .play-btn:hover {
-            background: linear-gradient(90deg, #357ab8 60%, #4a90e2 100%);
+            background: linear-gradient(135deg, #357ab8 0%, #2563eb 50%, #4a90e2 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(74, 144, 226, 0.4);
         }
         .play-btn:disabled {
-            background: #d1d5db;
+            background: #e2e8f0;
+            color: #94a3b8;
             cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+        .play-btn:disabled:hover {
+            transform: none;
+            box-shadow: none;
         }
         .player-section {
             background: #f4f8ff;
@@ -297,6 +381,13 @@
             }
             .folder-btn {
                 flex: none;
+                min-width: 120px;
+            }
+            .folder-name {
+                font-size: 17px;
+            }
+            .folder-card {
+                padding: 20px 16px;
             }
             .subtitles-container {
                 max-height: 300px;
@@ -509,13 +600,14 @@ function renderAllCategories() {
     
     categories.forEach(cat => {
         const foldersArr = allFoldersData[cat.key] || [];
-        const categoryHtml = renderCategoryFolders(foldersArr, cat.label);
+        const categoryHtml = renderCategoryFolders(foldersArr, cat.label, cat.key);
         
         // 更新各个分类的内容
         document.getElementById(`folderList-${cat.key}`).innerHTML = categoryHtml || '<div class="loading-indicator">暂无音频文件夹</div>';
         
-        // 累积到全部分类
-        allHtml += categoryHtml;
+        // 累积到全部分类（使用'all'作为前缀）
+        const allCategoryHtml = renderCategoryFolders(foldersArr, cat.label, 'all');
+        allHtml += allCategoryHtml;
     });
     
     // 更新全部分类
@@ -523,23 +615,32 @@ function renderAllCategories() {
 }
 
 // 渲染分类文件夹
-function renderCategoryFolders(foldersArr, categoryLabel) {
+function renderCategoryFolders(foldersArr, categoryLabel, categoryKey = '') {
     let html = '';
     
     foldersArr.forEach(folderObj => {
         const folder = folderObj.folder;
         const files = folderObj.files;
         const audioCount = files.length;
+        const idSuffix = categoryKey ? `-${categoryKey}` : '';
         
         html += `
-            <div class="folder-card">
-                <div class="folder-name">${folder}</div>
-                <div class="folder-info">${categoryLabel} • ${audioCount} 个音频</div>
+            <div class="folder-card" id="card-${folder}${idSuffix}">
+                <div class="folder-name">
+                    ${folder}
+                    <span class="status-badge" id="badge-${folder}${idSuffix}" style="display:none;">已生成</span>
+                </div>
+                <div class="folder-info">
+                    <svg class="info-icon" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
+                    ${categoryLabel} • ${audioCount} 个音频
+                </div>
                 <div class="folder-actions">
-                    <button class="folder-btn generate-btn" onclick="generateCombined('${folder}')">
+                    <button class="folder-btn generate-btn" id="generate-${folder}${idSuffix}" onclick="generateCombined('${folder}')">
                         生成合集
                     </button>
-                    <button class="folder-btn play-btn" id="play-${folder}" onclick="playCombined('${folder}')" disabled>
+                    <button class="folder-btn play-btn" id="play-${folder}${idSuffix}" onclick="playCombined('${folder}')" disabled>
                         播放合集
                     </button>
                 </div>
@@ -565,6 +666,9 @@ function switchCategory(category) {
         section.classList.remove('active');
     });
     document.getElementById(`section-${category}`).classList.add('active');
+    
+    // 切换后重新检查状态
+    checkExistingCombined();
 }
 
 // 检查已存在的合集音频
@@ -573,18 +677,56 @@ function checkExistingCombined() {
     .then(res => res.json())
     .then(data => {
         data.folders.forEach(folder => {
-            const playBtn = document.getElementById(`play-${folder}`);
-            if (playBtn) {
-                playBtn.disabled = false;
-            }
+            updateFolderStatus(folder, true);
         });
+    });
+}
+
+// 更新文件夹状态
+function updateFolderStatus(folder, hasCombined) {
+    // 查找所有可能的元素（在不同分类中可能有多个）
+    const allCards = document.querySelectorAll(`[id^="card-${folder}"]`);
+    const allBadges = document.querySelectorAll(`[id^="badge-${folder}"]`);
+    const allGenerateBtns = document.querySelectorAll(`[id^="generate-${folder}"]`);
+    const allPlayBtns = document.querySelectorAll(`[id^="play-${folder}"]`);
+    
+    // 更新所有找到的元素
+    allCards.forEach(card => {
+        if (hasCombined) {
+            card.classList.add('has-combined');
+        } else {
+            card.classList.remove('has-combined');
+        }
+    });
+    
+    allBadges.forEach(badge => {
+        if (hasCombined) {
+            badge.style.display = 'inline-block';
+        } else {
+            badge.style.display = 'none';
+        }
+    });
+    
+    allGenerateBtns.forEach(btn => {
+        if (hasCombined) {
+            btn.textContent = '重新生成';
+            btn.className = 'folder-btn regenerate-btn';
+        } else {
+            btn.textContent = '生成合集';
+            btn.className = 'folder-btn generate-btn';
+        }
+        btn.disabled = false;
+    });
+    
+    allPlayBtns.forEach(btn => {
+        btn.disabled = !hasCombined;
     });
 }
 
 // 生成合集音频
 function generateCombined(folder) {
     const generateBtn = event.target;
-    const playBtn = document.getElementById(`play-${folder}`);
+    const originalText = generateBtn.textContent;
     
     generateBtn.innerHTML = '<span class="loading-spinner"></span>生成中...';
     generateBtn.disabled = true;
@@ -597,18 +739,19 @@ function generateCombined(folder) {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            generateBtn.innerHTML = '重新生成';
-            generateBtn.disabled = false;
-            playBtn.disabled = false;
+            // 立即更新状态
+            updateFolderStatus(folder, true);
             showMessage('合集音频生成成功！', 'success');
         } else {
-            generateBtn.innerHTML = '生成合集';
+            // 恢复原始状态
+            generateBtn.textContent = originalText;
             generateBtn.disabled = false;
             showMessage(data.error || '生成失败', 'error');
         }
     })
     .catch(err => {
-        generateBtn.innerHTML = '生成合集';
+        // 恢复原始状态
+        generateBtn.textContent = originalText;
         generateBtn.disabled = false;
         showMessage('生成失败，请重试', 'error');
     });
