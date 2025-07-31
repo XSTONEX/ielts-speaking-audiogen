@@ -2,18 +2,65 @@ from flask import Flask, request, jsonify, send_from_directory, send_file
 import os
 import requests
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 import shutil
 from dotenv import load_dotenv
 from pydub import AudioSegment
+import secrets
 load_dotenv()
 
 app = Flask(__name__)
 
 MOTHER_DIR = 'audio_files'
 COMBINED_DIR = 'combined_audio'
+TOKEN_FILE = 'tokens.json'
 os.makedirs(MOTHER_DIR, exist_ok=True)
 os.makedirs(COMBINED_DIR, exist_ok=True)
+
+# Token管理
+def load_tokens():
+    """加载token数据"""
+    if os.path.exists(TOKEN_FILE):
+        try:
+            with open(TOKEN_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except:
+            return {}
+    return {}
+
+def save_tokens(tokens):
+    """保存token数据"""
+    with open(TOKEN_FILE, 'w', encoding='utf-8') as f:
+        json.dump(tokens, f, ensure_ascii=False, indent=2)
+
+def generate_token():
+    """生成新的token"""
+    return secrets.token_urlsafe(32)
+
+def is_token_valid(token):
+    """检查token是否有效"""
+    tokens = load_tokens()
+    if token in tokens:
+        expire_time = datetime.fromisoformat(tokens[token]['expire_time'])
+        if datetime.now() < expire_time:
+            return True
+        else:
+            # token过期，删除
+            del tokens[token]
+            save_tokens(tokens)
+    return False
+
+def create_token():
+    """创建新token"""
+    token = generate_token()
+    expire_time = datetime.now() + timedelta(days=7)
+    tokens = load_tokens()
+    tokens[token] = {
+        'expire_time': expire_time.isoformat(),
+        'created_time': datetime.now().isoformat()
+    }
+    save_tokens(tokens)
+    return token
 
 
 # 你的 TTS 生成函数
@@ -220,6 +267,30 @@ def has_part2_question():
 def get_password():
     password = os.getenv('PASSWORD')
     return jsonify({'password': password})
+
+@app.route('/verify_password', methods=['POST'])
+def verify_password():
+    """验证密码并返回token"""
+    data = request.json
+    password = data.get('password')
+    server_password = os.getenv('PASSWORD')
+    
+    if password == server_password:
+        token = create_token()
+        return jsonify({'success': True, 'token': token})
+    else:
+        return jsonify({'success': False, 'error': 'Invalid password'})
+
+@app.route('/verify_token', methods=['POST'])
+def verify_token():
+    """验证token是否有效"""
+    data = request.json
+    token = data.get('token')
+    
+    if token and is_token_valid(token):
+        return jsonify({'valid': True})
+    else:
+        return jsonify({'valid': False})
 
 @app.route('/combined')
 def combined_page():

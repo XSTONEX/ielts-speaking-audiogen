@@ -352,7 +352,7 @@
 <div class="container">
     <div class="header">
         <h2>IELTS Speaking - 合集播放</h2>
-        <button class="back-btn" onclick="window.close()">返回主页</button>
+        <button class="back-btn" onclick="window.history.back()">返回主页</button>
     </div>
     
     <div class="player-section" id="playerSection">
@@ -409,6 +409,7 @@ let subtitles = [];
 let currentSubtitleIndex = -1;
 let currentCategory = 'all';
 let allFoldersData = {};
+let currentToken = null;
 
 // 认证相关函数
 function fetchServerPassword() {
@@ -419,17 +420,59 @@ function fetchServerPassword() {
         });
 }
 
+function checkStoredToken() {
+    const storedToken = localStorage.getItem('authToken');
+    if (storedToken) {
+        return fetch('/verify_token', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({token: storedToken})
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.valid) {
+                currentToken = storedToken;
+                return true;
+            } else {
+                localStorage.removeItem('authToken');
+                return false;
+            }
+        })
+        .catch(() => {
+            localStorage.removeItem('authToken');
+            return false;
+        });
+    }
+    return Promise.resolve(false);
+}
+
 function checkPassword() {
     const input = document.getElementById('authPassword').value;
-    if (input === SERVER_PASSWORD) {
-        document.getElementById('authOverlay').style.display = 'none';
-        document.body.style.overflow = '';
-        loadFolderList();
-    } else {
+    
+    fetch('/verify_password', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({password: input})
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            currentToken = data.token;
+            localStorage.setItem('authToken', data.token);
+            document.getElementById('authOverlay').style.display = 'none';
+            document.body.style.overflow = '';
+            loadFolderList();
+        } else {
+            document.getElementById('authError').style.display = '';
+            document.getElementById('authPassword').value = '';
+            document.getElementById('authPassword').focus();
+        }
+    })
+    .catch(err => {
         document.getElementById('authError').style.display = '';
         document.getElementById('authPassword').value = '';
         document.getElementById('authPassword').focus();
-    }
+    });
 }
 
 // 加载文件夹列表
@@ -713,8 +756,20 @@ function showMessage(message, type) {
 window.onload = function() {
     if (document.getElementById('authOverlay')) {
         document.body.style.overflow = 'hidden';
-        document.getElementById('authPassword').focus();
-        fetchServerPassword();
+        
+        // 首先检查存储的token
+        checkStoredToken().then(isValidToken => {
+            if (isValidToken) {
+                // token有效，直接进入主界面
+                document.getElementById('authOverlay').style.display = 'none';
+                document.body.style.overflow = '';
+                loadFolderList();
+            } else {
+                // token无效或不存在，显示密码输入
+                document.getElementById('authPassword').focus();
+                fetchServerPassword();
+            }
+        });
     }
 }
 </script>

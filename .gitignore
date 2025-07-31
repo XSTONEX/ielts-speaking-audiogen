@@ -3,3 +3,4 @@ audio_files/
 .env
 .venv/
 combined_audio/
+tokens.json

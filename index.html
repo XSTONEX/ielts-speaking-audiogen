@@ -272,7 +272,7 @@
         <button id="submitBtn" onclick="submitText()">Submit</button>
         <button onclick="resetForm()" style="background:#e94e77;">Reset</button>
         <button id="manageBtn" onclick="toggleManageMode()" style="background:#fbbf24;color:#333;">管理</button>
-        <button onclick="window.open('/combined', '_blank')" style="background:#10b981;color:#fff;">合集播放</button>
+        <button onclick="window.location.href='/combined'" style="background:#10b981;color:#fff;">合集播放</button>
     </div>
     <div class="audio-list" id="audioList"></div>
     <!-- 不再需要弹窗 -->
@@ -285,6 +285,7 @@ let isLoading = false;
 let manageMode = false; // 是否处于管理模式
 let lastPlayingAudio = null; // 在全局添加一个变量记录上一个播放的audio
 let SERVER_PASSWORD = null;
+let currentToken = null;
 
 function onFolderInput() {
     const folder = document.getElementById('folder').value.trim();
@@ -585,26 +586,81 @@ function fetchServerPassword() {
         });
 }
 
+function checkStoredToken() {
+    const storedToken = localStorage.getItem('authToken');
+    if (storedToken) {
+        return fetch('/verify_token', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({token: storedToken})
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.valid) {
+                currentToken = storedToken;
+                return true;
+            } else {
+                localStorage.removeItem('authToken');
+                return false;
+            }
+        })
+        .catch(() => {
+            localStorage.removeItem('authToken');
+            return false;
+        });
+    }
+    return Promise.resolve(false);
+}
+
 function checkPassword() {
     const input = document.getElementById('authPassword').value;
-    if (input === SERVER_PASSWORD) {
-        document.getElementById('authOverlay').style.display = 'none';
-        document.body.style.overflow = '';
-        loadFolderList();
-        loadAudioList();
-    } else {
+    
+    fetch('/verify_password', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({password: input})
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            currentToken = data.token;
+            localStorage.setItem('authToken', data.token);
+            document.getElementById('authOverlay').style.display = 'none';
+            document.body.style.overflow = '';
+            loadFolderList();
+            loadAudioList();
+        } else {
+            document.getElementById('authError').style.display = '';
+            document.getElementById('authPassword').value = '';
+            document.getElementById('authPassword').focus();
+        }
+    })
+    .catch(err => {
         document.getElementById('authError').style.display = '';
         document.getElementById('authPassword').value = '';
         document.getElementById('authPassword').focus();
-    }
+    });
 }
 
 window.onload = function() {
     // 密码验证优先
     if (document.getElementById('authOverlay')) {
         document.body.style.overflow = 'hidden';
-        document.getElementById('authPassword').focus();
-        fetchServerPassword();
+        
+        // 首先检查存储的token
+        checkStoredToken().then(isValidToken => {
+            if (isValidToken) {
+                // token有效，直接进入主界面
+                document.getElementById('authOverlay').style.display = 'none';
+                document.body.style.overflow = '';
+                loadFolderList();
+                loadAudioList();
+            } else {
+                // token无效或不存在，显示密码输入
+                document.getElementById('authPassword').focus();
+                fetchServerPassword();
+            }
+        });
         return;
     }
     loadFolderList();
