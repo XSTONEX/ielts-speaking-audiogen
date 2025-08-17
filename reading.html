@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>IELTS 阅读真题</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f6f8fc; margin: 0; }
+        .container { max-width: 1100px; margin: 24px auto; background: #fff; border-radius: 16px; box-shadow: 0 8px 32px rgba(31,38,135,0.12); padding: 22px 22px 28px; }
+        h2 { text-align: center; color: #334155; margin: 6px 0 14px; }
+        .toolbar { display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap; margin-bottom: 12px; }
+        .toolbar button { padding: 8px 14px; border:none; border-radius:8px; cursor:pointer; background:#4f46e5; color:#fff; font-weight:600; }
+        .grid { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
+        .card { border:1px solid #e5e7eb; border-radius:12px; padding:12px 14px; background:#fafafa; }
+        .card h3 { margin:0 0 8px; font-size:16px; color:#374151; }
+        .item { background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:10px 12px; margin:10px 0; }
+        .item-title { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+        .tag { font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid #c7d2fe; color:#4f46e5; background:#eef2ff; }
+        .badge { font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid #d1fae5; color:#059669; background:#ecfdf5; }
+        .btn { padding:6px 10px; border:none; border-radius:8px; cursor:pointer; background:#10b981; color:#fff; font-weight:600; }
+        .btn.secondary { background:#6366f1; }
+        .btn.outline { background:#fff; color:#111827; border:1px solid #e5e7eb; }
+        .muted { color:#6b7280; font-size:13px; }
+        .empty { color:#9ca3af; font-size:14px; }
+        .footer { text-align:center; margin-top: 8px; }
+        .viewer { position: fixed; z-index: 10000; left:0; top:0; right:0; bottom:0; background: rgba(30,41,59,0.92); display:none; }
+        .viewer .frame { position:absolute; left:0; top:0; right:0; bottom:0; }
+        .viewer .close { position:absolute; right:16px; top:12px; background:#ef4444; color:#fff; border:none; border-radius:10px; padding:8px 12px; cursor:pointer; font-weight:700; box-shadow:0 2px 8px rgba(0,0,0,0.2); }
+        .part-tabs { display:flex; gap:8px; justify-content:center; margin: 8px 0 12px; }
+        .part-tabs button { padding:8px 14px; border-radius:999px; border:1px solid #e5e7eb; background:#fff; cursor:pointer; }
+        .part-tabs button.active { background:#4f46e5; color:#fff; border-color:#4f46e5; }
+        @media (max-width: 900px){ .grid { grid-template-columns: 1fr; } }
+    </style>
+    <script>
+        let SERVER_PASSWORD = null;
+        let currentToken = null;
+        let readingData = null;
+        let activePart = 'P1';
+
+        function fetchServerPassword(){
+            return fetch('/get_password').then(r=>r.json()).then(d=>{ SERVER_PASSWORD = d.password; });
+        }
+        function checkStoredToken(){
+            const tk = localStorage.getItem('authToken');
+            if(!tk) return Promise.resolve(false);
+            return fetch('/verify_token',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:tk})})
+                .then(r=>r.json()).then(d=>{ if(d.valid){ currentToken=tk; return true;} localStorage.removeItem('authToken'); return false; })
+                .catch(()=>{ localStorage.removeItem('authToken'); return false; });
+        }
+        function checkPassword(){
+            const input = document.getElementById('authPassword').value;
+            fetch('/verify_password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:input})})
+            .then(r=>r.json()).then(d=>{
+                if(d.success){ currentToken=d.token; localStorage.setItem('authToken', d.token); document.getElementById('authOverlay').style.display='none'; document.body.style.overflow=''; loadReading(); }
+                else { document.getElementById('authError').style.display=''; document.getElementById('authPassword').value=''; document.getElementById('authPassword').focus(); }
+            }).catch(()=>{ document.getElementById('authError').style.display=''; });
+        }
+
+        function loadReading(){
+            fetch('/list_reading').then(r=>r.json()).then(data=>{ readingData = data; render(); });
+        }
+
+        function setActivePart(part){ activePart = part; render(); }
+
+        function render(){
+            if(!readingData) return;
+            // tabs
+            ['P1','P2','P3'].forEach(p=>{
+                const btn = document.getElementById('tab-'+p);
+                if(btn) btn.className = (p===activePart? 'active':'');
+            });
+
+            const list = readingData[activePart] || [];
+            let html = '';
+            list.forEach(group=>{
+                const items = group.items || [];
+                html += `<div class="card">`+
+                    `<h3>${group.category} <span class="muted">（${items.length} 篇）</span></h3>`;
+                if(items.length===0){
+                    html += `<div class="empty">暂无题目</div>`;
+                } else {
+                    items.forEach(it=>{
+                        const encodedPath = (it.path||'').split('/').map(encodeURIComponent).join('/');
+                        const hasHtml = (it.html||[]).length>0;
+                        const hasPdf = (it.pdf||[]).length>0;
+                        const htmlCount = (it.html||[]).length;
+                        const pdfCount = (it.pdf||[]).length;
+                        html += `<div class="item">`+
+                            `<div class="item-title">`+
+                            `<div><strong>${it.name}</strong> <span class="tag">${activePart}</span></div>`+
+                            `<div>`+
+                            `${hasHtml? `<span class="badge">HTML×${htmlCount}</span>`: ''}`+
+                            `${hasPdf? `<span class="badge" style="background:#f0f9ff;border-color:#bae6fd;color:#0284c7;margin-left:6px;">PDF×${pdfCount}</span>`: ''}`+
+                            `</div>`+
+                            `</div>`+
+                            `<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">`+
+                            `${(it.html||[]).map(f=>`<button class=\"btn secondary\" onclick=\"openHtml('${encodedPath}/${encodeURIComponent(f)}')\">打开 HTML</button>`).join('')}`+
+                            `${(it.pdf||[]).map(f=>`<a class=\"btn outline\" href=\"/reading_exam/${encodedPath}/${encodeURIComponent(f)}\" target=\"_blank\">下载 PDF</a>`).join('')}`+
+                            `</div>`+
+                            `</div>`;
+                    });
+                }
+                html += `</div>`;
+            });
+            document.getElementById('list').innerHTML = html;
+        }
+
+        function openHtml(rel){
+            const url = '/reading_view/' + rel;
+            const v = document.getElementById('viewer');
+            const frame = document.getElementById('viewerFrame');
+            frame.src = url;
+            v.style.display = 'block';
+        }
+        function closeViewer(){
+            const v = document.getElementById('viewer');
+            const frame = document.getElementById('viewerFrame');
+            frame.src = '';
+            v.style.display = 'none';
+        }
+
+        window.onload = function(){
+            if (document.getElementById('authOverlay')) {
+                document.body.style.overflow = 'hidden';
+                checkStoredToken().then(valid => {
+                    if(valid){
+                        document.getElementById('authOverlay').style.display='none';
+                        document.body.style.overflow='';
+                        loadReading();
+                    } else {
+                        document.getElementById('authPassword').focus();
+                        fetchServerPassword();
+                    }
+                });
+                return;
+            }
+            loadReading();
+        }
+    </script>
+</head>
+<body>
+<div id="authOverlay" style="position:fixed;z-index:10000;left:0;top:0;width:100vw;height:100vh;background:rgba(240,245,255,0.98);display:flex;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:14px;box-shadow:0 8px 32px 0 rgba(31,38,135,0.15);padding:38px 32px 32px 32px;max-width:90vw;min-width:320px;text-align:center;">
+        <h2 style="color:#3b4a6b;margin-bottom:18px;">请输入访问密码</h2>
+        <input id="authPassword" type="password" placeholder="Password" style="padding:12px 16px;font-size:17px;border-radius:8px;border:1.5px solid #d1d5db;width:80%;max-width:260px;outline:none;" autofocus onkeydown="if(event.key==='Enter'){checkPassword();}">
+        <div id="authError" style="color:#e94e77;margin-top:14px;display:none;font-size:15px;">密码错误，请重试。</div>
+        <button onclick="checkPassword()" style="margin-top:22px;width:60%;max-width:180px;">进入</button>
+    </div>
+  </div>
+<div class="container">
+    <div class="toolbar">
+        <button class="btn outline" onclick="location.href='/'">返回模块选择</button>
+    </div>
+    <h2>IELTS 阅读真题</h2>
+    <div class="part-tabs">
+        <button id="tab-P1" class="active" onclick="setActivePart('P1')">Part 1</button>
+        <button id="tab-P2" onclick="setActivePart('P2')">Part 2</button>
+        <button id="tab-P3" onclick="setActivePart('P3')">Part 3</button>
+    </div>
+    <div class="grid" id="list"></div>
+    <div class="footer muted">点击 HTML 按钮可全屏预览；PDF 将在新标签页下载/打开。</div>
+</div>
+
+<div id="viewer" class="viewer">
+    <button class="close" onclick="closeViewer()">关闭</button>
+    <iframe id="viewerFrame" class="frame" src="" frameborder="0" style="width:100%;height:100%;background:#fff;"></iframe>
+  </div>
+</body>
+</html>
+
+

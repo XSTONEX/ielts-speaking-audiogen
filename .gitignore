@@ -4,3 +4,4 @@ audio_files/
 .venv/
 combined_audio/
 tokens.json
+reading_exam/
