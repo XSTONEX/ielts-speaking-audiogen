@@ -554,6 +554,7 @@ def reading_view(subpath):
     inject_script = r"""
 <script>(function(){
   const STORAGE_KEY = 'readingAnswers:' + decodeURIComponent(location.pathname.replace(/^.*\/reading_view\//,''));
+  function $(sel){ return document.querySelector(sel); }
   function assignKey(el, idx){ return el.name || el.id || (el.type ? el.type : el.tagName.toLowerCase()) + '#' + idx; }
   function collect(){
     const inputs = document.querySelectorAll('input, textarea, select');
@@ -564,12 +565,20 @@ def reading_view(subpath):
       else if(type==='checkbox'){ checks[key] = !!el.checked; }
       else { values[key] = el.value || ''; }
     });
-    const state = { t: Date.now(), radios, values, checks };
+    // 保存高亮（左右面板的 innerHTML）
+    let hlLeftHtml = null, hlRightHtml = null;
+    const left = $('#left'); const right = $('#right');
+    if(left) hlLeftHtml = left.innerHTML;
+    if(right) hlRightHtml = right.innerHTML;
+    const state = { t: Date.now(), radios, values, checks, hlLeftHtml, hlRightHtml };
     try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); showSaved('已自动保存'); }catch(e){}
   }
   function restore(){
     try{
       const raw = localStorage.getItem(STORAGE_KEY); if(!raw) return; const state = JSON.parse(raw);
+      // 先恢复高亮（重建 DOM），再恢复输入值
+      if(state.hlLeftHtml && $('#left')) $('#left').innerHTML = state.hlLeftHtml;
+      if(state.hlRightHtml && $('#right')) $('#right').innerHTML = state.hlRightHtml;
       const inputs = document.querySelectorAll('input, textarea, select');
       inputs.forEach((el, idx)=>{
         const type = (el.type||'').toLowerCase(); const key = assignKey(el, idx);
@@ -582,6 +591,8 @@ def reading_view(subpath):
   }
   function clearAll(){
     try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+    // 清除高亮（展开 .hl 包裹）
+    document.querySelectorAll('.hl').forEach(function(n){ const p=n.parentNode; if(!p) return; while(n.firstChild) p.insertBefore(n.firstChild, n); p.removeChild(n); p.normalize(); });
     if(typeof window.resetForm==='function'){ try{ window.resetForm(); }catch(e){} }
     const inputs = document.querySelectorAll('input, textarea, select');
     inputs.forEach((el)=>{ const type=(el.type||'').toLowerCase(); if(type==='radio'||type==='checkbox'){ el.checked=false; } else { el.value=''; } });
@@ -591,11 +602,17 @@ def reading_view(subpath):
   const debouncedSave = debounce(collect, 250);
   window.addEventListener('input', debouncedSave, true);
   window.addEventListener('change', debouncedSave, true);
+  // 监听高亮 DOM 变化以自动保存
+  [$('#left'), $('#right')].filter(Boolean).forEach(function(target){
+    try{ new MutationObserver(debouncedSave).observe(target, {subtree:true, childList:true, attributes:true}); }catch(e){}
+  });
   if(typeof window.resetForm==='function'){ const _orig = window.resetForm; window.resetForm = function(){ try{ _orig.apply(this, arguments);}finally{ clearAll(); } }; }
+  // 浮动控制条（清空暂存 + 返回阅读目录）
   const bar=document.createElement('div'); bar.style.cssText='position:fixed;right:12px;bottom:12px;z-index:3000;background:#111;color:#fff;padding:8px 12px;border-radius:10px;display:flex;gap:8px;align-items:center;opacity:.9;box-shadow:0 6px 20px rgba(0,0,0,.18);font-size:13px;';
   const msg=document.createElement('span'); msg.textContent='自动保存已启用';
-  const btn=document.createElement('button'); btn.textContent='清空暂存'; btn.style.cssText='border:1px solid rgba(255,255,255,.25);background:transparent;color:#fff;border-radius:8px;padding:4px 8px;cursor:pointer;'; btn.onclick=clearAll;
-  bar.appendChild(msg); bar.appendChild(btn); document.body.appendChild(bar);
+  const btnClear=document.createElement('button'); btnClear.textContent='清空暂存'; btnClear.style.cssText='border:1px solid rgba(255,255,255,.25);background:transparent;color:#fff;border-radius:8px;padding:4px 8px;cursor:pointer;'; btnClear.onclick=clearAll;
+  const btnBack=document.createElement('button'); btnBack.textContent='返回阅读目录'; btnBack.style.cssText='border:1px solid rgba(255,255,255,.25);background:transparent;color:#fff;border-radius:8px;padding:4px 8px;cursor:pointer;'; btnBack.onclick=function(){ try{ window.top.location.href='/reading'; }catch(e){ location.href='/reading'; } };
+  bar.appendChild(msg); bar.appendChild(btnClear); bar.appendChild(btnBack); document.body.appendChild(bar);
   let toastTimer; function showSaved(text){ msg.textContent=text; clearTimeout(toastTimer); toastTimer=setTimeout(()=>{ msg.textContent='自动保存已启用'; }, 1200); }
   restore();
 })();</script>
