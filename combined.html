@@ -243,41 +243,59 @@
             transform: none;
             box-shadow: none;
         }
+        .folder-btn.generating {
+            background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
+            color: #fff;
+            cursor: not-allowed;
+        }
+        .folder-btn.generating:hover {
+            transform: none;
+            box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
+        }
         .player-section {
             background: #f4f8ff;
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 24px;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 32px;
             display: none;
+            box-shadow: 0 8px 24px rgba(74, 144, 226, 0.1);
+            border: 1px solid #e0e7ff;
         }
         .player-section.active {
             display: block;
         }
         .player-title {
-            font-size: 20px;
-            font-weight: 600;
+            font-size: 28px;
+            font-weight: 700;
             color: #3b4a6b;
-            margin-bottom: 16px;
+            margin-bottom: 24px;
             text-align: center;
+            padding: 16px;
+            background: linear-gradient(90deg, #fff 0%, #f8fafc 100%);
+            border-radius: 12px;
+            border-left: 4px solid #4a90e2;
         }
         .audio-player {
             width: 100%;
-            margin-bottom: 20px;
+            margin-bottom: 28px;
             outline: none;
-            height: 54px;
+            height: 64px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.15);
         }
         .subtitles-container {
             background: #fff;
-            border-radius: 10px;
-            max-height: 400px;
+            border-radius: 16px;
+            max-height: 600px;
             overflow-y: auto;
             border: 2px solid #e0e7ff;
             position: relative;
+            box-shadow: 0 4px 16px rgba(74, 144, 226, 0.1);
         }
         .subtitle-item {
-            padding: 16px 20px;
+            padding: 24px 28px;
             border-bottom: 1px solid #f1f5f9;
-            transition: background 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
         }
         .subtitle-item:last-child {
@@ -285,33 +303,39 @@
         }
         .subtitle-item.active {
             background: linear-gradient(90deg, #e0e7ff 0%, #f0f4ff 100%);
-            border-left: 4px solid #4a90e2;
+            border-left: 6px solid #4a90e2;
+            transform: translateX(2px);
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.1);
         }
         .subtitle-item:hover {
             background: #f8fafc;
+            transform: translateX(1px);
         }
         .subtitle-question {
-            font-weight: 600;
+            font-weight: 700;
             color: #4a90e2;
-            margin-bottom: 8px;
-            font-size: 15px;
+            margin-bottom: 12px;
+            font-size: 18px;
+            line-height: 1.4;
         }
         .subtitle-answer {
             color: #374151;
-            line-height: 1.6;
-            font-size: 15px;
+            line-height: 1.7;
+            font-size: 17px;
+            font-weight: 400;
         }
         .part2-question {
             background: #fffbe6;
             border: 2px solid #fbbf24;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 16px;
-            font-weight: 600;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            font-weight: 700;
             color: #92400e;
-            font-size: 16px;
+            font-size: 20px;
             white-space: pre-line;
-            line-height: 1.6;
+            line-height: 1.7;
+            box-shadow: 0 4px 12px rgba(251, 191, 36, 0.15);
         }
         .loading-indicator {
             text-align: center;
@@ -411,10 +435,31 @@
                 padding: 12px;
             }
             .player-section {
-                padding: 20px 16px;
+                padding: 24px 20px;
             }
             .player-title {
+                font-size: 22px;
+                padding: 12px;
+            }
+            .audio-player {
+                height: 56px;
+            }
+            .subtitles-container {
+                max-height: 450px;
+            }
+            .subtitle-item {
+                padding: 20px 24px;
+            }
+            .subtitle-question {
+                font-size: 16px;
+                margin-bottom: 10px;
+            }
+            .subtitle-answer {
+                font-size: 15px;
+            }
+            .part2-question {
                 font-size: 18px;
+                padding: 20px;
             }
         }
         @media (max-width: 480px) {
@@ -456,17 +501,35 @@
                 font-size: 13px;
             }
             .player-section {
-                padding: 16px 12px;
+                padding: 20px 16px;
             }
             .player-title {
+                font-size: 20px;
+                padding: 10px;
+            }
+            .audio-player {
+                height: 52px;
+            }
+            .subtitles-container {
+                max-height: 400px;
+            }
+            .subtitle-item {
+                padding: 16px 20px;
+            }
+            .subtitle-question {
+                font-size: 15px;
+                margin-bottom: 8px;
+            }
+            .subtitle-answer {
+                font-size: 14px;
+            }
+            .part2-question {
                 font-size: 16px;
+                padding: 16px;
             }
             .category-title {
                 font-size: 16px;
                 padding: 10px;
-            }
-            .subtitle-item {
-                padding: 10px 12px;
             }
             .subtitle-question {
                 font-size: 14px;
@@ -548,6 +611,7 @@ let currentSubtitleIndex = -1;
 let currentCategory = 'all';
 let allFoldersData = {};
 let currentToken = null;
+let isGenerating = false; // 全局生成状态
 
 // 认证相关函数
 function fetchServerPassword() {
@@ -763,20 +827,145 @@ function updateFolderStatus(folder, hasCombined) {
             btn.className = 'folder-btn generate-btn';
         }
         btn.disabled = false;
+        // 恢复按钮样式
+        btn.style.opacity = '';
+        btn.style.pointerEvents = '';
     });
     
     allPlayBtns.forEach(btn => {
         btn.disabled = !hasCombined;
+        // 恢复按钮样式
+        if (hasCombined) {
+            btn.style.opacity = '';
+            btn.style.pointerEvents = '';
+        }
     });
+}
+
+// 设置页面加载状态
+function setPageLoading(loading) {
+    isGenerating = loading;
+    
+    if (loading) {
+        // 创建全局遮罩
+        const overlay = document.createElement('div');
+        overlay.id = 'generatingOverlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(240, 245, 255, 0.8);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(2px);
+        `;
+        
+        const loadingContent = document.createElement('div');
+        loadingContent.style.cssText = `
+            background: #fff;
+            padding: 32px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            text-align: center;
+            max-width: 300px;
+        `;
+        
+        loadingContent.innerHTML = `
+            <div style="margin-bottom: 16px;">
+                <span class="loading-spinner" style="width: 32px; height: 32px; border-width: 4px;"></span>
+            </div>
+            <div style="font-size: 18px; font-weight: 600; color: #3b4a6b; margin-bottom: 8px;">
+                正在生成合集音频
+            </div>
+            <div style="font-size: 14px; color: #6b7280;">
+                请耐心等待，生成过程可能需要一些时间...
+            </div>
+        `;
+        
+        overlay.appendChild(loadingContent);
+        document.body.appendChild(overlay);
+        
+        // 禁用所有按钮
+        disableAllButtons(true);
+    } else {
+        // 移除遮罩
+        const overlay = document.getElementById('generatingOverlay');
+        if (overlay) {
+            overlay.remove();
+        }
+        
+        // 启用所有按钮
+        disableAllButtons(false);
+    }
+}
+
+// 禁用/启用所有按钮
+function disableAllButtons(disable) {
+    // 禁用所有文件夹按钮
+    document.querySelectorAll('.folder-btn').forEach(btn => {
+        if (disable) {
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            btn.style.pointerEvents = 'none';
+        } else {
+            // 只恢复非播放按钮，播放按钮的状态由updateFolderStatus控制
+            if (!btn.classList.contains('play-btn')) {
+                btn.disabled = false;
+                btn.style.opacity = '';
+                btn.style.pointerEvents = '';
+            }
+        }
+    });
+    
+    // 禁用导航按钮
+    document.querySelectorAll('.category-btn').forEach(btn => {
+        if (disable) {
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            btn.style.pointerEvents = 'none';
+        } else {
+            btn.disabled = false;
+            btn.style.opacity = '';
+            btn.style.pointerEvents = '';
+        }
+    });
+    
+    // 禁用返回按钮
+    const backBtn = document.querySelector('.back-btn');
+    if (backBtn) {
+        if (disable) {
+            backBtn.disabled = true;
+            backBtn.style.opacity = '0.5';
+            backBtn.style.pointerEvents = 'none';
+        } else {
+            backBtn.disabled = false;
+            backBtn.style.opacity = '';
+            backBtn.style.pointerEvents = '';
+        }
+    }
 }
 
 // 生成合集音频
 function generateCombined(folder) {
+    // 防止重复点击
+    if (isGenerating) {
+        return;
+    }
+    
     const generateBtn = event.target;
     const originalText = generateBtn.textContent;
+    const originalClassName = generateBtn.className;
     
+    // 设置页面加载状态
+    setPageLoading(true);
+    
+    // 更新当前按钮状态
     generateBtn.innerHTML = '<span class="loading-spinner"></span>生成中...';
-    generateBtn.disabled = true;
+    generateBtn.className = 'folder-btn generate-btn generating';
     
     fetch('/generate_combined_audio', {
         method: 'POST',
@@ -791,17 +980,25 @@ function generateCombined(folder) {
             showMessage('合集音频生成成功！', 'success');
         } else {
             // 恢复原始状态
-            generateBtn.textContent = originalText;
-            generateBtn.disabled = false;
+            restoreButtonState(generateBtn, originalText, originalClassName);
             showMessage(data.error || '生成失败', 'error');
         }
     })
     .catch(err => {
         // 恢复原始状态
-        generateBtn.textContent = originalText;
-        generateBtn.disabled = false;
+        restoreButtonState(generateBtn, originalText, originalClassName);
         showMessage('生成失败，请重试', 'error');
+    })
+    .finally(() => {
+        // 恢复页面状态
+        setPageLoading(false);
     });
+}
+
+// 恢复按钮状态
+function restoreButtonState(button, originalText, originalClassName) {
+    button.textContent = originalText;
+    button.className = originalClassName;
 }
 
 // 播放合集音频
