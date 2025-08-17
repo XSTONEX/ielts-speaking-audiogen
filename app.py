@@ -16,8 +16,10 @@ MOTHER_DIR = 'audio_files'
 COMBINED_DIR = 'combined_audio'
 TOKEN_FILE = 'tokens.json'
 READING_DIR = 'reading_exam'
+INTENSIVE_DIR = 'intensive_articles'
 os.makedirs(MOTHER_DIR, exist_ok=True)
 os.makedirs(COMBINED_DIR, exist_ok=True)
+os.makedirs(INTENSIVE_DIR, exist_ok=True)
 
 # Token管理
 def load_tokens():
@@ -626,6 +628,180 @@ def reading_view(subpath):
     else:
         injected = content + inject_script
     return Response(injected, mimetype='text/html; charset=utf-8')
+
+# ------------------------
+# Intensive Reading (文章精读)
+# ------------------------
+
+import re
+
+def _safe_article_id(title: str) -> str:
+    base = re.sub(r"[^\w\-]+", "-", title.strip())[:60].strip('-') or 'article'
+    ts = datetime.now().strftime('%Y%m%d%H%M%S')
+    return f"{ts}-{base}"
+
+def _article_path(article_id: str) -> str:
+    return os.path.join(INTENSIVE_DIR, f"{article_id}.json")
+
+@app.route('/intensive')
+def intensive_page():
+    return send_file('intensive.html')
+ 
+@app.route('/intensive/new')
+def intensive_new_page():
+    return send_file('intensive_new.html')
+
+@app.route('/intensive_list', methods=['GET'])
+def intensive_list():
+    """列出所有文章（按时间倒序）。"""
+    items = []
+    try:
+        for fname in os.listdir(INTENSIVE_DIR):
+            if not fname.endswith('.json'):
+                continue
+            fpath = os.path.join(INTENSIVE_DIR, fname)
+            try:
+                with open(fpath, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                items.append({
+                    'id': data.get('id'),
+                    'title': data.get('title'),
+                    'category': data.get('category'),
+                    'created_at': data.get('created_at'),
+                    'highlight_count': len(data.get('highlights') or [])
+                })
+            except Exception:
+                continue
+    except Exception:
+        pass
+    # 时间倒序
+    items.sort(key=lambda x: x.get('created_at') or '', reverse=True)
+    return jsonify({'items': items})
+
+@app.route('/intensive_create', methods=['POST'])
+def intensive_create():
+    """创建新文章（创建后不可修改内容）。"""
+    data = request.json or {}
+    title = (data.get('title') or '').strip() or '未命名'
+    category = (data.get('category') or 'Reading').strip()
+    content = (data.get('content') or '').strip()
+    if not content:
+        return jsonify({'error': '内容不能为空'}), 400
+    article_id = _safe_article_id(title)
+    # 将简单换行转化为段落 HTML，保持只读展示友好
+    paragraphs = [f"<p>{re.sub(r'<', '&lt;', p)}</p>" for p in content.split('\n') if p.strip()]
+    content_html = '\n'.join(paragraphs) or f"<p>{re.sub(r'<', '&lt;', content)}</p>"
+    obj = {
+        'id': article_id,
+        'title': title,
+        'category': category if category in ['Reading','Listening','Writing'] else 'Reading',
+        'created_at': datetime.now().isoformat(),
+        'content_text': content,  # 原始文本（用于偏移计算）
+        'content_html': content_html,  # 展示用
+        'highlights': []  # {id,start,end,meaning,created_at}
+    }
+    try:
+        with open(_article_path(article_id), 'w', encoding='utf-8') as f:
+            json.dump(obj, f, ensure_ascii=False, indent=2)
+        return jsonify({'success': True, 'id': article_id})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/intensive_article/<article_id>', methods=['GET'])
+def intensive_article(article_id):
+    path = _article_path(article_id)
+    if not os.path.exists(path):
+        return jsonify({'error': '文章不存在'}), 404
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        return jsonify({'success': True, 'article': {
+            'id': data.get('id'),
+            'title': data.get('title'),
+            'category': data.get('category'),
+            'created_at': data.get('created_at'),
+            'content_html': data.get('content_html'),
+            'content_text': data.get('content_text'),
+            'highlights': data.get('highlights') or []
+        }})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/intensive_add_highlight', methods=['POST'])
+def intensive_add_highlight():
+    data = request.json or {}
+    article_id = data.get('id')
+    start = data.get('start')
+    end = data.get('end')
+    meaning = (data.get('meaning') or '').strip()
+    if article_id is None or start is None or end is None or not meaning:
+        return jsonify({'error': '参数不完整'}), 400
+    path = _article_path(article_id)
+    if not os.path.exists(path):
+        return jsonify({'error': '文章不存在'}), 404
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            obj = json.load(f)
+        # 简单校验范围
+        text_len = len(obj.get('content_text') or '')
+        if not (0 <= int(start) < int(end) <= text_len):
+            return jsonify({'error': '选择范围无效'}), 400
+        hl_id = generate_token()
+        hl = {
+            'id': hl_id,
+            'start': int(start),
+            'end': int(end),
+            'meaning': meaning,
+            'created_at': datetime.now().isoformat()
+        }
+        obj.setdefault('highlights', []).append(hl)
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump(obj, f, ensure_ascii=False, indent=2)
+        return jsonify({'success': True, 'highlight': hl})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/intensive_delete_highlight', methods=['POST'])
+def intensive_delete_highlight():
+    data = request.json or {}
+    article_id = data.get('id')
+    highlight_id = data.get('highlight_id')
+    if not article_id or not highlight_id:
+        return jsonify({'error': '参数不完整'}), 400
+    path = _article_path(article_id)
+    if not os.path.exists(path):
+        return jsonify({'error': '文章不存在'}), 404
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            obj = json.load(f)
+        before = len(obj.get('highlights') or [])
+        obj['highlights'] = [h for h in (obj.get('highlights') or []) if h.get('id') != highlight_id]
+        after = len(obj['highlights'])
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump(obj, f, ensure_ascii=False, indent=2)
+        return jsonify({'success': True, 'removed': before - after})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/intensive_update_category', methods=['POST'])
+def intensive_update_category():
+    data = request.json or {}
+    article_id = data.get('id')
+    category = (data.get('category') or '').strip()
+    if not article_id or category not in ['Reading','Listening','Writing']:
+        return jsonify({'error': '参数不合法'}), 400
+    path = _article_path(article_id)
+    if not os.path.exists(path):
+        return jsonify({'error': '文章不存在'}), 404
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            obj = json.load(f)
+        obj['category'] = category
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump(obj, f, ensure_ascii=False, indent=2)
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001)

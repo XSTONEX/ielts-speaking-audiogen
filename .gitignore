@@ -5,3 +5,5 @@ audio_files/
 combined_audio/
 tokens.json
 reading_exam/
+intensive_articles/
+__pycache__/

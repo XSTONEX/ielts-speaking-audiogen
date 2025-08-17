@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>文章精读</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif; background: #f6f8fb; margin:0; line-height: 1.55; color: #1f2937; letter-spacing: -0.1px; text-rendering: optimizeLegibility; font-kerning: normal; }
+    .container { max-width: 1200px; margin: 0 auto; background:#fff; min-height: 100vh; }
+    h2 { text-align:center; color:#111827; margin:0 0 24px; font-size: 26px; font-weight: 400; letter-spacing: -0.2px; }
+    .toolbar { display:flex; justify-content:space-between; align-items:center; padding: 24px 32px 16px; border-bottom: 1px solid #f1f5f9; }
+    .toolbar button { padding: 10px 20px; border:none; border-radius:12px; cursor:pointer; background:#f8fafc; color:#374151; font-weight:500; transition: all 0.2s; border: 1px solid #e2e8f0; }
+    .toolbar button:hover { background:#e2e8f0; transform: translateY(-1px); }
+    .toolbar .btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#fff; border: none; }
+    .toolbar .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(102, 126, 234, 0.25); }
+    .section { padding: 28px; margin: 24px; background: #ffffff; border: 1px solid #e6ebf2; border-radius: 16px; box-shadow: 0 6px 18px rgba(15,23,42,0.04); }
+    label { font-weight:600; color:#374151; font-size:14px; display: block; margin-bottom: 8px; }
+    .list { display:grid; grid-template-columns: repeat(auto-fill, minmax(320px,1fr)); gap:18px; margin-top: 16px; }
+    .card { background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%); border:1px solid #e5eaf0; border-radius:16px; padding:22px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
+    .card:hover { transform: translateY(-3px); box-shadow: 0 14px 30px rgba(0,0,0,0.08); border-color: #cbd5e1; }
+    .card h3 { margin:0 0 10px; font-size:17px; color:#111827; font-weight: 600; line-height: 1.25; letter-spacing: -0.1px; }
+    .muted { color:#6b7280; font-size:12.5px; letter-spacing: -0.1px; }
+    .viewer { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background:#fff; z-index: 1000; display: none; }
+    .viewer.active { display: flex; flex-direction: column; }
+    .viewer .header { display:flex; justify-content:space-between; align-items:center; padding: 20px 32px; border-bottom:1px solid #f1f5f9; background: #fafbfc; }
+    .viewer .title { font-weight:600; color:#111827; font-size: 20px; }
+    .viewer .close-btn { width: 40px; height: 40px; border: none; border-radius: 12px; background: #f3f4f6; color: #6b7280; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; font-size: 18px; }
+    .viewer .close-btn:hover { background: #e5e7eb; color: #374151; transform: scale(1.05); }
+    .viewer .content { flex: 1; padding: 24px; line-height:1.7; font-size:16.5px; color:#344256; overflow-y: auto; }
+    .viewer .content > .reader { max-width: 900px; margin: 16px auto; background: #fff; border: 1px solid #e6ebf2; border-radius: 16px; padding: 28px; box-shadow: 0 6px 18px rgba(15,23,42,0.03); letter-spacing: -0.05px; }
+    .hl { background: linear-gradient(120deg, #a8edea 0%, #fed6e3 100%); border-radius:4px; padding: 2px 4px; position:relative; transition: all 0.2s; }
+    .hl:hover { background: linear-gradient(120deg, #96e6fb 0%, #fbb6ce 100%); }
+    .tooltip { position:absolute; left:50%; bottom:100%; transform: translateX(-50%) translateY(-8px); background:#1f2937; color:#fff; padding:8px 12px; border-radius:8px; font-size:12px; white-space:nowrap; box-shadow:0 10px 30px rgba(0,0,0,0.2); display:none; z-index:20; pointer-events: none; }
+    .tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 6px solid transparent; border-top-color: #1f2937; }
+    .hl:hover .tooltip { display:block; }
+    .floating { position:fixed; background:rgba(17, 24, 39, 0.95); backdrop-filter: blur(12px); color:#fff; padding:12px 16px; border-radius:16px; font-size:14px; box-shadow:0 20px 40px rgba(0,0,0,0.3); display:none; z-index:3000; border: 1px solid rgba(255,255,255,0.1); }
+    .floating button { background:#10b981; border:none; color:#fff; padding:8px 16px; border-radius:10px; cursor:pointer; font-weight:600; transition: all 0.2s; font-size: 13px; }
+    .floating button:hover { background:#059669; transform: translateY(-1px); }
+    .floating .del { background:#ef4444; margin-left:8px; }
+    .floating .del:hover { background:#dc2626; }
+    .floating input { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 8px 12px; border-radius: 8px; outline: none; font-size: 14px; margin-right: 8px; min-width: 200px; }
+    .floating input::placeholder { color: rgba(255,255,255,0.6); }
+    .floating input:focus { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.4); }
+    .empty { color:#9ca3af; font-size:15px; text-align:center; padding:48px 16px; }
+    .cat-tabs { display:flex; gap:4px; justify-content:center; margin: 24px 0; }
+    .cat-tabs button { padding:10px 20px; border-radius:12px; border:none; background:#f8fafc; cursor:pointer; font-weight:500; color:#6b7280; transition: all 0.2s; }
+    .cat-tabs button.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#fff; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
+    .cat-tabs button:hover:not(.active) { background:#e2e8f0; }
+    
+    @media (max-width: 768px) {
+      .container { margin: 0; }
+      .toolbar { padding: 16px 20px 12px; flex-direction: column; gap: 12px; }
+      .toolbar .btn { width: 100%; }
+      h2 { font-size: 24px; margin-bottom: 24px; }
+      .section { padding: 20px; margin: 16px; }
+      .list { grid-template-columns: 1fr; gap: 16px; }
+      .card { padding: 20px; }
+      .card h3 { font-size: 16px; }
+      .viewer .header { padding: 16px 20px; }
+      .viewer .title { font-size: 18px; }
+      .viewer .content { padding: 16px; font-size: 15.5px; }
+      .viewer .content > .reader { margin: 12px auto; padding: 18px; border-radius: 14px; }
+      .cat-tabs { flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+      .cat-tabs button { padding: 8px 16px; font-size: 14px; }
+      .floating { margin: 8px; max-width: calc(100vw - 16px); }
+      .floating input { min-width: 160px; }
+    }
+    
+    @media (max-width: 480px) {
+      .toolbar { padding: 12px 16px; }
+      .section { padding: 16px; }
+      .card { padding: 16px; }
+      .viewer .content { padding: 14px; }
+      .viewer .content > .reader { margin: 8px auto; padding: 14px; border-radius: 12px; }
+      .floating { padding: 8px 12px; }
+      .floating button { padding: 6px 12px; font-size: 12px; }
+      .floating input { min-width: 140px; padding: 6px 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="authOverlay" style="position:fixed;z-index:10000;left:0;top:0;width:100vw;height:100vh;background:rgba(240,245,255,0.98);display:flex;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:14px;box-shadow:0 8px 32px 0 rgba(31,38,135,0.15);padding:38px 32px 32px 32px;max-width:90vw;min-width:320px;text-align:center;">
+        <h2 style="color:#3b4a6b;margin-bottom:18px;">请输入访问密码</h2>
+        <input id="authPassword" type="password" placeholder="Password" style="padding:12px 16px;font-size:17px;border-radius:8px;border:1.5px solid #d1d5db;width:80%;max-width:260px;outline:none;" autofocus onkeydown="if(event.key==='Enter'){checkPassword();}">
+        <div id="authError" style="color:#e94e77;margin-top:14px;display:none;font-size:15px;">密码错误，请重试。</div>
+        <button onclick="checkPassword()" style="margin-top:22px;width:60%;max-width:180px;">进入</button>
+    </div>
+  </div>
+  <div class="container">
+    <div class="toolbar" style="justify-content:space-between;">
+      <button onclick="location.href='/'" style="background:#0ea5e9;color:#fff;border: none;">返回模块选择</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn" onclick="location.href='/intensive/new'">添加文章</button>
+      </div>
+    </div>
+    <h2>文章精读</h2>
+    
+
+    <div class="section">
+      <label>我的文章</label>
+      <div class="cat-tabs">
+        <button id="tab-Reading" class="active" onclick="setActiveCat('Reading')">Reading</button>
+        <button id="tab-Listening" onclick="setActiveCat('Listening')">Listening</button>
+        <button id="tab-Writing" onclick="setActiveCat('Writing')">Writing</button>
+      </div>
+      <div id="list" class="list"></div>
+      <div id="empty" class="empty" style="display:none;">该分类暂无文章</div>
+    </div>
+
+          <div class="viewer" id="viewer">
+      <div class="header">
+        <div class="title" id="vTitle">-</div>
+        <div style="display:flex;gap:12px;align-items:center;">
+          <select id="vCategory" style="padding:6px 12px;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc;">
+            <option value="Reading">Reading</option>
+            <option value="Listening">Listening</option>
+            <option value="Writing">Writing</option>
+          </select>
+          <button class="close-btn" onclick="closeViewer()" title="关闭">✕</button>
+        </div>
+      </div>
+      <div class="content" id="vContent"></div>
+    </div>
+  </div>
+
+  <div class="floating" id="floatBox" style="background:#111827cc;backdrop-filter: blur(2px);">
+    <button onclick="confirmHighlight()" style="background:#22c55e;padding:6px 10px;border-radius:8px;">Highlight</button>
+    <button class="del" onclick="cancelFloat()" style="background:#6b7280;padding:6px 10px;border-radius:8px;">Cancel</button>
+    <button class="del" onclick="removeCurrentHighlight()" style="padding:6px 10px;border-radius:8px;">Remove</button>
+  </div>
+  <div class="floating" id="meaningBox" style="background:#111827cc;backdrop-filter: blur(2px);display:none;">
+    <input id="meaningInput" type="text" placeholder="Enter meaning" style="padding:6px 10px;border-radius:8px;border:none;outline:none;min-width:220px;" onkeydown="if(event.key==='Enter'){ event.preventDefault(); saveMeaning(); } else if(event.key==='Escape'){ event.preventDefault(); cancelMeaning(); }">
+    <button onclick="saveMeaning()" style="background:#22c55e;padding:6px 10px;border-radius:8px;">Save</button>
+    <button onclick="cancelMeaning()" class="del" style="background:#6b7280;padding:6px 10px;border-radius:8px;">Cancel</button>
+  </div>
+
+  <script>
+    let currentToken=null; let currentArticle=null; let selectionRange=null; let highlights=[]; let lastSelectionRect=null;
+    function fetchServerPassword(){ return fetch('/get_password').then(r=>r.json()); }
+    function checkStoredToken(){ const tk=localStorage.getItem('authToken'); if(!tk) return Promise.resolve(false); return fetch('/verify_token',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({token:tk})}).then(r=>r.json()).then(d=>{ if(d.valid){ currentToken=tk; return true;} localStorage.removeItem('authToken'); return false; }).catch(()=>{ localStorage.removeItem('authToken'); return false; }); }
+    function checkPassword(){ const val=document.getElementById('authPassword').value; fetch('/verify_password',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({password:val})}).then(r=>r.json()).then(d=>{ if(d.success){ currentToken=d.token; localStorage.setItem('authToken', d.token); document.getElementById('authOverlay').style.display='none'; document.body.style.overflow=''; loadList(); } else { document.getElementById('authError').style.display=''; document.getElementById('authPassword').value=''; document.getElementById('authPassword').focus(); } }).catch(()=>{ document.getElementById('authError').style.display=''; }); }
+    window.onload=function(){ if(document.getElementById('authOverlay')){ document.body.style.overflow='hidden'; checkStoredToken().then(valid=>{ if(valid){ document.getElementById('authOverlay').style.display='none'; document.body.style.overflow=''; loadList(); } else { document.getElementById('authPassword').focus(); fetchServerPassword(); } }); return; } loadList(); }
+
+    function createArticle(){ const title=document.getElementById('title').value.trim(); const category=document.getElementById('category').value; const content=document.getElementById('content').value; if(!content.trim()){ showCreateMsg('请粘贴文章内容', true); return; } fetch('/intensive_create',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({title, category, content})}).then(r=>r.json()).then(d=>{ if(d.success){ showCreateMsg('创建成功', false); document.getElementById('content').value=''; document.getElementById('title').value=''; loadList(); openArticle(d.id); } else { showCreateMsg(d.error||'创建失败', true); } }); }
+    function showCreateMsg(msg, isErr){ const el=document.getElementById('createMsg'); el.textContent=msg; el.style.color=isErr?'#ef4444':'#6b7280'; setTimeout(()=>{ el.textContent=''; }, 1500); }
+    let allItems=[]; let activeCat='Reading';
+    function setActiveCat(cat){ activeCat=cat; ['Reading','Listening','Writing'].forEach(c=>{ const el=document.getElementById('tab-'+c); if(el) el.className = (c===activeCat? 'active': ''); }); renderList(); }
+    function loadList(){ fetch('/intensive_list').then(r=>r.json()).then(d=>{ allItems = d.items||[]; renderList(); }); }
+    function renderList(){ const wrap=document.getElementById('list'); const empty=document.getElementById('empty'); wrap.innerHTML=''; const filtered = (allItems||[]).filter(it=> (it.category||'Reading')===activeCat ); if(!filtered.length){ empty.style.display=''; return; } empty.style.display='none'; filtered.forEach(it=>{ const div=document.createElement('div'); div.className='card'; div.style.cursor='pointer'; div.onclick=function(){ openArticle(it.id); }; div.innerHTML = `<h3>${escapeHtml(it.title||'未命名')}</h3><div class="muted">高亮：${it.highlight_count||0}｜创建：${(it.created_at||'').slice(0,19).replace('T',' ')}</div>`; wrap.appendChild(div); }); }
+
+    function openArticle(id){ fetch(`/intensive_article/${id}`).then(r=>r.json()).then(d=>{ if(!d.success){ alert(d.error||'加载失败'); return; } const art=d.article; currentArticle=art; highlights = art.highlights||[]; document.getElementById('vTitle').textContent = `${art.title||'未命名'}`; document.getElementById('vCategory').value = art.category||'Reading'; const contentDiv=document.getElementById('vContent'); contentDiv.innerHTML = art.content_html || ''; document.getElementById('viewer').classList.add('active'); bindSelection(contentDiv, art); restoreHighlights(contentDiv, art); }); }
+    function closeViewer(){ document.getElementById('viewer').classList.remove('active'); currentArticle=null; selectionRange=null; highlights=[]; cancelFloat(); cancelMeaning(); }
+
+    // 文本选择与悬浮操作
+    function bindSelection(container, art){ container.addEventListener('mouseup', function(e){ const sel=window.getSelection(); if(!sel || sel.isCollapsed){ cancelFloat(); return; } const range=sel.getRangeAt(0); if(!container.contains(range.commonAncestorContainer)){ cancelFloat(); return; } const text=sel.toString(); if(!text.trim()){ cancelFloat(); return; }
+        // 限制只能在同一段落内高亮，避免跨块包裹导致错误
+        const sP = closestBlock(range.startContainer, 'p'); const eP = closestBlock(range.endContainer, 'p');
+        if(sP !== eP){ alert('请在同一段内进行高亮'); cancelFloat(); return; }
+        const off = getOffsetsFromRange(container, range);
+        if(!off){ cancelFloat(); return; }
+        const containerText = getContainerText(container);
+        const startOrig = containerToOriginalIndex(off.start, art.content_text||'', containerText);
+        const endOrig = containerToOriginalIndex(off.end, art.content_text||'', containerText);
+        if(startOrig==null || endOrig==null || endOrig<=startOrig){ cancelFloat(); return; }
+        selectionRange = { start: startOrig, end: endOrig, text };
+        lastSelectionRect = range.getBoundingClientRect();
+        showFloatAtRect(lastSelectionRect);
+    }); }
+
+    function showFloatAtRect(rect){ const box=document.getElementById('floatBox'); positionBoxAtRect(box, rect); box.style.display='block'; }
+    function positionBoxAtRect(el, rect){ const x = window.scrollX + rect.left + rect.width/2; const y = window.scrollY + rect.top; const r = el.getBoundingClientRect(); el.style.left = Math.max(8, x - r.width/2) + 'px'; el.style.top = Math.max(8, y - 48) + 'px'; }
+    function cancelFloat(){ const box=document.getElementById('floatBox'); box.style.display='none'; selectionRange=null; window.getSelection().removeAllRanges(); }
+    function confirmHighlight(){ if(!currentArticle||!selectionRange){ cancelFloat(); return; } const mBox=document.getElementById('meaningBox'); const mInput=document.getElementById('meaningInput'); mInput.value=''; if(lastSelectionRect){ positionBoxAtRect(mBox, lastSelectionRect); } mBox.style.display='block'; }
+    function cancelMeaning(){ document.getElementById('meaningBox').style.display='none'; window.getSelection().removeAllRanges(); }
+    function saveMeaning(){ const meaning=document.getElementById('meaningInput').value.trim(); if(!meaning){ alert('Meaning required'); return; } const body={ id: currentArticle.id, start: selectionRange.start, end: selectionRange.end, meaning }; fetch('/intensive_add_highlight',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)}).then(r=>r.json()).then(d=>{ if(d.success){ highlights.push(d.highlight); applyOneHighlight(document.getElementById('vContent'), d.highlight, currentArticle.content_text); cancelFloat(); cancelMeaning(); } else { alert(d.error||'保存失败'); } }); }
+
+    // 分类修改
+    document.addEventListener('change', function(e){ if(e.target && e.target.id==='vCategory' && currentArticle){ const newCat=e.target.value; fetch('/intensive_update_category',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id: currentArticle.id, category: newCat})}).then(r=>r.json()).then(d=>{ if(!d.success){ alert(d.error||'保存失败'); e.target.value=currentArticle.category||'Reading'; } else { currentArticle.category=newCat; } }); } });
+
+    // 移除现有高亮（通过再次选择相同范围时）
+    function removeCurrentHighlight(){ if(!currentArticle) return; // 查找选区是否位于某个 mark.hl 内
+      const sel=window.getSelection(); if(!sel || sel.rangeCount===0) return; const node = sel.anchorNode; const mark = node ? (node.nodeType===1? node : node.parentNode).closest && (node.nodeType===1? node : node.parentNode).closest('mark.hl') : null; if(!mark) return; const hid = mark.getAttribute('data-hid'); if(!hid) return; deleteHighlight(hid); cancelFloat(); cancelMeaning(); }
+
+    // 滚动/窗口变化时保持浮动框跟随选区
+    function repositionFloating(){ if(!selectionRange || !currentArticle || (!isVisible('floatBox') && !isVisible('meaningBox'))) return; const rect = computeRectFromSelectionRange(); if(!rect) return; lastSelectionRect = rect; if(isVisible('floatBox')) positionBoxAtRect(document.getElementById('floatBox'), rect); if(isVisible('meaningBox')) positionBoxAtRect(document.getElementById('meaningBox'), rect); }
+    function isVisible(id){ const el=document.getElementById(id); return el && el.style.display!== 'none'; }
+    function computeRectFromSelectionRange(){ try{ const container=document.getElementById('vContent'); if(!container) return null; const containerText=getContainerText(container); const startC=originalToContainerIndex(selectionRange.start, currentArticle.content_text||'', containerText); const endC=originalToContainerIndex(selectionRange.end, currentArticle.content_text||'', containerText); if(startC==null||endC==null||endC<=startC) return null; // 建立临时range取rect
+      const walker=createWalker(container); let n,pos=0,sN=null,sO=0,eN=null,eO=0; while(n=walker.nextNode()){ const next=pos+n.nodeValue.length; if(sN===null && startC>=pos && startC<=next){ sN=n; sO=startC-pos; } if(eN===null && endC>=pos && endC<=next){ eN=n; eO=endC-pos; break; } pos=next; } if(!sN||!eN) return null; const r=document.createRange(); r.setStart(sN,sO); r.setEnd(eN,eO); return r.getBoundingClientRect(); }catch(e){ return null; } }
+    window.addEventListener('scroll', function(){ repositionFloating(); }, true);
+    window.addEventListener('resize', function(){ repositionFloating(); });
+    
+    // 全局 ESC 键监听
+    document.addEventListener('keydown', function(e){ 
+      if(e.key === 'Escape'){ 
+        if(isVisible('meaningBox')){ 
+          cancelMeaning(); 
+        } else if(isVisible('floatBox')){ 
+          cancelFloat(); 
+        }
+      }
+    });
+
+    function restoreHighlights(container, art){ (art.highlights||[]).sort((a,b)=>a.start-b.start).forEach(h=>{ applyOneHighlight(container, h, art.content_text); }); }
+    function applyOneHighlight(container, h, originalText){ try{ const containerText = getContainerText(container); const startC = originalToContainerIndex(h.start, originalText||'', containerText); const endC = originalToContainerIndex(h.end, originalText||'', containerText); if(startC==null || endC==null || endC<=startC) return; wrapContainerOffsets(container, startC, endC, h); }catch(e){} }
+    function deleteHighlight(hid){ if(!currentArticle) return; fetch('/intensive_delete_highlight',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id: currentArticle.id, highlight_id: hid})}).then(r=>r.json()).then(d=>{ if(d.success){ // 重新加载文章以刷新 DOM
+          openArticle(currentArticle.id);
+        } else { alert(d.error||'删除失败'); } }); }
+
+    function escapeHtml(s){ return (s||'').replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c])); }
+    function getContainerText(container){ const walker=createWalker(container); let t='', n; while(n=walker.nextNode()){ t+=n.nodeValue; } return t; }
+    function getOffsetsFromRange(container, range){ try{ const walker=createWalker(container); let pos=0, n; let sN=range.startContainer, eN=range.endContainer; let sO=range.startOffset, eO=range.endOffset; let start=-1,end=-1; while(n=walker.nextNode()){ if(n===sN){ start = pos + sO; } if(n===eN){ end = pos + eO; break; } pos += n.nodeValue.length; } if(start>=0 && end>start) return {start,end}; }catch(e){} return null; }
+    function wrapContainerOffsets(container, start, end, meta){ const walker=createWalker(container); let n, pos=0; let sN=null,sO=0,eN=null,eO=0; while(n=walker.nextNode()){ const next=pos + n.nodeValue.length; if(sN===null && start>=pos && start<=next){ sN=n; sO=start-pos; } if(eN===null && end>=pos && end<=next){ eN=n; eO=end-pos; break; } pos=next; } if(!sN||!eN) return; const r=document.createRange(); r.setStart(sN, sO); r.setEnd(eN, eO); const mark=document.createElement('mark'); mark.className='hl'; mark.setAttribute('data-hid', meta.id); const tip=document.createElement('span'); tip.className='tooltip'; tip.textContent=meta.meaning||''; r.surroundContents(mark); mark.appendChild(tip); mark.addEventListener('contextmenu', function(ev){ ev.preventDefault(); if(confirm('删除该高亮/笔记？')){ deleteHighlight(meta.id); } }); }
+    function createWalker(container){ return document.createTreeWalker(container, NodeFilter.SHOW_TEXT, { acceptNode: function(node){ let p=node.parentNode; while(p){ if(p.nodeType===1 && p.classList && p.classList.contains('tooltip')) return NodeFilter.FILTER_REJECT; p=p.parentNode; } return NodeFilter.FILTER_ACCEPT; } }); }
+    function closestBlock(node, selector){ let el = node.nodeType===1 ? node : node.parentNode; if(!el) return null; if(el.closest) return el.closest(selector); while(el){ if(el.matches && el.matches(selector)) return el; el = el.parentNode; } return null; }
+    function originalToContainerIndex(oi, original, container){ let o=0,c=0; const olen=original.length, clen=container.length; while(o<olen && c<=clen){ const ch=original[o]; if(ch==='\n' || ch==='\r'){ o++; continue; } if(c>=clen) break; if(ch===container[c]){ if(o===oi) return c; o++; c++; } else { c++; } } return null; }
+    function containerToOriginalIndex(ci, original, container){ let o=0,c=0; const olen=original.length, clen=container.length; while(o<olen && c<=clen){ const ch=original[o]; if(ch==='\n' || ch==='\r'){ o++; continue; } if(c===ci){ return o; } if(c>=clen) break; if(ch===container[c]){ o++; c++; } else { c++; } } return null; }
+  </script>
+</body>
+</html>
+
+
