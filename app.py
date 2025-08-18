@@ -646,6 +646,10 @@ def _article_path(article_id: str) -> str:
 @app.route('/intensive')
 def intensive_page():
     return send_file('intensive.html')
+
+@app.route('/vocab_summary')
+def vocab_summary():
+    return send_file('vocab_summary.html')
  
 @app.route('/intensive/new')
 def intensive_new_page():
@@ -734,6 +738,7 @@ def intensive_add_highlight():
     start = data.get('start')
     end = data.get('end')
     meaning = (data.get('meaning') or '').strip()
+    sel_text = (data.get('text') or '').strip()
     if article_id is None or start is None or end is None or not meaning:
         return jsonify({'error': '参数不完整'}), 400
     path = _article_path(article_id)
@@ -746,15 +751,30 @@ def intensive_add_highlight():
         text_len = len(obj.get('content_text') or '')
         if not (0 <= int(start) < int(end) <= text_len):
             return jsonify({'error': '选择范围无效'}), 400
+        highlights = obj.setdefault('highlights', [])
+        # 去重：如果同一范围已存在高亮，则更新释义并返回，不新增
+        for existing in highlights:
+            same_range = int(existing.get('start', -1)) == int(start) and int(existing.get('end', -1)) == int(end)
+            same_text = sel_text and sel_text == (existing.get('text') or '')
+            if same_range or same_text:
+                existing['meaning'] = meaning
+                existing['created_at'] = datetime.now().isoformat()
+                if sel_text:
+                    existing['text'] = sel_text
+                with open(path, 'w', encoding='utf-8') as f:
+                    json.dump(obj, f, ensure_ascii=False, indent=2)
+                return jsonify({'success': True, 'highlight': existing, 'updated': True})
+
         hl_id = generate_token()
         hl = {
             'id': hl_id,
             'start': int(start),
             'end': int(end),
             'meaning': meaning,
-            'created_at': datetime.now().isoformat()
+            'created_at': datetime.now().isoformat(),
+            'text': sel_text
         }
-        obj.setdefault('highlights', []).append(hl)
+        highlights.append(hl)
         with open(path, 'w', encoding='utf-8') as f:
             json.dump(obj, f, ensure_ascii=False, indent=2)
         return jsonify({'success': True, 'highlight': hl})
@@ -799,6 +819,21 @@ def intensive_update_category():
         obj['category'] = category
         with open(path, 'w', encoding='utf-8') as f:
             json.dump(obj, f, ensure_ascii=False, indent=2)
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/intensive_delete_article', methods=['POST'])
+def intensive_delete_article():
+    data = request.json or {}
+    article_id = data.get('id')
+    if not article_id:
+        return jsonify({'error': '缺少文章ID'}), 400
+    path = _article_path(article_id)
+    if not os.path.exists(path):
+        return jsonify({'error': '文章不存在'}), 404
+    try:
+        os.remove(path)
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'error': str(e)}), 500

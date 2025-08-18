@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>词汇汇总</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Crimson+Text:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'PT Serif', 'Crimson Text', ui-serif, 'Times New Roman', 'Georgia', serif; background: #f6f8fb; margin:0; line-height: 1.6; color: #1f2937; letter-spacing: -0.05px; text-rendering: optimizeLegibility; font-kerning: normal; }
+    .container { max-width: 1600px; margin: 0 auto; background:#fff; min-height: 100vh; display: flex; flex-direction: column; }
+    
+    /* Header */
+    .header { display:flex; justify-content:space-between; align-items:center; padding: 20px 32px; border-bottom:1px solid #f1f5f9; background: #fafbfc; }
+    .header .title { font-weight:600; color:#111827; font-size: 24px; }
+    .header .actions { display: flex; gap: 12px; align-items: center; }
+    .btn { padding: 10px 20px; border:none; border-radius:12px; cursor:pointer; background:#f8fafc; color:#374151; font-weight:500; transition: all 0.2s; border: 1px solid #e2e8f0; font-size: 14px; }
+    .btn:hover { background:#e2e8f0; transform: translateY(-1px); }
+    .btn.primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#fff; border: none; }
+    .btn.primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(102, 126, 234, 0.25); }
+    .btn.export { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color:#fff; border: none; }
+    .btn.export:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(16, 185, 129, 0.25); }
+    
+    /* Main Layout */
+    .main { flex: 1; display: flex; overflow: hidden; }
+    .sidebar { width: 380px; border-right: 1px solid #e6ebf2; background: #fafbfc; display: flex; flex-direction: column; }
+    .content { flex: 1; display: flex; flex-direction: column; background: #fff; }
+    
+    /* Category Tabs */
+    .cat-tabs { display:flex; gap:4px; justify-content:center; margin: 20px 16px 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 16px; }
+    .cat-tabs button { padding:10px 18px; border-radius:12px; border:none; background:#f8fafc; cursor:pointer; font-weight:500; color:#6b7280; transition: all 0.2s; font-size: 14px; }
+    .cat-tabs button.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#fff; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
+    .cat-tabs button:hover:not(.active) { background:#e2e8f0; }
+    
+    /* Article List */
+    .article-list { flex: 1; overflow-y: auto; padding: 0 16px 16px; }
+    .article-item { border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin-bottom: 12px; background: #fff; cursor: pointer; transition: all 0.2s; }
+    .article-item:hover { border-color: #c7d2fe; background: #f5f7ff; transform: translateY(-1px); }
+    .article-item.active { border-color: #667eea; background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%); }
+    .article-title { font-weight: 600; color: #111827; font-size: 15px; margin-bottom: 6px; }
+    .article-meta { color: #6b7280; font-size: 12px; display: flex; justify-content: space-between; }
+    .article-stats { color: #10b981; font-weight: 500; }
+    
+    /* Vocabulary Content */
+    .vocab-header { padding: 20px 24px; border-bottom: 1px solid #f1f5f9; background: #fafbfc; }
+    .vocab-title { font-weight: 600; color: #111827; font-size: 18px; margin-bottom: 8px; }
+    .vocab-subtitle { color: #6b7280; font-size: 14px; }
+    .vocab-controls { display: flex; gap: 12px; margin-top: 16px; }
+    .search-box { flex: 1; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 10px; background: #f8fafc; font-size: 14px; font-family: 'PT Serif', 'Crimson Text', ui-serif, 'Times New Roman', 'Georgia', serif; }
+    .search-box:focus { outline: none; border-color: #667eea; background: #fff; }
+    
+    /* Vocabulary List */
+    .vocab-list { flex: 1; overflow-y: auto; padding: 16px 24px; }
+    .vocab-item { border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px 16px; margin-bottom: 10px; background: #fafbff; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .vocab-item:hover { border-color: #c7d2fe; background: #f5f7ff; }
+    .vocab-content { flex: 1; min-width: 0; }
+    .vocab-word { font-weight: 700; color: #111827; font-size: 15px; margin-bottom: 4px; word-break: break-word; }
+    .vocab-meaning { color: #6b7280; font-size: 13px; line-height: 1.4; word-break: break-word; }
+    .vocab-actions { flex-shrink: 0; display: flex; align-items: center; }
+    .jump-btn { width: 32px; height: 32px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; color: #475569; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+    .jump-btn:hover { background: #eef2f7; border-color: #cbd5e1; transform: translateY(-1px); color: #667eea; }
+    .jump-btn:active { transform: translateY(0); }
+    
+    /* Empty States */
+    .empty { text-align: center; padding: 48px 24px; color: #9ca3af; }
+    .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+    .empty-text { font-size: 16px; margin-bottom: 8px; }
+    .empty-hint { font-size: 14px; color: #d1d5db; }
+    
+    /* Export Dropdown */
+    .export-dropdown { position: relative; display: inline-block; }
+    .export-menu { position: absolute; top: 100%; right: 0; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); min-width: 200px; z-index: 1000; display: none; }
+    .export-menu.active { display: block; }
+    .export-item { padding: 12px 16px; cursor: pointer; transition: all 0.2s; border-bottom: 1px solid #f1f5f9; }
+    .export-item:last-child { border-bottom: none; }
+    .export-item:hover { background: #f8fafc; }
+    .export-item-title { font-weight: 500; color: #111827; font-size: 14px; }
+    .export-item-desc { color: #6b7280; font-size: 12px; margin-top: 2px; }
+    
+    /* Mobile Responsive */
+    @media (max-width: 1024px) {
+      .main { flex-direction: column; }
+      .sidebar { width: 100%; max-height: 40vh; }
+      .content { flex: 1; }
+      .header { padding: 16px 20px; flex-direction: column; gap: 12px; }
+      .header .actions { width: 100%; justify-content: center; }
+    }
+    
+    @media (max-width: 768px) {
+      .container { margin: 0; }
+      .header { padding: 12px 16px; }
+      .header .title { font-size: 20px; }
+      .cat-tabs { margin: 16px 12px 12px; flex-wrap: wrap; }
+      .cat-tabs button { padding: 8px 14px; font-size: 13px; }
+      .article-list { padding: 0 12px 12px; }
+      .vocab-header { padding: 16px 16px; }
+      .vocab-list { padding: 12px 16px; }
+      .vocab-item { padding: 10px 12px; align-items: flex-start; gap: 8px; }
+      .vocab-content { flex: 1; }
+      .vocab-actions { margin-top: 2px; }
+      .btn { padding: 8px 16px; font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="authOverlay" style="position:fixed;z-index:10000;left:0;top:0;width:100vw;height:100vh;background:rgba(240,245,255,0.98);display:flex;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:14px;box-shadow:0 8px 32px 0 rgba(31,38,135,0.15);padding:38px 32px 32px 32px;max-width:90vw;min-width:320px;text-align:center;">
+        <h2 style="color:#3b4a6b;margin-bottom:18px;">请输入访问密码</h2>
+        <input id="authPassword" type="password" placeholder="Password" style="padding:12px 16px;font-size:17px;border-radius:8px;border:1.5px solid #d1d5db;width:80%;max-width:260px;outline:none;" autofocus onkeydown="if(event.key==='Enter'){checkPassword();}">
+        <div id="authError" style="color:#e94e77;margin-top:14px;display:none;font-size:15px;">密码错误，请重试。</div>
+        <button onclick="checkPassword()" style="margin-top:22px;width:60%;max-width:180px;">进入</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="header">
+      <div class="title">📚 词汇汇总</div>
+      <div class="actions">
+        <button class="btn" onclick="location.href='/intensive'">返回精读</button>
+        <div class="export-dropdown">
+          <button class="btn export" onclick="toggleExportMenu()">导出词汇 ▼</button>
+          <div class="export-menu" id="exportMenu">
+            <div class="export-item" onclick="exportVocab('current')">
+              <div class="export-item-title">导出当前文章</div>
+              <div class="export-item-desc">导出所选文章的词汇</div>
+            </div>
+            <div class="export-item" onclick="exportVocab('category')">
+              <div class="export-item-title">导出当前分类</div>
+              <div class="export-item-desc">导出所选分类的所有词汇</div>
+            </div>
+            <div class="export-item" onclick="exportVocab('all')">
+              <div class="export-item-title">导出全部词汇</div>
+              <div class="export-item-desc">导出所有分类的词汇</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="sidebar">
+        <div class="cat-tabs">
+          <button id="tab-Reading" class="active" onclick="setActiveCat('Reading')">Reading</button>
+          <button id="tab-Listening" onclick="setActiveCat('Listening')">Listening</button>
+          <button id="tab-Writing" onclick="setActiveCat('Writing')">Writing</button>
+        </div>
+        <div class="article-list" id="articleList">
+          <div class="empty">
+            <div class="empty-icon">📄</div>
+            <div class="empty-text">加载中...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="vocab-header">
+          <div class="vocab-title" id="vocabTitle">选择文章查看词汇</div>
+          <div class="vocab-subtitle" id="vocabSubtitle">从左侧选择一篇文章开始浏览词汇</div>
+          <div class="vocab-controls">
+            <input type="text" class="search-box" id="vocabSearch" placeholder="搜索单词或释义..." oninput="filterVocab()">
+            <button class="btn" onclick="refreshVocab()">刷新</button>
+          </div>
+        </div>
+        <div class="vocab-list" id="vocabList">
+          <div class="empty">
+            <div class="empty-icon">🔤</div>
+            <div class="empty-text">暂无词汇显示</div>
+            <div class="empty-hint">选择左侧文章查看其词汇内容</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentToken = null;
+    let allArticles = [];
+    let currentArticle = null;
+    let currentVocab = [];
+    let activeCat = 'Reading';
+
+    // Authentication
+    function fetchServerPassword(){ return fetch('/get_password').then(r=>r.json()); }
+    function checkStoredToken(){ const tk=localStorage.getItem('authToken'); if(!tk) return Promise.resolve(false); return fetch('/verify_token',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({token:tk})}).then(r=>r.json()).then(d=>{ if(d.valid){ currentToken=tk; return true;} localStorage.removeItem('authToken'); return false; }).catch(()=>{ localStorage.removeItem('authToken'); return false; }); }
+    function checkPassword(){ const val=document.getElementById('authPassword').value; fetch('/verify_password',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({password:val})}).then(r=>r.json()).then(d=>{ if(d.success){ currentToken=d.token; localStorage.setItem('authToken', d.token); document.getElementById('authOverlay').style.display='none'; document.body.style.overflow=''; loadData(); } else { document.getElementById('authError').style.display=''; document.getElementById('authPassword').value=''; document.getElementById('authPassword').focus(); } }).catch(()=>{ document.getElementById('authError').style.display=''; }); }
+    
+    window.onload = function(){
+      if(document.getElementById('authOverlay')){
+        document.body.style.overflow='hidden';
+        checkStoredToken().then(valid=>{
+          if(valid){
+            document.getElementById('authOverlay').style.display='none';
+            document.body.style.overflow='';
+            loadData();
+          } else {
+            document.getElementById('authPassword').focus();
+            fetchServerPassword();
+          }
+        });
+        return;
+      }
+      loadData();
+    }
+
+    // Category management
+    function setActiveCat(cat) {
+      activeCat = cat;
+      ['Reading','Listening','Writing'].forEach(c=>{
+        const el = document.getElementById('tab-'+c);
+        if(el) el.className = (c===activeCat ? 'active' : '');
+      });
+      renderArticleList();
+      clearVocabDisplay();
+    }
+
+    // Data loading
+    function loadData() {
+      fetch('/intensive_list')
+        .then(r => r.json())
+        .then(d => {
+          allArticles = d.items || [];
+          renderArticleList();
+        })
+        .catch(e => {
+          console.error('Failed to load articles:', e);
+          document.getElementById('articleList').innerHTML = '<div class="empty"><div class="empty-icon">❌</div><div class="empty-text">加载失败</div></div>';
+        });
+    }
+
+    // Article list rendering
+    function renderArticleList() {
+      const container = document.getElementById('articleList');
+      const filtered = allArticles.filter(item => (item.category || 'Reading') === activeCat);
+      
+      if (!filtered.length) {
+        container.innerHTML = '<div class="empty"><div class="empty-icon">📄</div><div class="empty-text">该分类暂无文章</div></div>';
+        return;
+      }
+
+      container.innerHTML = '';
+      filtered.forEach(article => {
+        const div = document.createElement('div');
+        div.className = 'article-item';
+        div.onclick = () => selectArticle(article);
+        
+        div.innerHTML = `
+          <div class="article-title">${escapeHtml(article.title || '未命名')}</div>
+          <div class="article-meta">
+            <span>${(article.created_at || '').slice(0,19).replace('T',' ')}</span>
+            <span class="article-stats">${article.highlight_count || 0} 词汇</span>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    // Article selection
+    function selectArticle(article) {
+      // Update active state
+      document.querySelectorAll('.article-item').forEach(item => item.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+      
+      currentArticle = article;
+      loadArticleVocab(article.id);
+    }
+
+    // Load vocabulary for selected article
+    function loadArticleVocab(articleId) {
+      fetch(`/intensive_article/${articleId}`)
+        .then(r => r.json())
+        .then(d => {
+          if (d.success) {
+            const article = d.article;
+            currentVocab = article.highlights || [];
+            renderVocabDisplay();
+          } else {
+            showVocabError('加载词汇失败');
+          }
+        })
+        .catch(e => {
+          console.error('Failed to load vocabulary:', e);
+          showVocabError('加载词汇失败');
+        });
+    }
+
+    // Vocabulary display
+    function renderVocabDisplay() {
+      const titleEl = document.getElementById('vocabTitle');
+      const subtitleEl = document.getElementById('vocabSubtitle');
+      const listEl = document.getElementById('vocabList');
+      
+      titleEl.textContent = currentArticle.title || '未命名';
+      subtitleEl.textContent = `共 ${currentVocab.length} 个词汇`;
+      
+      if (!currentVocab.length) {
+        listEl.innerHTML = '<div class="empty"><div class="empty-icon">🔤</div><div class="empty-text">该文章暂无词汇</div></div>';
+        return;
+      }
+
+      filterVocab();
+    }
+
+    function filterVocab() {
+      const searchVal = (document.getElementById('vocabSearch').value || '').toLowerCase();
+      const listEl = document.getElementById('vocabList');
+      
+      let filteredVocab = currentVocab.slice().sort((a,b) => a.start - b.start);
+      
+      if (searchVal) {
+        filteredVocab = filteredVocab.filter(item => {
+          const word = (item.text || '').toLowerCase();
+          const meaning = (item.meaning || '').toLowerCase();
+          return word.includes(searchVal) || meaning.includes(searchVal);
+        });
+      }
+
+      if (!filteredVocab.length) {
+        listEl.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">${searchVal ? '未找到匹配词汇' : '暂无词汇'}</div></div>`;
+        return;
+      }
+
+      listEl.innerHTML = '';
+      filteredVocab.forEach(vocab => {
+        const div = document.createElement('div');
+        div.className = 'vocab-item';
+        
+        div.innerHTML = `
+          <div class="vocab-content">
+            <div class="vocab-word">${escapeHtml(vocab.text || '')}</div>
+            <div class="vocab-meaning">${escapeHtml(vocab.meaning || '')}</div>
+          </div>
+          <div class="vocab-actions">
+            <button class="jump-btn" onclick="jumpToArticle('${currentArticle.id}', '${vocab.id}')" title="跳转到原文">↗</button>
+          </div>
+        `;
+        listEl.appendChild(div);
+      });
+    }
+
+    function clearVocabDisplay() {
+      document.getElementById('vocabTitle').textContent = '选择文章查看词汇';
+      document.getElementById('vocabSubtitle').textContent = '从左侧选择一篇文章开始浏览词汇';
+      document.getElementById('vocabList').innerHTML = '<div class="empty"><div class="empty-icon">🔤</div><div class="empty-text">暂无词汇显示</div><div class="empty-hint">选择左侧文章查看其词汇内容</div></div>';
+      document.getElementById('vocabSearch').value = '';
+      currentArticle = null;
+      currentVocab = [];
+      document.querySelectorAll('.article-item').forEach(item => item.classList.remove('active'));
+    }
+
+    function showVocabError(message) {
+      document.getElementById('vocabList').innerHTML = `<div class="empty"><div class="empty-icon">❌</div><div class="empty-text">${message}</div></div>`;
+    }
+
+    function refreshVocab() {
+      if (currentArticle) {
+        loadArticleVocab(currentArticle.id);
+      }
+    }
+
+    // Jump to article
+    function jumpToArticle(articleId, vocabId) {
+      // Store the target highlight in sessionStorage and navigate to intensive page
+      sessionStorage.setItem('jumpToHighlight', vocabId);
+      window.open(`/intensive#article-${articleId}`, '_blank');
+    }
+
+    // Export functionality
+    function toggleExportMenu() {
+      const menu = document.getElementById('exportMenu');
+      menu.classList.toggle('active');
+    }
+
+    // Close export menu when clicking outside
+    document.addEventListener('click', function(e) {
+      const dropdown = document.querySelector('.export-dropdown');
+      if (dropdown && !dropdown.contains(e.target)) {
+        document.getElementById('exportMenu').classList.remove('active');
+      }
+    });
+
+    function exportVocab(type) {
+      document.getElementById('exportMenu').classList.remove('active');
+      
+      let vocabData = [];
+      let filename = '';
+
+      switch(type) {
+        case 'current':
+          if (!currentArticle || !currentVocab.length) {
+            alert('请先选择一篇包含词汇的文章');
+            return;
+          }
+          vocabData = currentVocab;
+          filename = `${currentArticle.title || '文章'}_词汇.csv`;
+          break;
+        case 'category':
+          const categoryArticles = allArticles.filter(item => (item.category || 'Reading') === activeCat);
+          if (!categoryArticles.length) {
+            alert('当前分类暂无文章');
+            return;
+          }
+          // We'll need to fetch all articles in this category
+          exportCategoryVocab(categoryArticles);
+          return;
+        case 'all':
+          if (!allArticles.length) {
+            alert('暂无文章数据');
+            return;
+          }
+          exportAllVocab();
+          return;
+      }
+
+      downloadCSV(vocabData, filename);
+    }
+
+    function exportCategoryVocab(articles) {
+      const filename = `${activeCat}_分类词汇.csv`;
+      const promises = articles.map(article => 
+        fetch(`/intensive_article/${article.id}`)
+          .then(r => r.json())
+          .then(d => d.success ? d.article.highlights || [] : [])
+          .catch(() => [])
+      );
+
+      Promise.all(promises).then(results => {
+        const allVocab = results.flat();
+        downloadCSV(allVocab, filename);
+      });
+    }
+
+    function exportAllVocab() {
+      const filename = '全部词汇.csv';
+      const promises = allArticles.map(article => 
+        fetch(`/intensive_article/${article.id}`)
+          .then(r => r.json())
+          .then(d => d.success ? d.article.highlights || [] : [])
+          .catch(() => [])
+      );
+
+      Promise.all(promises).then(results => {
+        const allVocab = results.flat();
+        downloadCSV(allVocab, filename);
+      });
+    }
+
+    function downloadCSV(vocabData, filename) {
+      if (!vocabData.length) {
+        alert('没有词汇数据可导出');
+        return;
+      }
+
+      // Remove duplicates based on text and meaning
+      const uniqueVocab = [];
+      const seen = new Set();
+      
+      vocabData.forEach(item => {
+        const key = `${item.text}|${item.meaning}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          uniqueVocab.push(item);
+        }
+      });
+
+      // Create CSV content
+      let csvContent = '\uFEFF'; // BOM for proper UTF-8 encoding
+      csvContent += '词汇,释义\n';
+      
+      uniqueVocab.forEach(item => {
+        const word = (item.text || '').replace(/"/g, '""');
+        const meaning = (item.meaning || '').replace(/"/g, '""');
+        csvContent += `"${word}","${meaning}"\n`;
+      });
+
+      // Download file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      alert(`已导出 ${uniqueVocab.length} 个词汇到 ${filename}`);
+    }
+
+    // Utility functions
+    function escapeHtml(text) {
+      return (text || '').replace(/[&<>"']/g, function(match) {
+        const escape = {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        };
+        return escape[match];
+      });
+    }
+  </script>
+</body>
+</html>
