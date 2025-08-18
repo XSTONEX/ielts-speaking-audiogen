@@ -22,11 +22,13 @@ READING_DIR = 'reading_exam'
 INTENSIVE_DIR = 'intensive_articles'
 MESSAGE_BOARD_DIR = 'message_board'
 MESSAGE_IMAGES_DIR = 'message_board/images'
+CHALLENGES_DIR = 'challenges'
 os.makedirs(MOTHER_DIR, exist_ok=True)
 os.makedirs(COMBINED_DIR, exist_ok=True)
 os.makedirs(INTENSIVE_DIR, exist_ok=True)
 os.makedirs(MESSAGE_BOARD_DIR, exist_ok=True)
 os.makedirs(MESSAGE_IMAGES_DIR, exist_ok=True)
+os.makedirs(CHALLENGES_DIR, exist_ok=True)
 
 # Token管理
 def load_tokens():
@@ -1086,9 +1088,23 @@ def delete_message(message_id):
         if message_to_delete.get('user', {}).get('username') != username:
             return jsonify({'error': '只能删除自己的消息'}), 403
         
+        # 检查是否有关联的挑战需要删除
+        challenge_id = None
+        if (message_to_delete.get('type') == 'mixed_content' and 
+            message_to_delete.get('content', {}).get('challenge')):
+            challenge_id = message_to_delete['content']['challenge'].get('id')
+        
         # 删除消息
         messages.pop(message_index)
         save_messages(messages)
+        
+        # 删除关联的挑战记录
+        if challenge_id:
+            try:
+                delete_challenge_record(challenge_id)
+            except Exception as e:
+                # 挑战删除失败不影响消息删除，只记录错误
+                print(f"删除挑战记录失败: {e}")
         
         return jsonify({'success': True})
         
@@ -1225,6 +1241,387 @@ def get_articles_list_for_share():
                 continue
                 
         return jsonify({'success': True, 'categories': categories})
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ==================== 挑战系统相关API ====================
+
+def _challenge_file(challenge_id):
+    """获取挑战文件路径"""
+    return os.path.join(CHALLENGES_DIR, f"{challenge_id}.json")
+
+def verify_token_get_username(token):
+    """从token中获取用户名"""
+    if not token or not is_token_valid(token):
+        return None
+    
+    tokens = load_tokens()
+    return tokens.get(token, {}).get('username')
+
+def delete_challenge_record(challenge_id):
+    """删除挑战记录文件"""
+    challenge_path = _challenge_file(challenge_id)
+    if os.path.exists(challenge_path):
+        os.remove(challenge_path)
+        return True
+    return False
+
+def extract_vocabulary_from_articles(article_ids, word_count):
+    """从指定文章中提取词汇，优化随机算法"""
+    import random
+    import hashlib
+    from collections import defaultdict
+    
+    # 按文章分组收集词汇
+    articles_vocab = defaultdict(list)
+    
+    for article_id in article_ids:
+        article_path = _article_path(article_id)
+        if os.path.exists(article_path):
+            try:
+                with open(article_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                highlights = data.get('highlights', [])
+                for highlight in highlights:
+                    vocab_item = {
+                        'word': highlight.get('text', '').strip(),
+                        'meaning': highlight.get('meaning', '').strip(),
+                        'article_id': article_id,
+                        'article_title': data.get('title', ''),
+                        'highlight_id': highlight.get('id')
+                    }
+                    if vocab_item['word'] and vocab_item['meaning']:
+                        articles_vocab[article_id].append(vocab_item)
+            except Exception as e:
+                continue
+    
+    # 智能去重：基于词汇内容而不仅仅是文本
+    unique_vocab = []
+    seen_items = set()
+    
+    for article_id, vocabs in articles_vocab.items():
+        # 对每篇文章的词汇进行随机打乱
+        random.shuffle(vocabs)
+        
+        for vocab in vocabs:
+            # 生成基于词汇和含义的唯一标识
+            word_lower = vocab['word'].lower().strip()
+            meaning_lower = vocab['meaning'].lower().strip()
+            
+            # 创建更严格的去重机制
+            vocab_hash = hashlib.md5(f"{word_lower}::{meaning_lower}".encode()).hexdigest()
+            
+            if vocab_hash not in seen_items:
+                seen_items.add(vocab_hash)
+                unique_vocab.append(vocab)
+    
+    # 如果词汇数量不足，返回所有可用词汇
+    if len(unique_vocab) <= word_count:
+        return unique_vocab
+    
+    # 多重随机策略选择词汇
+    selected_vocab = []
+    
+    # 策略1：确保每篇文章至少有一个词汇被选中（如果可能）
+    article_representation = {}
+    for vocab in unique_vocab:
+        aid = vocab['article_id']
+        if aid not in article_representation:
+            article_representation[aid] = []
+        article_representation[aid].append(vocab)
+    
+    # 从每篇文章随机选择1-2个词汇作为基础
+    for aid, vocabs in article_representation.items():
+        if len(selected_vocab) >= word_count:
+            break
+        
+        # 根据剩余配额决定从这篇文章选择多少个
+        remaining = word_count - len(selected_vocab)
+        from_this_article = min(len(vocabs), max(1, remaining // len(article_representation)))
+        
+        # 随机选择
+        selected_from_article = random.sample(vocabs, min(from_this_article, len(vocabs)))
+        selected_vocab.extend(selected_from_article)
+    
+    # 策略2：如果还需要更多词汇，从剩余池中随机选择
+    if len(selected_vocab) < word_count:
+        remaining_vocab = [v for v in unique_vocab if v not in selected_vocab]
+        if remaining_vocab:
+            additional_needed = word_count - len(selected_vocab)
+            additional = random.sample(remaining_vocab, 
+                                     min(additional_needed, len(remaining_vocab)))
+            selected_vocab.extend(additional)
+    
+    # 策略3：最终随机打乱顺序
+    random.shuffle(selected_vocab)
+    
+    # 返回精确数量的词汇
+    return selected_vocab[:word_count]
+
+@app.route('/api/get_users_list', methods=['GET'])
+def get_users_list():
+    """获取用户列表供@功能使用"""
+    try:
+        users = load_users()
+        user_list = []
+        for username, user_data in users.items():
+            user_list.append({
+                'username': username,
+                'display_name': user_data.get('display_name', username),
+                'avatar': user_data.get('avatar', 'avatar_admin.svg')
+            })
+        return jsonify({'success': True, 'users': user_list})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/create_challenge', methods=['POST'])
+def create_challenge():
+    """创建词汇挑战"""
+    try:
+        # 验证token
+        auth_header = request.headers.get('Authorization', '')
+        if not auth_header.startswith('Bearer '):
+            return jsonify({'error': '未授权'}), 401
+        
+        token = auth_header.split(' ')[1]
+        username = verify_token_get_username(token)
+        if not username:
+            return jsonify({'error': '无效token'}), 401
+        
+        data = request.json
+        article_ids = data.get('article_ids', [])
+        word_count = int(data.get('word_count', 10))
+        mentioned_users = data.get('mentioned_users', [])  # @的用户列表
+        title = data.get('title', '词汇挑战').strip()
+        description = data.get('description', '').strip()
+        
+        if not article_ids:
+            return jsonify({'error': '请选择至少一篇文章'}), 400
+        
+        if word_count < 1 or word_count > 50:
+            return jsonify({'error': '词汇数量应在1-50之间'}), 400
+        
+        # 提取词汇
+        vocabulary = extract_vocabulary_from_articles(article_ids, word_count)
+        
+        if not vocabulary:
+            return jsonify({'error': '从选中的文章中未找到足够的词汇'}), 400
+        
+        # 创建挑战
+        challenge_id = str(uuid.uuid4())
+        challenge_data = {
+            'id': challenge_id,
+            'title': title,
+            'description': description,
+            'creator': username,
+            'created_at': datetime.now().isoformat(),
+            'article_ids': article_ids,
+            'vocabulary': vocabulary,
+            'mentioned_users': mentioned_users,
+            'participants': {},  # username: {score, completed_at, answers: []}
+            'status': 'active'  # active, completed
+        }
+        
+        # 保存挑战数据
+        with open(_challenge_file(challenge_id), 'w', encoding='utf-8') as f:
+            json.dump(challenge_data, f, ensure_ascii=False, indent=2)
+        
+        return jsonify({
+            'success': True,
+            'challenge_id': challenge_id,
+            'vocabulary_count': len(vocabulary)
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/get_challenge/<challenge_id>', methods=['GET'])
+def get_challenge(challenge_id):
+    """获取挑战详情"""
+    try:
+        challenge_path = _challenge_file(challenge_id)
+        if not os.path.exists(challenge_path):
+            return jsonify({'error': '挑战不存在'}), 404
+        
+        with open(challenge_path, 'r', encoding='utf-8') as f:
+            challenge_data = json.load(f)
+        
+        return jsonify({'success': True, 'challenge': challenge_data})
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/participate_challenge', methods=['POST'])
+def participate_challenge():
+    """参与挑战（提交答案）"""
+    try:
+        # 验证token
+        auth_header = request.headers.get('Authorization', '')
+        if not auth_header.startswith('Bearer '):
+            return jsonify({'error': '未授权'}), 401
+        
+        token = auth_header.split(' ')[1]
+        username = verify_token_get_username(token)
+        if not username:
+            return jsonify({'error': '无效token'}), 401
+        
+        data = request.json
+        challenge_id = data.get('challenge_id')
+        answers = data.get('answers', [])  # [{question_index, selected_option, time_taken, is_correct}]
+        
+        challenge_path = _challenge_file(challenge_id)
+        if not os.path.exists(challenge_path):
+            return jsonify({'error': '挑战不存在'}), 404
+        
+        # 加载挑战数据
+        with open(challenge_path, 'r', encoding='utf-8') as f:
+            challenge_data = json.load(f)
+        
+        # 计算分数
+        total_questions = len(challenge_data['vocabulary'])
+        correct_count = sum(1 for answer in answers if answer.get('is_correct', False))
+        
+        # 时间奖励计算：每个问题最多10秒，用时越少奖励越多
+        time_bonus = 0
+        for answer in answers:
+            time_taken = answer.get('time_taken', 10)  # 默认10秒
+            if answer.get('is_correct', False):
+                # 正确答案才有时间奖励，1-10秒对应10-1分的时间奖励
+                time_bonus += max(1, 11 - min(10, time_taken))
+        
+        # 总分 = (正确数/总数 * 70) + (时间奖励 * 30 / (总数 * 10))
+        accuracy_score = (correct_count / total_questions) * 70
+        time_score = (time_bonus * 30) / (total_questions * 10)
+        total_score = round(accuracy_score + time_score, 2)
+        
+        # 更新参与者数据
+        challenge_data['participants'][username] = {
+            'score': total_score,
+            'correct_count': correct_count,
+            'total_questions': total_questions,
+            'completed_at': datetime.now().isoformat(),
+            'answers': answers,
+            'time_bonus': time_bonus
+        }
+        
+        # 检查是否所有被@的用户都已完成
+        if challenge_data.get('mentioned_users'):
+            all_completed = all(
+                user in challenge_data['participants'] 
+                for user in challenge_data['mentioned_users']
+            )
+            if all_completed:
+                challenge_data['status'] = 'completed'
+        
+        # 保存更新后的挑战数据
+        with open(challenge_path, 'w', encoding='utf-8') as f:
+            json.dump(challenge_data, f, ensure_ascii=False, indent=2)
+        
+        return jsonify({
+            'success': True,
+            'score': total_score,
+            'correct_count': correct_count,
+            'total_questions': total_questions,
+            'ranking_ready': challenge_data['status'] == 'completed' or not challenge_data.get('mentioned_users')
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/get_challenge_ranking/<challenge_id>', methods=['GET'])
+def get_challenge_ranking(challenge_id):
+    """获取挑战排名"""
+    try:
+        challenge_path = _challenge_file(challenge_id)
+        if not os.path.exists(challenge_path):
+            return jsonify({'error': '挑战不存在'}), 404
+        
+        with open(challenge_path, 'r', encoding='utf-8') as f:
+            challenge_data = json.load(f)
+        
+        # 获取用户信息
+        users = load_users()
+        
+        # 构建排名数据
+        ranking = []
+        for username, result in challenge_data['participants'].items():
+            user_info = users.get(username, {})
+            ranking.append({
+                'username': username,
+                'display_name': user_info.get('display_name', username),
+                'avatar': user_info.get('avatar', 'avatar_admin.svg'),
+                'score': result['score'],
+                'correct_count': result['correct_count'],
+                'total_questions': result['total_questions'],
+                'completed_at': result['completed_at']
+            })
+        
+        # 按分数排序
+        ranking.sort(key=lambda x: x['score'], reverse=True)
+        
+        return jsonify({
+            'success': True,
+            'ranking': ranking,
+            'challenge': {
+                'title': challenge_data['title'],
+                'description': challenge_data['description'],
+                'status': challenge_data['status'],
+                'vocabulary_count': len(challenge_data['vocabulary'])
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/cleanup_orphaned_challenges', methods=['POST'])
+def cleanup_orphaned_challenges():
+    """清理孤立的挑战记录（没有对应帖子的挑战）"""
+    try:
+        # 验证管理员权限
+        auth_header = request.headers.get('Authorization', '')
+        if not auth_header.startswith('Bearer '):
+            return jsonify({'error': '未授权'}), 401
+        
+        token = auth_header.split(' ')[1]
+        username = verify_token_get_username(token)
+        if not username:
+            return jsonify({'error': '无效token'}), 401
+        
+        # 获取所有消息中的挑战ID
+        messages = load_messages()
+        active_challenge_ids = set()
+        
+        for message in messages:
+            if (message.get('type') == 'mixed_content' and 
+                message.get('content', {}).get('challenge')):
+                challenge_id = message['content']['challenge'].get('id')
+                if challenge_id:
+                    active_challenge_ids.add(challenge_id)
+        
+        # 检查挑战文件夹中的所有挑战
+        orphaned_challenges = []
+        if os.path.exists(CHALLENGES_DIR):
+            for filename in os.listdir(CHALLENGES_DIR):
+                if filename.endswith('.json'):
+                    challenge_id = filename.replace('.json', '')
+                    if challenge_id not in active_challenge_ids:
+                        orphaned_challenges.append(challenge_id)
+        
+        # 删除孤立的挑战记录
+        deleted_count = 0
+        for challenge_id in orphaned_challenges:
+            try:
+                if delete_challenge_record(challenge_id):
+                    deleted_count += 1
+            except Exception as e:
+                print(f"删除孤立挑战记录失败 {challenge_id}: {e}")
+        
+        return jsonify({
+            'success': True,
+            'orphaned_count': len(orphaned_challenges),
+            'deleted_count': deleted_count
+        })
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500

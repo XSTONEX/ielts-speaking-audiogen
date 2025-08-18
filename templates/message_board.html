@@ -333,6 +333,8 @@
       align-items: center; 
       justify-content: center; 
       z-index: 1000; 
+      overflow: hidden; /* 防止背景滚动 */
+      touch-action: none; /* 防止触摸滚动背景 */
     }
     
     .modal { 
@@ -653,15 +655,334 @@
       box-shadow: 0 8px 32px rgba(0,0,0,0.5); 
     }
     
-    .image-modal .close-hint { 
-      position: absolute; 
-      top: 20px; 
-      right: 20px; 
-      color: white; 
-      font-size: 14px; 
-      background: rgba(0,0,0,0.5); 
-      padding: 8px 12px; 
-      border-radius: 20px; 
+        .image-modal .close-hint {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      color: white;
+      font-size: 14px;
+      background: rgba(0,0,0,0.5);
+      padding: 8px 12px;
+      border-radius: 20px;
+    }
+    
+    /* 挑战相关样式 */
+    .word-count-btn {
+      padding: 8px 16px;
+      border: 2px solid #e5e7eb;
+      background: white;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s;
+      color: #6b7280;
+    }
+    
+    .word-count-btn:hover {
+      border-color: #4a90e2;
+      color: #4a90e2;
+    }
+    
+    .word-count-btn.active {
+      background: #4a90e2;
+      border-color: #4a90e2;
+      color: white;
+    }
+    
+    .challenge-article-item, .challenge-user-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-bottom: 4px;
+    }
+    
+    .challenge-article-item:hover, .challenge-user-item:hover {
+      background: #f3f4f6;
+    }
+    
+    .challenge-article-item.selected, .challenge-user-item.selected {
+      background: #e0f2fe;
+      border: 1px solid #0284c7;
+    }
+    
+    .challenge-article-checkbox, .challenge-user-checkbox {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #d1d5db;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    
+    .challenge-article-item.selected .challenge-article-checkbox,
+    .challenge-user-item.selected .challenge-user-checkbox {
+      background: #0284c7;
+      border-color: #0284c7;
+      color: white;
+    }
+    
+    .challenge-article-info, .challenge-user-info {
+      flex: 1;
+    }
+    
+    .challenge-article-title, .challenge-user-name {
+      font-weight: 600;
+      color: #1f2937;
+      font-size: 14px;
+    }
+    
+    .challenge-article-meta, .challenge-user-meta {
+      color: #6b7280;
+      font-size: 12px;
+      margin-top: 2px;
+    }
+    
+    .challenge-option {
+      padding: 16px;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      background: white;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      font-size: 16px;
+      font-weight: 500;
+      color: #374151;
+    }
+    
+    .challenge-option:hover {
+      border-color: #4a90e2;
+      background: #f0f9ff;
+    }
+    
+    .challenge-option.correct {
+      border-color: #10b981;
+      background: #d1fae5;
+      color: #065f46;
+    }
+    
+    .challenge-option.incorrect {
+      border-color: #ef4444;
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    
+    .challenge-option.selected {
+      border-color: #4a90e2;
+      background: #dbeafe;
+      color: #1e40af;
+    }
+    
+    .challenge-card {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      border: 1px solid #f59e0b;
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .challenge-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(245, 158, 11, 0.15);
+    }
+    
+    .challenge-card .card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    
+    .challenge-card .card-icon {
+      font-size: 20px;
+    }
+    
+    .challenge-card .card-title {
+      font-weight: 600;
+      color: #92400e;
+      font-size: 16px;
+    }
+    
+    .challenge-card .card-desc {
+      color: #a16207;
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+    
+    .challenge-card .card-meta {
+      color: #d97706;
+      font-size: 12px;
+    }
+    
+    .ranking-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      background: white;
+      border: 1px solid #e5e7eb;
+      transition: all 0.2s;
+    }
+    
+    .ranking-item:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .ranking-item.rank-1 {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      border-color: #f59e0b;
+    }
+    
+    .ranking-item.rank-2 {
+      background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+      border-color: #9ca3af;
+    }
+    
+    .ranking-item.rank-3 {
+      background: linear-gradient(135deg, #fdf4ff 0%, #fae8ff 100%);
+      border-color: #c084fc;
+    }
+    
+    .ranking-number {
+      font-size: 24px;
+      font-weight: 700;
+      color: #374151;
+      min-width: 40px;
+      text-align: center;
+    }
+    
+    .ranking-item.rank-1 .ranking-number {
+      color: #d97706;
+    }
+    
+    .ranking-item.rank-2 .ranking-number {
+      color: #6b7280;
+    }
+    
+    .ranking-item.rank-3 .ranking-number {
+      color: #a855f7;
+    }
+    
+    .ranking-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #e5e7eb;
+    }
+    
+    .ranking-info {
+      flex: 1;
+    }
+    
+    .ranking-name {
+      font-weight: 600;
+      color: #1f2937;
+      font-size: 16px;
+      margin-bottom: 4px;
+    }
+    
+    .ranking-score {
+      color: #6b7280;
+      font-size: 14px;
+    }
+    
+    .ranking-points {
+      font-size: 20px;
+      font-weight: 700;
+      color: #4a90e2;
+    }
+    
+    /* 挑战提醒条样式 */
+    .challenge-alert {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      border: 1px solid #f59e0b;
+      border-radius: 0 0 16px 16px;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+      position: relative;
+      z-index: 10;
+    }
+    
+    .alert-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+    }
+    
+    .alert-icon {
+      font-size: 24px;
+      animation: gentle-bounce 2s ease-in-out infinite;
+    }
+    
+    @keyframes gentle-bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+    
+    .alert-text {
+      color: #92400e;
+      font-weight: 600;
+      font-size: 15px;
+    }
+    
+    .alert-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .alert-btn-primary {
+      background: #f59e0b;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .alert-btn-primary:hover {
+      background: #d97706;
+      transform: translateY(-1px);
+    }
+    
+    .alert-btn-close {
+      background: none;
+      border: none;
+      color: #92400e;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    
+    .alert-btn-close:hover {
+      background: rgba(146, 64, 14, 0.1);
+      transform: scale(1.1);
     }
     
     @media (max-width: 768px) {
@@ -674,6 +995,28 @@
         border-radius: 0; 
         min-height: 100vh; 
         box-shadow: none;
+      }
+      
+      /* 挑战提醒条移动端适配 */
+      .challenge-alert {
+        padding: 12px 16px;
+        flex-direction: column;
+        gap: 12px;
+        border-radius: 0;
+      }
+      
+      .alert-content {
+        justify-content: center;
+        text-align: center;
+      }
+      
+      .alert-text {
+        font-size: 14px;
+      }
+      
+      .alert-actions {
+        width: 100%;
+        justify-content: center;
       }
       
       .header {
@@ -786,6 +1129,165 @@
         grid-template-columns: 1fr 1fr;
         gap: 8px;
         width: 100%;
+      }
+      
+      /* 挑战功能移动端适配 */
+      .word-count-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+        border-radius: 16px;
+      }
+      
+      .challenge-article-item, .challenge-user-item {
+        padding: 6px 10px;
+        margin-bottom: 3px;
+      }
+      
+      .challenge-article-title, .challenge-user-name {
+        font-size: 13px;
+      }
+      
+      .challenge-article-meta, .challenge-user-meta {
+        font-size: 11px;
+      }
+      
+      .challenge-article-checkbox, .challenge-user-checkbox {
+        width: 16px;
+        height: 16px;
+      }
+      
+      .challenge-option {
+        padding: 12px;
+        font-size: 14px;
+        border-radius: 10px;
+      }
+      
+      .challenge-card {
+        padding: 12px;
+        margin-top: 8px;
+      }
+      
+      .challenge-card .card-title {
+        font-size: 14px;
+      }
+      
+      .challenge-card .card-desc {
+        font-size: 12px;
+      }
+      
+      .challenge-card .card-meta {
+        font-size: 11px;
+      }
+      
+      .ranking-item {
+        padding: 12px;
+        margin-bottom: 8px;
+        gap: 12px;
+      }
+      
+      .ranking-number {
+        font-size: 20px;
+        min-width: 32px;
+      }
+      
+      .ranking-avatar {
+        width: 40px;
+        height: 40px;
+      }
+      
+      .ranking-name {
+        font-size: 14px;
+      }
+      
+      .ranking-score {
+        font-size: 12px;
+      }
+      
+      .ranking-points {
+        font-size: 16px;
+      }
+      
+      /* 挑战游戏模态框移动端适配 */
+      #challengeGameModal .modal {
+        max-width: 95vw;
+        max-height: 95vh;
+        margin: 0 8px;
+      }
+      
+      #challengeGameModal .modal-body {
+        padding: 20px;
+      }
+      
+      #challengeTimer {
+        font-size: 20px;
+        margin-bottom: 16px;
+      }
+      
+      #challengeQuestion {
+        font-size: 16px;
+        min-height: 50px;
+        padding: 16px;
+        margin-bottom: 20px;
+      }
+      
+      #challengeOptions {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+      
+      .challenge-option {
+        padding: 14px;
+        font-size: 15px;
+      }
+      
+      #challengeProgress {
+        font-size: 12px;
+      }
+      
+      /* 挑战创建模态框移动端适配 */
+      #challengeModal .modal {
+        max-width: 95vw;
+        max-height: 90vh;
+        margin: 0 8px;
+      }
+      
+      #challengeModal .modal-body {
+        padding: 16px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
+      }
+      
+      #challengeTitle, #challengeDescription {
+        font-size: 14px;
+        padding: 8px 10px;
+      }
+      
+      #challengeDescription {
+        min-height: 50px;
+      }
+      
+      #challengeArticleList, #challengeUserList {
+        max-height: 150px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
+      }
+      
+      /* 挑战排名模态框移动端适配 */
+      #challengeRankingModal .modal {
+        max-width: 95vw;
+        max-height: 90vh;
+        margin: 0 8px;
+      }
+      
+      #challengeRankingModal .modal-body {
+        padding: 16px;
+      }
+      
+      #challengeInfo {
+        font-size: 13px;
+        padding: 12px;
       }
       
       .type-btn {
@@ -1017,6 +1519,154 @@
         display: none;
       }
       
+      /* 挑战功能小屏幕适配 */
+      .word-count-btn {
+        padding: 5px 10px;
+        font-size: 11px;
+      }
+      
+      .challenge-article-item, .challenge-user-item {
+        padding: 5px 8px;
+      }
+      
+      .challenge-article-title, .challenge-user-name {
+        font-size: 12px;
+      }
+      
+      .challenge-article-meta, .challenge-user-meta {
+        font-size: 10px;
+      }
+      
+      .challenge-option {
+        padding: 10px;
+        font-size: 13px;
+      }
+      
+      .challenge-card {
+        padding: 10px;
+      }
+      
+      .challenge-card .card-title {
+        font-size: 13px;
+      }
+      
+      .challenge-card .card-desc {
+        font-size: 11px;
+      }
+      
+      .challenge-card .card-meta {
+        font-size: 10px;
+      }
+      
+      .ranking-item {
+        padding: 10px;
+        gap: 10px;
+      }
+      
+      .ranking-number {
+        font-size: 18px;
+        min-width: 28px;
+      }
+      
+      .ranking-avatar {
+        width: 36px;
+        height: 36px;
+      }
+      
+      .ranking-name {
+        font-size: 13px;
+      }
+      
+      .ranking-score {
+        font-size: 11px;
+      }
+      
+      .ranking-points {
+        font-size: 14px;
+      }
+      
+      /* 挑战游戏模态框小屏幕适配 */
+      #challengeGameModal .modal {
+        max-width: 98vw;
+        max-height: 98vh;
+        margin: 0 4px;
+      }
+      
+      #challengeGameModal .modal-body {
+        padding: 16px;
+      }
+      
+      #challengeTimer {
+        font-size: 18px;
+        margin-bottom: 12px;
+      }
+      
+      #challengeQuestion {
+        font-size: 14px;
+        min-height: 40px;
+        padding: 12px;
+        margin-bottom: 16px;
+      }
+      
+      #challengeOptions {
+        gap: 6px;
+      }
+      
+      .challenge-option {
+        padding: 12px;
+        font-size: 14px;
+      }
+      
+      #challengeProgress {
+        font-size: 11px;
+      }
+      
+      /* 挑战创建模态框小屏幕适配 */
+      #challengeModal .modal {
+        max-width: 98vw;
+        max-height: 95vh;
+        margin: 0 4px;
+      }
+      
+      #challengeModal .modal-body {
+        padding: 12px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
+      }
+      
+      #challengeTitle, #challengeDescription {
+        font-size: 13px;
+        padding: 6px 8px;
+      }
+      
+      #challengeDescription {
+        min-height: 40px;
+      }
+      
+      #challengeArticleList, #challengeUserList {
+        max-height: 120px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
+      }
+      
+      /* 挑战排名模态框小屏幕适配 */
+      #challengeRankingModal .modal {
+        max-width: 98vw;
+        max-height: 95vh;
+        margin: 0 4px;
+      }
+      
+      #challengeRankingModal .modal-body {
+        padding: 12px;
+      }
+      
+      #challengeInfo {
+        font-size: 12px;
+        padding: 10px;
+      }
+      
       .form-btn {
         padding: 8px 12px;
         font-size: 13px;
@@ -1083,6 +1733,20 @@
 </head>
 <body>
   <div class="container">
+    <!-- 挑战提醒条 -->
+    <div id="challengeAlert" class="challenge-alert" style="display: none;">
+      <div class="alert-content">
+        <span class="alert-icon">🏆</span>
+        <div class="alert-text">
+          <span id="alertMessage">您有新的词汇挑战等待完成</span>
+        </div>
+      </div>
+      <div class="alert-actions">
+        <button class="alert-btn-primary" onclick="goToChallengePost()">查看挑战</button>
+        <button class="alert-btn-close" onclick="dismissAlert()">×</button>
+      </div>
+    </div>
+    
     <div class="header">
       <h1>📚 学习交流小天地</h1>
       <div class="header-actions">
@@ -1122,6 +1786,10 @@
             <button class="type-btn" onclick="showImageUploader()">
               <span>🖼️</span>
               <span>添加图片</span>
+            </button>
+            <button class="type-btn" onclick="showChallengeCreator()">
+              <span>🏆</span>
+              <span>发起挑战</span>
             </button>
           </div>
           
@@ -1212,6 +1880,98 @@
     </div>
   </div>
   
+  <!-- 挑战创建模态框 -->
+  <div class="modal-overlay" id="challengeModal">
+    <div class="modal large-modal">
+      <div class="modal-header">
+        <h3>发起词汇挑战</h3>
+        <button class="close-btn" onclick="closeModal('challengeModal')">×</button>
+      </div>
+      <div class="modal-body" style="flex-direction: column;">
+        <div style="padding: 20px;">
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #1f2937;">挑战标题</label>
+            <input type="text" id="challengeTitle" placeholder="输入挑战标题..." style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; box-sizing: border-box;">
+          </div>
+          
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #1f2937;">挑战描述（可选）</label>
+            <textarea id="challengeDescription" placeholder="描述一下这个挑战..." style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; min-height: 60px; resize: vertical; box-sizing: border-box;"></textarea>
+          </div>
+          
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #1f2937;">选择文章</label>
+            <div id="challengeArticleList" style="max-height: 200px; overflow-y: auto; -webkit-overflow-scrolling: touch; border: 1px solid #e5e7eb; border-radius: 8px; padding: 8px; touch-action: pan-y;">
+              <div style="text-align: center; padding: 20px; color: #6b7280;">加载中...</div>
+            </div>
+          </div>
+          
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #1f2937;">词汇数量</label>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <button class="word-count-btn active" data-count="5" onclick="selectWordCount(5)">5个</button>
+              <button class="word-count-btn" data-count="10" onclick="selectWordCount(10)">10个</button>
+              <button class="word-count-btn" data-count="15" onclick="selectWordCount(15)">15个</button>
+              <span style="margin: 0 8px; color: #6b7280;">或</span>
+              <input type="number" id="customWordCount" placeholder="自定义" min="1" max="50" style="width: 80px; padding: 6px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px;">
+            </div>
+          </div>
+          
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #1f2937;">@ 用户（可选）</label>
+            <div id="challengeUserList" style="max-height: 120px; overflow-y: auto; -webkit-overflow-scrolling: touch; border: 1px solid #e5e7eb; border-radius: 8px; padding: 8px; touch-action: pan-y;">
+              <div style="text-align: center; padding: 20px; color: #6b7280;">加载中...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn secondary" onclick="closeModal('challengeModal')">取消</button>
+        <button class="modal-btn primary" onclick="createChallenge()">创建挑战</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 挑战游戏模态框 -->
+  <div class="modal-overlay" id="challengeGameModal" style="background: rgba(0,0,0,0.9);">
+    <div class="modal" style="max-width: 600px; max-height: 90vh;">
+      <div class="modal-header">
+        <h3 id="challengeGameTitle">词汇挑战</h3>
+        <div id="challengeProgress" style="color: #6b7280; font-size: 14px;"></div>
+      </div>
+      <div class="modal-body" style="flex-direction: column; padding: 30px;">
+        <div id="challengeTimer" style="text-align: center; margin-bottom: 20px; font-size: 24px; font-weight: 700; color: #ef4444;"></div>
+        
+        <div id="challengeQuestion" style="text-align: center; margin-bottom: 30px; font-size: 20px; font-weight: 600; color: #1f2937; min-height: 60px; display: flex; align-items: center; justify-content: center; background: #f8fafc; border-radius: 12px; padding: 20px;"></div>
+        
+        <div id="challengeOptions" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <!-- 选项将通过JavaScript动态生成 -->
+        </div>
+        
+        <div id="challengeResult" style="display: none; text-align: center; margin-top: 20px; padding: 20px; border-radius: 12px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 挑战排名模态框 -->
+  <div class="modal-overlay" id="challengeRankingModal">
+    <div class="modal large-modal">
+      <div class="modal-header">
+        <h3 id="rankingTitle">挑战排名</h3>
+        <button class="close-btn" onclick="closeModal('challengeRankingModal')">×</button>
+      </div>
+      <div class="modal-body" style="flex-direction: column; padding: 20px;">
+        <div id="challengeInfo" style="text-align: center; margin-bottom: 20px; padding: 16px; background: #f8fafc; border-radius: 12px; color: #6b7280;"></div>
+        <div id="rankingList" style="flex: 1; overflow-y: auto;">
+          <!-- 排名将通过JavaScript动态生成 -->
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn primary" onclick="closeModal('challengeRankingModal')">关闭</button>
+      </div>
+    </div>
+  </div>
+  
   <!-- 图片放大模态框 -->
   <div class="image-modal" id="imageModal" onclick="closeImageModal()">
     <div class="close-hint">点击任意位置关闭</div>
@@ -1227,8 +1987,22 @@
     let selectedItems = {
       audios: [],
       articles: [],
-      images: []
+      images: [],
+      challenge: null
     };
+    
+    // 挑战相关变量
+    let challengeData = {
+      selectedArticles: [],
+      selectedUsers: [],
+      wordCount: 5
+    };
+    let currentChallenge = null;
+    let currentChallengeAnswers = [];
+    let currentQuestionIndex = 0;
+    let challengeTimer = null;
+    let questionStartTime = 0;
+    let pendingChallenges = [];
     
     // 检查登录状态
     function checkStoredToken(){
@@ -1274,6 +2048,7 @@
         // 登录成功后继续初始化
         showUserInfo();
         loadPosts();
+        checkPendingChallenges();
       });
     };
     
@@ -1304,7 +2079,8 @@
       selectedItems = {
         audios: [],
         articles: [],
-        images: []
+        images: [],
+        challenge: null
       };
     }
     
@@ -1325,12 +2101,17 @@
       selectedItems.images.forEach((image, index) => {
         extraArea.appendChild(createImagePreview(image, index));
       });
+      
+      // 显示挑战内容
+      if (selectedItems.challenge) {
+        extraArea.appendChild(createChallengePreview(selectedItems.challenge, 0));
+      }
     }
     
     // 提交帖子
     function submitPost() {
       const content = document.getElementById('postContent').value.trim();
-      if (!content && selectedItems.audios.length === 0 && selectedItems.articles.length === 0 && selectedItems.images.length === 0) {
+      if (!content && selectedItems.audios.length === 0 && selectedItems.articles.length === 0 && selectedItems.images.length === 0 && !selectedItems.challenge) {
         alert('请输入内容或添加分享内容');
         return;
       }
@@ -1341,7 +2122,8 @@
           text: content,
           audios: selectedItems.audios,
           articles: selectedItems.articles,
-          images: selectedItems.images
+          images: selectedItems.images,
+          challenge: selectedItems.challenge
         }
       };
       
@@ -1481,13 +2263,21 @@
     
     // 移除选中的项目
     function removeSelectedItem(type, index) {
-      selectedItems[type].splice(index, 1);
+      if (type === 'challenge') {
+        selectedItems.challenge = null;
+      } else {
+        selectedItems[type].splice(index, 1);
+      }
       updateContentPreview();
     }
     
     // 显示音频选择器
     function showAudioSelector() {
       document.getElementById('audioModal').style.display = 'flex';
+      // 阻止背景滚动
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
       resetAudioModal();
       loadAudioList();
     }
@@ -1495,6 +2285,10 @@
     // 显示文章选择器
     function showArticleSelector() {
       document.getElementById('articleModal').style.display = 'flex';
+      // 阻止背景滚动
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
       resetArticleModal();
       loadArticleList();
     }
@@ -1520,6 +2314,10 @@
     // 关闭模态框
     function closeModal(modalId) {
       document.getElementById(modalId).style.display = 'none';
+      // 恢复背景滚动
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
     }
     
     // 加载音频列表
@@ -1945,6 +2743,7 @@
     function createPostElement(post) {
       const postEl = document.createElement('div');
       postEl.className = 'post-card';
+      postEl.setAttribute('data-post-id', post.id);
       
       const header = document.createElement('div');
       header.className = 'post-header';
@@ -2055,6 +2854,14 @@
             content.appendChild(imageDiv);
             hasContent = true;
           });
+        }
+        
+        // 挑战内容
+        if (post.content.challenge) {
+          const challengeCard = createChallengeCard(post.content.challenge);
+          if (hasContent) challengeCard.classList.add('content-section');
+          content.appendChild(challengeCard);
+          hasContent = true;
         }
       } else if (post.type === 'text') {
         content.innerHTML = `<div class="text-content">${escapeHtml(post.content.text)}</div>        `;
@@ -2249,8 +3056,31 @@
       .then(r => r.json())
       .then(data => {
         if (data.success) {
-          // 重新加载帖子列表
-          loadPosts();
+          // 找到并移除对应的帖子元素，添加删除动画
+          const postElement = document.querySelector(`[data-post-id="${postId}"]`);
+          if (postElement) {
+            // 添加删除动画
+            postElement.style.transition = 'all 0.3s ease';
+            postElement.style.opacity = '0';
+            postElement.style.transform = 'translateX(-100px)';
+            
+            setTimeout(() => {
+              postElement.remove();
+              
+              // 检查是否还有其他帖子
+              const remainingPosts = document.querySelectorAll('.post-card');
+              if (remainingPosts.length === 0) {
+                // 如果没有帖子了，显示空状态
+                const emptyState = document.getElementById('emptyState');
+                if (emptyState) {
+                  emptyState.style.display = 'block';
+                }
+              }
+            }, 300);
+          } else {
+            // 如果找不到元素，重新加载整个列表
+            loadPosts();
+          }
         } else {
           alert('删除失败：' + (data.error || '未知错误'));
         }
@@ -2281,6 +3111,837 @@
       modal.style.opacity = '0';
       setTimeout(() => {
         modal.style.display = 'none';
+      }, 300);
+    }
+    
+    // ==================== 挑战功能 ====================
+    
+    // 显示挑战创建器
+    function showChallengeCreator() {
+      document.getElementById('challengeModal').style.display = 'flex';
+      // 阻止背景滚动
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      loadChallengeArticles();
+      loadChallengeUsers();
+    }
+    
+    // 加载文章列表
+    function loadChallengeArticles() {
+      fetch('/api/get_articles_list')
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            renderChallengeArticles(data.categories);
+          }
+        })
+        .catch(e => console.error('加载文章列表失败:', e));
+    }
+    
+    // 渲染文章列表
+    function renderChallengeArticles(categories) {
+      const container = document.getElementById('challengeArticleList');
+      let html = '';
+      
+      Object.keys(categories).forEach(category => {
+        const articles = categories[category];
+        if (articles.length > 0) {
+          html += `<div style="margin-bottom: 12px;">
+            <div style="font-weight: 600; color: #374151; margin-bottom: 6px; font-size: 13px;">${category}</div>`;
+          
+          articles.forEach(article => {
+            const isSelected = challengeData.selectedArticles.includes(article.id);
+            html += `
+              <div class="challenge-article-item ${isSelected ? 'selected' : ''}" onclick="toggleChallengeArticle('${article.id}')">
+                <div class="challenge-article-checkbox">
+                  ${isSelected ? '✓' : ''}
+                </div>
+                <div class="challenge-article-info">
+                  <div class="challenge-article-title">${article.title}</div>
+                  <div class="challenge-article-meta">${article.highlight_count} 个词汇</div>
+                </div>
+              </div>
+            `;
+          });
+          
+          html += '</div>';
+        }
+      });
+      
+      if (!html) {
+        html = '<div style="text-align: center; padding: 20px; color: #6b7280;">暂无可用文章</div>';
+      }
+      
+      container.innerHTML = html;
+    }
+    
+    // 切换文章选择
+    function toggleChallengeArticle(articleId) {
+      const index = challengeData.selectedArticles.indexOf(articleId);
+      if (index > -1) {
+        challengeData.selectedArticles.splice(index, 1);
+      } else {
+        challengeData.selectedArticles.push(articleId);
+      }
+      loadChallengeArticles(); // 重新渲染
+    }
+    
+    // 加载用户列表
+    function loadChallengeUsers() {
+      fetch('/api/get_users_list')
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            renderChallengeUsers(data.users);
+          }
+        })
+        .catch(e => console.error('加载用户列表失败:', e));
+    }
+    
+    // 渲染用户列表
+    function renderChallengeUsers(users) {
+      const container = document.getElementById('challengeUserList');
+      let html = '';
+      
+      users.forEach(user => {
+        if (user.username === currentUser.username) return; // 排除自己
+        
+        const isSelected = challengeData.selectedUsers.includes(user.username);
+        html += `
+          <div class="challenge-user-item ${isSelected ? 'selected' : ''}" onclick="toggleChallengeUser('${user.username}')">
+            <div class="challenge-user-checkbox">
+              ${isSelected ? '✓' : ''}
+            </div>
+            <img src="/static/${user.avatar}" alt="${user.display_name}" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">
+            <div class="challenge-user-info">
+              <div class="challenge-user-name">${user.display_name}</div>
+            </div>
+          </div>
+        `;
+      });
+      
+      if (!html) {
+        html = '<div style="text-align: center; padding: 20px; color: #6b7280;">暂无其他用户</div>';
+      }
+      
+      container.innerHTML = html;
+    }
+    
+    // 切换用户选择
+    function toggleChallengeUser(username) {
+      const index = challengeData.selectedUsers.indexOf(username);
+      if (index > -1) {
+        challengeData.selectedUsers.splice(index, 1);
+      } else {
+        challengeData.selectedUsers.push(username);
+      }
+      loadChallengeUsers(); // 重新渲染
+    }
+    
+    // 选择词汇数量
+    function selectWordCount(count) {
+      challengeData.wordCount = count;
+      document.getElementById('customWordCount').value = '';
+      
+      // 更新按钮状态
+      document.querySelectorAll('.word-count-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (parseInt(btn.dataset.count) === count) {
+          btn.classList.add('active');
+        }
+      });
+    }
+    
+    // 创建挑战
+    function createChallenge() {
+      const title = document.getElementById('challengeTitle').value.trim();
+      const description = document.getElementById('challengeDescription').value.trim();
+      const customCount = document.getElementById('customWordCount').value;
+      
+      if (!title) {
+        alert('请输入挑战标题');
+        return;
+      }
+      
+      if (challengeData.selectedArticles.length === 0) {
+        alert('请选择至少一篇文章');
+        return;
+      }
+      
+      const wordCount = customCount ? parseInt(customCount) : challengeData.wordCount;
+      if (wordCount < 1 || wordCount > 50) {
+        alert('词汇数量应在1-50之间');
+        return;
+      }
+      
+      const challengeRequest = {
+        title: title,
+        description: description,
+        article_ids: challengeData.selectedArticles,
+        word_count: wordCount,
+        mentioned_users: challengeData.selectedUsers
+      };
+      
+      fetch('/api/create_challenge', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify(challengeRequest)
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          // 创建挑战卡片并添加到选中项
+          const challengeItem = {
+            id: data.challenge_id,
+            title: title,
+            description: description,
+            vocabulary_count: data.vocabulary_count,
+            mentioned_users: challengeData.selectedUsers
+          };
+          
+          selectedItems.challenge = challengeItem;
+          updateContentPreview();
+          closeModal('challengeModal');
+          
+          // 重置挑战数据
+          challengeData = {
+            selectedArticles: [],
+            selectedUsers: [],
+            wordCount: 5
+          };
+          document.getElementById('challengeTitle').value = '';
+          document.getElementById('challengeDescription').value = '';
+          document.getElementById('customWordCount').value = '';
+          selectWordCount(5);
+        } else {
+          alert('创建挑战失败：' + (data.error || '未知错误'));
+        }
+      })
+      .catch(e => {
+        alert('创建挑战失败：' + e.message);
+      });
+    }
+    
+    // 创建挑战预览组件
+    function createChallengePreview(challenge, index) {
+      const div = document.createElement('div');
+      div.style.cssText = 'margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;';
+      
+      div.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <label class="form-label">挑战 ${index + 1}</label>
+          <button onclick="removeSelectedItem('challenge', 0)" style="background: #ef4444; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 11px;">移除</button>
+        </div>
+        <div class="challenge-card">
+          <div class="card-header">
+            <span class="card-icon">🏆</span>
+            <div class="card-title">${challenge.title}</div>
+          </div>
+          ${challenge.description ? `<div class="card-desc">${challenge.description}</div>` : ''}
+          <div class="card-meta">
+            ${challenge.vocabulary_count} 个词汇
+            ${challenge.mentioned_users.length > 0 ? ` • @${challenge.mentioned_users.length} 个用户` : ''}
+          </div>
+        </div>
+      `;
+      
+      return div;
+    }
+    
+    // 检查挑战状态
+    function checkChallengeStatus(challengeId) {
+      return fetch(`/api/get_challenge/${challengeId}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            const challenge = data.challenge;
+            const hasParticipated = challenge.participants && challenge.participants[currentUser.username];
+            const mentionedUsers = challenge.mentioned_users || [];
+            const isCurrentUserMentioned = mentionedUsers.includes(currentUser.username);
+            const isCreator = challenge.creator === currentUser.username;
+            
+            // 判断是否所有被@的用户都已参与
+            const allMentionedParticipated = mentionedUsers.length === 0 || 
+              mentionedUsers.every(user => challenge.participants && challenge.participants[user]);
+            
+            // 挑战完成条件：没有@任何人 或 所有被@的用户都参与了
+            const isChallengeCompleted = challenge.status === 'completed' || allMentionedParticipated;
+            
+            // 用户是否需要参与挑战的逻辑：
+            // 1. 如果用户被@了，则需要参与
+            // 2. 如果用户是创建者，也需要参与
+            // 3. 如果用户没被@且不是创建者，可以直接查看结果
+            const needsParticipation = isCurrentUserMentioned || isCreator;
+            
+            // 用户是否可以查看结果：
+            // 1. 如果不需要参与（没被@且不是创建者），直接可以查看
+            // 2. 如果需要参与，必须先参与了才能查看结果
+            const canViewResults = !needsParticipation || hasParticipated;
+            
+            return {
+              completed: isChallengeCompleted && canViewResults,
+              participated: hasParticipated,
+              needsParticipation: needsParticipation,
+              canViewResults: canViewResults,
+              totalParticipants: Object.keys(challenge.participants || {}).length,
+              mentionedUsers: mentionedUsers
+            };
+          } else {
+            throw new Error(data.error || '获取挑战状态失败');
+          }
+        });
+    }
+    
+    // 创建挑战卡片（帖子中显示）
+    function createChallengeCard(challengeContent) {
+      const card = document.createElement('div');
+      card.className = 'challenge-card';
+      card.setAttribute('data-challenge-id', challengeContent.id);
+      card.onclick = () => {
+        startChallenge(challengeContent.id);
+      };
+      
+      const header = document.createElement('div');
+      header.className = 'card-header';
+      
+      const icon = document.createElement('div');
+      icon.className = 'card-icon';
+      icon.textContent = '🏆';
+      
+      const title = document.createElement('div');
+      title.className = 'card-title';
+      title.textContent = challengeContent.title;
+      
+      header.appendChild(icon);
+      header.appendChild(title);
+      
+      if (challengeContent.description) {
+        const desc = document.createElement('div');
+        desc.className = 'card-desc';
+        desc.textContent = challengeContent.description;
+        card.appendChild(desc);
+      }
+      
+      const meta = document.createElement('div');
+      meta.className = 'card-meta';
+      meta.textContent = `${challengeContent.vocabulary_count} 个词汇`;
+      
+      // 显示被@用户的名字
+      if (challengeContent.mentioned_users && challengeContent.mentioned_users.length > 0) {
+        // 需要获取用户显示名字，先显示用户名，后续可以优化为显示名
+        const userNames = challengeContent.mentioned_users.join(', ');
+        meta.innerHTML += ` • @<span style="color: #2563eb; font-weight: 600;">${userNames}</span>`;
+      }
+      
+      // 添加动态按钮
+      const actionBtn = document.createElement('div');
+      actionBtn.setAttribute('data-challenge-btn', 'true');
+      actionBtn.style.cssText = 'margin-top: 12px; padding: 8px 16px; background: rgba(255,255,255,0.8); border-radius: 8px; text-align: center; font-weight: 600; color: #92400e; border: 1px solid #f59e0b; cursor: pointer; transition: all 0.2s; user-select: none;';
+      
+      // 检查挑战状态并设置按钮文本
+      checkChallengeStatus(challengeContent.id).then(status => {
+        if (status.completed) {
+          // 挑战完成且用户可以查看结果
+          actionBtn.textContent = '查看挑战结果';
+          actionBtn.style.background = 'rgba(16, 185, 129, 0.1)';
+          actionBtn.style.color = '#059669';
+          actionBtn.style.borderColor = '#10b981';
+        } else if (!status.needsParticipation) {
+          // 用户不需要参与（未被@且不是创建者），可以直接查看当前结果
+          actionBtn.textContent = '查看挑战结果';
+          actionBtn.style.background = 'rgba(16, 185, 129, 0.1)';
+          actionBtn.style.color = '#059669';
+          actionBtn.style.borderColor = '#10b981';
+        } else if (status.participated) {
+          // 用户已参与但挑战未完全结束
+          actionBtn.textContent = '查看我的成绩';
+          actionBtn.style.background = 'rgba(59, 130, 246, 0.1)';
+          actionBtn.style.color = '#2563eb';
+          actionBtn.style.borderColor = '#3b82f6';
+        } else {
+          // 用户需要参与但还未参与
+          actionBtn.textContent = '点击参与挑战';
+        }
+      }).catch(() => {
+        actionBtn.textContent = '点击参与挑战';
+      });
+      
+      actionBtn.onclick = (e) => {
+        e.stopPropagation();
+        startChallenge(challengeContent.id);
+      };
+      
+      card.appendChild(header);
+      card.appendChild(meta);
+      card.appendChild(actionBtn);
+      
+      return card;
+    }
+    
+    // 开始挑战
+    function startChallenge(challengeId) {
+      fetch(`/api/get_challenge/${challengeId}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            currentChallenge = data.challenge;
+            currentChallengeAnswers = [];
+            currentQuestionIndex = 0;
+            
+            // 检查用户是否已经参与过
+            if (currentChallenge.participants[currentUser.username]) {
+              showChallengeRanking(challengeId);
+              return;
+            }
+            
+            document.getElementById('challengeGameModal').style.display = 'flex';
+            // 阻止背景滚动
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+            document.getElementById('challengeGameTitle').textContent = currentChallenge.title;
+            showNextQuestion();
+          } else {
+            alert('加载挑战失败：' + (data.error || '未知错误'));
+          }
+        })
+        .catch(e => {
+          alert('加载挑战失败：' + e.message);
+        });
+    }
+    
+    // 显示下一题
+    function showNextQuestion() {
+      if (currentQuestionIndex >= currentChallenge.vocabulary.length) {
+        finishChallenge();
+        return;
+      }
+      
+      const vocab = currentChallenge.vocabulary[currentQuestionIndex];
+      const progress = document.getElementById('challengeProgress');
+      progress.textContent = `第 ${currentQuestionIndex + 1} 题 / 共 ${currentChallenge.vocabulary.length} 题`;
+      
+      // 随机决定是显示单词还是意思
+      const showWord = Math.random() > 0.5;
+      const question = document.getElementById('challengeQuestion');
+      const optionsContainer = document.getElementById('challengeOptions');
+      
+      if (showWord) {
+        question.textContent = vocab.word;
+        // 生成选项：正确答案 + 3个错误答案
+        const options = [vocab.meaning];
+        const otherVocab = currentChallenge.vocabulary.filter(v => v.word !== vocab.word);
+        while (options.length < 4 && otherVocab.length > 0) {
+          const randomVocab = otherVocab[Math.floor(Math.random() * otherVocab.length)];
+          if (!options.includes(randomVocab.meaning)) {
+            options.push(randomVocab.meaning);
+          }
+          otherVocab.splice(otherVocab.indexOf(randomVocab), 1);
+        }
+        
+        // 打乱选项顺序
+        for (let i = options.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [options[i], options[j]] = [options[j], options[i]];
+        }
+        
+        renderChallengeOptions(options, vocab.meaning);
+      } else {
+        question.textContent = vocab.meaning;
+        // 生成选项：正确答案 + 3个错误答案
+        const options = [vocab.word];
+        const otherVocab = currentChallenge.vocabulary.filter(v => v.meaning !== vocab.meaning);
+        while (options.length < 4 && otherVocab.length > 0) {
+          const randomVocab = otherVocab[Math.floor(Math.random() * otherVocab.length)];
+          if (!options.includes(randomVocab.word)) {
+            options.push(randomVocab.word);
+          }
+          otherVocab.splice(otherVocab.indexOf(randomVocab), 1);
+        }
+        
+        // 打乱选项顺序
+        for (let i = options.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [options[i], options[j]] = [options[j], options[i]];
+        }
+        
+        renderChallengeOptions(options, vocab.word);
+      }
+      
+      // 开始倒计时
+      startQuestionTimer();
+    }
+    
+    // 渲染选项
+    function renderChallengeOptions(options, correctAnswer) {
+      const container = document.getElementById('challengeOptions');
+      container.innerHTML = '';
+      
+      options.forEach((option, index) => {
+        const optionDiv = document.createElement('div');
+        optionDiv.className = 'challenge-option';
+        optionDiv.textContent = option;
+        optionDiv.onclick = () => selectChallengeOption(option, correctAnswer, optionDiv);
+        container.appendChild(optionDiv);
+      });
+    }
+    
+    // 选择答案
+    function selectChallengeOption(selectedOption, correctAnswer, optionElement) {
+      // 停止计时器
+      if (challengeTimer) {
+        clearInterval(challengeTimer);
+        challengeTimer = null;
+      }
+      
+      const timeTaken = Math.round((Date.now() - questionStartTime) / 1000);
+      const isCorrect = selectedOption === correctAnswer;
+      
+      // 记录答案
+      currentChallengeAnswers.push({
+        question_index: currentQuestionIndex,
+        selected_option: selectedOption,
+        correct_answer: correctAnswer,
+        time_taken: timeTaken,
+        is_correct: isCorrect
+      });
+      
+      // 显示结果
+      const allOptions = document.querySelectorAll('.challenge-option');
+      allOptions.forEach(opt => {
+        opt.style.pointerEvents = 'none';
+        if (opt.textContent === correctAnswer) {
+          opt.classList.add('correct');
+        } else if (opt === optionElement && !isCorrect) {
+          opt.classList.add('incorrect');
+        }
+      });
+      
+      // 2秒后显示下一题
+      setTimeout(() => {
+        currentQuestionIndex++;
+        showNextQuestion();
+      }, 2000);
+    }
+    
+    // 开始问题计时器
+    function startQuestionTimer() {
+      questionStartTime = Date.now();
+      let timeLeft = 10;
+      const timerElement = document.getElementById('challengeTimer');
+      
+      timerElement.textContent = `${timeLeft}s`;
+      
+      challengeTimer = setInterval(() => {
+        timeLeft--;
+        timerElement.textContent = `${timeLeft}s`;
+        
+        if (timeLeft <= 0) {
+          clearInterval(challengeTimer);
+          challengeTimer = null;
+          
+          // 时间到，自动选择错误答案
+          const timeTaken = 10;
+          currentChallengeAnswers.push({
+            question_index: currentQuestionIndex,
+            selected_option: null,
+            correct_answer: null,
+            time_taken: timeTaken,
+            is_correct: false
+          });
+          
+          // 显示正确答案
+          const allOptions = document.querySelectorAll('.challenge-option');
+          allOptions.forEach(opt => {
+            opt.style.pointerEvents = 'none';
+            // 这里需要根据当前题目找到正确答案
+            // 简化处理，直接进入下一题
+          });
+          
+          setTimeout(() => {
+            currentQuestionIndex++;
+            showNextQuestion();
+          }, 2000);
+        }
+      }, 1000);
+    }
+    
+    // 完成挑战
+    function finishChallenge() {
+      fetch('/api/participate_challenge', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify({
+          challenge_id: currentChallenge.id,
+          answers: currentChallengeAnswers
+        })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          // 关闭游戏模态框
+          closeModal('challengeGameModal');
+          
+          // 显示结果
+          alert(`挑战完成！\\n正确率：${data.correct_count}/${data.total_questions}\\n总分：${data.score}分`);
+          
+          // 刷新页面上所有挑战卡片的状态
+          refreshChallengeCards();
+          
+          // 重新检查待完成的挑战（更新提醒状态）
+          setTimeout(() => {
+            checkPendingChallenges();
+          }, 500);
+          
+          // 如果排名已准备好，显示排名
+          if (data.ranking_ready) {
+            setTimeout(() => {
+              showChallengeRanking(currentChallenge.id);
+            }, 1000);
+          }
+        } else {
+          alert('提交答案失败：' + (data.error || '未知错误'));
+        }
+      })
+      .catch(e => {
+        alert('提交答案失败：' + e.message);
+      });
+    }
+    
+    // 刷新页面上所有挑战卡片的状态
+    function refreshChallengeCards() {
+      const challengeCards = document.querySelectorAll('.challenge-card');
+      challengeCards.forEach(card => {
+        const challengeId = card.getAttribute('data-challenge-id');
+        if (challengeId) {
+          // 找到挑战卡片中的按钮并更新状态
+          const actionBtn = card.querySelector('[data-challenge-btn]');
+          if (actionBtn) {
+            updateChallengeButton(challengeId, actionBtn);
+          }
+        }
+      });
+    }
+    
+    // 更新单个挑战按钮状态
+    function updateChallengeButton(challengeId, actionBtn) {
+      checkChallengeStatus(challengeId).then(status => {
+        if (status.completed) {
+          actionBtn.textContent = '查看挑战结果';
+          actionBtn.style.background = 'rgba(16, 185, 129, 0.1)';
+          actionBtn.style.color = '#059669';
+          actionBtn.style.borderColor = '#10b981';
+        } else if (!status.needsParticipation) {
+          actionBtn.textContent = '查看挑战结果';
+          actionBtn.style.background = 'rgba(16, 185, 129, 0.1)';
+          actionBtn.style.color = '#059669';
+          actionBtn.style.borderColor = '#10b981';
+        } else if (status.participated) {
+          actionBtn.textContent = '查看我的成绩';
+          actionBtn.style.background = 'rgba(59, 130, 246, 0.1)';
+          actionBtn.style.color = '#2563eb';
+          actionBtn.style.borderColor = '#3b82f6';
+        } else {
+          actionBtn.textContent = '点击参与挑战';
+          actionBtn.style.background = 'rgba(255,255,255,0.8)';
+          actionBtn.style.color = '#92400e';
+          actionBtn.style.borderColor = '#f59e0b';
+        }
+      }).catch(() => {
+        // 错误时保持默认状态
+      });
+    }
+    
+    // 显示挑战排名
+    function showChallengeRanking(challengeId) {
+      fetch(`/api/get_challenge_ranking/${challengeId}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            document.getElementById('challengeRankingModal').style.display = 'flex';
+            // 阻止背景滚动
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+            document.getElementById('rankingTitle').textContent = data.challenge.title + ' - 排行榜';
+            
+            const challengeInfo = document.getElementById('challengeInfo');
+            challengeInfo.innerHTML = `
+              ${data.challenge.description ? `<div style="margin-bottom: 8px;">${data.challenge.description}</div>` : ''}
+              <div>${data.challenge.vocabulary_count} 个词汇 • ${data.ranking.length} 人参与</div>
+            `;
+            
+            renderRanking(data.ranking);
+          } else {
+            alert('加载排名失败：' + (data.error || '未知错误'));
+          }
+        })
+        .catch(e => {
+          alert('加载排名失败：' + e.message);
+        });
+    }
+    
+    // 渲染排名
+    function renderRanking(ranking) {
+      const container = document.getElementById('rankingList');
+      let html = '';
+      
+      ranking.forEach((item, index) => {
+        const rank = index + 1;
+        const rankClass = rank <= 3 ? `rank-${rank}` : '';
+        
+        html += `
+          <div class="ranking-item ${rankClass}">
+            <div class="ranking-number">${rank}</div>
+            <img src="/static/${item.avatar}" alt="${item.display_name}" class="ranking-avatar">
+            <div class="ranking-info">
+              <div class="ranking-name">${item.display_name}</div>
+              <div class="ranking-score">${item.correct_count}/${item.total_questions} 正确</div>
+            </div>
+            <div class="ranking-points">${item.score}分</div>
+          </div>
+        `;
+      });
+      
+      if (!html) {
+        html = '<div style="text-align: center; padding: 40px; color: #6b7280;">暂无参与者</div>';
+      }
+      
+      container.innerHTML = html;
+    }
+    
+    // ==================== 挑战提醒功能 ====================
+    
+    // 检查待完成的挑战
+    function checkPendingChallenges() {
+      fetch('/api/messages')
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            findPendingChallenges(data.messages);
+          }
+        })
+        .catch(e => console.error('检查挑战失败:', e));
+    }
+    
+    // 从消息列表中找到待完成的挑战
+    function findPendingChallenges(messages) {
+      pendingChallenges = [];
+      const challengePromises = [];
+      
+      messages.forEach(message => {
+        if (message.type === 'mixed_content' && message.content.challenge) {
+          const challenge = message.content.challenge;
+          // 检查当前用户是否被@或是创建者
+          const isCreator = message.user.username === currentUser.username;
+          const isMentioned = challenge.mentioned_users && 
+            challenge.mentioned_users.includes(currentUser.username);
+          
+          if (isCreator || isMentioned) {
+            challengePromises.push(
+              checkChallengeStatus(challenge.id).then(status => {
+                if (!status.participated) {
+                  pendingChallenges.push({
+                    id: challenge.id,
+                    title: challenge.title,
+                    postId: message.id,
+                    creator: message.user.display_name,
+                    isCreator: isCreator
+                  });
+                }
+              }).catch(() => {})
+            );
+          }
+        }
+      });
+      
+      Promise.all(challengePromises).then(() => {
+        if (pendingChallenges.length > 0) {
+          showChallengeAlert();
+        }
+      });
+    }
+    
+    // 显示挑战提醒
+    function showChallengeAlert() {
+      const alert = document.getElementById('challengeAlert');
+      const message = document.getElementById('alertMessage');
+      
+      if (pendingChallenges.length === 1) {
+        const challenge = pendingChallenges[0];
+        if (challenge.isCreator) {
+          message.textContent = `您创建的挑战"${challenge.title}"等待您完成`;
+        } else {
+          message.textContent = `${challenge.creator}邀请您完成挑战"${challenge.title}"`;
+        }
+      } else {
+        message.textContent = `您有${pendingChallenges.length}个词汇挑战等待完成`;
+      }
+      
+      alert.style.display = 'flex';
+      
+      // 添加淡入动画
+      alert.style.opacity = '0';
+      alert.style.transform = 'translateY(-20px)';
+      setTimeout(() => {
+        alert.style.transition = 'all 0.3s ease';
+        alert.style.opacity = '1';
+        alert.style.transform = 'translateY(0)';
+      }, 100);
+    }
+    
+    // 跳转到挑战帖子
+    function goToChallengePost() {
+      if (pendingChallenges.length > 0) {
+        const firstChallenge = pendingChallenges[0];
+        // 找到对应的帖子并高亮显示
+        const postElement = document.querySelector(`[data-post-id="${firstChallenge.postId}"]`);
+        if (postElement) {
+          // 滚动到帖子位置
+          postElement.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
+          });
+          
+          // 高亮显示帖子
+          highlightPost(postElement);
+        }
+      }
+      dismissAlert();
+    }
+    
+    // 高亮显示帖子
+    function highlightPost(postElement) {
+      // 添加高亮效果
+      postElement.style.background = 'rgba(245, 158, 11, 0.1)';
+      postElement.style.border = '2px solid #f59e0b';
+      postElement.style.transform = 'scale(1.02)';
+      postElement.style.transition = 'all 0.3s ease';
+      postElement.style.boxShadow = '0 8px 24px rgba(245, 158, 11, 0.3)';
+      
+      // 3秒后移除高亮
+      setTimeout(() => {
+        postElement.style.background = '';
+        postElement.style.border = '';
+        postElement.style.transform = '';
+        postElement.style.boxShadow = '';
+      }, 3000);
+    }
+    
+    // 关闭提醒
+    function dismissAlert() {
+      const alert = document.getElementById('challengeAlert');
+      alert.style.opacity = '0';
+      alert.style.transform = 'translateY(-20px)';
+      setTimeout(() => {
+        alert.style.display = 'none';
       }, 300);
     }
   </script>
