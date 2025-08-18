@@ -1,0 +1,2288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>学习交流小天地</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/static/android-chrome-192x192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/static/android-chrome-512x512.png">
+  
+  <link href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Crimson+Text:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body { 
+      font-family: 'PT Serif', 'Crimson Text', ui-serif, 'Times New Roman', 'Georgia', serif; 
+      background: linear-gradient(135deg, #e0e7ff 0%, #f4f6fa 100%); 
+      margin: 0; 
+      min-height: 100vh; 
+      padding: 16px; 
+      box-sizing: border-box; 
+    }
+    
+    .container { 
+      max-width: 900px; 
+      margin: 0 auto; 
+      background: #fff; 
+      border-radius: 20px; 
+      box-shadow: 0 16px 48px rgba(31,38,135,0.20); 
+      overflow: hidden;
+    }
+    
+    .header { 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+      color: white; 
+      padding: 20px 24px; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+    }
+    
+    .header h1 { 
+      margin: 0; 
+      font-size: 24px; 
+      font-weight: 700; 
+    }
+    
+    .header-actions { 
+      display: flex; 
+      gap: 12px; 
+      align-items: center; 
+    }
+    
+    .user-info { 
+      display: flex; 
+      align-items: center; 
+      gap: 8px; 
+      color: rgba(255,255,255,0.9); 
+      font-size: 14px; 
+    }
+    
+    .user-avatar-small { 
+      width: 28px; 
+      height: 28px; 
+      border-radius: 50%; 
+      border: 2px solid rgba(255,255,255,0.3); 
+    }
+    
+    .new-post-btn { 
+      background: rgba(255,255,255,0.2); 
+      border: 2px solid rgba(255,255,255,0.3); 
+      color: white; 
+      border-radius: 20px; 
+      padding: 8px 16px; 
+      cursor: pointer; 
+      font-size: 14px; 
+      display: flex; 
+      align-items: center; 
+      gap: 6px; 
+      transition: all 0.2s; 
+    }
+    
+    .new-post-btn:hover { 
+      background: rgba(255,255,255,0.3); 
+      border-color: rgba(255,255,255,0.5); 
+    }
+    
+    .posts-container { 
+      min-height: 500px; 
+      padding: 20px 24px; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 16px; 
+    }
+    
+    .post-card { 
+      background: #f8fafc; 
+      border-radius: 16px; 
+      padding: 20px; 
+      border: 1px solid #e2e8f0; 
+      transition: box-shadow 0.2s; 
+      margin-bottom: 20px; 
+    }
+    
+    .post-card:hover { 
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08); 
+    }
+    
+    .post-header { 
+      display: flex; 
+      align-items: center; 
+      gap: 12px; 
+      margin-bottom: 16px; 
+      position: relative; 
+    }
+    
+    .user-avatar { 
+      width: 40px; 
+      height: 40px; 
+      border-radius: 50%; 
+      object-fit: cover;
+      border: 2px solid #e5e7eb; 
+    }
+    
+    .post-user-info { 
+      flex: 1; 
+    }
+    
+    .user-name { 
+      font-weight: 600; 
+      color: #1f2937; 
+      font-size: 16px; 
+    }
+    
+    .post-time { 
+      color: #6b7280; 
+      font-size: 13px; 
+      margin-top: 2px; 
+    }
+    
+    .post-content { 
+      line-height: 1.6; 
+      color: #374151; 
+      margin-bottom: 16px; 
+    }
+    
+    .text-content { 
+      font-size: 15px; 
+      white-space: pre-wrap; 
+      line-height: 1.6; 
+    }
+    
+    .image-content { 
+      margin-top: 12px; 
+    }
+    
+    .content-section { 
+      margin-top: 12px; 
+    }
+    
+    .content-section:first-child { 
+      margin-top: 0; 
+    }
+    
+    .message-image { 
+      max-width: 100%; 
+      max-height: 300px; 
+      border-radius: 12px; 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+    }
+    
+    .audio-card, .article-card { 
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); 
+      border: 1px solid #0284c7; 
+      border-radius: 12px; 
+      padding: 16px; 
+      margin-top: 12px; 
+      cursor: pointer; 
+      transition: all 0.2s; 
+    }
+    
+    .audio-card:hover, .article-card:hover { 
+      transform: translateY(-2px); 
+      box-shadow: 0 8px 24px rgba(2,132,199,0.15); 
+    }
+    
+    .card-header { 
+      display: flex; 
+      align-items: center; 
+      gap: 10px; 
+      margin-bottom: 8px; 
+    }
+    
+    .card-icon { 
+      font-size: 20px; 
+    }
+    
+    .card-title { 
+      font-weight: 600; 
+      color: #0c4a6e; 
+      font-size: 16px; 
+    }
+    
+    .card-desc { 
+      color: #075985; 
+      font-size: 13px; 
+      margin-bottom: 6px; 
+    }
+    
+    .card-meta { 
+      color: #0369a1; 
+      font-size: 12px; 
+    }
+    
+    .new-post-form { 
+      background: #f0f9ff; 
+      border: 2px dashed #0284c7; 
+      border-radius: 16px; 
+      padding: 20px; 
+      margin-bottom: 20px; 
+      display: none; 
+    }
+    
+    .new-post-form.active { 
+      display: block; 
+    }
+    
+    .form-row { 
+      margin-bottom: 16px; 
+    }
+    
+    .form-label { 
+      display: block; 
+      margin-bottom: 8px; 
+      font-weight: 600; 
+      color: #1f2937; 
+      font-size: 14px; 
+    }
+    
+    .text-input { 
+      width: 100%; 
+      border: 1px solid #d1d5db; 
+      border-radius: 12px; 
+      padding: 12px 16px; 
+      font-family: inherit; 
+      font-size: 14px; 
+      resize: vertical; 
+      min-height: 100px; 
+      box-sizing: border-box; 
+    }
+    
+    .text-input:focus { 
+      outline: none; 
+      border-color: #0284c7; 
+      box-shadow: 0 0 0 3px rgba(2,132,199,0.1); 
+    }
+    
+    .form-actions { 
+      display: flex; 
+      gap: 12px; 
+      justify-content: space-between; 
+      align-items: center; 
+    }
+    
+    .content-type-selector { 
+      display: flex; 
+      gap: 8px; 
+    }
+    
+    .type-btn { 
+      padding: 6px 12px; 
+      border: 1px solid #d1d5db; 
+      background: white; 
+      border-radius: 8px; 
+      cursor: pointer; 
+      font-size: 12px; 
+      transition: all 0.2s; 
+      display: flex; 
+      align-items: center; 
+      gap: 4px; 
+    }
+    
+    .type-btn:hover { 
+      background: #f3f4f6; 
+      border-color: #9ca3af; 
+    }
+    
+    .form-submit-actions { 
+      display: flex; 
+      gap: 8px; 
+    }
+    
+    .form-btn { 
+      padding: 10px 20px; 
+      border: 1px solid #d1d5db; 
+      border-radius: 8px; 
+      cursor: pointer; 
+      font-family: inherit; 
+      font-size: 14px; 
+      transition: all 0.2s; 
+    }
+    
+    .form-btn.primary { 
+      background: #0284c7; 
+      border-color: #0284c7; 
+      color: white; 
+    }
+    
+    .form-btn.primary:hover { 
+      background: #0369a1; 
+    }
+    
+    .form-btn.secondary { 
+      background: white; 
+      color: #374151; 
+    }
+    
+    .form-btn.secondary:hover { 
+      background: #f9fafb; 
+    }
+    
+    .modal-overlay { 
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      right: 0; 
+      bottom: 0; 
+      background: rgba(0,0,0,0.5); 
+      display: none; 
+      align-items: center; 
+      justify-content: center; 
+      z-index: 1000; 
+    }
+    
+    .modal { 
+      background: white; 
+      border-radius: 16px; 
+      padding: 0; 
+      max-width: 500px; 
+      width: 90%; 
+      max-height: 70vh; 
+      overflow: hidden; 
+      display: flex; 
+      flex-direction: column; 
+    }
+    
+    .large-modal { 
+      max-width: 800px; 
+      max-height: 80vh; 
+    }
+    
+    .modal-header { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      padding: 20px 24px; 
+      border-bottom: 1px solid #e5e7eb; 
+    }
+    
+    .modal-header h3 { 
+      margin: 0; 
+      color: #1f2937; 
+      font-size: 18px; 
+    }
+    
+    .close-btn { 
+      background: none; 
+      border: none; 
+      font-size: 24px; 
+      cursor: pointer; 
+      color: #6b7280; 
+      padding: 0; 
+      width: 32px; 
+      height: 32px; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      border-radius: 6px; 
+    }
+    
+    .close-btn:hover { 
+      background: #f3f4f6; 
+      color: #374151; 
+    }
+    
+    .modal-body { 
+      display: flex; 
+      flex: 1; 
+      min-height: 0; 
+    }
+    
+    .sidebar { 
+      width: 200px; 
+      background: #f8fafc; 
+      border-right: 1px solid #e5e7eb; 
+      overflow-y: auto; 
+    }
+    
+    .sidebar-section { 
+      padding: 16px; 
+    }
+    
+    .section-title { 
+      font-weight: 600; 
+      color: #374151; 
+      font-size: 14px; 
+      margin-bottom: 12px; 
+    }
+    
+    .category-list { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 4px; 
+    }
+    
+    .category-item { 
+      padding: 10px 12px; 
+      border-radius: 8px; 
+      cursor: pointer; 
+      font-size: 14px; 
+      color: #4b5563; 
+      transition: all 0.2s; 
+    }
+    
+    .category-item:hover { 
+      background: #e0f2fe; 
+      color: #0c4a6e; 
+    }
+    
+    .category-item.active { 
+      background: #0284c7; 
+      color: white; 
+    }
+    
+    .category-item.active:hover { 
+      background: #0369a1; 
+    }
+    
+    .content-area { 
+      flex: 1; 
+      display: flex; 
+      flex-direction: column; 
+      min-height: 0; 
+    }
+    
+    .content-header { 
+      padding: 16px 20px; 
+      border-bottom: 1px solid #e5e7eb; 
+    }
+    
+    .breadcrumb { 
+      color: #6b7280; 
+      font-size: 14px; 
+    }
+    
+    .content-list { 
+      flex: 1; 
+      padding: 16px 20px; 
+      overflow-y: auto; 
+    }
+    
+    .empty-content { 
+      text-align: center; 
+      color: #9ca3af; 
+      font-size: 14px; 
+      padding: 40px 20px; 
+    }
+    
+    .content-item { 
+      padding: 12px 16px; 
+      border: 1px solid #e5e7eb; 
+      border-radius: 8px; 
+      margin-bottom: 8px; 
+      cursor: pointer; 
+      transition: all 0.2s; 
+    }
+    
+    .content-item:hover { 
+      border-color: #0284c7; 
+      box-shadow: 0 2px 8px rgba(2,132,199,0.1); 
+    }
+    
+    .content-item.selected { 
+      border-color: #0284c7; 
+      background: #f0f9ff; 
+    }
+    
+    .content-item-title { 
+      font-weight: 600; 
+      color: #1f2937; 
+      margin-bottom: 4px; 
+    }
+    
+    .content-item-meta { 
+      color: #6b7280; 
+      font-size: 12px; 
+    }
+    
+    .content-item-actions { 
+      display: flex; 
+      gap: 8px; 
+      margin-top: 8px; 
+    }
+    
+    .content-item-btn { 
+      padding: 4px 8px; 
+      border: 1px solid #d1d5db; 
+      background: white; 
+      border-radius: 4px; 
+      font-size: 11px; 
+      cursor: pointer; 
+      transition: all 0.2s; 
+    }
+    
+    .content-item-btn:hover { 
+      background: #f3f4f6; 
+    }
+    
+    .content-item-btn.primary { 
+      background: #0284c7; 
+      border-color: #0284c7; 
+      color: white; 
+    }
+    
+    .content-item-btn.primary:hover { 
+      background: #0369a1; 
+    }
+    
+    .modal h3 { 
+      margin: 0 0 16px; 
+      color: #1f2937; 
+    }
+    
+    .modal-section { 
+      margin-bottom: 20px; 
+    }
+    
+    .modal-section h4 { 
+      margin: 0 0 8px; 
+      color: #374151; 
+      font-size: 14px; 
+    }
+    
+    .item-list { 
+      max-height: 200px; 
+      overflow-y: auto; 
+      border: 1px solid #e5e7eb; 
+      border-radius: 8px; 
+    }
+    
+    .item { 
+      padding: 12px; 
+      border-bottom: 1px solid #f3f4f6; 
+      cursor: pointer; 
+      transition: background 0.2s; 
+    }
+    
+    .item:hover { 
+      background: #f8fafc; 
+    }
+    
+    .item:last-child { 
+      border-bottom: none; 
+    }
+    
+    .item-title { 
+      font-weight: 600; 
+      color: #1f2937; 
+      margin-bottom: 4px; 
+    }
+    
+    .item-meta { 
+      color: #6b7280; 
+      font-size: 12px; 
+    }
+    
+    .modal-actions { 
+      display: flex; 
+      gap: 12px; 
+      justify-content: flex-end; 
+      padding: 16px 24px; 
+      border-top: 1px solid #e5e7eb; 
+      background: #f9fafb; 
+    }
+    
+    .modal-btn { 
+      padding: 8px 16px; 
+      border: 1px solid #d1d5db; 
+      border-radius: 8px; 
+      cursor: pointer; 
+      font-family: inherit; 
+      transition: all 0.2s; 
+    }
+    
+    .modal-btn.primary { 
+      background: #6366f1; 
+      border-color: #6366f1; 
+      color: white; 
+    }
+    
+    .modal-btn.primary:hover { 
+      background: #5a5afc; 
+    }
+    
+    .modal-btn.secondary { 
+      background: white; 
+      color: #374151; 
+    }
+    
+    .modal-btn.secondary:hover { 
+      background: #f9fafb; 
+    }
+    
+    .empty-state { 
+      text-align: center; 
+      padding: 40px 20px; 
+      color: #6b7280; 
+    }
+    
+    .empty-icon { 
+      font-size: 48px; 
+      margin-bottom: 16px; 
+      opacity: 0.5; 
+    }
+    
+    .hidden { 
+      display: none !important; 
+    }
+    
+    /* 图片放大模态框样式 */
+    .image-modal { 
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      right: 0; 
+      bottom: 0; 
+      background: rgba(0,0,0,0.9); 
+      display: none; 
+      align-items: center; 
+      justify-content: center; 
+      z-index: 2000; 
+      cursor: pointer; 
+    }
+    
+    .image-modal img { 
+      max-width: 90vw; 
+      max-height: 90vh; 
+      object-fit: contain; 
+      border-radius: 8px; 
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5); 
+    }
+    
+    .image-modal .close-hint { 
+      position: absolute; 
+      top: 20px; 
+      right: 20px; 
+      color: white; 
+      font-size: 14px; 
+      background: rgba(0,0,0,0.5); 
+      padding: 8px 12px; 
+      border-radius: 20px; 
+    }
+    
+    @media (max-width: 768px) {
+      body {
+        padding: 0;
+      }
+      
+      .container { 
+        margin: 0; 
+        border-radius: 0; 
+        min-height: 100vh; 
+        box-shadow: none;
+      }
+      
+      .header {
+        padding: 16px 20px;
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+      }
+      
+      .header h1 {
+        font-size: 20px;
+        text-align: center;
+        margin: 0;
+      }
+      
+      .header-actions {
+        justify-content: space-between;
+        width: 100%;
+      }
+      
+      .user-info {
+        font-size: 13px;
+      }
+      
+      .user-avatar-small {
+        width: 24px;
+        height: 24px;
+      }
+      
+      .new-post-btn {
+        padding: 6px 12px;
+        font-size: 13px;
+        border-radius: 16px;
+      }
+      
+      .posts-container { 
+        padding: 12px 16px;
+        min-height: calc(100vh - 180px); 
+        gap: 12px;
+      }
+      
+      .post-card {
+        padding: 16px;
+        margin-bottom: 16px;
+        border-radius: 12px;
+      }
+      
+      .post-header {
+        margin-bottom: 12px;
+      }
+      
+      .user-avatar {
+        width: 32px;
+        height: 32px;
+      }
+      
+      .user-name {
+        font-size: 14px;
+      }
+      
+      .post-time {
+        font-size: 11px;
+      }
+      
+      .text-content {
+        font-size: 14px;
+      }
+      
+      .audio-card, .article-card {
+        padding: 12px;
+        margin-top: 8px;
+      }
+      
+      .card-title {
+        font-size: 14px;
+      }
+      
+      .card-desc {
+        font-size: 12px;
+      }
+      
+      .card-meta {
+        font-size: 11px;
+      }
+      
+      .message-image {
+        max-height: 250px;
+      }
+      
+      .new-post-form {
+        padding: 16px;
+        margin-bottom: 16px;
+        border-radius: 12px;
+      }
+      
+      .text-input {
+        min-height: 80px;
+        font-size: 14px;
+        padding: 10px 12px;
+      }
+      
+      .form-actions {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+      }
+      
+      .content-type-selector {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        width: 100%;
+      }
+      
+      .type-btn {
+        padding: 8px 12px;
+        font-size: 12px;
+        justify-content: center;
+      }
+      
+      .form-submit-actions {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      .form-btn {
+        flex: 1;
+        max-width: 120px;
+        padding: 10px 16px;
+        font-size: 14px;
+      }
+      
+      .large-modal { 
+        max-width: 95vw; 
+        max-height: 90vh; 
+        margin: 0 8px;
+      }
+      
+      .modal-header {
+        padding: 16px 20px;
+      }
+      
+      .modal-header h3 {
+        font-size: 16px;
+      }
+      
+      .modal-body { 
+        flex-direction: column; 
+      }
+      
+      .sidebar { 
+        width: 100%; 
+        max-height: 120px; 
+        border-right: none; 
+        border-bottom: 1px solid #e5e7eb; 
+      }
+      
+      .sidebar-section {
+        padding: 12px 16px;
+      }
+      
+      .section-title {
+        font-size: 13px;
+        margin-bottom: 8px;
+      }
+      
+      .category-list { 
+        flex-direction: row; 
+        overflow-x: auto; 
+        gap: 6px;
+        padding-bottom: 8px; 
+      }
+      
+      .category-item { 
+        flex-shrink: 0; 
+        white-space: nowrap; 
+        padding: 8px 12px;
+        font-size: 12px;
+      }
+      
+      .content-area { 
+        min-height: 250px; 
+      }
+      
+      .content-header {
+        padding: 12px 16px;
+      }
+      
+      .breadcrumb {
+        font-size: 12px;
+      }
+      
+      .content-list {
+        padding: 12px 16px;
+      }
+      
+      .content-item {
+        padding: 10px 12px;
+        margin-bottom: 6px;
+      }
+      
+      .content-item-title {
+        font-size: 13px;
+        margin-bottom: 3px;
+      }
+      
+      .content-item-meta {
+        font-size: 11px;
+      }
+      
+      .content-item-actions {
+        margin-top: 6px;
+        gap: 6px;
+      }
+      
+      .content-item-btn {
+        padding: 4px 8px;
+        font-size: 10px;
+        border-radius: 4px;
+      }
+      
+      .modal-actions {
+        padding: 12px 16px;
+      }
+      
+      .modal-btn {
+        padding: 8px 16px;
+        font-size: 13px;
+      }
+      
+      .expanded-content {
+        margin-top: 8px !important;
+        padding: 12px !important;
+      }
+      
+      .image-modal .close-hint {
+        top: 10px;
+        right: 10px;
+        font-size: 12px;
+        padding: 6px 10px;
+      }
+      
+      .empty-state {
+        padding: 30px 16px;
+      }
+      
+      .empty-icon {
+        font-size: 36px;
+        margin-bottom: 12px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .header {
+        padding: 12px 16px;
+      }
+      
+      .header h1 {
+        font-size: 18px;
+      }
+      
+      .user-info {
+        font-size: 12px;
+      }
+      
+      .user-avatar-small {
+        width: 20px;
+        height: 20px;
+      }
+      
+      .new-post-btn {
+        padding: 6px 10px;
+        font-size: 12px;
+        gap: 4px;
+      }
+      
+      .posts-container {
+        padding: 8px 12px;
+      }
+      
+      .post-card {
+        padding: 12px;
+        margin-bottom: 12px;
+      }
+      
+      .user-avatar {
+        width: 28px;
+        height: 28px;
+      }
+      
+      .user-name {
+        font-size: 13px;
+      }
+      
+      .post-time {
+        font-size: 10px;
+      }
+      
+      .text-content {
+        font-size: 13px;
+      }
+      
+      .audio-card, .article-card {
+        padding: 10px;
+      }
+      
+      .card-title {
+        font-size: 13px;
+      }
+      
+      .card-desc {
+        font-size: 11px;
+      }
+      
+      .card-meta {
+        font-size: 10px;
+      }
+      
+      .new-post-form {
+        padding: 12px;
+      }
+      
+      .text-input {
+        min-height: 70px;
+        font-size: 13px;
+        padding: 8px 10px;
+      }
+      
+      .content-type-selector {
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+      }
+      
+      .type-btn {
+        padding: 6px 8px;
+        font-size: 11px;
+        gap: 3px;
+      }
+      
+      .type-btn span:last-child {
+        display: none;
+      }
+      
+      .form-btn {
+        padding: 8px 12px;
+        font-size: 13px;
+      }
+      
+      .large-modal {
+        max-width: 98vw;
+        max-height: 95vh;
+        margin: 0 4px;
+      }
+      
+      .modal-header {
+        padding: 12px 16px;
+      }
+      
+      .modal-header h3 {
+        font-size: 15px;
+      }
+      
+      .sidebar-section {
+        padding: 8px 12px;
+      }
+      
+      .category-item {
+        padding: 6px 10px;
+        font-size: 11px;
+      }
+      
+      .content-header {
+        padding: 8px 12px;
+      }
+      
+      .content-list {
+        padding: 8px 12px;
+      }
+      
+      .content-item {
+        padding: 8px 10px;
+      }
+      
+      .content-item-title {
+        font-size: 12px;
+      }
+      
+      .content-item-meta {
+        font-size: 10px;
+      }
+      
+      .content-item-btn {
+        padding: 3px 6px;
+        font-size: 9px;
+      }
+      
+      .modal-actions {
+        padding: 10px 12px;
+      }
+      
+      .modal-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📚 学习交流小天地</h1>
+      <div class="header-actions">
+        <div class="user-info" id="userInfo">
+          <img class="user-avatar-small" id="userAvatarSmall" src="" alt="">
+          <span id="userDisplayName">加载中...</span>
+        </div>
+        <button class="new-post-btn" onclick="toggleNewPostForm()">
+          <span>+</span>
+          <span>发布新帖</span>
+        </button>
+      </div>
+    </div>
+    
+    <div class="posts-container" id="postsContainer">
+      <!-- 新帖发布表单 -->
+      <div class="new-post-form" id="newPostForm">
+        <div class="form-row">
+          <label class="form-label">分享内容</label>
+          <textarea 
+            class="text-input" 
+            id="postContent" 
+            placeholder="分享你的学习心得、经验或想法..."
+          ></textarea>
+        </div>
+        
+        <div class="form-actions">
+          <div class="content-type-selector">
+            <button class="type-btn" onclick="showAudioSelector()">
+              <span>🎤</span>
+              <span>添加音频</span>
+            </button>
+            <button class="type-btn" onclick="showArticleSelector()">
+              <span>📝</span>
+              <span>添加文章</span>
+            </button>
+            <button class="type-btn" onclick="showImageUploader()">
+              <span>🖼️</span>
+              <span>添加图片</span>
+            </button>
+          </div>
+          
+          <div class="form-submit-actions">
+            <button class="form-btn secondary" onclick="cancelNewPost()">取消</button>
+            <button class="form-btn primary" onclick="submitPost()">发布</button>
+          </div>
+        </div>
+        
+        <!-- 额外内容选择区域 -->
+        <div id="extraContentArea"></div>
+      </div>
+      
+      <!-- 帖子列表 -->
+      <div id="postsList">
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon">📝</div>
+          <div>还没有帖子，点击上方"发布新帖"开始分享吧！</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 音频分享模态框 -->
+  <div class="modal-overlay" id="audioModal">
+    <div class="modal large-modal">
+      <div class="modal-header">
+        <h3>分享音频内容</h3>
+        <button class="close-btn" onclick="closeModal('audioModal')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="sidebar">
+          <div class="sidebar-section">
+            <div class="section-title">选择分类</div>
+            <div class="category-list" id="audioCategoryList">
+              <div class="category-item" data-category="Part1">Part 1</div>
+              <div class="category-item" data-category="Part2">Part 2</div>
+              <div class="category-item" data-category="Part3">Part 3</div>
+              <div class="category-item" data-category="其他">其他</div>
+            </div>
+          </div>
+        </div>
+        <div class="content-area">
+          <div class="content-header">
+            <div class="breadcrumb" id="audioBreadcrumb">请选择分类</div>
+          </div>
+          <div class="content-list" id="audioContentList">
+            <div class="empty-content">请先选择左侧分类</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn secondary" onclick="closeModal('audioModal')">关闭</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 文章分享模态框 -->
+  <div class="modal-overlay" id="articleModal">
+    <div class="modal large-modal">
+      <div class="modal-header">
+        <h3>分享精读文章</h3>
+        <button class="close-btn" onclick="closeModal('articleModal')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="sidebar">
+          <div class="sidebar-section">
+            <div class="section-title">选择分类</div>
+            <div class="category-list" id="articleCategoryList">
+              <div class="category-item" data-category="Reading">Reading</div>
+              <div class="category-item" data-category="Listening">Listening</div>
+              <div class="category-item" data-category="Writing">Writing</div>
+            </div>
+          </div>
+        </div>
+        <div class="content-area">
+          <div class="content-header">
+            <div class="breadcrumb" id="articleBreadcrumb">请选择分类</div>
+          </div>
+          <div class="content-list" id="articleContentList">
+            <div class="empty-content">请先选择左侧分类</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn secondary" onclick="closeModal('articleModal')">关闭</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 图片放大模态框 -->
+  <div class="image-modal" id="imageModal" onclick="closeImageModal()">
+    <div class="close-hint">点击任意位置关闭</div>
+    <img id="modalImage" src="" alt="放大图片">
+  </div>
+  
+  <!-- 隐藏的文件上传input -->
+  <input type="file" id="imageUpload" accept="image/*" style="display: none" onchange="handleImageUpload(event)">
+  
+  <script>
+    let currentUser = null;
+    let authToken = null;
+    let selectedItems = {
+      audios: [],
+      articles: [],
+      images: []
+    };
+    
+    // 检查登录状态
+    function checkStoredToken(){
+      const tk = localStorage.getItem('authToken');
+      if(!tk) return Promise.resolve(false);
+      return fetch('/verify_token',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({token:tk})})
+        .then(r=>r.json()).then(d=>{ 
+          if(d.valid){ 
+            authToken=tk; 
+            // 尝试获取存储的用户信息
+            const userStr = localStorage.getItem('currentUser');
+            if(userStr) {
+              try {
+                currentUser = JSON.parse(userStr);
+              } catch(e) {}
+            }
+            return true;
+          } 
+          localStorage.removeItem('authToken'); 
+          localStorage.removeItem('currentUser');
+          return false; 
+        })
+        .catch(()=>{ 
+          localStorage.removeItem('authToken'); 
+          localStorage.removeItem('currentUser');
+          return false; 
+        });
+    }
+    
+    function redirectToLogin() {
+      window.location.href = '/login';
+    }
+    
+    // 页面加载时初始化
+    window.onload = function() {
+      // 首先检查登录状态
+      checkStoredToken().then(valid=>{
+        if(!valid) {
+          redirectToLogin();
+          return;
+        }
+        
+        // 登录成功后继续初始化
+        showUserInfo();
+        loadPosts();
+      });
+    };
+    
+    // 显示用户信息
+    function showUserInfo() {
+      if(currentUser) {
+        document.getElementById('userAvatarSmall').src = `/static/${currentUser.avatar}`;
+        document.getElementById('userDisplayName').textContent = currentUser.display_name;
+      }
+    }
+    
+    // 切换新帖表单
+    function toggleNewPostForm() {
+      const form = document.getElementById('newPostForm');
+      form.classList.toggle('active');
+      if (form.classList.contains('active')) {
+        document.getElementById('postContent').focus();
+      }
+    }
+    
+    // 取消新帖
+    function cancelNewPost() {
+      document.getElementById('newPostForm').classList.remove('active');
+      document.getElementById('postContent').value = '';
+      document.getElementById('extraContentArea').innerHTML = '';
+      
+      // 清空所有选择
+      selectedItems = {
+        audios: [],
+        articles: [],
+        images: []
+      };
+    }
+    
+    // 更新内容预览区域
+    function updateContentPreview() {
+      const extraArea = document.getElementById('extraContentArea');
+      extraArea.innerHTML = '';
+      
+      // 显示所有选中的内容
+      selectedItems.audios.forEach((audio, index) => {
+        extraArea.appendChild(createAudioPreview(audio, index));
+      });
+      
+      selectedItems.articles.forEach((article, index) => {
+        extraArea.appendChild(createArticlePreview(article, index));
+      });
+      
+      selectedItems.images.forEach((image, index) => {
+        extraArea.appendChild(createImagePreview(image, index));
+      });
+    }
+    
+    // 提交帖子
+    function submitPost() {
+      const content = document.getElementById('postContent').value.trim();
+      if (!content && selectedItems.audios.length === 0 && selectedItems.articles.length === 0 && selectedItems.images.length === 0) {
+        alert('请输入内容或添加分享内容');
+        return;
+      }
+      
+      let postData = {
+        type: 'mixed_content',
+        content: {
+          text: content,
+          audios: selectedItems.audios,
+          articles: selectedItems.articles,
+          images: selectedItems.images
+        }
+      };
+      
+      postMessage(postData);
+    }
+    
+    // 显示图片上传器
+    function showImageUploader() {
+      const extraArea = document.getElementById('extraContentArea');
+      extraArea.innerHTML = `
+        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
+          <label class="form-label">上传图片</label>
+          <input type="file" id="imageUpload" accept="image/*" onchange="handleImageUpload(event)" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 8px;">
+        </div>
+      `;
+    }
+    
+    function handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('user_id', currentUser.username);
+      
+      fetch('/api/upload_message_image', {
+        method: 'POST',
+        body: formData
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          // 添加到选中列表
+          selectedItems.images.push({
+            filename: data.filename,
+            caption: ''
+          });
+          
+          updateContentPreview();
+        } else {
+          alert('图片上传失败：' + (data.error || '未知错误'));
+        }
+      })
+      .catch(e => {
+        alert('上传失败：' + e.message);
+      });
+      
+      // 清空文件选择
+      event.target.value = '';
+    }
+    
+    // 创建音频预览组件
+    function createAudioPreview(audio, index) {
+      const div = document.createElement('div');
+      div.style.cssText = 'margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;';
+      
+      if (audio.type === 'single') {
+        div.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <label class="form-label">音频 ${index + 1}</label>
+            <button onclick="removeSelectedItem('audios', ${index})" style="background: #ef4444; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 11px;">移除</button>
+          </div>
+          <div style="padding: 16px; background: #f0f9ff; border: 1px solid #0284c7; border-radius: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+              <span style="font-size: 20px;">🎤</span>
+              <div>
+                <div style="font-weight: 600; color: #0c4a6e;">${audio.filename.replace('.mp3', '')}</div>
+                <div style="color: #0369a1; font-size: 12px;">来自：${audio.folder}</div>
+              </div>
+            </div>
+            ${audio.question ? `<div style="color: #075985; font-size: 13px; margin-bottom: 8px; line-height: 1.4; white-space: pre-wrap;">${audio.question}</div>` : ''}
+          </div>
+        `;
+      } else {
+        div.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <label class="form-label">合集音频 ${index + 1}</label>
+            <button onclick="removeSelectedItem('audios', ${index})" style="background: #ef4444; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 11px;">移除</button>
+          </div>
+          <div style="padding: 16px; background: #fef9c3; border: 1px solid #eab308; border-radius: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+              <span style="font-size: 20px;">🎵</span>
+              <div>
+                <div style="font-weight: 600; color: #92400e;">${audio.folder}</div>
+                <div style="color: #a16207; font-size: 12px;">${audio.file_count} 个音频的合集</div>
+              </div>
+            </div>
+            ${audio.question ? `<div style="color: #a16207; font-size: 13px; margin-bottom: 8px; line-height: 1.4; white-space: pre-wrap;">${audio.question}</div>` : ''}
+          </div>
+        `;
+      }
+      
+      return div;
+    }
+    
+    // 创建文章预览组件
+    function createArticlePreview(article, index) {
+      const div = document.createElement('div');
+      div.style.cssText = 'margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;';
+      
+      div.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <label class="form-label">文章 ${index + 1}</label>
+          <button onclick="removeSelectedItem('articles', ${index})" style="background: #ef4444; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 11px;">移除</button>
+        </div>
+        <div style="padding: 16px; background: #f0fdf4; border: 1px solid #16a34a; border-radius: 12px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="font-size: 20px;">📝</span>
+            <div>
+              <div style="font-weight: 600; color: #14532d;">${article.title}</div>
+              <div style="color: #15803d; font-size: 12px;">${article.category} • ${article.highlight_count} 个高亮词汇</div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      return div;
+    }
+    
+    // 创建图片预览组件
+    function createImagePreview(image, index) {
+      const div = document.createElement('div');
+      div.style.cssText = 'margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;';
+      
+      div.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <label class="form-label">图片 ${index + 1}</label>
+          <button onclick="removeSelectedItem('images', ${index})" style="background: #ef4444; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 11px;">移除</button>
+        </div>
+        <div style="padding: 16px; background: #fef7ff; border: 1px solid #a855f7; border-radius: 12px;">
+          <img src="/message_images/${image.filename}" alt="预览图片" style="max-width: 100%; max-height: 200px; border-radius: 8px;">
+        </div>
+      `;
+      
+      return div;
+    }
+    
+    // 移除选中的项目
+    function removeSelectedItem(type, index) {
+      selectedItems[type].splice(index, 1);
+      updateContentPreview();
+    }
+    
+    // 显示音频选择器
+    function showAudioSelector() {
+      document.getElementById('audioModal').style.display = 'flex';
+      resetAudioModal();
+      loadAudioList();
+    }
+    
+    // 显示文章选择器
+    function showArticleSelector() {
+      document.getElementById('articleModal').style.display = 'flex';
+      resetArticleModal();
+      loadArticleList();
+    }
+    
+    // 重置音频模态框
+    function resetAudioModal() {
+      document.querySelectorAll('#audioCategoryList .category-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      document.getElementById('audioBreadcrumb').textContent = '请选择分类';
+      document.getElementById('audioContentList').innerHTML = '<div class="empty-content">请先选择左侧分类</div>';
+    }
+    
+    // 重置文章模态框
+    function resetArticleModal() {
+      document.querySelectorAll('#articleCategoryList .category-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      document.getElementById('articleBreadcrumb').textContent = '请选择分类';
+      document.getElementById('articleContentList').innerHTML = '<div class="empty-content">请先选择左侧分类</div>';
+    }
+    
+    // 关闭模态框
+    function closeModal(modalId) {
+      document.getElementById(modalId).style.display = 'none';
+    }
+    
+    // 加载音频列表
+    function loadAudioList() {
+      fetch('/api/get_audio_list')
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            audioData = data.categories;
+            setupAudioModal();
+          }
+        })
+        .catch(e => console.error('加载音频列表失败:', e));
+    }
+    
+    let audioData = {};
+    let articleData = {};
+    
+    // 设置音频模态框
+    function setupAudioModal() {
+      const categoryItems = document.querySelectorAll('#audioCategoryList .category-item');
+      categoryItems.forEach(item => {
+        item.onclick = () => {
+          const category = item.dataset.category;
+          selectAudioCategory(category, item);
+        };
+      });
+    }
+    
+    // 选择音频分类
+    function selectAudioCategory(category, itemEl) {
+      // 更新选中状态
+      document.querySelectorAll('#audioCategoryList .category-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      itemEl.classList.add('active');
+      
+      // 更新面包屑
+      document.getElementById('audioBreadcrumb').textContent = category;
+      
+      // 渲染内容
+      renderAudioContent(category);
+    }
+    
+    // 渲染音频内容
+    function renderAudioContent(category) {
+      const contentList = document.getElementById('audioContentList');
+      const items = audioData[category] || [];
+      
+      if (items.length === 0) {
+        contentList.innerHTML = '<div class="empty-content">该分类下暂无内容</div>';
+        return;
+      }
+      
+      contentList.innerHTML = '';
+      items.forEach(item => {
+        const itemEl = document.createElement('div');
+        itemEl.className = 'content-item';
+        
+        const titleEl = document.createElement('div');
+        titleEl.className = 'content-item-title';
+        titleEl.textContent = item.folder;
+        
+        const metaEl = document.createElement('div');
+        metaEl.className = 'content-item-meta';
+        let metaText = `${item.file_count} 个音频`;
+        if (item.has_combined) metaText += ' • 有合集';
+        if (item.question) metaText += ` • ${item.question.substring(0, 40)}...`;
+        metaEl.textContent = metaText;
+        
+        const actionsEl = document.createElement('div');
+        actionsEl.className = 'content-item-actions';
+        
+        // 单独音频按钮
+        const singleBtn = document.createElement('button');
+        singleBtn.className = 'content-item-btn';
+        singleBtn.textContent = '分享单独音频';
+        singleBtn.onclick = (e) => {
+          e.stopPropagation();
+          selectAudioItem(item, 'single', itemEl);
+        };
+        
+        actionsEl.appendChild(singleBtn);
+        
+        // 合集音频按钮（如果有合集）
+        if (item.has_combined) {
+          const combinedBtn = document.createElement('button');
+          combinedBtn.className = 'content-item-btn primary';
+          combinedBtn.textContent = '分享合集音频';
+          combinedBtn.onclick = (e) => {
+            e.stopPropagation();
+            selectAudioItem(item, 'combined', itemEl);
+          };
+          actionsEl.appendChild(combinedBtn);
+        }
+        
+        itemEl.appendChild(titleEl);
+        itemEl.appendChild(metaEl);
+        itemEl.appendChild(actionsEl);
+        
+        contentList.appendChild(itemEl);
+      });
+    }
+    
+    // 选择音频项目
+    function selectAudioItem(item, type, itemEl) {
+      if (type === 'single') {
+        // 在当前项目下展开单个音频选择
+        showIndividualAudioInline(item, itemEl);
+      } else {
+        // 在当前项目下展开合集音频选择
+        showCombinedAudioInline(item, itemEl);
+      }
+    }
+    
+    // 在行内展开单个音频选择
+    function showIndividualAudioInline(item, itemEl) {
+      // 移除其他展开的内容
+      document.querySelectorAll('.expanded-content').forEach(el => el.remove());
+      
+      // 获取具体音频文件列表
+      fetch(`/list_audio`)
+        .then(r => r.json())
+        .then(data => {
+          if (data) {
+            // 找到对应的文件夹详细信息
+            let folderData = null;
+            Object.keys(data).forEach(category => {
+              const found = data[category].find(f => f.folder === item.folder);
+              if (found) folderData = found;
+            });
+            
+            if (folderData && folderData.files) {
+              renderIndividualAudioInline(item, folderData.files, itemEl);
+            }
+          }
+        })
+        .catch(e => console.error('获取音频文件列表失败:', e));
+    }
+    
+    // 在行内展开合集音频选择
+    function showCombinedAudioInline(item, itemEl) {
+      // 移除其他展开的内容
+      document.querySelectorAll('.expanded-content').forEach(el => el.remove());
+      
+      // 创建合集音频展开内容
+      const expandedDiv = document.createElement('div');
+      expandedDiv.className = 'expanded-content';
+      expandedDiv.style.cssText = `
+        margin-top: 12px; 
+        padding: 16px; 
+        background: #fef9c3; 
+        border: 1px solid #eab308; 
+        border-radius: 8px;
+      `;
+      
+      expandedDiv.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div>
+            <div style="font-weight: 600; color: #92400e; font-size: 13px;">合集音频预览</div>
+            <div style="color: #a16207; font-size: 11px;">${item.file_count} 个音频的合集</div>
+          </div>
+          <button onclick="this.closest('.expanded-content').remove()" style="background: #ef4444; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 10px;">收起</button>
+        </div>
+        ${item.question ? `<div style="color: #a16207; font-size: 12px; margin-bottom: 8px; line-height: 1.4;">${item.question}</div>` : ''}
+        <button onclick="addCombinedAudio('${item.folder}', ${item.file_count}, ${item.has_combined}, '${item.question || ''}')" style="background: #0284c7; color: white; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; font-size: 11px;">添加到帖子</button>
+      `;
+      
+      itemEl.appendChild(expandedDiv);
+    }
+    
+    // 在行内渲染单个音频文件
+    function renderIndividualAudioInline(folderItem, files, itemEl) {
+      const expandedDiv = document.createElement('div');
+      expandedDiv.className = 'expanded-content';
+      expandedDiv.style.cssText = `
+        margin-top: 12px; 
+        padding: 16px; 
+        background: #f0f9ff; 
+        border: 1px solid #0284c7; 
+        border-radius: 8px;
+      `;
+      
+      let filesHtml = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div style="font-weight: 600; color: #0c4a6e; font-size: 13px;">选择具体音频文件</div>
+          <button onclick="this.closest('.expanded-content').remove()" style="background: #ef4444; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 10px;">收起</button>
+        </div>
+        <div style="max-height: 200px; overflow-y: auto;">
+      `;
+      
+      files.forEach((file, index) => {
+        filesHtml += `
+          <div style="padding: 8px 12px; border: 1px solid #e0f2fe; border-radius: 6px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s;" 
+               onmouseover="this.style.background='#e0f2fe'" 
+               onmouseout="this.style.background=''" 
+               onclick="selectIndividualAudioFile('${folderItem.folder}', '${file.name}', '${file.question || ''}')">
+            <div style="font-weight: 600; color: #1f2937; margin-bottom: 4px; font-size: 13px;">${file.name.replace('.mp3', '')}</div>
+            ${file.question ? `<div style="color: #6b7280; font-size: 11px; line-height: 1.4;">${file.question}</div>` : ''}
+          </div>
+        `;
+      });
+      
+      filesHtml += '</div>';
+      expandedDiv.innerHTML = filesHtml;
+      itemEl.appendChild(expandedDiv);
+    }
+    
+    // 选择单个音频文件
+    function selectIndividualAudioFile(folder, filename, question) {
+      // 移除展开内容
+      document.querySelectorAll('.expanded-content').forEach(el => el.remove());
+      
+      // 添加到选中列表
+      const audioItem = {
+        folder: folder,
+        filename: filename,
+        question: question,
+        type: 'single'
+      };
+      
+      selectedItems.audios.push(audioItem);
+      updateContentPreview();
+      closeModal('audioModal');
+    }
+    
+    // 添加合集音频
+    function addCombinedAudio(folder, fileCount, hasCombined, question) {
+      // 移除展开内容
+      document.querySelectorAll('.expanded-content').forEach(el => el.remove());
+      
+      // 添加到选中列表
+      const audioItem = {
+        folder: folder,
+        file_count: fileCount,
+        has_combined: hasCombined,
+        question: question,
+        type: 'combined'
+      };
+      
+      selectedItems.audios.push(audioItem);
+      updateContentPreview();
+      closeModal('audioModal');
+    }
+    
+
+    
+
+    
+    // 加载文章列表
+    function loadArticleList() {
+      fetch('/api/get_articles_list')
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            articleData = data.categories;
+            setupArticleModal();
+          }
+        })
+        .catch(e => console.error('加载文章列表失败:', e));
+    }
+    
+    // 设置文章模态框
+    function setupArticleModal() {
+      const categoryItems = document.querySelectorAll('#articleCategoryList .category-item');
+      categoryItems.forEach(item => {
+        item.onclick = () => {
+          const category = item.dataset.category;
+          selectArticleCategory(category, item);
+        };
+      });
+    }
+    
+    // 选择文章分类
+    function selectArticleCategory(category, itemEl) {
+      // 更新选中状态
+      document.querySelectorAll('#articleCategoryList .category-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      itemEl.classList.add('active');
+      
+      // 更新面包屑
+      document.getElementById('articleBreadcrumb').textContent = category;
+      
+      // 渲染内容
+      renderArticleContent(category);
+    }
+    
+    // 渲染文章内容
+    function renderArticleContent(category) {
+      const contentList = document.getElementById('articleContentList');
+      const items = articleData[category] || [];
+      
+      if (items.length === 0) {
+        contentList.innerHTML = '<div class="empty-content">该分类下暂无内容</div>';
+        return;
+      }
+      
+      contentList.innerHTML = '';
+      items.forEach(item => {
+        const itemEl = document.createElement('div');
+        itemEl.className = 'content-item';
+        itemEl.onclick = () => selectArticleItem(item, itemEl);
+        
+        const titleEl = document.createElement('div');
+        titleEl.className = 'content-item-title';
+        titleEl.textContent = item.title;
+        
+        const metaEl = document.createElement('div');
+        metaEl.className = 'content-item-meta';
+        metaEl.textContent = `${item.highlight_count} 个高亮词汇`;
+        
+        itemEl.appendChild(titleEl);
+        itemEl.appendChild(metaEl);
+        contentList.appendChild(itemEl);
+      });
+    }
+    
+    // 选择文章项目
+    function selectArticleItem(item, itemEl) {
+      // 添加到选中列表
+      selectedItems.articles.push(item);
+      updateContentPreview();
+      closeModal('articleModal');
+    }
+    
+
+    
+
+    
+    // 发送消息到服务器
+    function postMessage(message) {
+      // 添加token到请求体
+      message.token = authToken;
+      
+      fetch('/api/messages', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify(message)
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          // 关闭新帖表单
+          cancelNewPost();
+          // 立即将新帖添加到列表顶部，而不是重新加载整个列表
+          addNewPostToTop(data.message);
+        } else {
+          alert('发送失败：' + (data.error || '未知错误'));
+        }
+      })
+      .catch(e => {
+        alert('发送失败：' + e.message);
+      });
+    }
+    
+    // 将新帖添加到列表顶部
+    function addNewPostToTop(newPost) {
+      const postsList = document.getElementById('postsList');
+      const emptyState = document.getElementById('emptyState');
+      
+      // 隐藏空状态
+      if (emptyState) {
+        emptyState.style.display = 'none';
+      }
+      
+      // 创建新帖元素
+      const newPostEl = createPostElement(newPost);
+      
+      // 添加到列表顶部
+      if (postsList.firstChild) {
+        postsList.insertBefore(newPostEl, postsList.firstChild);
+      } else {
+        postsList.appendChild(newPostEl);
+      }
+      
+      // 添加一个轻微的动画效果
+      newPostEl.style.opacity = '0';
+      newPostEl.style.transform = 'translateY(-20px)';
+      setTimeout(() => {
+        newPostEl.style.transition = 'all 0.3s ease';
+        newPostEl.style.opacity = '1';
+        newPostEl.style.transform = 'translateY(0)';
+      }, 100);
+    }
+    
+    // 加载所有帖子
+    function loadPosts() {
+      fetch('/api/messages')
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            renderPosts(data.messages);
+          }
+        })
+        .catch(e => console.error('加载帖子失败:', e));
+    }
+    
+    // 渲染帖子列表
+    function renderPosts(posts) {
+      const container = document.getElementById('postsList');
+      const emptyState = document.getElementById('emptyState');
+      
+      if (posts.length === 0) {
+        emptyState.style.display = 'block';
+        return;
+      } else {
+        emptyState.style.display = 'none';
+      }
+      
+      container.innerHTML = '';
+      
+      posts.forEach(post => {
+        const postEl = createPostElement(post);
+        container.appendChild(postEl);
+      });
+    }
+    
+    // 创建帖子元素
+    function createPostElement(post) {
+      const postEl = document.createElement('div');
+      postEl.className = 'post-card';
+      
+      const header = document.createElement('div');
+      header.className = 'post-header';
+      
+      const avatar = document.createElement('img');
+      avatar.className = 'user-avatar';
+      avatar.src = `/static/${post.user.avatar}`;
+      avatar.alt = post.user.display_name;
+      
+      const userInfo = document.createElement('div');
+      userInfo.className = 'post-user-info';
+      
+      const userName = document.createElement('div');
+      userName.className = 'user-name';
+      userName.textContent = post.user.display_name;
+      
+      const time = document.createElement('div');
+      time.className = 'post-time';
+      time.textContent = formatTime(post.timestamp);
+      
+      userInfo.appendChild(userName);
+      userInfo.appendChild(time);
+      
+      // 如果是当前用户的帖子，添加删除按钮到右上角
+      if (currentUser && post.user.username === currentUser.username) {
+        const deleteBtn = document.createElement('button');
+        deleteBtn.innerHTML = '🗑️';
+        deleteBtn.title = '删除帖子';
+        deleteBtn.style.cssText = `
+          position: absolute;
+          top: 0;
+          right: 0;
+          background: none; 
+          border: none; 
+          color: #9ca3af; 
+          cursor: pointer; 
+          font-size: 14px; 
+          padding: 6px; 
+          border-radius: 6px; 
+          transition: all 0.2s;
+          opacity: 0.7;
+        `;
+        deleteBtn.onmouseover = () => {
+          deleteBtn.style.background = '#fee2e2';
+          deleteBtn.style.color = '#dc2626';
+          deleteBtn.style.opacity = '1';
+          deleteBtn.style.transform = 'scale(1.1)';
+        };
+        deleteBtn.onmouseout = () => {
+          deleteBtn.style.background = 'none';
+          deleteBtn.style.color = '#9ca3af';
+          deleteBtn.style.opacity = '0.7';
+          deleteBtn.style.transform = 'scale(1)';
+        };
+        deleteBtn.onclick = (e) => {
+          e.stopPropagation();
+          deletePost(post.id);
+        };
+        header.appendChild(deleteBtn);
+      }
+      header.appendChild(avatar);
+      header.appendChild(userInfo);
+      
+      const content = document.createElement('div');
+      content.className = 'post-content';
+      
+      // 根据消息类型渲染不同内容
+      let hasContent = false;
+      
+      if (post.type === 'mixed_content') {
+        // 文字内容
+        if (post.content.text) {
+          const textDiv = document.createElement('div');
+          textDiv.className = 'text-content';
+          if (hasContent) textDiv.className += ' content-section';
+          textDiv.innerHTML = escapeHtml(post.content.text);
+          content.appendChild(textDiv);
+          hasContent = true;
+        }
+        
+        // 音频内容
+        if (post.content.audios && post.content.audios.length > 0) {
+          post.content.audios.forEach(audio => {
+            const audioCard = createAudioCard(audio);
+            if (hasContent) audioCard.classList.add('content-section');
+            content.appendChild(audioCard);
+            hasContent = true;
+          });
+        }
+        
+        // 文章内容
+        if (post.content.articles && post.content.articles.length > 0) {
+          post.content.articles.forEach(article => {
+            const articleCard = createArticleCard(article);
+            if (hasContent) articleCard.classList.add('content-section');
+            content.appendChild(articleCard);
+            hasContent = true;
+          });
+        }
+        
+        // 图片内容
+        if (post.content.images && post.content.images.length > 0) {
+          post.content.images.forEach(image => {
+            const imageDiv = document.createElement('div');
+            imageDiv.className = 'image-content';
+            if (hasContent) imageDiv.classList.add('content-section');
+            imageDiv.innerHTML = `<img class="message-image" src="/message_images/${image.filename}" alt="图片" ondblclick="openImageModal('/message_images/${image.filename}')" title="双击查看大图">`;
+            content.appendChild(imageDiv);
+            hasContent = true;
+          });
+        }
+      } else if (post.type === 'text') {
+        content.innerHTML = `<div class="text-content">${escapeHtml(post.content.text)}</div>        `;
+      } else if (post.type === 'image') {
+        content.innerHTML = `
+          <div class="image-content">
+            <img class="message-image" src="/message_images/${post.content.filename}" alt="图片" ondblclick="openImageModal('/message_images/${post.content.filename}')" title="双击查看大图">
+            ${post.content.caption ? `<div class="text-content" style="margin-top: 8px;">${escapeHtml(post.content.caption)}</div>` : ''}
+          </div>
+        `;
+      } else if (post.type === 'audio_share') {
+        if (post.content.text) {
+          content.innerHTML = `<div class="text-content">${escapeHtml(post.content.text)}</div>`;
+        }
+        const audioCard = createAudioCard(post.content);
+        content.appendChild(audioCard);
+      } else if (post.type === 'article_share') {
+        if (post.content.text) {
+          content.innerHTML = `<div class="text-content">${escapeHtml(post.content.text)}</div>`;
+        }
+        const articleCard = createArticleCard(post.content);
+        content.appendChild(articleCard);
+      }
+      
+      postEl.appendChild(header);
+      postEl.appendChild(content);
+      
+      return postEl;
+    }
+    
+    // 创建音频卡片
+    function createAudioCard(audioContent) {
+      const card = document.createElement('div');
+      card.className = 'audio-card';
+      
+      if (audioContent.type === 'single') {
+        card.onclick = () => {
+          // 构造详细的单个音频跳转URL，包含文件夹和具体音频文件信息
+          const jumpUrl = `/speaking#folder=${encodeURIComponent(audioContent.folder)}&file=${encodeURIComponent(audioContent.filename)}`;
+          window.open(jumpUrl, '_blank');
+        };
+        
+        const header = document.createElement('div');
+        header.className = 'card-header';
+        
+        const icon = document.createElement('div');
+        icon.className = 'card-icon';
+        icon.textContent = '🎤';
+        
+        const title = document.createElement('div');
+        title.className = 'card-title';
+        title.textContent = audioContent.filename.replace('.mp3', '');
+        
+        header.appendChild(icon);
+        header.appendChild(title);
+        
+        const desc = document.createElement('div');
+        desc.className = 'card-desc';
+        desc.style.whiteSpace = 'pre-wrap';
+        if (audioContent.question) {
+          desc.textContent = audioContent.question;
+        } else {
+          desc.textContent = '点击查看音频内容';
+        }
+        
+        const meta = document.createElement('div');
+        meta.className = 'card-meta';
+        meta.textContent = `来自：${audioContent.folder}`;
+        
+        card.appendChild(header);
+        card.appendChild(desc);
+        card.appendChild(meta);
+        
+      } else {
+        // 合集音频
+        card.onclick = () => {
+          // 构造合集音频跳转URL，直接定位到具体合集
+          window.open(`/combined#folder=${encodeURIComponent(audioContent.folder)}`, '_blank');
+        };
+        
+        const header = document.createElement('div');
+        header.className = 'card-header';
+        
+        const icon = document.createElement('div');
+        icon.className = 'card-icon';
+        icon.textContent = '🎵';
+        
+        const title = document.createElement('div');
+        title.className = 'card-title';
+        title.textContent = audioContent.folder;
+        
+        header.appendChild(icon);
+        header.appendChild(title);
+        
+        const desc = document.createElement('div');
+        desc.className = 'card-desc';
+        desc.style.whiteSpace = 'pre-wrap';
+        if (audioContent.question) {
+          desc.textContent = audioContent.question;
+        } else {
+          desc.textContent = '点击查看音频内容';
+        }
+        
+        const meta = document.createElement('div');
+        meta.className = 'card-meta';
+        meta.textContent = `${audioContent.file_count} 个音频的合集`;
+        
+        card.appendChild(header);
+        card.appendChild(desc);
+        card.appendChild(meta);
+      }
+      
+      return card;
+    }
+    
+    // 创建文章卡片
+    function createArticleCard(articleContent) {
+      const card = document.createElement('div');
+      card.className = 'article-card';
+      card.onclick = () => {
+        // 构造正确的文章跳转URL，使用intensive页面的hash格式
+        window.open(`/intensive#article-${articleContent.id || articleContent.article_id}`, '_blank');
+      };
+      
+      const header = document.createElement('div');
+      header.className = 'card-header';
+      
+      const icon = document.createElement('div');
+      icon.className = 'card-icon';
+      icon.textContent = '📝';
+      
+      const title = document.createElement('div');
+      title.className = 'card-title';
+      title.textContent = articleContent.title;
+      
+      header.appendChild(icon);
+      header.appendChild(title);
+      
+      const desc = document.createElement('div');
+      desc.className = 'card-desc';
+      desc.textContent = `${articleContent.category} 文章 • 点击查看精读内容`;
+      
+      const meta = document.createElement('div');
+      meta.className = 'card-meta';
+      meta.textContent = `${articleContent.highlight_count} 个高亮词汇`;
+      
+      card.appendChild(header);
+      card.appendChild(desc);
+      card.appendChild(meta);
+      
+      return card;
+    }
+    
+    // 格式化时间
+    function formatTime(timestamp) {
+      const date = new Date(timestamp);
+      const now = new Date();
+      const diff = now - date;
+      
+      if (diff < 60000) { // 1分钟内
+        return '刚刚';
+      } else if (diff < 3600000) { // 1小时内
+        return Math.floor(diff / 60000) + '分钟前';
+      } else if (diff < 86400000) { // 24小时内
+        return Math.floor(diff / 3600000) + '小时前';
+      } else if (diff < 604800000) { // 7天内
+        return Math.floor(diff / 86400000) + '天前';
+      } else {
+        return date.toLocaleDateString();
+      }
+    }
+    
+    // HTML转义
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    // 删除帖子
+    function deletePost(postId) {
+      if (!confirm('确定要删除这个帖子吗？删除后无法恢复。')) {
+        return;
+      }
+      
+      fetch(`/api/messages/${postId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${authToken}`
+        }
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          // 重新加载帖子列表
+          loadPosts();
+        } else {
+          alert('删除失败：' + (data.error || '未知错误'));
+        }
+      })
+      .catch(e => {
+        alert('删除失败：' + e.message);
+      });
+    }
+    
+    // 打开图片放大模态框
+    function openImageModal(imageSrc) {
+      const modal = document.getElementById('imageModal');
+      const modalImage = document.getElementById('modalImage');
+      modalImage.src = imageSrc;
+      modal.style.display = 'flex';
+      
+      // 添加淡入动画
+      modal.style.opacity = '0';
+      setTimeout(() => {
+        modal.style.transition = 'opacity 0.3s ease';
+        modal.style.opacity = '1';
+      }, 10);
+    }
+    
+    // 关闭图片放大模态框
+    function closeImageModal() {
+      const modal = document.getElementById('imageModal');
+      modal.style.opacity = '0';
+      setTimeout(() => {
+        modal.style.display = 'none';
+      }, 300);
+    }
+  </script>
+</body>
+</html>

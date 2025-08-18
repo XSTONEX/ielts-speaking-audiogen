@@ -147,6 +147,20 @@
         @media (max-width: 768px) { .container { margin: 20px auto; padding: 24px 20px; } h2 { font-size: 24px; } .actions { gap: 12px; flex-wrap: wrap; justify-content: center; } button { padding: 10px 20px; font-size: 15px; min-width: 100px; } .audio-list h3 { font-size: 20px; } .folder-header { font-size: 16px; } .audio-file .view-text-btn { padding: 2px 8px; font-size: 13px; margin-left: 6px; } .audio-file span { font-size: 14px; } }
         @media (max-width: 600px) { .container { margin: 15px auto; padding: 20px 16px; } h2 { font-size: 22px; } .actions { gap: 10px; flex-direction: column; align-items: stretch; } button { padding: 10px 16px; font-size: 14px; min-width: auto; width: 100%; } .audio-list h3 { font-size: 18px; } .folder-header { font-size: 15px; } .audio-file { flex-direction: column; align-items: stretch; gap: 8px; } .audio-file > div { flex-wrap: wrap; gap: 8px; } .audio-file .view-text-btn { padding: 2px 6px; font-size: 12px; margin-left: 0; flex-shrink: 0; } .audio-file span { font-size: 13px; word-break: break-word; } audio { width: 100%; min-width: 200px; } }
         @media (max-width: 480px) { .container { margin: 10px auto; padding: 16px 12px; } h2 { font-size: 20px; } label { font-size: 14px; margin-top: 18px; } input[type="text"], textarea { padding: 10px 12px; font-size: 15px; } .actions { gap: 8px; margin-top: 18px; } button { padding: 8px 12px; font-size: 13px; } .audio-list { margin-top: 32px; } .audio-list h3 { font-size: 16px; } .folder-header { font-size: 14px; } .audio-folder { padding: 12px 14px 8px 14px; margin-bottom: 16px; } .audio-file .view-text-btn { padding: 1px 5px; font-size: 11px; } .audio-question { padding: 8px 12px; font-size: 14px; } .audio-text-content { padding: 10px 12px; font-size: 14px; } }
+        
+        @keyframes gentle-glow {
+          0% { 
+            box-shadow: 0 8px 32px rgba(245, 158, 11, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+          }
+          50% { 
+            box-shadow: 0 12px 40px rgba(245, 158, 11, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px) scale(1.03);
+          }
+          100% { 
+            box-shadow: 0 8px 32px rgba(245, 158, 11, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px) scale(1.02);
+          }
+        }
     </style>
 </head>
 <body>
@@ -201,7 +215,109 @@
     function fetchServerPassword(){ return fetch('/get_password').then(r=>r.json()).then(d=>{ SERVER_PASSWORD = d.password; }); }
     function checkStoredToken(){ const tk=localStorage.getItem('authToken'); if(!tk) return Promise.resolve(false); return fetch('/verify_token',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({token:tk})}).then(r=>r.json()).then(d=>{ if(d.valid){ currentToken=tk; return true; } localStorage.removeItem('authToken'); return false; }).catch(()=>{ localStorage.removeItem('authToken'); return false; }); }
     function checkPassword(){ const input=document.getElementById('authPassword').value; fetch('/verify_password',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({password:input})}).then(r=>r.json()).then(d=>{ if(d.success){ currentToken=d.token; localStorage.setItem('authToken', d.token); document.getElementById('authOverlay').style.display='none'; document.body.style.overflow=''; loadFolderList(); loadAudioList(); } else { document.getElementById('authError').style.display=''; document.getElementById('authPassword').value=''; document.getElementById('authPassword').focus(); } }).catch(()=>{ document.getElementById('authError').style.display=''; }); }
-    window.onload = function(){ if(document.getElementById('authOverlay')){ document.body.style.overflow='hidden'; checkStoredToken().then(valid=>{ if(valid){ document.getElementById('authOverlay').style.display='none'; document.body.style.overflow=''; loadFolderList(); loadAudioList(); } else { document.getElementById('authPassword').focus(); fetchServerPassword(); } }); return; } loadFolderList(); loadAudioList(); }
+    window.onload = function(){ if(document.getElementById('authOverlay')){ document.body.style.overflow='hidden'; checkStoredToken().then(valid=>{ if(valid){ document.getElementById('authOverlay').style.display='none'; document.body.style.overflow=''; loadFolderList(); loadAudioList(); setTimeout(checkURLHash, 1000); } else { document.getElementById('authPassword').focus(); fetchServerPassword(); } }); return; } loadFolderList(); loadAudioList(); setTimeout(checkURLHash, 1000); }
+    
+    // 检查URL hash并处理跳转
+    function checkURLHash() {
+      const hash = window.location.hash;
+      if (hash) {
+        const params = new URLSearchParams(hash.substring(1));
+        const folder = params.get('folder');
+        const file = params.get('file');
+        
+        if (folder && file) {
+          // 跳转到具体音频文件
+          jumpToSpecificAudio(folder, file);
+        } else if (folder) {
+          // 跳转到文件夹
+          jumpToFolder(folder);
+        }
+      }
+    }
+    
+    // 跳转到具体音频文件
+    function jumpToSpecificAudio(folder, file) {
+      // 首先确定分类
+      let category = 'Part1';
+      if (folder.startsWith('P2')) category = 'Part2';
+      else if (folder.startsWith('P3')) category = 'Part3';
+      else if (!folder.startsWith('P1')) category = '其他';
+      
+      // 展开分类
+      categoryState[category] = true;
+      
+      // 展开文件夹
+      folderState[folder] = true;
+      
+      // 重新加载音频列表
+      loadAudioList();
+      
+      // 延迟高亮具体音频
+      setTimeout(() => {
+        const audioElements = document.querySelectorAll('.audio-file');
+        audioElements.forEach(audioEl => {
+          const audioName = audioEl.querySelector('span')?.textContent;
+          if (audioName && audioName.includes(file.replace('.mp3', ''))) {
+            // 毛玻璃高亮效果
+            audioEl.style.background = 'rgba(254, 243, 199, 0.8)';
+            audioEl.style.backdropFilter = 'blur(10px)';
+            audioEl.style.borderRadius = '12px';
+            audioEl.style.boxShadow = '0 8px 32px rgba(245, 158, 11, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3)';
+            audioEl.style.transform = 'translateY(-2px) scale(1.02)';
+            audioEl.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+            
+            // 添加柔和的脉冲效果
+            audioEl.style.animation = 'gentle-glow 3s ease-in-out';
+            
+            // 滚动到视图中心
+            audioEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // 5秒后移除高亮效果
+            setTimeout(() => {
+              audioEl.style.animation = '';
+              audioEl.style.transform = '';
+              audioEl.style.backdropFilter = '';
+              audioEl.style.background = '';
+              audioEl.style.boxShadow = '';
+            }, 5000);
+          }
+        });
+      }, 500);
+    }
+    
+    // 跳转到文件夹
+    function jumpToFolder(folder) {
+      // 首先确定分类
+      let category = 'Part1';
+      if (folder.startsWith('P2')) category = 'Part2';
+      else if (folder.startsWith('P3')) category = 'Part3';
+      else if (!folder.startsWith('P1')) category = '其他';
+      
+      // 展开分类
+      categoryState[category] = true;
+      
+      // 展开文件夹
+      folderState[folder] = true;
+      
+      // 重新加载音频列表
+      loadAudioList();
+      
+      // 延迟滚动到文件夹
+      setTimeout(() => {
+        const folderElements = document.querySelectorAll('.folder-header');
+        folderElements.forEach(folderEl => {
+          if (folderEl.textContent.includes(folder)) {
+            folderEl.style.background = 'rgba(254, 243, 199, 0.8)';
+            folderEl.style.backdropFilter = 'blur(8px)';
+            folderEl.style.borderRadius = '12px';
+            folderEl.style.boxShadow = '0 8px 24px rgba(245, 158, 11, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
+            folderEl.style.transform = 'translateY(-1px) scale(1.01)';
+            folderEl.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+            folderEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        });
+      }, 500);
+    }
     function loadFolderList(){ fetch('/list_folders').then(r=>r.json()).then(data=>{ const datalist=document.getElementById('folderList'); datalist.innerHTML=''; (data.folders||[]).forEach(folder=>{ const option=document.createElement('option'); option.value=folder; datalist.appendChild(option); }); }); }
     function setupAudioExclusivePlay(){ document.querySelectorAll('.audio-file audio').forEach(audio=>{ audio.addEventListener('play', function(){ if(lastPlayingAudio && lastPlayingAudio!==audio){ lastPlayingAudio.pause(); } lastPlayingAudio = audio; }); audio.addEventListener('pause', function(){ if(lastPlayingAudio===audio && audio.paused){ lastPlayingAudio=null; } }); }); }
     </script>

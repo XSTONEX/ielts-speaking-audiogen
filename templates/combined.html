@@ -1018,7 +1018,7 @@ function playCombined(folder) {
     document.getElementById('playerTitle').textContent = `正在播放：${folder}`;
     
     const audioPlayer = document.getElementById('audioPlayer');
-    audioPlayer.src = `/combined_audio/${folder}`;
+    audioPlayer.src = `/combined_audio/${folder}.mp3`;
     audioPlayer.style.display = 'block';
     
     // 加载字幕
@@ -1160,11 +1160,85 @@ window.onload = function() {
                 document.body.style.overflow = '';
             }
             loadFolderList();
+            setTimeout(checkURLHash, 1000);
         } else {
             // token无效或不存在，重定向到登录页面
             window.location.href = '/login';
         }
     });
+}
+
+// 检查URL hash并处理合集跳转
+function checkURLHash() {
+    const hash = window.location.hash;
+    if (hash) {
+        const params = new URLSearchParams(hash.substring(1));
+        const folder = params.get('folder');
+        
+        if (folder) {
+            // 跳转到具体合集并自动播放
+            jumpToSpecificCombined(folder);
+        }
+    }
+}
+
+// 跳转到具体合集音频
+function jumpToSpecificCombined(folder) {
+    // 延迟查找并点击对应的合集
+    setTimeout(() => {
+        let foundCard = null;
+        let foundPlayBtn = null;
+        let foundGenerateBtn = null;
+        
+        // 查找所有可能的ID变体（考虑分类后缀）
+        const possibleSuffixes = ['', '-all', '-Part1', '-Part2', '-Part3', '-其他'];
+        
+        for (const suffix of possibleSuffixes) {
+            const cardId = `card-${folder}${suffix}`;
+            const playId = `play-${folder}${suffix}`;
+            const generateId = `generate-${folder}${suffix}`;
+            
+            const card = document.getElementById(cardId);
+            const playBtn = document.getElementById(playId);
+            const generateBtn = document.getElementById(generateId);
+            
+            if (card) {
+                foundCard = card;
+                foundPlayBtn = playBtn;
+                foundGenerateBtn = generateBtn;
+                break;
+            }
+        }
+        
+        if (foundCard) {
+            // 毛玻璃高亮效果
+            foundCard.style.background = 'rgba(254, 243, 199, 0.8)';
+            foundCard.style.backdropFilter = 'blur(10px)';
+            foundCard.style.borderRadius = '12px';
+            foundCard.style.boxShadow = '0 8px 32px rgba(245, 158, 11, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3)';
+            foundCard.style.transform = 'translateY(-2px) scale(1.02)';
+            foundCard.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+            
+            // 滚动到视图中心
+            foundCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // 尝试播放合集
+            if (foundPlayBtn && !foundPlayBtn.disabled) {
+                setTimeout(() => {
+                    foundPlayBtn.click();
+                }, 800);
+            } else if (foundGenerateBtn) {
+                // 如果没有合集，提示生成
+                setTimeout(() => {
+                    if (confirm('该文件夹还没有生成合集音频，是否现在生成？')) {
+                        foundGenerateBtn.click();
+                    }
+                }, 500);
+            }
+        } else {
+            console.log('未找到对应的合集文件夹:', folder);
+        }
+    }, 1000);
 }
 </script>
 </body>

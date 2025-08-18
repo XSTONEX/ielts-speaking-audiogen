@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 from pydub import AudioSegment
 import secrets
 from werkzeug.wrappers import Response
+from werkzeug.utils import secure_filename
+import uuid
 load_dotenv()
 
 app = Flask(__name__, static_folder='static', static_url_path='/static')
@@ -18,9 +20,13 @@ TOKEN_FILE = 'tokens.json'
 USERS_FILE = 'users.json'
 READING_DIR = 'reading_exam'
 INTENSIVE_DIR = 'intensive_articles'
+MESSAGE_BOARD_DIR = 'message_board'
+MESSAGE_IMAGES_DIR = 'message_board/images'
 os.makedirs(MOTHER_DIR, exist_ok=True)
 os.makedirs(COMBINED_DIR, exist_ok=True)
 os.makedirs(INTENSIVE_DIR, exist_ok=True)
+os.makedirs(MESSAGE_BOARD_DIR, exist_ok=True)
+os.makedirs(MESSAGE_IMAGES_DIR, exist_ok=True)
 
 # Token管理
 def load_tokens():
@@ -941,6 +947,285 @@ def intensive_delete_article():
     try:
         os.remove(path)
         return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ------------------------
+# Message Board (留言板)
+# ------------------------
+
+def _message_board_file():
+    return os.path.join(MESSAGE_BOARD_DIR, 'messages.json')
+
+def load_messages():
+    """加载留言数据"""
+    messages_file = _message_board_file()
+    if os.path.exists(messages_file):
+        try:
+            with open(messages_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except:
+            return []
+    return []
+
+def save_messages(messages):
+    """保存留言数据"""
+    messages_file = _message_board_file()
+    with open(messages_file, 'w', encoding='utf-8') as f:
+        json.dump(messages, f, ensure_ascii=False, indent=2)
+
+def generate_message_id():
+    """生成消息ID"""
+    return f"msg_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{str(uuid.uuid4())[:8]}"
+
+@app.route('/message_board')
+def message_board_page():
+    return send_file('templates/message_board.html')
+
+@app.route('/api/messages', methods=['GET'])
+def get_messages():
+    """获取所有留言，按时间倒序"""
+    try:
+        messages = load_messages()
+        # 按时间倒序排列（最新的在前面）
+        messages.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+        return jsonify({'success': True, 'messages': messages})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/messages', methods=['POST'])
+def post_message():
+    """发送新留言"""
+    try:
+        # 验证用户登录状态
+        token = request.headers.get('Authorization')
+        if token and token.startswith('Bearer '):
+            token = token[7:]
+        else:
+            token = request.json.get('token') if request.json else None
+            
+        if not token or not is_token_valid(token):
+            return jsonify({'error': '未登录或token无效'}), 401
+            
+        # 从token获取用户信息
+        tokens = load_tokens()
+        username = tokens.get(token, {}).get('username')
+        
+        if not username:
+            return jsonify({'error': '无法获取用户信息'}), 401
+            
+        users = load_users()
+        if username not in users:
+            return jsonify({'error': '用户不存在'}), 404
+            
+        user_data = users[username]
+        user_info = {
+            'username': user_data['username'],
+            'display_name': user_data['display_name'],
+            'role': user_data['role'],
+            'avatar': user_data['avatar']
+        }
+        
+        data = request.json or {}
+        message_type = data.get('type', 'text')
+        content = data.get('content', {})
+        
+        message = {
+            'id': generate_message_id(),
+            'user': user_info,
+            'type': message_type,
+            'content': content,
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        messages = load_messages()
+        messages.append(message)
+        save_messages(messages)
+        
+        return jsonify({'success': True, 'message': message})
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/messages/<message_id>', methods=['DELETE'])
+def delete_message(message_id):
+    """删除留言"""
+    try:
+        # 验证用户登录状态
+        token = request.headers.get('Authorization')
+        if token and token.startswith('Bearer '):
+            token = token[7:]
+        else:
+            return jsonify({'error': '未登录或token无效'}), 401
+            
+        if not token or not is_token_valid(token):
+            return jsonify({'error': '未登录或token无效'}), 401
+            
+        # 从token获取用户信息
+        tokens = load_tokens()
+        username = tokens.get(token, {}).get('username')
+        
+        if not username:
+            return jsonify({'error': '无法获取用户信息'}), 401
+        
+        messages = load_messages()
+        
+        # 找到要删除的消息
+        message_to_delete = None
+        message_index = -1
+        for i, msg in enumerate(messages):
+            if msg.get('id') == message_id:
+                message_to_delete = msg
+                message_index = i
+                break
+        
+        if not message_to_delete:
+            return jsonify({'error': '消息不存在'}), 404
+            
+        # 检查是否是消息的作者
+        if message_to_delete.get('user', {}).get('username') != username:
+            return jsonify({'error': '只能删除自己的消息'}), 403
+        
+        # 删除消息
+        messages.pop(message_index)
+        save_messages(messages)
+        
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/upload_message_image', methods=['POST'])
+def upload_message_image():
+    """上传留言板图片"""
+    try:
+        if 'image' not in request.files:
+            return jsonify({'error': '没有找到图片文件'}), 400
+            
+        file = request.files['image']
+        username = request.form.get('user_id')  # 前端传的是username
+        
+        if not username:
+            return jsonify({'error': '用户信息无效'}), 400
+            
+        if file.filename == '':
+            return jsonify({'error': '没有选择文件'}), 400
+            
+        if file and _allowed_file(file.filename):
+            # 创建用户专属目录
+            user_dir = os.path.join(MESSAGE_IMAGES_DIR, username)
+            os.makedirs(user_dir, exist_ok=True)
+            
+            # 生成安全的文件名
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            file_ext = os.path.splitext(secure_filename(file.filename))[1]
+            filename = f'{timestamp}_{str(uuid.uuid4())[:8]}{file_ext}'
+            
+            filepath = os.path.join(user_dir, filename)
+            file.save(filepath)
+            
+            # 返回相对路径供前端使用
+            relative_path = f'{username}/{filename}'
+            return jsonify({'success': True, 'filename': relative_path})
+            
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+def _allowed_file(filename):
+    """检查文件类型是否允许"""
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/message_images/<path:filename>')
+def serve_message_image(filename):
+    """提供留言板图片文件"""
+    return send_from_directory(MESSAGE_IMAGES_DIR, filename)
+
+@app.route('/api/get_audio_list', methods=['GET'])
+def get_audio_list_for_share():
+    """获取音频列表供分享使用"""
+    try:
+        categories = {
+            'Part1': [],
+            'Part2': [],
+            'Part3': [],
+            '其他': []
+        }
+        
+        if not os.path.exists(MOTHER_DIR):
+            return jsonify({'success': True, 'categories': categories})
+            
+        for folder in os.listdir(MOTHER_DIR):
+            folder_path = os.path.join(MOTHER_DIR, folder)
+            if os.path.isdir(folder_path) and not folder.startswith('.'):
+                files = [f for f in os.listdir(folder_path) if f.endswith('.mp3')]
+                if files:
+                    # 检查是否有合集
+                    combined_file = os.path.join(COMBINED_DIR, f"{folder}.mp3")
+                    has_combined = os.path.exists(combined_file)
+                    
+                    folder_info = {
+                        'folder': folder,
+                        'file_count': len(files),
+                        'has_combined': has_combined
+                    }
+                    
+                    # 对于Part2，添加问题信息
+                    if folder.startswith('P2'):
+                        question_file = os.path.join(folder_path, 'question.txt')
+                        if os.path.exists(question_file):
+                            try:
+                                with open(question_file, 'r', encoding='utf-8') as f:
+                                    folder_info['question'] = f.read().strip()
+                            except:
+                                pass
+                    
+                    # 分类
+                    if folder.startswith('P1'):
+                        categories['Part1'].append(folder_info)
+                    elif folder.startswith('P2'):
+                        categories['Part2'].append(folder_info)
+                    elif folder.startswith('P3'):
+                        categories['Part3'].append(folder_info)
+                    else:
+                        categories['其他'].append(folder_info)
+        
+        return jsonify({'success': True, 'categories': categories})
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/get_articles_list', methods=['GET'])
+def get_articles_list_for_share():
+    """获取文章列表供分享使用"""
+    try:
+        categories = {'Reading': [], 'Listening': [], 'Writing': []}
+        
+        if not os.path.exists(INTENSIVE_DIR):
+            return jsonify({'success': True, 'categories': categories})
+            
+        for fname in os.listdir(INTENSIVE_DIR):
+            if not fname.endswith('.json'):
+                continue
+            fpath = os.path.join(INTENSIVE_DIR, fname)
+            try:
+                with open(fpath, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                article_info = {
+                    'id': data.get('id'),
+                    'title': data.get('title'),
+                    'category': data.get('category', 'Reading'),
+                    'highlight_count': len(data.get('highlights') or [])
+                }
+                category = article_info['category']
+                if category in categories:
+                    categories[category].append(article_info)
+            except:
+                continue
+                
+        return jsonify({'success': True, 'categories': categories})
+        
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
