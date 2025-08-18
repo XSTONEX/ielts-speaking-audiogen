@@ -1151,23 +1151,20 @@ function showMessage(message, type) {
 
 // 页面加载
 window.onload = function() {
-    if (document.getElementById('authOverlay')) {
-        document.body.style.overflow = 'hidden';
-        
-        // 首先检查存储的token
-        checkStoredToken().then(isValidToken => {
-            if (isValidToken) {
-                // token有效，直接进入主界面
+    // 检查存储的token
+    checkStoredToken().then(isValidToken => {
+        if (isValidToken) {
+            // token有效，直接进入主界面
+            if (document.getElementById('authOverlay')) {
                 document.getElementById('authOverlay').style.display = 'none';
                 document.body.style.overflow = '';
-                loadFolderList();
-            } else {
-                // token无效或不存在，显示密码输入
-                document.getElementById('authPassword').focus();
-                fetchServerPassword();
             }
-        });
-    }
+            loadFolderList();
+        } else {
+            // token无效或不存在，重定向到登录页面
+            window.location.href = '/login';
+        }
+    });
 }
 </script>
 </body>

@@ -41,46 +41,80 @@
     }
   </style>
   <script>
-    let currentToken=null;
+    let currentToken = null;
+    let currentUser = null;
+    
     function checkStoredToken(){
       const tk = localStorage.getItem('authToken');
       if(!tk) return Promise.resolve(false);
       return fetch('/verify_token',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({token:tk})})
-        .then(r=>r.json()).then(d=>{ if(d.valid){ currentToken=tk; return true;} localStorage.removeItem('authToken'); return false; })
-        .catch(()=>{ localStorage.removeItem('authToken'); return false; });
-    }
-    function fetchServerPassword(){ return fetch('/get_password').then(r=>r.json()); }
-    function checkPassword(){
-      const val = document.getElementById('authPassword').value;
-      fetch('/verify_password',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({password:val})})
-        .then(r=>r.json()).then(d=>{
-          if(d.success){ currentToken=d.token; localStorage.setItem('authToken', d.token); document.getElementById('authOverlay').style.display='none'; document.body.style.overflow=''; }
-          else { document.getElementById('authError').style.display=''; document.getElementById('authPassword').value=''; document.getElementById('authPassword').focus(); }
-        }).catch(()=>{ document.getElementById('authError').style.display=''; });
-    }
-    window.onload = function(){
-      if(document.getElementById('authOverlay')){
-        document.body.style.overflow='hidden';
-        checkStoredToken().then(valid=>{
-          if(valid){ document.getElementById('authOverlay').style.display='none'; document.body.style.overflow=''; }
-          else { document.getElementById('authPassword').focus(); fetchServerPassword(); }
+        .then(r=>r.json()).then(d=>{ 
+          if(d.valid){ 
+            currentToken=tk; 
+            // 尝试获取存储的用户信息
+            const userStr = localStorage.getItem('currentUser');
+            if(userStr) {
+              try {
+                currentUser = JSON.parse(userStr);
+              } catch(e) {}
+            }
+            return true;
+          } 
+          localStorage.removeItem('authToken'); 
+          localStorage.removeItem('currentUser');
+          return false; 
+        })
+        .catch(()=>{ 
+          localStorage.removeItem('authToken'); 
+          localStorage.removeItem('currentUser');
+          return false; 
         });
-        return;
+    }
+    
+    function redirectToLogin() {
+      window.location.href = '/login';
+    }
+    
+    function showUserInfo() {
+      if(currentUser) {
+        const userDisplay = document.getElementById('userDisplay');
+        if(userDisplay) {
+          userDisplay.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+              <img src="/static/${currentUser.avatar}" alt="${currentUser.display_name}" style="width: 24px; height: 24px; border-radius: 50%;">
+              <span style="color: #374151; font-weight: 600;">${currentUser.display_name}</span>
+            </div>
+            <button onclick="logout()" style="background: #f3f4f6; border: 1px solid #d1d5db; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; color: #6b7280;">退出登录</button>
+          `;
+        }
       }
+    }
+    
+    function logout() {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('currentUser');
+      currentToken = null;
+      currentUser = null;
+      redirectToLogin();
+    }
+    
+    window.onload = function(){
+      checkStoredToken().then(valid=>{
+        if(valid) {
+          showUserInfo();
+        } else {
+          redirectToLogin();
+        }
+      });
     }
   </script>
 </head>
 <body>
-  <div id="authOverlay" style="position:fixed;z-index:10000;left:0;top:0;width:100vw;height:100vh;background:rgba(240,245,255,0.98);display:flex;align-items:center;justify-content:center;">
-    <div style="background:#fff;border-radius:14px;box-shadow:0 8px 32px 0 rgba(31,38,135,0.15);padding:38px 32px 32px 32px;max-width:90vw;min-width:320px;text-align:center;">
-        <h2 style="color:#3b4a6b;margin-bottom:18px;">请输入访问密码</h2>
-        <input id="authPassword" type="password" placeholder="Password" style="padding:12px 16px;font-size:17px;border-radius:8px;border:1.5px solid #d1d5db;width:80%;max-width:260px;outline:none;" autofocus onkeydown="if(event.key==='Enter'){checkPassword();}">
-        <div id="authError" style="color:#e94e77;margin-top:14px;display:none;font-size:15px;">密码错误，请重试。</div>
-        <button onclick="checkPassword()" style="margin-top:22px;width:60%;max-width:180px;">进入</button>
-    </div>
-  </div>
   <div class="wrap">
-    <h1>请选择模块</h1>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h1 style="margin: 0;">请选择模块</h1>
+      <div id="userDisplay" style="text-align: right;"></div>
+    </div>
     <div class="grid">
       <div class="card speaking" onclick="location.href='/speaking'">
         <div class="icon">🎤</div>

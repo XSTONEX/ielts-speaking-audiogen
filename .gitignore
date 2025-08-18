@@ -7,3 +7,5 @@ tokens.json
 reading_exam/
 intensive_articles/
 __pycache__/
+users.json
+tokens.json

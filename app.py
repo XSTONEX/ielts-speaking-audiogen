@@ -15,6 +15,7 @@ app = Flask(__name__, static_folder='static', static_url_path='/static')
 MOTHER_DIR = 'audio_files'
 COMBINED_DIR = 'combined_audio'
 TOKEN_FILE = 'tokens.json'
+USERS_FILE = 'users.json'
 READING_DIR = 'reading_exam'
 INTENSIVE_DIR = 'intensive_articles'
 os.makedirs(MOTHER_DIR, exist_ok=True)
@@ -54,17 +55,43 @@ def is_token_valid(token):
             save_tokens(tokens)
     return False
 
-def create_token():
+def create_token(username=None):
     """创建新token"""
     token = generate_token()
     expire_time = datetime.now() + timedelta(days=7)
     tokens = load_tokens()
     tokens[token] = {
         'expire_time': expire_time.isoformat(),
-        'created_time': datetime.now().isoformat()
+        'created_time': datetime.now().isoformat(),
+        'username': username
     }
     save_tokens(tokens)
     return token
+
+# 用户管理
+def load_users():
+    """加载用户数据"""
+    if os.path.exists(USERS_FILE):
+        try:
+            with open(USERS_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except:
+            return {}
+    return {}
+
+def save_users(users):
+    """保存用户数据"""
+    with open(USERS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(users, f, ensure_ascii=False, indent=2)
+
+def authenticate_user(username, password):
+    """验证用户凭据"""
+    users = load_users()
+    if username in users:
+        user_data = users[username]
+        if user_data.get('password') == password:
+            return user_data
+    return None
 
 
 # 你的 TTS 生成函数
@@ -99,6 +126,11 @@ def generate_tts(text, folder):
 @app.route('/')
 def index():
     return send_file('templates/modules.html')
+
+@app.route('/login')
+def login_page():
+    """登录页面"""
+    return send_file('templates/login.html')
 
 @app.route('/generate_audio', methods=['POST'])
 def generate_audio():
@@ -274,7 +306,7 @@ def get_password():
 
 @app.route('/verify_password', methods=['POST'])
 def verify_password():
-    """验证密码并返回token"""
+    """验证密码并返回token（向后兼容旧系统）"""
     data = request.json
     password = data.get('password')
     server_password = os.getenv('PASSWORD')
@@ -292,9 +324,83 @@ def verify_token():
     token = data.get('token')
     
     if token and is_token_valid(token):
+        # 尝试获取用户信息
+        tokens = load_tokens()
+        username = tokens.get(token, {}).get('username')
+        
+        if username:
+            users = load_users()
+            if username in users:
+                user_data = users[username]
+                user_info = {
+                    'username': user_data['username'],
+                    'display_name': user_data['display_name'],
+                    'role': user_data['role'],
+                    'avatar': user_data['avatar']
+                }
+                return jsonify({'valid': True, 'user': user_info})
+        
         return jsonify({'valid': True})
     else:
         return jsonify({'valid': False})
+
+@app.route('/user_login', methods=['POST'])
+def user_login():
+    """用户登录"""
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
+    
+    if not username or not password:
+        return jsonify({'success': False, 'error': '用户名和密码不能为空'})
+    
+    user_data = authenticate_user(username, password)
+    if user_data:
+        token = create_token(username)
+        # 返回用户信息（不包含密码）
+        user_info = {
+            'username': user_data['username'],
+            'display_name': user_data['display_name'],
+            'role': user_data['role'],
+            'avatar': user_data['avatar']
+        }
+        return jsonify({
+            'success': True, 
+            'token': token,
+            'user': user_info
+        })
+    else:
+        return jsonify({'success': False, 'error': '用户名或密码错误'})
+
+@app.route('/get_current_user', methods=['GET'])
+def get_current_user():
+    """获取当前登录用户信息"""
+    token = request.headers.get('Authorization')
+    if token and token.startswith('Bearer '):
+        token = token[7:]
+    
+    if not token or not is_token_valid(token):
+        return jsonify({'error': '未登录或token无效'}), 401
+    
+    # 从token获取用户名
+    tokens = load_tokens()
+    username = tokens.get(token, {}).get('username')
+    
+    if not username:
+        return jsonify({'error': '无法获取用户信息'}), 401
+    
+    users = load_users()
+    if username in users:
+        user_data = users[username]
+        user_info = {
+            'username': user_data['username'],
+            'display_name': user_data['display_name'],
+            'role': user_data['role'],
+            'avatar': user_data['avatar']
+        }
+        return jsonify({'success': True, 'user': user_info})
+    
+    return jsonify({'error': '用户不存在'}), 404
 
 @app.route('/combined')
 def combined_page():

@@ -194,21 +194,17 @@
     function checkPassword(){ const val=document.getElementById('authPassword').value; fetch('/verify_password',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({password:val})}).then(r=>r.json()).then(d=>{ if(d.success){ currentToken=d.token; localStorage.setItem('authToken', d.token); document.getElementById('authOverlay').style.display='none'; document.body.style.overflow=''; loadData(); } else { document.getElementById('authError').style.display=''; document.getElementById('authPassword').value=''; document.getElementById('authPassword').focus(); } }).catch(()=>{ document.getElementById('authError').style.display=''; }); }
     
     window.onload = function(){
-      if(document.getElementById('authOverlay')){
-        document.body.style.overflow='hidden';
-        checkStoredToken().then(valid=>{
-          if(valid){
+      checkStoredToken().then(valid=>{
+        if(valid){
+          if(document.getElementById('authOverlay')){
             document.getElementById('authOverlay').style.display='none';
             document.body.style.overflow='';
-            loadData();
-          } else {
-            document.getElementById('authPassword').focus();
-            fetchServerPassword();
           }
-        });
-        return;
-      }
-      loadData();
+          loadData();
+        } else {
+          window.location.href='/login';
+        }
+      });
     }
 
     // Category management
