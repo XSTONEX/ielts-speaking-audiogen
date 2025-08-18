@@ -98,7 +98,7 @@ def generate_tts(text, folder):
 
 @app.route('/')
 def index():
-    return send_file('modules.html')
+    return send_file('templates/modules.html')
 
 @app.route('/generate_audio', methods=['POST'])
 def generate_audio():
@@ -298,11 +298,11 @@ def verify_token():
 
 @app.route('/combined')
 def combined_page():
-    return send_file('combined.html')
+    return send_file('templates/combined.html')
  
 @app.route('/speaking')
 def speaking_page():
-    return send_file('speaking.html')
+    return send_file('templates/speaking.html')
 
 @app.route('/check_combined_audio')
 def check_combined_audio():
@@ -532,7 +532,7 @@ def serve_reading_file(subpath):
 
 @app.route('/reading')
 def reading_page():
-    return send_file('reading.html')
+    return send_file('templates/reading.html')
 
 @app.route('/reading_view/<path:subpath>')
 def reading_view(subpath):
@@ -645,15 +645,15 @@ def _article_path(article_id: str) -> str:
 
 @app.route('/intensive')
 def intensive_page():
-    return send_file('intensive.html')
+    return send_file('templates/intensive.html')
 
 @app.route('/vocab_summary')
 def vocab_summary():
-    return send_file('vocab_summary.html')
+    return send_file('templates/vocab_summary.html')
  
 @app.route('/intensive/new')
 def intensive_new_page():
-    return send_file('intensive_new.html')
+    return send_file('templates/intensive_new.html')
 
 @app.route('/intensive_list', methods=['GET'])
 def intensive_list():
