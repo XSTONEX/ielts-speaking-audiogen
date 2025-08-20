@@ -10,6 +10,8 @@ import secrets
 from werkzeug.wrappers import Response
 from werkzeug.utils import secure_filename
 import uuid
+import threading
+import time
 load_dotenv()
 
 app = Flask(__name__, static_folder='static', static_url_path='/static')
@@ -20,12 +22,14 @@ TOKEN_FILE = 'tokens.json'
 USERS_FILE = 'users.json'
 READING_DIR = 'reading_exam'
 INTENSIVE_DIR = 'intensive_articles'
+VOCAB_AUDIO_DIR = 'vocab_audio'  # 词汇音频存储目录
 MESSAGE_BOARD_DIR = 'message_board'
 MESSAGE_IMAGES_DIR = 'message_board/images'
 CHALLENGES_DIR = 'challenges'
 os.makedirs(MOTHER_DIR, exist_ok=True)
 os.makedirs(COMBINED_DIR, exist_ok=True)
 os.makedirs(INTENSIVE_DIR, exist_ok=True)
+os.makedirs(VOCAB_AUDIO_DIR, exist_ok=True)
 os.makedirs(MESSAGE_BOARD_DIR, exist_ok=True)
 os.makedirs(MESSAGE_IMAGES_DIR, exist_ok=True)
 os.makedirs(CHALLENGES_DIR, exist_ok=True)
@@ -130,6 +134,111 @@ def generate_tts(text, folder):
     with open(txt_filepath, 'w', encoding='utf-8') as f:
         f.write(text)
     return folder, filename
+
+# 词汇音频管理函数
+def get_vocab_audio_path(article_id, word):
+    """获取词汇音频文件路径"""
+    # 创建文章专用目录
+    article_audio_dir = os.path.join(VOCAB_AUDIO_DIR, article_id)
+    os.makedirs(article_audio_dir, exist_ok=True)
+    
+    # 使用单词的哈希值作为文件名，避免特殊字符问题
+    import hashlib
+    word_hash = hashlib.md5(word.lower().encode('utf-8')).hexdigest()
+    filename = f"{word_hash}.mp3"
+    return os.path.join(article_audio_dir, filename)
+
+def generate_and_save_vocab_audio(article_id, word):
+    """生成并保存词汇音频文件"""
+    audio_path = get_vocab_audio_path(article_id, word)
+    
+    # 如果文件已存在，直接返回
+    if os.path.exists(audio_path):
+        return audio_path
+    
+    # 生成音频数据
+    url = "https://api.deerapi.com/v1/audio/speech"
+    payload = json.dumps({
+        "model": "tts-1",
+        "input": word,
+        "voice": "nova"
+    })
+    headers = {
+        'Authorization': f"Bearer {os.getenv('DEER_API_KEY')}",
+        'Content-Type': 'application/json'
+    }
+    
+    try:
+        response = requests.post(url, headers=headers, data=payload, timeout=10)
+        if response.status_code == 200:
+            # 保存音频文件
+            with open(audio_path, 'wb') as f:
+                f.write(response.content)
+            print(f"Generated audio for word '{word}' in article '{article_id}'")
+            return audio_path
+        else:
+            print(f"TTS API error for word '{word}': {response.status_code}")
+            return None
+    except Exception as e:
+        print(f"Error generating pronunciation for '{word}': {e}")
+        return None
+
+def delete_vocab_audio(article_id, word):
+    """删除特定词汇的音频文件"""
+    audio_path = get_vocab_audio_path(article_id, word)
+    if os.path.exists(audio_path):
+        try:
+            os.remove(audio_path)
+            print(f"Deleted audio for word '{word}' in article '{article_id}'")
+        except Exception as e:
+            print(f"Error deleting audio for word '{word}': {e}")
+
+def delete_article_vocab_audio(article_id):
+    """删除整篇文章的所有词汇音频"""
+    article_audio_dir = os.path.join(VOCAB_AUDIO_DIR, article_id)
+    if os.path.exists(article_audio_dir):
+        try:
+            shutil.rmtree(article_audio_dir)
+            print(f"Deleted all vocab audio for article '{article_id}'")
+        except Exception as e:
+            print(f"Error deleting vocab audio for article '{article_id}': {e}")
+
+def generate_vocab_audio_async(article_id, word):
+    """异步生成词汇音频"""
+    def _generate():
+        try:
+            generate_and_save_vocab_audio(article_id, word)
+            print(f"异步生成音频成功: {word} (文章: {article_id})")
+        except Exception as e:
+            print(f"异步生成音频失败: {word} (文章: {article_id}), 错误: {e}")
+    
+    # 在后台线程中生成音频
+    thread = threading.Thread(target=_generate, daemon=True)
+    thread.start()
+
+def generate_challenge_vocab_audio(challenge_id, word):
+    """为挑战生成词汇音频（使用challenge_id作为文章ID）"""
+    return generate_and_save_vocab_audio(f"challenge_{challenge_id}", word)
+
+@app.route('/vocab_audio/<article_id>/<word>')
+def get_vocab_audio(article_id, word):
+    """获取词汇音频文件"""
+    # URL解码单词
+    from urllib.parse import unquote
+    word = unquote(word)
+    
+    # 获取音频文件路径
+    audio_path = get_vocab_audio_path(article_id, word)
+    
+    if os.path.exists(audio_path):
+        return send_file(
+            audio_path,
+            mimetype='audio/mpeg',
+            as_attachment=False,
+            download_name=f"{word}.mp3"
+        )
+    else:
+        return jsonify({'error': '音频文件不存在'}), 404
 
 @app.route('/')
 def index():
@@ -764,6 +873,11 @@ def intensive_page():
 @app.route('/vocab_summary')
 def vocab_summary():
     return send_file('templates/vocab_summary.html')
+
+@app.route('/test_pronunciation')
+def test_pronunciation():
+    """单词发音功能测试页面"""
+    return send_file('test_pronunciation.html')
  
 @app.route('/intensive/new')
 def intensive_new_page():
@@ -877,6 +991,11 @@ def intensive_add_highlight():
                     existing['text'] = sel_text
                 with open(path, 'w', encoding='utf-8') as f:
                     json.dump(obj, f, ensure_ascii=False, indent=2)
+                
+                # 异步生成词汇音频
+                if sel_text:
+                    generate_vocab_audio_async(article_id, sel_text)
+                
                 return jsonify({'success': True, 'highlight': existing, 'updated': True})
 
         hl_id = generate_token()
@@ -891,6 +1010,11 @@ def intensive_add_highlight():
         highlights.append(hl)
         with open(path, 'w', encoding='utf-8') as f:
             json.dump(obj, f, ensure_ascii=False, indent=2)
+        
+        # 异步生成词汇音频
+        if sel_text:
+            generate_vocab_audio_async(article_id, sel_text)
+        
         return jsonify({'success': True, 'highlight': hl})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -908,11 +1032,25 @@ def intensive_delete_highlight():
     try:
         with open(path, 'r', encoding='utf-8') as f:
             obj = json.load(f)
+        
+        # 找到要删除的高亮，以便删除其音频
+        highlight_to_delete = None
+        for h in (obj.get('highlights') or []):
+            if h.get('id') == highlight_id:
+                highlight_to_delete = h
+                break
+        
         before = len(obj.get('highlights') or [])
         obj['highlights'] = [h for h in (obj.get('highlights') or []) if h.get('id') != highlight_id]
         after = len(obj['highlights'])
+        
         with open(path, 'w', encoding='utf-8') as f:
             json.dump(obj, f, ensure_ascii=False, indent=2)
+        
+        # 删除对应的音频文件
+        if highlight_to_delete and highlight_to_delete.get('text'):
+            delete_vocab_audio(article_id, highlight_to_delete['text'])
+        
         return jsonify({'success': True, 'removed': before - after})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -947,8 +1085,13 @@ def intensive_delete_article():
     if not os.path.exists(path):
         return jsonify({'error': '文章不存在'}), 404
     try:
+        # 删除文章文件
         os.remove(path)
-        return jsonify({'success': True})
+        
+        # 删除文章相关的所有词汇音频
+        delete_article_vocab_audio(article_id)
+        
+        return jsonify({'success': True, 'article_id': article_id, 'clear_cache': True})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -1260,12 +1403,19 @@ def verify_token_get_username(token):
     return tokens.get(token, {}).get('username')
 
 def delete_challenge_record(challenge_id):
-    """删除挑战记录文件"""
+    """删除挑战记录文件和相关音频"""
     challenge_path = _challenge_file(challenge_id)
+    success = False
+    
     if os.path.exists(challenge_path):
         os.remove(challenge_path)
-        return True
-    return False
+        success = True
+    
+    # 删除挑战相关的音频文件
+    challenge_audio_id = f"challenge_{challenge_id}"
+    delete_article_vocab_audio(challenge_audio_id)
+    
+    return success
 
 def extract_vocabulary_from_articles(article_ids, word_count):
     """从指定文章中提取词汇，优化随机算法"""
@@ -1426,6 +1576,21 @@ def create_challenge():
         # 保存挑战数据
         with open(_challenge_file(challenge_id), 'w', encoding='utf-8') as f:
             json.dump(challenge_data, f, ensure_ascii=False, indent=2)
+        
+        # 异步生成所有词汇的音频
+        def _generate_challenge_audio():
+            try:
+                for vocab in vocabulary:
+                    word = vocab.get('word', '').strip()
+                    if word:
+                        generate_challenge_vocab_audio(challenge_id, word)
+                        time.sleep(0.5)  # 避免API频率限制
+                print(f"挑战 {challenge_id} 的音频生成完成")
+            except Exception as e:
+                print(f"挑战 {challenge_id} 音频生成失败: {e}")
+        
+        thread = threading.Thread(target=_generate_challenge_audio, daemon=True)
+        thread.start()
         
         return jsonify({
             'success': True,

@@ -110,6 +110,8 @@
       .btn { padding: 8px 16px; font-size: 13px; }
     }
   </style>
+  <!-- 词汇发音管理器 -->
+  <script src="/static/word-pronunciation.js"></script>
 </head>
 <body>
   <div id="authOverlay" style="position:fixed;z-index:10000;left:0;top:0;width:100vw;height:100vh;background:rgba(240,245,255,0.98);display:flex;align-items:center;justify-content:center;">
@@ -328,6 +330,7 @@
       filteredVocab.forEach(vocab => {
         const div = document.createElement('div');
         div.className = 'vocab-item';
+        div.style.cursor = 'pointer';
         
         div.innerHTML = `
           <div class="vocab-content">
@@ -335,9 +338,20 @@
             <div class="vocab-meaning">${escapeHtml(vocab.meaning || '')}</div>
           </div>
           <div class="vocab-actions">
+            <button class="play-btn" style="padding:6px 8px;margin-right:6px;border:none;background:#f3f4f6;color:#6b7280;border-radius:4px;cursor:pointer;font-size:12px;" onclick="event.stopPropagation(); playWordPronunciation('${(vocab.text || '').replace(/'/g, "\\'")}', '${currentArticle.id}')" title="播放发音">🔊</button>
             <button class="jump-btn" onclick="jumpToArticle('${currentArticle.id}', '${vocab.id}')" title="跳转到原文">↗</button>
           </div>
         `;
+        
+        // 添加整体点击事件播放发音
+        div.onclick = function(e) {
+          if (e.target.closest('.vocab-actions')) return; // 如果点击的是动作按钮区域，不触发
+          const word = vocab.text || '';
+          if (word && window.playWordPronunciation) {
+            window.playWordPronunciation(word, currentArticle.id);
+          }
+        };
+        
         listEl.appendChild(div);
       });
     }

@@ -1230,6 +1230,38 @@
         margin-bottom: 20px;
       }
       
+      .challenge-word {
+        margin-right: 12px;
+        font-weight: 600;
+      }
+      
+      .challenge-audio-btn {
+        background: transparent;
+        border: none;
+        border-radius: 50%;
+        width: 28px;
+        height: 28px;
+        cursor: pointer;
+        font-size: 12px;
+        color: #3b82f6;
+        transition: all 0.2s ease;
+        margin-left: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+      
+      .challenge-audio-btn:hover {
+        background: rgba(59, 130, 246, 0.1);
+        color: #1d4ed8;
+        transform: scale(1.1);
+      }
+      
+      .challenge-audio-btn:active {
+        transform: scale(0.95);
+      }
+      
       #challengeOptions {
         grid-template-columns: 1fr;
         gap: 8px;
@@ -1606,6 +1638,27 @@
         min-height: 40px;
         padding: 12px;
         margin-bottom: 16px;
+      }
+      
+      .challenge-word {
+        margin-right: 8px;
+        font-weight: 600;
+      }
+      
+      .challenge-audio-btn {
+        background: transparent;
+        border: none;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        cursor: pointer;
+        font-size: 10px;
+        color: #3b82f6;
+        transition: all 0.2s ease;
+        margin-left: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
       }
       
       #challengeOptions {
@@ -2002,6 +2055,7 @@
     let currentQuestionIndex = 0;
     let challengeTimer = null;
     let questionStartTime = 0;
+    let currentQuestionType = null; // 'word_to_meaning' 或 'meaning_to_word'
     let pendingChallenges = [];
     
     // 检查登录状态
@@ -3569,6 +3623,34 @@
         });
     }
     
+    // 播放挑战词汇音频
+    function playChallengeWord(word, challengeId) {
+      if (!word || !challengeId) {
+        console.warn('Word or challenge ID missing for audio playback');
+        return;
+      }
+      
+      try {
+        // 构造挑战音频URL（使用challenge_前缀作为文章ID）
+        const audioUrl = `/vocab_audio/challenge_${encodeURIComponent(challengeId)}/${encodeURIComponent(word.trim().toLowerCase())}`;
+        
+        // 创建并播放音频
+        const audio = new Audio(audioUrl);
+        audio.onended = () => {
+          console.log(`播放完成: ${word}`);
+        };
+        audio.onerror = (error) => {
+          console.warn(`音频播放失败: ${word}`, error);
+          // 播放失败时不显示错误给用户，保持挑战流畅性
+        };
+        audio.play().catch(error => {
+          console.warn(`音频播放失败: ${word}`, error);
+        });
+      } catch (error) {
+        console.warn(`音频播放错误: ${word}`, error);
+      }
+    }
+
     // 显示下一题
     function showNextQuestion() {
       if (currentQuestionIndex >= currentChallenge.vocabulary.length) {
@@ -3586,7 +3668,20 @@
       const optionsContainer = document.getElementById('challengeOptions');
       
       if (showWord) {
-        question.textContent = vocab.word;
+        // 英文对中文：显示英文单词，选择中文释义
+        currentQuestionType = 'word_to_meaning';
+        question.innerHTML = `
+          <span class="challenge-word">${vocab.word}</span>
+          <button class="challenge-audio-btn" onclick="playChallengeWord('${vocab.word.replace(/'/g, "\\'")}', '${currentChallenge.id}')" title="播放发音">
+            🔊
+          </button>
+        `;
+        
+        // 自动播放一次
+        setTimeout(() => {
+          playChallengeWord(vocab.word, currentChallenge.id);
+        }, 100);
+        
         // 生成选项：正确答案 + 3个错误答案
         const options = [vocab.meaning];
         const otherVocab = currentChallenge.vocabulary.filter(v => v.word !== vocab.word);
@@ -3606,7 +3701,10 @@
         
         renderChallengeOptions(options, vocab.meaning);
       } else {
+        // 中文对英文：显示中文释义，选择英文单词
+        currentQuestionType = 'meaning_to_word';
         question.textContent = vocab.meaning;
+        
         // 生成选项：正确答案 + 3个错误答案
         const options = [vocab.word];
         const otherVocab = currentChallenge.vocabulary.filter(v => v.meaning !== vocab.meaning);
@@ -3655,6 +3753,12 @@
       
       const timeTaken = Math.round((Date.now() - questionStartTime) / 1000);
       const isCorrect = selectedOption === correctAnswer;
+      
+      // 如果是中文对英文题目，播放选中单词的音频
+      if (currentQuestionType === 'meaning_to_word') {
+        // selectedOption 是英文单词，播放其音频
+        playChallengeWord(selectedOption, currentChallenge.id);
+      }
       
       // 记录答案
       currentChallengeAnswers.push({
