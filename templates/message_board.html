@@ -2180,42 +2180,73 @@
       const div = document.createElement('div');
       div.style.cssText = 'margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;';
       
+      // 创建标题和移除按钮
+      const headerDiv = document.createElement('div');
+      headerDiv.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;';
+      
+      const label = document.createElement('label');
+      label.className = 'form-label';
+      label.textContent = audio.type === 'single' ? `音频 ${index + 1}` : `合集音频 ${index + 1}`;
+      
+      const removeBtn = document.createElement('button');
+      removeBtn.textContent = '移除';
+      removeBtn.style.cssText = 'background: #ef4444; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 11px;';
+      removeBtn.onclick = () => removeSelectedItem('audios', index);
+      
+      headerDiv.appendChild(label);
+      headerDiv.appendChild(removeBtn);
+      div.appendChild(headerDiv);
+      
+      // 创建内容卡片
+      const cardDiv = document.createElement('div');
+      
       if (audio.type === 'single') {
-        div.innerHTML = `
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <label class="form-label">音频 ${index + 1}</label>
-            <button onclick="removeSelectedItem('audios', ${index})" style="background: #ef4444; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 11px;">移除</button>
-          </div>
-          <div style="padding: 16px; background: #f0f9ff; border: 1px solid #0284c7; border-radius: 12px;">
-            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-              <span style="font-size: 20px;">🎤</span>
-              <div>
-                <div style="font-weight: 600; color: #0c4a6e;">${audio.filename.replace('.mp3', '')}</div>
-                <div style="color: #0369a1; font-size: 12px;">来自：${audio.folder}</div>
-              </div>
-            </div>
-            ${audio.question ? `<div style="color: #075985; font-size: 13px; margin-bottom: 8px; line-height: 1.4; white-space: pre-wrap;">${audio.question}</div>` : ''}
+        cardDiv.style.cssText = 'padding: 16px; background: #f0f9ff; border: 1px solid #0284c7; border-radius: 12px;';
+        
+        // 标题部分
+        const titleDiv = document.createElement('div');
+        titleDiv.style.cssText = 'display: flex; align-items: center; gap: 12px; margin-bottom: 12px;';
+        titleDiv.innerHTML = `
+          <span style="font-size: 20px;">🎤</span>
+          <div>
+            <div style="font-weight: 600; color: #0c4a6e;">${audio.filename.replace('.mp3', '')}</div>
+            <div style="color: #0369a1; font-size: 12px;">来自：${audio.folder}</div>
           </div>
         `;
+        cardDiv.appendChild(titleDiv);
+        
+        // 问题描述（支持换行）
+        if (audio.question) {
+          const questionDiv = document.createElement('div');
+          questionDiv.style.cssText = 'color: #075985; font-size: 13px; margin-bottom: 8px; line-height: 1.4; white-space: pre-wrap;';
+          questionDiv.textContent = audio.question;
+          cardDiv.appendChild(questionDiv);
+        }
       } else {
-        div.innerHTML = `
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <label class="form-label">合集音频 ${index + 1}</label>
-            <button onclick="removeSelectedItem('audios', ${index})" style="background: #ef4444; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 11px;">移除</button>
-          </div>
-          <div style="padding: 16px; background: #fef9c3; border: 1px solid #eab308; border-radius: 12px;">
-            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-              <span style="font-size: 20px;">🎵</span>
-              <div>
-                <div style="font-weight: 600; color: #92400e;">${audio.folder}</div>
-                <div style="color: #a16207; font-size: 12px;">${audio.file_count} 个音频的合集</div>
-              </div>
-            </div>
-            ${audio.question ? `<div style="color: #a16207; font-size: 13px; margin-bottom: 8px; line-height: 1.4; white-space: pre-wrap;">${audio.question}</div>` : ''}
+        cardDiv.style.cssText = 'padding: 16px; background: #fef9c3; border: 1px solid #eab308; border-radius: 12px;';
+        
+        // 标题部分
+        const titleDiv = document.createElement('div');
+        titleDiv.style.cssText = 'display: flex; align-items: center; gap: 12px; margin-bottom: 12px;';
+        titleDiv.innerHTML = `
+          <span style="font-size: 20px;">🎵</span>
+          <div>
+            <div style="font-weight: 600; color: #92400e;">${audio.folder}</div>
+            <div style="color: #a16207; font-size: 12px;">${audio.file_count} 个音频的合集</div>
           </div>
         `;
+        cardDiv.appendChild(titleDiv);
+        
+        // 问题描述（支持换行）
+        if (audio.question) {
+          const questionDiv = document.createElement('div');
+          questionDiv.style.cssText = 'color: #a16207; font-size: 13px; margin-bottom: 8px; line-height: 1.4; white-space: pre-wrap;';
+          questionDiv.textContent = audio.question;
+          cardDiv.appendChild(questionDiv);
+        }
       }
       
+      div.appendChild(cardDiv);
       return div;
     }
     
@@ -2474,17 +2505,41 @@
         border-radius: 8px;
       `;
       
-      expandedDiv.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-          <div>
-            <div style="font-weight: 600; color: #92400e; font-size: 13px;">合集音频预览</div>
-            <div style="color: #a16207; font-size: 11px;">${item.file_count} 个音频的合集</div>
-          </div>
-          <button onclick="this.closest('.expanded-content').remove()" style="background: #ef4444; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 10px;">收起</button>
-        </div>
-        ${item.question ? `<div style="color: #a16207; font-size: 12px; margin-bottom: 8px; line-height: 1.4;">${item.question}</div>` : ''}
-        <button onclick="addCombinedAudio('${item.folder}', ${item.file_count}, ${item.has_combined}, '${item.question || ''}')" style="background: #0284c7; color: white; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; font-size: 11px;">添加到帖子</button>
+      // 创建标题和收起按钮部分
+      const headerDiv = document.createElement('div');
+      headerDiv.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;';
+      
+      const titleDiv = document.createElement('div');
+      titleDiv.innerHTML = `
+        <div style="font-weight: 600; color: #92400e; font-size: 13px;">合集音频预览</div>
+        <div style="color: #a16207; font-size: 11px;">${item.file_count} 个音频的合集</div>
       `;
+      
+      const closeBtn = document.createElement('button');
+      closeBtn.textContent = '收起';
+      closeBtn.style.cssText = 'background: #ef4444; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 10px;';
+      closeBtn.onclick = () => expandedDiv.remove();
+      
+      headerDiv.appendChild(titleDiv);
+      headerDiv.appendChild(closeBtn);
+      expandedDiv.appendChild(headerDiv);
+      
+      // 添加问题描述（支持换行）
+      if (item.question) {
+        const questionDiv = document.createElement('div');
+        questionDiv.style.cssText = 'color: #a16207; font-size: 12px; margin-bottom: 8px; line-height: 1.4; white-space: pre-wrap;';
+        questionDiv.textContent = item.question;
+        expandedDiv.appendChild(questionDiv);
+      }
+      
+      // 添加到帖子按钮
+      const addBtn = document.createElement('button');
+      addBtn.textContent = '添加到帖子';
+      addBtn.style.cssText = 'background: #0284c7; color: white; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; font-size: 11px;';
+      addBtn.onclick = () => {
+        addCombinedAudio(item.folder, item.file_count, item.has_combined, item.question || '');
+      };
+      expandedDiv.appendChild(addBtn);
       
       itemEl.appendChild(expandedDiv);
     }

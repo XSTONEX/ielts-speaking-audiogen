@@ -70,10 +70,11 @@
     .hp-item.highlight { background: linear-gradient(120deg, #a8edea 0%, #fed6e3 100%); border-color: #96e6fb; }
     .hp-word { font-weight: 700; color: #111827; font-size: 13px; }
     .hp-meaning { color: #6b7280; font-size: 12px; margin-top: 4px; }
-    .hl { background: linear-gradient(120deg, #a8edea 0%, #fed6e3 100%); border-radius:4px; padding: 2px 4px; position:relative; transition: all 0.2s; user-select: text; -webkit-user-select: text; }
+    .hl { background: linear-gradient(120deg, #a8edea 0%, #fed6e3 100%); border-radius:4px; padding: 2px 4px; position:relative; transition: all 0.2s; user-select: text; -webkit-user-select: text; margin: 1px 1px; display: inline-block; }
     .hl:hover { background: linear-gradient(120deg, #96e6fb 0%, #fbb6ce 100%); }
     .hl.active { background: linear-gradient(120deg, #fbbf24 0%, #f59e0b 100%); animation: highlight-pulse 0.6s ease-in-out; }
     @keyframes highlight-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+    @keyframes temp-tooltip-fade { 0% { opacity: 1; transform: translateY(0); } 70% { opacity: 1; } 100% { opacity: 0; transform: translateY(-10px); } }
     .tooltip { position:absolute; left:50%; bottom:100%; transform: translateX(-50%) translateY(-8px); background:#1f2937; color:#fff; padding:8px 12px; border-radius:8px; font-size:12px; white-space:nowrap; box-shadow:0 10px 30px rgba(0,0,0,0.2); display:none; z-index:20; pointer-events: none; user-select: none; }
     .tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 6px solid transparent; border-top-color: #1f2937; }
     .hl:hover .tooltip { display:block; }
@@ -113,6 +114,7 @@
       .floating input { min-width: 160px; }
       .highlights-panel { max-width: 90vw; min-width: 240px; }
       .resize-handle { display: none; }
+      .hl { margin: 2px 2px; padding: 3px 5px; display: inline-block; }
     }
     
     @media (max-width: 480px) {
@@ -124,6 +126,7 @@
       .floating { padding: 8px 12px; }
       .floating button { padding: 6px 12px; font-size: 12px; }
       .floating input { min-width: 140px; padding: 6px 10px; }
+      .hl { margin: 3px 3px; padding: 4px 6px; line-height: 1.4; display: inline-block; }
     }
   </style>
 </head>
@@ -285,23 +288,109 @@
     }
 
     // 文本选择与悬浮操作
-    function bindSelection(container, art){ container.addEventListener('mouseup', function(e){ const sel=window.getSelection(); if(!sel || sel.isCollapsed){ cancelFloat(); return; } const range=sel.getRangeAt(0); if(!container.contains(range.commonAncestorContainer)){ cancelFloat(); return; } const text=sel.toString(); if(!text.trim()){ cancelFloat(); return; }
+    function bindSelection(container, art){ container.addEventListener('mouseup', function(e){ const sel=window.getSelection(); if(!sel || sel.isCollapsed){ cancelFloat(); return; } const range=sel.getRangeAt(0); if(!container.contains(range.commonAncestorContainer)){ cancelFloat(); return; } const text=sel.toString().trim(); if(!text){ cancelFloat(); return; }
+        
+        // 检查是否选中了已经高亮的词汇
+        const existingMark = findHighlightMarkInSelection(range);
+        if(existingMark){
+          // 如果选中了已高亮的词汇，显示移除选项
+          selectionRange = { existingHighlight: existingMark.getAttribute('data-hid'), text };
+          lastSelectionRect = range.getBoundingClientRect();
+          showFloatAtRect(lastSelectionRect, true);
+          return;
+        }
+
         // 限制只能在同一段落内高亮，避免跨块包裹导致错误
         const sP = closestBlock(range.startContainer, 'p'); const eP = closestBlock(range.endContainer, 'p');
-        if(sP !== eP){ alert('请在同一段内进行高亮'); cancelFloat(); return; }
+        if(sP !== eP){ showTempTooltip('请在同一段内进行高亮', range.getBoundingClientRect()); cancelFloat(); return; }
+        
         const off = getOffsetsFromRange(container, range);
         if(!off){ cancelFloat(); return; }
         const containerText = getContainerText(container);
         const startOrig = containerToOriginalIndex(off.start, art.content_text||'', containerText);
         const endOrig = containerToOriginalIndex(off.end, art.content_text||'', containerText);
         if(startOrig==null || endOrig==null || endOrig<=startOrig){ cancelFloat(); return; }
+        
+        // 检查是否为重复词汇
+        const isDuplicate = (highlights||[]).some(h => h.text && h.text.toLowerCase() === text.toLowerCase());
+        if(isDuplicate){
+          showTempTooltip('此词汇已存在高亮', range.getBoundingClientRect());
+          cancelFloat();
+          return;
+        }
+        
         selectionRange = { start: startOrig, end: endOrig, text };
         lastSelectionRect = range.getBoundingClientRect();
-        showFloatAtRect(lastSelectionRect);
+        showFloatAtRect(lastSelectionRect, false);
     }); }
 
-    function showFloatAtRect(rect){ const box=document.getElementById('floatBox'); positionBoxAtRect(box, rect); box.style.display='block'; }
+    function showFloatAtRect(rect, isExisting = false){ 
+      const box=document.getElementById('floatBox'); 
+      const highlightBtn = box.querySelector('button[onclick="confirmHighlight()"]');
+      const removeBtn = box.querySelector('button[onclick="removeCurrentHighlight()"]');
+      
+      if(isExisting){
+        highlightBtn.style.display='none';
+        removeBtn.style.display='inline-block';
+      } else {
+        highlightBtn.style.display='inline-block';
+        removeBtn.style.display='none';
+      }
+      
+      positionBoxAtRect(box, rect); 
+      box.style.display='block'; 
+    }
     function positionBoxAtRect(el, rect){ const x = window.scrollX + rect.left + rect.width/2; const y = window.scrollY + rect.top; const r = el.getBoundingClientRect(); el.style.left = Math.max(8, x - r.width/2) + 'px'; el.style.top = Math.max(8, y - 48) + 'px'; }
+    
+    // 查找选区中是否包含高亮标记
+    function findHighlightMarkInSelection(range){
+      try{
+        const container = range.commonAncestorContainer;
+        if(container.nodeType === Node.TEXT_NODE){
+          let parent = container.parentNode;
+          while(parent && parent.tagName !== 'MARK'){
+            parent = parent.parentNode;
+          }
+          return parent && parent.classList.contains('hl') ? parent : null;
+        } else {
+          const marks = container.querySelectorAll ? container.querySelectorAll('mark.hl') : [];
+          for(let mark of marks){
+            if(range.intersectsNode && range.intersectsNode(mark)){
+              return mark;
+            }
+          }
+        }
+      }catch(e){}
+      return null;
+    }
+    
+    // 显示临时提示
+    function showTempTooltip(message, rect){
+      const tooltip = document.createElement('div');
+      tooltip.className = 'temp-tooltip';
+      tooltip.textContent = message;
+      tooltip.style.cssText = `
+        position: fixed;
+        background: rgba(239, 68, 68, 0.95);
+        color: white;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        z-index: 4000;
+        pointer-events: none;
+        animation: temp-tooltip-fade 2s ease-out forwards;
+      `;
+      
+      const x = window.scrollX + rect.left + rect.width/2;
+      const y = window.scrollY + rect.top;
+      tooltip.style.left = Math.max(8, x - 80) + 'px';
+      tooltip.style.top = Math.max(8, y - 40) + 'px';
+      
+      document.body.appendChild(tooltip);
+      setTimeout(() => {
+        if(tooltip.parentNode) tooltip.parentNode.removeChild(tooltip);
+      }, 2000);
+    }
     function cancelFloat(){ const box=document.getElementById('floatBox'); box.style.display='none'; selectionRange=null; window.getSelection().removeAllRanges(); }
     function confirmHighlight(){ if(!currentArticle||!selectionRange){ cancelFloat(); return; } const mBox=document.getElementById('meaningBox'); const mInput=document.getElementById('meaningInput'); mInput.value=''; if(lastSelectionRect){ positionBoxAtRect(mBox, lastSelectionRect); } mBox.style.display='block'; }
     function cancelMeaning(){ document.getElementById('meaningBox').style.display='none'; window.getSelection().removeAllRanges(); }
@@ -314,9 +403,30 @@
     // 分类修改
     document.addEventListener('change', function(e){ if(e.target && e.target.id==='vCategory' && currentArticle){ const newCat=e.target.value; fetch('/intensive_update_category',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id: currentArticle.id, category: newCat})}).then(r=>r.json()).then(d=>{ if(!d.success){ alert(d.error||'保存失败'); e.target.value=currentArticle.category||'Reading'; } else { currentArticle.category=newCat; } }); } });
 
-    // 移除现有高亮（通过再次选择相同范围时）
-    function removeCurrentHighlight(){ if(!currentArticle) return; // 查找选区是否位于某个 mark.hl 内
-      const sel=window.getSelection(); if(!sel || sel.rangeCount===0) return; const node = sel.anchorNode; const mark = node ? (node.nodeType===1? node : node.parentNode).closest && (node.nodeType===1? node : node.parentNode).closest('mark.hl') : null; if(!mark) return; const hid = mark.getAttribute('data-hid'); if(!hid) return; deleteHighlight(hid); cancelFloat(); cancelMeaning(); }
+    // 移除现有高亮
+    function removeCurrentHighlight(){ 
+      if(!currentArticle) return; 
+      
+      let hid = null;
+      
+      // 如果通过选择范围传入了高亮ID
+      if(selectionRange && selectionRange.existingHighlight){
+        hid = selectionRange.existingHighlight;
+      } else {
+        // 查找选区是否位于某个 mark.hl 内
+        const sel=window.getSelection(); 
+        if(!sel || sel.rangeCount===0) return; 
+        const node = sel.anchorNode; 
+        const mark = node ? (node.nodeType===1? node : node.parentNode).closest && (node.nodeType===1? node : node.parentNode).closest('mark.hl') : null; 
+        if(!mark) return; 
+        hid = mark.getAttribute('data-hid');
+      }
+      
+      if(!hid) return; 
+      deleteHighlight(hid); 
+      cancelFloat(); 
+      cancelMeaning(); 
+    }
 
     // 滚动/窗口变化时保持浮动框跟随选区
     function repositionFloating(){ if(!selectionRange || !currentArticle || (!isVisible('floatBox') && !isVisible('meaningBox'))) return; const rect = computeRectFromSelectionRange(); if(!rect) return; lastSelectionRect = rect; if(isVisible('floatBox')) positionBoxAtRect(document.getElementById('floatBox'), rect); if(isVisible('meaningBox')) positionBoxAtRect(document.getElementById('meaningBox'), rect); }
@@ -354,30 +464,123 @@
     function createWalker(container){ return document.createTreeWalker(container, NodeFilter.SHOW_TEXT, { acceptNode: function(node){ let p=node.parentNode; while(p){ if(p.nodeType===1 && p.classList && p.classList.contains('tooltip')) return NodeFilter.FILTER_REJECT; p=p.parentNode; } return NodeFilter.FILTER_ACCEPT; } }); }
     function closestBlock(node, selector){ let el = node.nodeType===1 ? node : node.parentNode; if(!el) return null; if(el.closest) return el.closest(selector); while(el){ if(el.matches && el.matches(selector)) return el; el = el.parentNode; } return null; }
     function originalToContainerIndex(oi, original, container){
-      let o=0,c=0; const olen=original.length, clen=container.length;
-      while(o<olen && c<=clen){
-        const ch = original[o];
-        if(ch==='\n' || ch==='\r'){ o++; continue; }
-        if(o===oi) return Math.min(c, clen);
-        if(c>=clen) break;
-        if(ch===container[c]){ o++; c++; } else { c++; }
+      let o=0, c=0;
+      const olen=original.length, clen=container.length;
+      
+      while(o < olen && c < clen){
+        // 如果已经到达目标位置
+        if(o === oi) return c;
+        
+        const origChar = original[o];
+        
+        // 跳过原文中的换行符、回车符和多余的空格
+        if(origChar === '\n' || origChar === '\r'){
+          o++;
+          continue;
+        }
+        
+        // 如果原文是空格，跳过连续的空格
+        if(origChar === ' '){
+          // 跳过原文中连续的空格
+          while(o < olen && original[o] === ' '){
+            o++;
+          }
+          // 跳过容器中的单个空格
+          if(c < clen && container[c] === ' '){
+            c++;
+          }
+          continue;
+        }
+        
+        // 跳过容器中连续的空白字符直到找到匹配或非空白字符
+        while(c < clen && /\s/.test(container[c]) && container[c] !== origChar){
+          c++;
+        }
+        
+        if(c >= clen) break;
+        
+        // 检查字符是否匹配
+        if(origChar === container[c]){
+          o++;
+          c++;
+        } else {
+          // 字符不匹配，可能是格式差异，继续尝试
+          o++;
+          // 在容器中寻找下一个匹配的字符
+          let found = false;
+          for(let j = c; j < Math.min(c + 10, clen); j++){
+            if(container[j] === origChar){
+              c = j + 1;
+              found = true;
+              break;
+            }
+          }
+          if(!found) c++;
+        }
       }
-      // 若目标在原文末尾或超出，映射到容器末尾
-      if(oi>=o) return clen;
-      return null;
+      
+      // 目标在原文末尾或超出
+      if(oi >= o) return clen;
+      return c;
     }
     function containerToOriginalIndex(ci, original, container){
-      let o=0,c=0; const olen=original.length, clen=container.length;
-      while(o<olen && c<=clen){
-        const ch = original[o];
-        if(ch==='\n' || ch==='\r'){ o++; continue; }
-        if(c===ci) return o;
-        if(c>=clen) break;
-        if(ch===container[c]){ o++; c++; } else { c++; }
+      let o=0, c=0;
+      const olen=original.length, clen=container.length;
+      
+      while(o < olen && c < clen){
+        // 如果已经到达目标容器位置
+        if(c === ci) return o;
+        
+        const origChar = original[o];
+        
+        // 跳过原文中的换行符、回车符
+        if(origChar === '\n' || origChar === '\r'){
+          o++;
+          continue;
+        }
+        
+        // 如果原文是空格，处理连续空格
+        if(origChar === ' '){
+          // 跳过原文中连续的空格
+          while(o < olen && original[o] === ' '){
+            o++;
+          }
+          // 跳过容器中的单个空格
+          if(c < clen && container[c] === ' '){
+            c++;
+          }
+          continue;
+        }
+        
+        // 跳过容器中连续的空白字符直到找到匹配或非空白字符
+        while(c < clen && /\s/.test(container[c]) && container[c] !== origChar){
+          c++;
+        }
+        
+        if(c >= clen) break;
+        
+        // 检查字符是否匹配
+        if(origChar === container[c]){
+          o++;
+          c++;
+        } else {
+          // 字符不匹配，寻找下一个匹配
+          let found = false;
+          for(let j = c; j < Math.min(c + 10, clen); j++){
+            if(container[j] === origChar){
+              c = j + 1;
+              found = true;
+              break;
+            }
+          }
+          if(!found) c++;
+          o++;
+        }
       }
-      // 若目标在容器末尾或超出，映射到原文当前位置
-      if(ci>=c) return o;
-      return null;
+      
+      // 目标在容器末尾或超出
+      if(ci >= c) return o;
+      return o;
     }
   </script>
 </body>
