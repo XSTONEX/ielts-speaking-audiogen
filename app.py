@@ -240,6 +240,22 @@ def get_vocab_audio(article_id, word):
     else:
         return jsonify({'error': '音频文件不存在'}), 404
 
+@app.route('/vocab_audio/articles/<article_id>/<filename>')
+def get_article_audio(article_id, filename):
+    """获取文章音频文件"""
+    # 构建音频文件路径
+    audio_path = os.path.join(VOCAB_AUDIO_DIR, 'articles', article_id, filename)
+    
+    if os.path.exists(audio_path):
+        return send_file(
+            audio_path,
+            mimetype='audio/mpeg',
+            as_attachment=False,
+            download_name=filename
+        )
+    else:
+        return jsonify({'error': '音频文件不存在'}), 404
+
 @app.route('/')
 def index():
     return send_file('templates/modules.html')
@@ -1094,6 +1110,487 @@ def intensive_delete_article():
         return jsonify({'success': True, 'article_id': article_id, 'clear_cache': True})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+def split_text_intelligently(text, target_segments=None, max_chars=3500):
+    """
+    智能分割文本，确保句子完整性
+    :param text: 要分割的文本
+    :param target_segments: 目标分段数量，如果指定则平均分割
+    :param max_chars: 每段最大字符数
+    """
+    if len(text) <= max_chars:
+        return [text]
+    
+    # 如果指定了目标分段数，计算平均长度
+    if target_segments:
+        avg_length = len(text) // target_segments
+        max_chars = min(max_chars, avg_length + 500)  # 允许一定的弹性
+    
+    segments = []
+    current_segment = ""
+    
+    # 更智能的句子分割，处理多种结束标点
+    import re
+    sentences = re.split(r'(?<=[.!?])\s+', text)
+    
+    for sentence in sentences:
+        sentence = sentence.strip()
+        if not sentence:
+            continue
+            
+        # 检查添加这句话后是否超过限制
+        test_segment = current_segment + (' ' if current_segment else '') + sentence
+        
+        if len(test_segment) > max_chars and current_segment:
+            # 如果当前段落不为空，先保存它
+            segments.append(current_segment.strip())
+            current_segment = sentence
+        else:
+            current_segment = test_segment
+    
+    # 添加最后一个段落
+    if current_segment:
+        segments.append(current_segment.strip())
+    
+    # 如果指定了目标分段数但实际分段数不符，进行调整
+    if target_segments and len(segments) != target_segments:
+        return redistribute_segments(segments, target_segments, max_chars)
+    
+    # 检查是否有段落仍然过长
+    final_segments = []
+    for segment in segments:
+        if len(segment) <= max_chars:
+            final_segments.append(segment)
+        else:
+            # 对过长段落进行二次分割
+            sub_segments = split_long_segment(segment, max_chars)
+            final_segments.extend(sub_segments)
+    
+    return final_segments
+
+def redistribute_segments(segments, target_count, max_chars):
+    """重新分配段落，使其更接近目标数量"""
+    if len(segments) < target_count:
+        # 分段太少，需要进一步分割
+        result = []
+        for segment in segments:
+            if len(segment) > max_chars * 0.8:
+                sub_segments = split_long_segment(segment, len(segment) // 2)
+                result.extend(sub_segments)
+            else:
+                result.append(segment)
+        return result
+    elif len(segments) > target_count:
+        # 分段太多，需要合并一些
+        result = []
+        current_segment = ""
+        for segment in segments:
+            test_merge = current_segment + (' ' if current_segment else '') + segment
+            if len(test_merge) <= max_chars:
+                current_segment = test_merge
+            else:
+                if current_segment:
+                    result.append(current_segment)
+                current_segment = segment
+        if current_segment:
+            result.append(current_segment)
+        return result
+    
+    return segments
+
+def split_long_segment(segment, max_chars):
+    """分割过长的段落，保持句子完整"""
+    if len(segment) <= max_chars:
+        return [segment]
+    
+    import re
+    sentences = re.split(r'(?<=[.!?])\s+', segment)
+    
+    sub_segments = []
+    current_sub = ""
+    
+    for sentence in sentences:
+        test_sub = current_sub + (' ' if current_sub else '') + sentence
+        if len(test_sub) > max_chars and current_sub:
+            sub_segments.append(current_sub.strip())
+            current_sub = sentence
+        else:
+            current_sub = test_sub
+    
+    if current_sub:
+        sub_segments.append(current_sub.strip())
+    
+    return sub_segments
+
+def generate_tts_segment(text, temp_dir, segment_index):
+    """生成单个文本段的TTS音频"""
+    url = "https://api.deerapi.com/v1/audio/speech"
+    payload = json.dumps({
+        "model": "tts-1",
+        "input": text,
+        "voice": "nova"
+    })
+    headers = {
+        'Authorization': f"Bearer {os.getenv('DEER_API_KEY')}",
+        'Content-Type': 'application/json'
+    }
+    
+    response = requests.post(url, headers=headers, data=payload, timeout=30)
+    
+    if response.status_code == 200:
+        segment_path = os.path.join(temp_dir, f"segment_{segment_index:03d}.mp3")
+        with open(segment_path, 'wb') as f:
+            f.write(response.content)
+        return segment_path
+    else:
+        raise Exception(f'TTS API错误: {response.status_code}')
+
+@app.route('/generate_article_audio', methods=['POST'])
+def generate_article_audio():
+    """为精听文章生成英文音频（支持长文本分段生成和合并）"""
+    data = request.json or {}
+    article_id = data.get('article_id')
+    text = data.get('text', '').strip()
+    
+    if not article_id or not text:
+        return jsonify({'error': '缺少必要参数'}), 400
+    
+    # 检查文章是否存在
+    article_path = _article_path(article_id)
+    if not os.path.exists(article_path):
+        return jsonify({'error': '文章不存在'}), 404
+    
+    try:
+        # 创建文章音频目录
+        article_audio_dir = os.path.join(VOCAB_AUDIO_DIR, 'articles', article_id)
+        os.makedirs(article_audio_dir, exist_ok=True)
+        
+        # 生成最终音频文件名
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"article_{timestamp}.mp3"
+        final_audio_path = os.path.join(article_audio_dir, filename)
+        
+        # 检查文本长度，决定是否需要分段处理
+        MAX_CHARS = 3500  # 保守的字符限制
+        
+        if len(text) <= MAX_CHARS:
+            # 文本较短，直接生成
+            url = "https://api.deerapi.com/v1/audio/speech"
+            payload = json.dumps({
+                "model": "tts-1",
+                "input": text,
+                "voice": "nova"
+            })
+            headers = {
+                'Authorization': f"Bearer {os.getenv('DEER_API_KEY')}",
+                'Content-Type': 'application/json'
+            }
+            
+            response = requests.post(url, headers=headers, data=payload, timeout=30)
+            
+            if response.status_code == 200:
+                with open(final_audio_path, 'wb') as f:
+                    f.write(response.content)
+            else:
+                return jsonify({'error': f'TTS服务错误: {response.status_code}'}), 500
+        else:
+            # 文本较长，需要分段处理
+            segments = split_text_intelligently(text, MAX_CHARS)
+            
+            # 创建临时目录存储分段音频
+            temp_dir = os.path.join(article_audio_dir, f"temp_{timestamp}")
+            os.makedirs(temp_dir, exist_ok=True)
+            
+            try:
+                # 生成每个分段的音频
+                segment_paths = []
+                for i, segment in enumerate(segments):
+                    segment_path = generate_tts_segment(segment, temp_dir, i)
+                    segment_paths.append(segment_path)
+                
+                # 使用pydub合并音频
+                combined_audio = None
+                silence = AudioSegment.silent(duration=800)  # 800ms静音间隔
+                
+                for segment_path in segment_paths:
+                    audio_segment = AudioSegment.from_mp3(segment_path)
+                    
+                    if combined_audio is None:
+                        combined_audio = audio_segment
+                    else:
+                        combined_audio = combined_audio + silence + audio_segment
+                
+                # 导出合并后的音频
+                combined_audio.export(final_audio_path, format="mp3")
+                
+            finally:
+                # 清理临时文件
+                if os.path.exists(temp_dir):
+                    shutil.rmtree(temp_dir)
+        
+        # 保存对应的文本文件
+        txt_path = final_audio_path.replace('.mp3', '.txt')
+        with open(txt_path, 'w', encoding='utf-8') as f:
+            f.write(text)
+        
+        # 返回音频访问URL
+        audio_url = f"/vocab_audio/articles/{article_id}/{filename}"
+        
+        return jsonify({
+            'success': True,
+            'audio_url': audio_url,
+            'filename': filename,
+            'text_length': len(text),
+            'segments_count': len(split_text_intelligently(text, MAX_CHARS)) if len(text) > MAX_CHARS else 1
+        })
+        
+    except requests.exceptions.Timeout:
+        return jsonify({'error': '音频生成超时，请稍后重试'}), 500
+    except Exception as e:
+        return jsonify({'error': f'音频生成失败: {str(e)}'}), 500
+
+@app.route('/prepare_article_audio', methods=['POST'])
+def prepare_article_audio():
+    """准备分批音频生成，返回分段信息"""
+    data = request.json or {}
+    article_id = data.get('article_id')
+    text = data.get('text', '').strip()
+    
+    if not article_id or not text:
+        return jsonify({'error': '缺少必要参数'}), 400
+    
+    # 检查文章是否存在
+    article_path = _article_path(article_id)
+    if not os.path.exists(article_path):
+        return jsonify({'error': '文章不存在'}), 404
+    
+    try:
+        # 计算最优分段数量
+        MAX_CHARS = 3500
+        if len(text) <= MAX_CHARS:
+            segments = [text]
+        else:
+            # 根据长度计算合适的分段数
+            target_segments = max(2, min(6, len(text) // 2500))  # 2-6段之间
+            segments = split_text_intelligently(text, target_segments, MAX_CHARS)
+        
+        # 生成任务ID
+        task_id = f"audio_{article_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        
+        return jsonify({
+            'success': True,
+            'task_id': task_id,
+            'segments_count': len(segments),
+            'segments_info': [
+                {
+                    'index': i,
+                    'length': len(segment),
+                    'preview': segment[:100] + '...' if len(segment) > 100 else segment
+                }
+                for i, segment in enumerate(segments)
+            ]
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'准备失败: {str(e)}'}), 500
+
+@app.route('/generate_audio_segment', methods=['POST'])
+def generate_audio_segment():
+    """生成单个音频分段"""
+    data = request.json or {}
+    article_id = data.get('article_id')
+    text = data.get('text', '').strip()
+    segment_index = data.get('segment_index', 0)
+    task_id = data.get('task_id')
+    
+    if not all([article_id, text, task_id is not None]):
+        return jsonify({'error': '缺少必要参数'}), 400
+    
+    try:
+        # 创建任务目录
+        article_audio_dir = os.path.join(VOCAB_AUDIO_DIR, 'articles', article_id)
+        task_dir = os.path.join(article_audio_dir, task_id)
+        os.makedirs(task_dir, exist_ok=True)
+        
+        # 生成单段音频
+        segment_path = generate_tts_segment(text, task_dir, segment_index)
+        
+        return jsonify({
+            'success': True,
+            'segment_index': segment_index,
+            'segment_path': os.path.basename(segment_path),
+            'text_length': len(text)
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'分段生成失败: {str(e)}'}), 500
+
+@app.route('/combine_audio_segments', methods=['POST'])
+def combine_audio_segments():
+    """合并音频分段"""
+    data = request.json or {}
+    article_id = data.get('article_id')
+    task_id = data.get('task_id')
+    segments_count = data.get('segments_count')
+    original_text = data.get('original_text', '')
+    
+    if not all([article_id, task_id, segments_count]):
+        return jsonify({'error': '缺少必要参数'}), 400
+    
+    try:
+        # 找到任务目录
+        article_audio_dir = os.path.join(VOCAB_AUDIO_DIR, 'articles', article_id)
+        task_dir = os.path.join(article_audio_dir, task_id)
+        
+        if not os.path.exists(task_dir):
+            return jsonify({'error': '任务目录不存在'}), 404
+        
+        # 收集所有分段音频文件
+        segment_paths = []
+        for i in range(segments_count):
+            segment_file = f"segment_{i:03d}.mp3"
+            segment_path = os.path.join(task_dir, segment_file)
+            if os.path.exists(segment_path):
+                segment_paths.append(segment_path)
+            else:
+                return jsonify({'error': f'分段文件缺失: {segment_file}'}), 404
+        
+        # 合并音频
+        combined_audio = None
+        silence = AudioSegment.silent(duration=800)  # 800ms静音间隔
+        
+        for segment_path in segment_paths:
+            audio_segment = AudioSegment.from_mp3(segment_path)
+            
+            if combined_audio is None:
+                combined_audio = audio_segment
+            else:
+                combined_audio = combined_audio + silence + audio_segment
+        
+        # 生成最终文件名
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"article_{timestamp}.mp3"
+        final_audio_path = os.path.join(article_audio_dir, filename)
+        
+        # 导出合并后的音频
+        combined_audio.export(final_audio_path, format="mp3")
+        
+        # 保存对应的文本文件
+        txt_path = final_audio_path.replace('.mp3', '.txt')
+        with open(txt_path, 'w', encoding='utf-8') as f:
+            f.write(original_text)
+        
+        # 清理任务目录
+        if os.path.exists(task_dir):
+            shutil.rmtree(task_dir)
+        
+        # 返回音频访问URL
+        audio_url = f"/vocab_audio/articles/{article_id}/{filename}"
+        
+        return jsonify({
+            'success': True,
+            'audio_url': audio_url,
+            'filename': filename,
+            'text_length': len(original_text),
+            'segments_count': segments_count
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'合并失败: {str(e)}'}), 500
+
+@app.route('/cleanup_article_audio', methods=['POST'])
+def cleanup_article_audio():
+    """清理文章的音频文件和临时文件"""
+    data = request.json or {}
+    article_id = data.get('article_id')
+    
+    if not article_id:
+        return jsonify({'error': '缺少文章ID'}), 400
+    
+    try:
+        article_audio_dir = os.path.join(VOCAB_AUDIO_DIR, 'articles', article_id)
+        
+        if not os.path.exists(article_audio_dir):
+            return jsonify({'success': True, 'message': '无需清理，目录不存在'})
+        
+        cleaned_files = []
+        cleaned_dirs = []
+        
+        # 遍历音频目录
+        for item in os.listdir(article_audio_dir):
+            item_path = os.path.join(article_audio_dir, item)
+            
+            if os.path.isfile(item_path):
+                # 删除音频文件和文本文件
+                if item.endswith(('.mp3', '.txt')):
+                    os.remove(item_path)
+                    cleaned_files.append(item)
+            elif os.path.isdir(item_path):
+                # 删除临时目录（任务目录）
+                if item.startswith('audio_') or item.startswith('temp_'):
+                    shutil.rmtree(item_path)
+                    cleaned_dirs.append(item)
+        
+        # 如果目录为空，删除整个目录
+        if not os.listdir(article_audio_dir):
+            os.rmdir(article_audio_dir)
+            cleaned_dirs.append(os.path.basename(article_audio_dir))
+        
+        return jsonify({
+            'success': True,
+            'cleaned_files': cleaned_files,
+            'cleaned_dirs': cleaned_dirs,
+            'message': f'清理完成：删除了{len(cleaned_files)}个文件和{len(cleaned_dirs)}个目录'
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'清理失败: {str(e)}'}), 500
+
+@app.route('/check_article_audio/<article_id>', methods=['GET'])
+def check_article_audio(article_id):
+    """检查文章是否已有音频文件"""
+    try:
+        # 检查文章是否存在
+        article_path = _article_path(article_id)
+        if not os.path.exists(article_path):
+            return jsonify({'error': '文章不存在'}), 404
+        
+        # 检查音频目录
+        article_audio_dir = os.path.join(VOCAB_AUDIO_DIR, 'articles', article_id)
+        
+        if not os.path.exists(article_audio_dir):
+            return jsonify({'exists': False})
+        
+        # 查找最新的音频文件
+        audio_files = [f for f in os.listdir(article_audio_dir) if f.endswith('.mp3')]
+        
+        if not audio_files:
+            return jsonify({'exists': False})
+        
+        # 按修改时间排序，获取最新的音频文件
+        audio_files.sort(key=lambda x: os.path.getmtime(os.path.join(article_audio_dir, x)), reverse=True)
+        latest_audio = audio_files[0]
+        
+        # 获取对应的文本文件
+        txt_file = latest_audio.replace('.mp3', '.txt')
+        txt_path = os.path.join(article_audio_dir, txt_file)
+        
+        audio_info = {
+            'exists': True,
+            'filename': latest_audio,
+            'audio_url': f"/vocab_audio/articles/{article_id}/{latest_audio}",
+            'created_time': datetime.fromtimestamp(os.path.getmtime(os.path.join(article_audio_dir, latest_audio))).isoformat()
+        }
+        
+        # 如果文本文件存在，读取原始文本
+        if os.path.exists(txt_path):
+            with open(txt_path, 'r', encoding='utf-8') as f:
+                audio_info['original_text'] = f.read()
+        
+        return jsonify(audio_info)
+        
+    except Exception as e:
+        return jsonify({'error': f'检查音频文件失败: {str(e)}'}), 500
 
 # ------------------------
 # Message Board (留言板)

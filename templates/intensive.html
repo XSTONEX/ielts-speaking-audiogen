@@ -81,6 +81,8 @@
     .floating { position:fixed; background:rgba(17, 24, 39, 0.95); backdrop-filter: blur(12px); color:#fff; padding:12px 16px; border-radius:16px; font-size:14px; box-shadow:0 20px 40px rgba(0,0,0,0.3); display:none; z-index:3000; border: 1px solid rgba(255,255,255,0.1); }
     .floating button { background:#10b981; border:none; color:#fff; padding:8px 16px; border-radius:10px; cursor:pointer; font-weight:600; transition: all 0.2s; font-size: 13px; }
     .floating button:hover { background:#059669; transform: translateY(-1px); }
+    .floating button:disabled { background:#6b7280; cursor:not-allowed; transform: none; }
+    .floating button:disabled:hover { background:#6b7280; transform: none; }
     .floating .del { background:#ef4444; margin-left:8px; }
     .floating .del:hover { background:#dc2626; }
     .floating input { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 8px 12px; border-radius: 8px; outline: none; font-size: 14px; margin-right: 8px; min-width: 200px; font-family: 'PT Serif', 'Crimson Text', ui-serif, 'Times New Roman', 'Georgia', serif; }
@@ -91,6 +93,103 @@
     .cat-tabs button { padding:10px 20px; border-radius:12px; border:none; background:#f8fafc; cursor:pointer; font-weight:500; color:#6b7280; transition: all 0.2s; }
     .cat-tabs button.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#fff; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
     .cat-tabs button:hover:not(.active) { background:#e2e8f0; }
+    
+    /* 音频播放面板样式 */
+    .audio-panel { 
+      position: absolute; 
+      bottom: 0; 
+      left: 0; 
+      right: 0; 
+      background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%); 
+      border-top: 1px solid #e6ebf2; 
+      padding: 16px 24px; 
+      box-shadow: 0 -4px 12px rgba(15,23,42,0.08); 
+      z-index: 100; 
+    }
+    .audio-controls { 
+      display: flex; 
+      align-items: center; 
+      gap: 12px; 
+      max-width: 900px; 
+      margin: 0 auto; 
+    }
+    .audio-controls audio { 
+      flex: 1; 
+      height: 40px; 
+      border-radius: 8px; 
+      outline: none; 
+    }
+    .audio-controls button { 
+      padding: 8px 12px; 
+      border: 1px solid #e2e8f0; 
+      border-radius: 8px; 
+      background: #f8fafc; 
+      color: #475569; 
+      cursor: pointer; 
+      transition: all 0.2s; 
+      font-size: 14px; 
+      font-weight: 500; 
+      display: flex; 
+      align-items: center; 
+      gap: 4px; 
+    }
+    .audio-controls button:hover { 
+      background: #eef2f7; 
+      border-color: #cbd5e1; 
+      transform: translateY(-1px); 
+    }
+    
+    /* 音频指示器样式 */
+    .audio-indicator {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+      opacity: 0;
+      animation: fadeInSlide 0.4s ease-out 0.3s forwards;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .audio-indicator:hover {
+      transform: translateY(-1px) scale(1.02);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    }
+    
+    .audio-indicator svg {
+      flex-shrink: 0;
+    }
+    
+    .audio-indicator span {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      letter-spacing: 0.2px;
+    }
+    
+    @keyframes fadeInSlide {
+      from {
+        opacity: 0;
+        transform: translateX(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+    
+    /* 卡片悬停时音频指示器的效果 */
+    .card:hover .audio-indicator {
+      transform: translateY(-1px) scale(1.05);
+      box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
+    }
     
           @media (max-width: 768px) {
         .container { margin: 0; }
@@ -115,6 +214,17 @@
       .highlights-panel { max-width: 90vw; min-width: 240px; }
       .resize-handle { display: none; }
       .hl { margin: 2px 2px; padding: 3px 5px; display: inline-block; }
+      .audio-panel { padding: 12px 16px; }
+      .audio-controls { gap: 8px; }
+      .audio-controls button { padding: 6px 8px; font-size: 12px; }
+      .audio-indicator { 
+        top: 8px; 
+        right: 8px; 
+        padding: 3px 6px; 
+        font-size: 10px; 
+        border-radius: 8px; 
+      }
+      .audio-indicator span { display: none; }
     }
     
     @media (max-width: 480px) {
@@ -180,6 +290,9 @@
             <option value="Listening">Listening</option>
             <option value="Writing">Writing</option>
           </select>
+          <button id="generateAudioBtn" class="vocab-btn" onclick="generateArticleAudio()" title="生成英文音频" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; border: none;">
+            <span style="margin-right: 4px;">🔊</span>音频
+          </button>
           <button id="vocabToggle" class="vocab-btn" onclick="toggleHighlightsPanel()" title="词汇面板">词汇</button>
           <button class="close-btn" onclick="closeViewer()" title="关闭">✕</button>
         </div>
@@ -194,6 +307,21 @@
             <button class="close-btn" onclick="closeHighlightsPanel()" title="关闭">✕</button>
           </div>
           <div class="hp-body" id="hpBody"></div>
+        </div>
+      </div>
+      <!-- 音频播放控制面板 -->
+      <div id="audioPanel" class="audio-panel" style="display: none;">
+        <div class="audio-controls">
+          <audio id="articleAudio" controls style="flex: 1; margin-right: 12px;">
+            您的浏览器不支持音频播放。
+          </audio>
+          <button id="downloadAudioBtn" class="action-btn" onclick="downloadAudio()" title="下载音频">
+            <span class="btn-icon">⬇️</span>
+            下载
+          </button>
+          <button class="action-btn" onclick="closeAudioPanel()" title="关闭音频面板">
+            <span class="btn-icon">✕</span>
+          </button>
         </div>
       </div>
     </div>
@@ -223,10 +351,54 @@
     let allItems=[]; let activeCat='Reading';
     function setActiveCat(cat){ activeCat=cat; ['Reading','Listening','Writing'].forEach(c=>{ const el=document.getElementById('tab-'+c); if(el) el.className = (c===activeCat? 'active': ''); }); renderList(); }
     function loadList(){ fetch('/intensive_list').then(r=>r.json()).then(d=>{ allItems = d.items||[]; renderList(); }); }
-    function renderList(){ const wrap=document.getElementById('list'); const empty=document.getElementById('empty'); wrap.innerHTML=''; const filtered = (allItems||[]).filter(it=> (it.category||'Reading')===activeCat ); if(!filtered.length){ empty.style.display=''; return; } empty.style.display='none'; filtered.forEach(it=>{ const div=document.createElement('div'); div.className='card'; div.style.cursor='pointer'; div.innerHTML = `<h3>${escapeHtml(it.title||'未命名')}</h3><div class=\"muted\">高亮：${it.highlight_count||0}｜创建：${(it.created_at||'').slice(0,19).replace('T',' ')}</div>`; const delBtn=document.createElement('button'); delBtn.className='icon-btn'; delBtn.setAttribute('title','删除'); delBtn.setAttribute('aria-label','删除'); delBtn.textContent='✕'; delBtn.onclick=function(e){ e.stopPropagation(); if(!confirm('确定删除这篇文章吗？此操作不可恢复。')) return; fetch('/intensive_delete_article',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id: it.id})}).then(r=>r.json()).then(d=>{ if(d.success){ renderAfterDelete(it.id); } else { alert(d.error||'删除失败'); } }); }; div.onclick=function(){ openArticle(it.id); }; div.appendChild(delBtn); wrap.appendChild(div); }); }
+    function renderList(){ const wrap=document.getElementById('list'); const empty=document.getElementById('empty'); wrap.innerHTML=''; const filtered = (allItems||[]).filter(it=> (it.category||'Reading')===activeCat ); if(!filtered.length){ empty.style.display=''; return; } empty.style.display='none'; filtered.forEach(it=>{ const div=document.createElement('div'); div.className='card'; div.style.cursor='pointer'; 
+      
+      // 创建基本内容
+      const title = escapeHtml(it.title||'未命名');
+      const highlightCount = it.highlight_count||0;
+      const createdTime = (it.created_at||'').slice(0,19).replace('T',' ');
+      
+      div.innerHTML = `<h3>${title}</h3><div class=\"muted\">高亮：${highlightCount}｜创建：${createdTime}</div>`;
+      
+      // 异步检查音频状态并添加指示器
+      checkExistingAudio(it.id).then(audioInfo => {
+        if (audioInfo.exists) {
+          const audioIndicator = document.createElement('div');
+          audioIndicator.className = 'audio-indicator';
+          audioIndicator.innerHTML = `
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+            </svg>
+            <span>音频</span>
+          `;
+          audioIndicator.title = `已有音频 (${new Date(audioInfo.created_time).toLocaleString()})`;
+          div.appendChild(audioIndicator);
+        }
+      }).catch(() => {
+        // 静默处理错误，不影响列表显示
+      });
+      
+      const delBtn=document.createElement('button'); delBtn.className='icon-btn'; delBtn.setAttribute('title','删除'); delBtn.setAttribute('aria-label','删除'); delBtn.textContent='✕'; delBtn.onclick=function(e){ e.stopPropagation(); if(!confirm('确定删除这篇文章吗？此操作不可恢复。')) return; fetch('/intensive_delete_article',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id: it.id})}).then(r=>r.json()).then(d=>{ if(d.success){ renderAfterDelete(it.id); } else { alert(d.error||'删除失败'); } }); }; div.onclick=function(){ openArticle(it.id); }; div.appendChild(delBtn); wrap.appendChild(div); }); }
     function renderAfterDelete(id){ allItems = (allItems||[]).filter(x=>x.id!==id); renderList(); if(window.clearArticlePronunciationCache){ window.clearArticlePronunciationCache(id); } }
 
-    function openArticle(id){ fetch(`/intensive_article/${id}`).then(r=>r.json()).then(d=>{ if(!d.success){ alert(d.error||'加载失败'); return; } const art=d.article; currentArticle=art; highlights = art.highlights||[]; document.getElementById('vTitle').textContent = `${art.title||'未命名'}`; document.getElementById('vCategory').value = art.category||'Reading'; const contentDiv=document.getElementById('vContent'); contentDiv.innerHTML = `<div class=\"reader\">${art.content_html || ''}</div>`; document.getElementById('viewer').classList.add('active'); bindSelection(contentDiv, art); restoreHighlights(contentDiv, art); closeHighlightsPanel(); checkForJumpHighlight(); }); }
+    function openArticle(id){ fetch(`/intensive_article/${id}`).then(r=>r.json()).then(d=>{ if(!d.success){ alert(d.error||'加载失败'); return; } const art=d.article; currentArticle=art; highlights = art.highlights||[]; document.getElementById('vTitle').textContent = `${art.title||'未命名'}`; document.getElementById('vCategory').value = art.category||'Reading'; const contentDiv=document.getElementById('vContent'); contentDiv.innerHTML = `<div class=\"reader\">${art.content_html || ''}</div>`; document.getElementById('viewer').classList.add('active'); bindSelection(contentDiv, art); restoreHighlights(contentDiv, art); closeHighlightsPanel(); checkForJumpHighlight(); 
+      
+      // 检查音频文件状态并更新按钮
+      checkExistingAudio(id).then(audioInfo => {
+        updateAudioButton(audioInfo.exists);
+        currentAudioInfo = audioInfo.exists ? audioInfo : null;
+        
+        // 如果有现有音频，自动显示播放器
+        if (audioInfo.exists) {
+          showAudioPlayer(audioInfo.audio_url, audioInfo.filename, true);
+          currentAudioUrl = audioInfo.audio_url;
+          console.log(`自动加载已存在的音频: ${audioInfo.filename} (${new Date(audioInfo.created_time).toLocaleString()})`);
+        }
+      }).catch(error => {
+        console.error('检查音频状态失败:', error);
+        updateAudioButton(false);
+      });
+    }); }
     function checkForJumpHighlight(){ const targetHighlightId = sessionStorage.getItem('jumpToHighlight'); if(targetHighlightId){ sessionStorage.removeItem('jumpToHighlight'); setTimeout(()=>{ scrollToHighlight(targetHighlightId); }, 300); } }
     function renderHighlightsPanel(){ const searchVal=(document.getElementById('hpSearch').value||'').toLowerCase(); const body=document.getElementById('hpBody'); body.innerHTML=''; let list=(highlights||[]).slice().sort((a,b)=>a.start-b.start); if(searchVal){ list=list.filter(h=>{ const word=(h.text || (currentArticle.content_text||'').substring(h.start, h.end)).toLowerCase(); const meaning=(h.meaning||'').toLowerCase(); return word.includes(searchVal) || meaning.includes(searchVal); }); } if(!list.length){ body.innerHTML=`<div class="muted" style="padding:8px 4px;">${searchVal?'未找到匹配词汇':'暂无词汇'}</div>`; return; } list.forEach(h=>{ const item=document.createElement('div'); item.className='hp-item'; item.style.cursor='pointer'; const word=document.createElement('div'); word.className='hp-word'; word.textContent= h.text || (currentArticle.content_text||'').substring(h.start, h.end); const mean=document.createElement('div'); mean.className='hp-meaning'; mean.textContent= h.meaning || ''; const actions=document.createElement('div'); actions.className='hp-actions'; actions.style.cssText='display:flex;gap:4px;align-items:center;margin-left:auto;'; const playBtn=document.createElement('button'); playBtn.style.cssText='padding:4px 6px;border:none;background:#f3f4f6;color:#6b7280;border-radius:4px;cursor:pointer;font-size:12px;'; playBtn.textContent='🔊'; playBtn.title='播放发音'; playBtn.onclick=function(e){ e.stopPropagation(); const wordText = h.text || (currentArticle.content_text||'').substring(h.start, h.end); if(wordText && window.playWordPronunciation){ window.playWordPronunciation(wordText.trim(), currentArticle?.id); } }; const jumpBtn=document.createElement('button'); jumpBtn.style.cssText='padding:4px 6px;border:none;background:#f3f4f6;color:#6b7280;border-radius:4px;cursor:pointer;font-size:11px;'; jumpBtn.textContent='↗'; jumpBtn.title='跳转到原文'; jumpBtn.onclick=function(e){ e.stopPropagation(); scrollToHighlight(h.id); }; actions.appendChild(playBtn); actions.appendChild(jumpBtn); item.appendChild(word); item.appendChild(mean); item.appendChild(actions); item.onclick=function(){ const wordText = h.text || (currentArticle.content_text||'').substring(h.start, h.end); if(wordText && window.playWordPronunciation){ window.playWordPronunciation(wordText.trim(), currentArticle?.id); } }; body.appendChild(item); }); }
     let panelWidth = 320; // 默认宽度
@@ -234,7 +406,7 @@
     function closeHighlightsPanel(){ const panel=document.getElementById('highlightsPanel'); const content=document.getElementById('vContent'); const btn=document.getElementById('vocabToggle'); panel.classList.remove('active'); content.classList.remove('panel-open'); btn.classList.remove('active'); }
     function updatePanelWidth(){ const panel=document.getElementById('highlightsPanel'); const content=document.getElementById('vContent'); if(panel && content){ panel.style.width = panelWidth + 'px'; content.style.setProperty('--panel-width', panelWidth + 'px'); } }
     function scrollToHighlight(hid){ try{ const container=document.getElementById('vContent'); const mark=container.querySelector(`mark.hl[data-hid="${hid}"]`); if(mark){ mark.scrollIntoView({behavior:'smooth', block:'center'}); mark.classList.add('active'); setTimeout(()=>{ mark.classList.remove('active'); }, 1200); } }catch(e){} }
-    function closeViewer(){ document.getElementById('viewer').classList.remove('active'); currentArticle=null; selectionRange=null; highlights=[]; cancelFloat(); cancelMeaning(); closeHighlightsPanel(); }
+    function closeViewer(){ document.getElementById('viewer').classList.remove('active'); currentArticle=null; selectionRange=null; highlights=[]; cancelFloat(); cancelMeaning(); closeHighlightsPanel(); closeAudioPanel(); currentAudioInfo=null; updateAudioButton(false); }
 
     // 拖拽调整侧边栏宽度
     function initResizeHandle(){ 
@@ -315,18 +487,13 @@
         
         // 检查是否为重复词汇
         const isDuplicate = (highlights||[]).some(h => h.text && h.text.toLowerCase() === text.toLowerCase());
-        if(isDuplicate){
-          showTempTooltip('此词汇已存在高亮', range.getBoundingClientRect());
-          cancelFloat();
-          return;
-        }
         
-        selectionRange = { start: startOrig, end: endOrig, text };
+        selectionRange = { start: startOrig, end: endOrig, text, isDuplicate };
         lastSelectionRect = range.getBoundingClientRect();
-        showFloatAtRect(lastSelectionRect, false);
+        showFloatAtRect(lastSelectionRect, false, isDuplicate);
     }); }
 
-    function showFloatAtRect(rect, isExisting = false){ 
+    function showFloatAtRect(rect, isExisting = false, isDuplicate = false){ 
       const box=document.getElementById('floatBox'); 
       const highlightBtn = box.querySelector('button[onclick="confirmHighlight()"]');
       const removeBtn = box.querySelector('button[onclick="removeCurrentHighlight()"]');
@@ -337,6 +504,19 @@
       } else {
         highlightBtn.style.display='inline-block';
         removeBtn.style.display='none';
+        
+        // 如果是重复词汇，禁用高亮按钮并显示提示
+        if(isDuplicate){
+          highlightBtn.disabled = true;
+          highlightBtn.style.opacity = '0.5';
+          highlightBtn.style.cursor = 'not-allowed';
+          highlightBtn.title = '此词汇已存在高亮';
+        } else {
+          highlightBtn.disabled = false;
+          highlightBtn.style.opacity = '1';
+          highlightBtn.style.cursor = 'pointer';
+          highlightBtn.title = '';
+        }
       }
       
       positionBoxAtRect(box, rect); 
@@ -393,8 +573,39 @@
         if(tooltip.parentNode) tooltip.parentNode.removeChild(tooltip);
       }, 2000);
     }
-    function cancelFloat(){ const box=document.getElementById('floatBox'); box.style.display='none'; selectionRange=null; window.getSelection().removeAllRanges(); }
-    function confirmHighlight(){ if(!currentArticle||!selectionRange){ cancelFloat(); return; } const mBox=document.getElementById('meaningBox'); const mInput=document.getElementById('meaningInput'); mInput.value=''; if(lastSelectionRect){ positionBoxAtRect(mBox, lastSelectionRect); } mBox.style.display='block'; }
+    function cancelFloat(){ 
+      const box=document.getElementById('floatBox'); 
+      const highlightBtn = box.querySelector('button[onclick="confirmHighlight()"]');
+      
+      // 重置按钮状态
+      highlightBtn.disabled = false;
+      highlightBtn.style.opacity = '1';
+      highlightBtn.style.cursor = 'pointer';
+      highlightBtn.title = '';
+      
+      box.style.display='none'; 
+      selectionRange=null; 
+      window.getSelection().removeAllRanges(); 
+    }
+    function confirmHighlight(){ 
+      if(!currentArticle||!selectionRange){ 
+        cancelFloat(); 
+        return; 
+      } 
+      
+      // 检查是否为重复词汇
+      if(selectionRange.isDuplicate){
+        return; // 重复词汇不允许高亮
+      }
+      
+      const mBox=document.getElementById('meaningBox'); 
+      const mInput=document.getElementById('meaningInput'); 
+      mInput.value=''; 
+      if(lastSelectionRect){ 
+        positionBoxAtRect(mBox, lastSelectionRect); 
+      } 
+      mBox.style.display='block'; 
+    }
     function cancelMeaning(){ document.getElementById('meaningBox').style.display='none'; window.getSelection().removeAllRanges(); }
     function saveMeaning(){ const meaning=document.getElementById('meaningInput').value.trim(); if(!meaning){ alert('Meaning required'); return; } const selTxt=(selectionRange&&selectionRange.text)?selectionRange.text:''; const body={ id: currentArticle.id, start: selectionRange.start, end: selectionRange.end, meaning, text: selTxt }; fetch('/intensive_add_highlight',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)}).then(r=>r.json()).then(d=>{ if(d.success){ const list=document.getElementById('vContent'); // 防重复：先清理并重绘
         restoreHighlights(list, {highlights: (function(){ const idx = (highlights||[]).findIndex(h=>h.id===d.highlight.id); if(idx>=0){ highlights[idx]=d.highlight; } else { // 若存在相同范围，替换
@@ -465,6 +676,420 @@
     function wrapContainerOffsets(container, start, end, meta){ const walker=createWalker(container); let n, pos=0; let sN=null,sO=0,eN=null,eO=0; while(n=walker.nextNode()){ const next=pos + n.nodeValue.length; if(sN===null && start>=pos && start<=next){ sN=n; sO=start-pos; } if(eN===null && end>=pos && end<=next){ eN=n; eO=end-pos; break; } pos=next; } if(!sN||!eN) return; const r=document.createRange(); r.setStart(sN, sO); r.setEnd(eN, eO); const mark=document.createElement('mark'); mark.className='hl'; mark.setAttribute('data-hid', meta.id); mark.style.cursor='pointer'; const tip=document.createElement('span'); tip.className='tooltip'; tip.textContent=meta.meaning||''; r.surroundContents(mark); mark.appendChild(tip); mark.addEventListener('contextmenu', function(ev){ ev.preventDefault(); if(confirm('删除该高亮/笔记？')){ deleteHighlight(meta.id); } }); mark.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); const word = meta.text || mark.textContent.replace(tip.textContent, '').trim(); if(word && window.playWordPronunciation){ window.playWordPronunciation(word, currentArticle?.id); } }); }
     function createWalker(container){ return document.createTreeWalker(container, NodeFilter.SHOW_TEXT, { acceptNode: function(node){ let p=node.parentNode; while(p){ if(p.nodeType===1 && p.classList && p.classList.contains('tooltip')) return NodeFilter.FILTER_REJECT; p=p.parentNode; } return NodeFilter.FILTER_ACCEPT; } }); }
     function closestBlock(node, selector){ let el = node.nodeType===1 ? node : node.parentNode; if(!el) return null; if(el.closest) return el.closest(selector); while(el){ if(el.matches && el.matches(selector)) return el; el = el.parentNode; } return null; }
+    // 音频生成相关功能
+    let currentAudioUrl = null;
+    let currentAudioInfo = null;
+    
+    function extractEnglishText(text) {
+      if (!text) return '';
+      
+      // 移除HTML标签
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = text;
+      const plainText = tempDiv.textContent || tempDiv.innerText || '';
+      
+      // 使用正则表达式提取英文内容（包括标点符号、数字）
+      // 排除中文字符（Unicode范围 \u4e00-\u9fff）和中文标点符号
+      const englishParts = plainText.match(/[^\u4e00-\u9fff\uFF00-\uFFEF\u3000-\u303F]+/g);
+      
+      if (!englishParts) return '';
+      
+      // 清理和连接英文部分，移除只包含标点符号的部分
+      return englishParts
+        .map(part => part.trim())
+        .filter(part => part.length > 0 && /[a-zA-Z0-9]/.test(part)) // 必须包含字母或数字
+        .join(' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+    
+    function checkExistingAudio(articleId) {
+      return fetch(`/check_article_audio/${articleId}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.error) {
+            throw new Error(data.error);
+          }
+          return data;
+        });
+    }
+    
+    function updateAudioButton(audioExists = false) {
+      const btn = document.getElementById('generateAudioBtn');
+      if (audioExists) {
+        btn.innerHTML = '<span style="margin-right: 4px;">🔄</span>重新生成';
+        btn.title = '重新生成英文音频';
+      } else {
+        btn.innerHTML = '<span style="margin-right: 4px;">🔊</span>音频';
+        btn.title = '生成英文音频';
+      }
+    }
+    
+    function generateArticleAudio() {
+      if (!currentArticle) {
+        alert('请先打开一篇文章');
+        return;
+      }
+      
+      // 先检查是否已存在音频文件
+      checkExistingAudio(currentArticle.id)
+        .then(audioInfo => {
+          if (audioInfo.exists) {
+            // 如果音频已存在，显示确认对话框
+            const confirmMessage = `此文章已有音频文件（生成时间：${new Date(audioInfo.created_time).toLocaleString()}）。\n\n是否要重新生成音频？这将覆盖原有文件。`;
+            
+            if (!confirm(confirmMessage)) {
+              // 用户选择不重新生成，直接播放现有音频
+              showAudioPlayer(audioInfo.audio_url, audioInfo.filename, true);
+              currentAudioUrl = audioInfo.audio_url;
+              currentAudioInfo = audioInfo;
+              return;
+            }
+            
+            // 用户确认重新生成，先清理已存在的音频文件
+            cleanupExistingAudio().then(() => {
+              // 清理完成后继续生成
+              proceedWithAudioGeneration();
+            }).catch(error => {
+              console.error('清理音频文件失败:', error);
+              // 即使清理失败也继续生成，让用户知道
+              alert('清理旧音频文件时出现问题，但将继续生成新音频');
+              proceedWithAudioGeneration();
+            });
+          } else {
+            // 没有已存在音频，直接生成
+            proceedWithAudioGeneration();
+          }
+        })
+        .catch(error => {
+          console.error('检查音频文件错误:', error);
+          // 如果检查失败，直接尝试生成
+          proceedWithAudioGeneration();
+        });
+    }
+    
+    function cleanupExistingAudio() {
+      if (!currentArticle) {
+        return Promise.resolve();
+      }
+      
+      console.log('开始清理已存在的音频文件和临时文件...');
+      
+      return fetch('/cleanup_article_audio', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          article_id: currentArticle.id
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          console.log('音频清理完成:', data.message);
+          if (data.cleaned_files.length > 0 || data.cleaned_dirs.length > 0) {
+            console.log('已删除文件:', data.cleaned_files);
+            console.log('已删除目录:', data.cleaned_dirs);
+          }
+          
+          // 关闭当前的音频播放器（如果有的话）
+          closeAudioPanel();
+          
+          // 重置相关状态
+          currentAudioUrl = null;
+          currentAudioInfo = null;
+          
+          return data;
+        } else {
+          throw new Error(data.error || '清理失败');
+        }
+      });
+    }
+    
+    function proceedWithAudioGeneration() {
+      const btn = document.getElementById('generateAudioBtn');
+      const originalContent = btn.innerHTML;
+      
+      // 提取英文文本
+      const englishText = extractEnglishText(currentArticle.content_text);
+      
+      if (!englishText || englishText.trim().length === 0) {
+        alert('未找到英文内容可生成音频');
+        return;
+      }
+      
+      // 禁用按钮，显示加载状态
+      btn.disabled = true;
+      btn.innerHTML = '<span style="margin-right: 4px;">⏳</span>准备中...';
+      btn.style.opacity = '0.7';
+      btn.style.cursor = 'not-allowed';
+      
+      // 根据文本长度决定使用哪种处理方式
+      if (englishText.length <= 3500) {
+        // 短文本，使用原有的直接生成方式
+        generateAudioDirect(englishText, btn, originalContent);
+      } else {
+        // 长文本，使用分批处理方式
+        generateAudioBatch(englishText, btn, originalContent);
+      }
+    }
+    
+    function generateAudioDirect(englishText, btn, originalContent) {
+      btn.innerHTML = '<span style="margin-right: 4px;">⏳</span>生成中...';
+      
+      // 调用原有的API
+      fetch('/generate_article_audio', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          article_id: currentArticle.id,
+          text: englishText
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          showAudioPlayer(data.audio_url, data.filename);
+          currentAudioUrl = data.audio_url;
+          updateAudioButton(true);
+        } else {
+          alert(data.error || '音频生成失败');
+        }
+      })
+      .catch(error => {
+        console.error('音频生成错误:', error);
+        alert('音频生成失败，请稍后重试');
+      })
+      .finally(() => {
+        resetAudioButton(btn, originalContent);
+      });
+    }
+    
+    function generateAudioBatch(englishText, btn, originalContent) {
+      // 第一步：准备分批处理
+      fetch('/prepare_article_audio', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          article_id: currentArticle.id,
+          text: englishText
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          const { task_id, segments_count, segments_info } = data;
+          console.log(`文本将分为 ${segments_count} 段进行处理:`, segments_info);
+          
+          // 更新按钮显示分段信息
+          btn.innerHTML = `<span style="margin-right: 4px;">⏳</span>生成中... (0/${segments_count})`;
+          
+          // 开始分段生成
+          generateSegmentsSequentially(task_id, segments_info, englishText, btn, originalContent);
+        } else {
+          alert(data.error || '准备失败');
+          resetAudioButton(btn, originalContent);
+        }
+      })
+      .catch(error => {
+        console.error('准备错误:', error);
+        alert('准备失败，请稍后重试');
+        resetAudioButton(btn, originalContent);
+      });
+    }
+    
+    async function generateSegmentsSequentially(taskId, segmentsInfo, originalText, btn, originalContent) {
+      const totalSegments = segmentsInfo.length;
+      let completedSegments = 0;
+      
+      try {
+        // 重新分割文本以获取实际的分段内容
+        const segments = await getSegmentTexts(originalText, totalSegments);
+        
+        // 逐个生成分段
+        for (let i = 0; i < segments.length; i++) {
+          btn.innerHTML = `<span style="margin-right: 4px;">⏳</span>生成第${i+1}段... (${completedSegments}/${totalSegments})`;
+          
+          const response = await fetch('/generate_audio_segment', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              article_id: currentArticle.id,
+              task_id: taskId,
+              segment_index: i,
+              text: segments[i]
+            })
+          });
+          
+          const result = await response.json();
+          
+          if (!result.success) {
+            throw new Error(result.error || `第${i+1}段生成失败`);
+          }
+          
+          completedSegments++;
+          btn.innerHTML = `<span style="margin-right: 4px;">⏳</span>已完成 ${completedSegments}/${totalSegments} 段`;
+          
+          console.log(`第${i+1}段生成完成 (${result.text_length}字符)`);
+        }
+        
+        // 所有分段完成，开始合并
+        btn.innerHTML = `<span style="margin-right: 4px;">⏳</span>合并音频...`;
+        
+        const combineResponse = await fetch('/combine_audio_segments', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            article_id: currentArticle.id,
+            task_id: taskId,
+            segments_count: totalSegments,
+            original_text: originalText
+          })
+        });
+        
+        const combineResult = await combineResponse.json();
+        
+        if (combineResult.success) {
+          showAudioPlayer(combineResult.audio_url, combineResult.filename);
+          currentAudioUrl = combineResult.audio_url;
+          updateAudioButton(true);
+          console.log(`音频生成成功！共${combineResult.segments_count}段，总长度${combineResult.text_length}字符`);
+        } else {
+          throw new Error(combineResult.error || '合并失败');
+        }
+        
+      } catch (error) {
+        console.error('分批生成错误:', error);
+        alert(`音频生成失败: ${error.message}`);
+      } finally {
+        resetAudioButton(btn, originalContent);
+      }
+    }
+    
+    async function getSegmentTexts(text, targetSegments) {
+      // 在前端重新分割文本，确保与后端一致
+      const MAX_CHARS = 3500;
+      if (text.length <= MAX_CHARS) {
+        return [text];
+      }
+      
+      // 简单的分割逻辑，按句号分割
+      const sentences = text.split(/(?<=[.!?])\s+/);
+      const avgLength = text.length / targetSegments;
+      
+      const segments = [];
+      let currentSegment = '';
+      
+      for (const sentence of sentences) {
+        const testSegment = currentSegment + (currentSegment ? ' ' : '') + sentence;
+        
+        if (testSegment.length > avgLength && currentSegment && segments.length < targetSegments - 1) {
+          segments.push(currentSegment.trim());
+          currentSegment = sentence;
+        } else {
+          currentSegment = testSegment;
+        }
+      }
+      
+      if (currentSegment) {
+        segments.push(currentSegment.trim());
+      }
+      
+      return segments;
+    }
+    
+    function resetAudioButton(btn, originalContent) {
+      btn.disabled = false;
+      btn.innerHTML = originalContent;
+      btn.style.opacity = '1';
+      btn.style.cursor = 'pointer';
+    }
+    
+    function showAudioPlayer(audioUrl, filename, isExisting = false) {
+      const audioPanel = document.getElementById('audioPanel');
+      const audio = document.getElementById('articleAudio');
+      const downloadBtn = document.getElementById('downloadAudioBtn');
+      
+      // 设置音频源
+      audio.src = audioUrl;
+      
+      // 如果是已存在的音频，添加预加载
+      if (isExisting) {
+        audio.preload = 'metadata';
+        audio.addEventListener('loadedmetadata', function() {
+          console.log(`音频加载完成，时长: ${Math.round(audio.duration)}秒`);
+        }, { once: true });
+      }
+      
+      // 设置下载链接
+      downloadBtn.onclick = function() {
+        const link = document.createElement('a');
+        link.href = audioUrl;
+        link.download = filename || 'article_audio.mp3';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+      
+      // 显示音频面板
+      audioPanel.style.display = 'block';
+      
+      // 调整内容区域，为音频面板留出空间
+      const content = document.getElementById('vContent');
+      if (content) {
+        content.style.paddingBottom = '80px';
+      }
+      
+      // 如果是已存在的音频，添加一个淡入效果
+      if (isExisting) {
+        audioPanel.style.opacity = '0';
+        audioPanel.style.transition = 'opacity 0.3s ease-in';
+        setTimeout(() => {
+          audioPanel.style.opacity = '1';
+        }, 100);
+      }
+    }
+    
+    function closeAudioPanel() {
+      const audioPanel = document.getElementById('audioPanel');
+      const audio = document.getElementById('articleAudio');
+      const content = document.getElementById('vContent');
+      
+      // 停止播放
+      audio.pause();
+      audio.src = '';
+      
+      // 隐藏面板
+      audioPanel.style.display = 'none';
+      
+      // 恢复内容区域
+      if (content) {
+        content.style.paddingBottom = '';
+      }
+      
+      currentAudioUrl = null;
+    }
+    
+    function downloadAudio() {
+      if (currentAudioUrl) {
+        const link = document.createElement('a');
+        link.href = currentAudioUrl;
+        link.download = `${currentArticle.title || 'article'}_audio.mp3`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    }
+    
     function originalToContainerIndex(oi, original, container){
       let o=0, c=0;
       const olen=original.length, clen=container.length;
