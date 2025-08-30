@@ -22,6 +22,7 @@ TOKEN_FILE = 'tokens.json'
 USERS_FILE = 'users.json'
 READING_DIR = 'reading_exam'
 INTENSIVE_DIR = 'intensive_articles'
+INTENSIVE_IMAGES_DIR = 'intensive_articles/images'  # 精读文章图片存储目录
 VOCAB_AUDIO_DIR = 'vocab_audio'  # 词汇音频存储目录
 MESSAGE_BOARD_DIR = 'message_board'
 MESSAGE_IMAGES_DIR = 'message_board/images'
@@ -29,6 +30,7 @@ CHALLENGES_DIR = 'challenges'
 os.makedirs(MOTHER_DIR, exist_ok=True)
 os.makedirs(COMBINED_DIR, exist_ok=True)
 os.makedirs(INTENSIVE_DIR, exist_ok=True)
+os.makedirs(INTENSIVE_IMAGES_DIR, exist_ok=True)
 os.makedirs(VOCAB_AUDIO_DIR, exist_ok=True)
 os.makedirs(MESSAGE_BOARD_DIR, exist_ok=True)
 os.makedirs(MESSAGE_IMAGES_DIR, exist_ok=True)
@@ -202,6 +204,40 @@ def delete_article_vocab_audio(article_id):
             print(f"Deleted all vocab audio for article '{article_id}'")
         except Exception as e:
             print(f"Error deleting vocab audio for article '{article_id}': {e}")
+
+def delete_article_audio_files(article_id):
+    """删除文章的整体音频文件（包括完整音频和临时文件）"""
+    article_audio_dir = os.path.join(VOCAB_AUDIO_DIR, 'articles', article_id)
+    
+    if os.path.exists(article_audio_dir):
+        try:
+            deleted_files = []
+            deleted_dirs = []
+            
+            # 遍历并删除所有文件和目录
+            for item in os.listdir(article_audio_dir):
+                item_path = os.path.join(article_audio_dir, item)
+                
+                if os.path.isfile(item_path):
+                    # 删除音频文件和文本文件
+                    if item.endswith(('.mp3', '.txt')):
+                        os.remove(item_path)
+                        deleted_files.append(item)
+                elif os.path.isdir(item_path):
+                    # 删除临时目录（任务目录）
+                    if item.startswith('audio_') or item.startswith('temp_'):
+                        shutil.rmtree(item_path)
+                        deleted_dirs.append(item)
+            
+            # 如果目录为空，删除整个目录
+            if not os.listdir(article_audio_dir):
+                os.rmdir(article_audio_dir)
+                deleted_dirs.append(os.path.basename(article_audio_dir))
+            
+            print(f"Deleted article audio for '{article_id}': {len(deleted_files)} files, {len(deleted_dirs)} directories")
+            
+        except Exception as e:
+            print(f"Error deleting article audio for '{article_id}': {e}")
 
 def generate_vocab_audio_async(article_id, word):
     """异步生成词汇音频"""
@@ -946,7 +982,8 @@ def intensive_create():
         'created_at': datetime.now().isoformat(),
         'content_text': content,  # 原始文本（用于偏移计算）
         'content_html': content_html,  # 展示用
-        'highlights': []  # {id,start,end,meaning,created_at}
+        'highlights': [],  # {id,start,end,meaning,created_at}
+        'images': []  # 文章图片列表 {id, filename, original_name, created_at}
     }
     try:
         with open(_article_path(article_id), 'w', encoding='utf-8') as f:
@@ -970,7 +1007,8 @@ def intensive_article(article_id):
             'created_at': data.get('created_at'),
             'content_html': data.get('content_html'),
             'content_text': data.get('content_text'),
-            'highlights': data.get('highlights') or []
+            'highlights': data.get('highlights') or [],
+            'images': data.get('images') or []
         }})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -1101,13 +1139,138 @@ def intensive_delete_article():
     if not os.path.exists(path):
         return jsonify({'error': '文章不存在'}), 404
     try:
+        # 删除文章相关的图片文件
+        article_image_dir = os.path.join(INTENSIVE_IMAGES_DIR, article_id)
+        if os.path.exists(article_image_dir):
+            shutil.rmtree(article_image_dir)
+        
         # 删除文章文件
         os.remove(path)
         
         # 删除文章相关的所有词汇音频
         delete_article_vocab_audio(article_id)
         
+        # 删除文章相关的整体音频文件
+        delete_article_audio_files(article_id)
+        
         return jsonify({'success': True, 'article_id': article_id, 'clear_cache': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/intensive_upload_image', methods=['POST'])
+def intensive_upload_image():
+    """为精读文章上传图片"""
+    try:
+        if 'image' not in request.files:
+            return jsonify({'error': '没有找到图片文件'}), 400
+            
+        file = request.files['image']
+        article_id = request.form.get('article_id')
+        
+        if not article_id:
+            return jsonify({'error': '缺少文章ID'}), 400
+            
+        if file.filename == '':
+            return jsonify({'error': '没有选择文件'}), 400
+            
+        if file and _allowed_file(file.filename):
+            # 创建文章专属图片目录
+            article_image_dir = os.path.join(INTENSIVE_IMAGES_DIR, article_id)
+            os.makedirs(article_image_dir, exist_ok=True)
+            
+            # 生成安全的文件名
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            file_ext = os.path.splitext(secure_filename(file.filename))[1]
+            filename = f'{timestamp}_{str(uuid.uuid4())[:8]}{file_ext}'
+            
+            filepath = os.path.join(article_image_dir, filename)
+            file.save(filepath)
+            
+            # 更新文章数据，添加图片信息
+            article_path = _article_path(article_id)
+            if not os.path.exists(article_path):
+                return jsonify({'error': '文章不存在'}), 404
+                
+            with open(article_path, 'r', encoding='utf-8') as f:
+                article_data = json.load(f)
+            
+            # 添加图片信息到文章数据
+            image_info = {
+                'id': str(uuid.uuid4()),
+                'filename': filename,
+                'original_name': secure_filename(file.filename),
+                'created_at': datetime.now().isoformat()
+            }
+            
+            if 'images' not in article_data:
+                article_data['images'] = []
+            article_data['images'].append(image_info)
+            
+            # 保存更新后的文章数据
+            with open(article_path, 'w', encoding='utf-8') as f:
+                json.dump(article_data, f, ensure_ascii=False, indent=2)
+            
+            # 返回图片URL供前端使用
+            image_url = f'/intensive_image/{article_id}/{filename}'
+            return jsonify({
+                'success': True, 
+                'image': image_info,
+                'image_url': image_url
+            })
+            
+        else:
+            return jsonify({'error': '不支持的文件类型'}), 400
+            
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/intensive_image/<article_id>/<filename>')
+def serve_intensive_image(article_id, filename):
+    """提供精读文章图片文件"""
+    return send_from_directory(os.path.join(INTENSIVE_IMAGES_DIR, article_id), filename)
+
+@app.route('/intensive_delete_image', methods=['POST'])
+def intensive_delete_image():
+    """删除精读文章图片"""
+    try:
+        data = request.json or {}
+        article_id = data.get('article_id')
+        image_id = data.get('image_id')
+        
+        if not article_id or not image_id:
+            return jsonify({'error': '缺少参数'}), 400
+            
+        article_path = _article_path(article_id)
+        if not os.path.exists(article_path):
+            return jsonify({'error': '文章不存在'}), 404
+            
+        # 读取文章数据
+        with open(article_path, 'r', encoding='utf-8') as f:
+            article_data = json.load(f)
+            
+        # 查找要删除的图片
+        images = article_data.get('images', [])
+        image_to_delete = None
+        for i, img in enumerate(images):
+            if img.get('id') == image_id:
+                image_to_delete = img
+                images.pop(i)
+                break
+                
+        if not image_to_delete:
+            return jsonify({'error': '图片不存在'}), 404
+            
+        # 删除文件
+        image_file_path = os.path.join(INTENSIVE_IMAGES_DIR, article_id, image_to_delete['filename'])
+        if os.path.exists(image_file_path):
+            os.remove(image_file_path)
+            
+        # 保存更新后的文章数据
+        with open(article_path, 'w', encoding='utf-8') as f:
+            json.dump(article_data, f, ensure_ascii=False, indent=2)
+            
+        return jsonify({'success': True})
+        
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
