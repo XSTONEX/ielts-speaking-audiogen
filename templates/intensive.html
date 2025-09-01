@@ -46,6 +46,95 @@
     .viewer.active { display: flex; flex-direction: column; }
     .viewer .header { display:flex; justify-content:space-between; align-items:center; padding: 20px 32px; border-bottom:1px solid #f1f5f9; background: #fafbfc; }
     .viewer .title { font-weight:600; color:#111827; font-size: 20px; }
+    
+    /* 标题编辑相关样式 */
+    .title-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+    
+    .edit-title-btn {
+      padding: 4px 8px;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      color: #6b7280;
+      cursor: pointer;
+      font-size: 14px;
+      opacity: 0;
+      transition: all 0.2s ease;
+    }
+    
+    .title-container:hover .edit-title-btn {
+      opacity: 1;
+    }
+    
+    .edit-title-btn:hover {
+      background: #f3f4f6;
+      border-color: #e5e7eb;
+      color: #374151;
+    }
+    
+    .title-edit-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+    
+    .title-edit-input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #fff;
+      font-size: 18px;
+      font-weight: 600;
+      color: #111827;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+    
+    .title-edit-input:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .title-edit-save, .title-edit-cancel {
+      width: 32px;
+      height: 32px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    
+    .title-edit-save {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+    }
+    
+    .title-edit-save:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+    
+    .title-edit-cancel {
+      background: #f3f4f6;
+      color: #6b7280;
+    }
+    
+    .title-edit-cancel:hover {
+      background: #e5e7eb;
+      color: #374151;
+    }
     .viewer .close-btn { width: 40px; height: 40px; border: none; border-radius: 12px; background: #f3f4f6; color: #6b7280; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; font-size: 18px; }
     .viewer .close-btn:hover { background: #e5e7eb; color: #374151; transform: scale(1.05); }
     .viewer-body { flex: 1; display: flex; overflow: hidden; position: relative; }
@@ -477,6 +566,9 @@
       #nextImageBtn { right: -60px; }
       .image-modal-close { top: -40px; width: 35px; height: 35px; font-size: 16px; }
       .image-modal-info { bottom: -40px; font-size: 12px; }
+      .edit-title-btn { opacity: 1; }
+      .title-edit-input { font-size: 16px; padding: 6px 10px; }
+      .title-edit-save, .title-edit-cancel { width: 28px; height: 28px; font-size: 12px; }
     }
     
     @media (max-width: 480px) {
@@ -535,7 +627,15 @@
 
           <div class="viewer" id="viewer">
       <div class="header">
-        <div class="title" id="vTitle">-</div>
+        <div class="title-container">
+          <div class="title" id="vTitle">-</div>
+          <button id="editTitleBtn" class="edit-title-btn" onclick="startEditTitle()" title="编辑标题">✏️</button>
+          <div id="titleEditContainer" class="title-edit-container" style="display: none;">
+            <input type="text" id="titleEditInput" class="title-edit-input" placeholder="输入新标题">
+            <button class="title-edit-save" onclick="saveTitleEdit()">✓</button>
+            <button class="title-edit-cancel" onclick="cancelTitleEdit()">✕</button>
+          </div>
+        </div>
         <div style="display:flex;gap:12px;align-items:center;">
           <select id="vCategory" style="padding:6px 12px;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc;">
             <option value="Reading">Reading</option>
@@ -1107,12 +1207,12 @@
       btn.style.opacity = '0.7';
       btn.style.cursor = 'not-allowed';
       
-      // 根据文本长度决定使用哪种处理方式
-      if (englishText.length <= 3500) {
+      // 根据文本长度决定使用哪种处理方式（降低阈值，增加40%冗余）
+      if (englishText.length <= 2200) {
         // 短文本，使用原有的直接生成方式
         generateAudioDirect(englishText, btn, originalContent);
       } else {
-        // 长文本，使用分批处理方式
+        // 长文本，使用分批处理方式（增加40%冗余分段）
         generateAudioBatch(englishText, btn, originalContent);
       }
     }
@@ -1258,15 +1358,15 @@
     }
     
     async function getSegmentTexts(text, targetSegments) {
-      // 在前端重新分割文本，确保与后端一致
-      const MAX_CHARS = 3500;
+      // 在前端重新分割文本，确保与后端一致（增加40%冗余）
+      const MAX_CHARS = 2200;  // 进一步降低字符限制
       if (text.length <= MAX_CHARS) {
         return [text];
       }
       
-      // 简单的分割逻辑，按句号分割
+      // 智能分割逻辑，按句号分割并确保平均分配
       const sentences = text.split(/(?<=[.!?])\s+/);
-      const avgLength = text.length / targetSegments;
+      const idealLength = text.length / targetSegments;
       
       const segments = [];
       let currentSegment = '';
@@ -1274,7 +1374,15 @@
       for (const sentence of sentences) {
         const testSegment = currentSegment + (currentSegment ? ' ' : '') + sentence;
         
-        if (testSegment.length > avgLength && currentSegment && segments.length < targetSegments - 1) {
+        // 更严格的分割条件，确保段落更短（40%冗余策略）
+        const shouldSplit = (
+          testSegment.length > idealLength * 0.9 &&  // 更早分割
+          currentSegment && 
+          segments.length < targetSegments - 1 &&
+          testSegment.length > MAX_CHARS * 0.5  // 避免过小段落
+        );
+        
+        if (shouldSplit) {
           segments.push(currentSegment.trim());
           currentSegment = sentence;
         } else {
@@ -1286,7 +1394,33 @@
         segments.push(currentSegment.trim());
       }
       
-      return segments;
+      // 如果某个段落仍然过长，进行二次分割
+      const finalSegments = [];
+      for (const segment of segments) {
+        if (segment.length <= MAX_CHARS) {
+          finalSegments.push(segment);
+        } else {
+          // 对过长段落按句子进一步分割
+          const subSentences = segment.split(/(?<=[.!?])\s+/);
+          let currentSub = '';
+          
+          for (const subSentence of subSentences) {
+            const testSub = currentSub + (currentSub ? ' ' : '') + subSentence;
+            if (testSub.length > MAX_CHARS && currentSub) {
+              finalSegments.push(currentSub.trim());
+              currentSub = subSentence;
+            } else {
+              currentSub = testSub;
+            }
+          }
+          
+          if (currentSub) {
+            finalSegments.push(currentSub.trim());
+          }
+        }
+      }
+      
+      return finalSegments;
     }
     
     function resetAudioButton(btn, originalContent) {
@@ -1664,7 +1798,133 @@
             break;
         }
       }
+      
+      // 标题编辑键盘快捷键
+      const titleEditContainer = document.getElementById('titleEditContainer');
+      if (titleEditContainer && titleEditContainer.style.display !== 'none') {
+        switch(e.key) {
+          case 'Enter':
+            e.preventDefault();
+            saveTitleEdit();
+            break;
+          case 'Escape':
+            e.preventDefault();
+            cancelTitleEdit();
+            break;
+        }
+      }
     });
+    
+    // 标题编辑功能
+    function startEditTitle() {
+      if (!currentArticle) return;
+      
+      const titleElement = document.getElementById('vTitle');
+      const editBtn = document.getElementById('editTitleBtn');
+      const editContainer = document.getElementById('titleEditContainer');
+      const editInput = document.getElementById('titleEditInput');
+      
+      // 隐藏标题和编辑按钮，显示编辑界面
+      titleElement.style.display = 'none';
+      editBtn.style.display = 'none';
+      editContainer.style.display = 'flex';
+      
+      // 设置当前标题作为初始值
+      editInput.value = currentArticle.title || '未命名';
+      editInput.focus();
+      editInput.select();
+    }
+    
+    function cancelTitleEdit() {
+      const titleElement = document.getElementById('vTitle');
+      const editBtn = document.getElementById('editTitleBtn');
+      const editContainer = document.getElementById('titleEditContainer');
+      
+      // 恢复显示
+      titleElement.style.display = 'block';
+      editBtn.style.display = 'block';
+      editContainer.style.display = 'none';
+    }
+    
+    function saveTitleEdit() {
+      if (!currentArticle) return;
+      
+      const editInput = document.getElementById('titleEditInput');
+      const newTitle = editInput.value.trim();
+      
+      if (!newTitle) {
+        alert('标题不能为空');
+        editInput.focus();
+        return;
+      }
+      
+      if (newTitle === currentArticle.title) {
+        cancelTitleEdit();
+        return;
+      }
+      
+      const saveBtn = document.querySelector('.title-edit-save');
+      const originalContent = saveBtn.innerHTML;
+      
+      // 显示保存状态
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '⏳';
+      saveBtn.style.opacity = '0.7';
+      
+      fetch('/intensive_update_title', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          article_id: currentArticle.id,
+          new_title: newTitle
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // 更新当前文章对象
+          const oldArticleId = currentArticle.id;
+          currentArticle.title = newTitle;
+          currentArticle.id = data.new_article_id;
+          
+          // 更新显示的标题
+          document.getElementById('vTitle').textContent = newTitle;
+          
+          // 如果文件被重命名，显示详细信息
+          if (data.renamed_files) {
+            console.log('标题更新成功，相关文件已重命名：');
+            console.log('文件:', data.details.files);
+            console.log('目录:', data.details.directories);
+            
+            // 更新浏览器URL（如果有hash）
+            if (window.location.hash === `#article-${oldArticleId}`) {
+              window.location.hash = `#article-${data.new_article_id}`;
+            }
+          }
+          
+          // 刷新文章列表以显示新标题
+          if (typeof loadList === 'function') {
+            loadList();
+          }
+          
+          cancelTitleEdit();
+        } else {
+          alert(data.error || '标题更新失败');
+        }
+      })
+      .catch(error => {
+        console.error('标题更新错误:', error);
+        alert('标题更新失败，请稍后重试');
+      })
+      .finally(() => {
+        // 重置按钮状态
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalContent;
+        saveBtn.style.opacity = '1';
+      });
+    }
     
     function originalToContainerIndex(oi, original, container){
       let o=0, c=0;

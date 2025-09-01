@@ -42,6 +42,29 @@
       align-items: center; 
     }
     
+    .header-left {
+      flex: 0 0 auto;
+    }
+    
+    .back-btn {
+      background: rgba(255,255,255,0.2); 
+      border: 2px solid rgba(255,255,255,0.3); 
+      color: white; 
+      border-radius: 20px; 
+      padding: 8px 16px; 
+      cursor: pointer; 
+      font-size: 14px; 
+      display: flex; 
+      align-items: center; 
+      gap: 6px; 
+      transition: all 0.2s; 
+    }
+    
+    .back-btn:hover { 
+      background: rgba(255,255,255,0.3); 
+      border-color: rgba(255,255,255,0.5); 
+    }
+    
     .header h1 { 
       margin: 0; 
       font-size: 24px; 
@@ -145,6 +168,252 @@
       line-height: 1.6; 
       color: #374151; 
       margin-bottom: 16px; 
+    }
+    
+    .post-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 12px;
+      border-top: 1px solid #e5e7eb;
+      margin-top: 16px;
+    }
+    
+    .write-comment-btn {
+      background: none;
+      border: 1px solid #d1d5db;
+      color: #6b7280;
+      padding: 6px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    
+    .write-comment-btn:hover {
+      background: #f3f4f6;
+      border-color: #9ca3af;
+      color: #374151;
+    }
+    
+    .write-comment-btn.active {
+      background: #e0f2fe;
+      border-color: #0284c7;
+      color: #0c4a6e;
+    }
+    
+    .comments-section {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #e5e7eb;
+      background: #f8fafc;
+      border-radius: 0 0 16px 16px;
+      margin: 16px -20px -20px -20px;
+      padding: 16px 20px 20px 20px;
+      display: none;
+    }
+    
+    .comments-section.has-comments {
+      display: block;
+    }
+    
+    .comments-section.active {
+      display: block;
+    }
+    
+    .comment-form {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      display: none;
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: all 0.3s ease;
+    }
+    
+    .comment-form.active {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    .comments-wrapper {
+      position: relative;
+    }
+    
+    .comments-list-container {
+      margin-bottom: 12px;
+    }
+    
+    .comment-input {
+      width: 100%;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-family: inherit;
+      font-size: 14px;
+      resize: vertical;
+      min-height: 60px;
+      box-sizing: border-box;
+      margin-bottom: 12px;
+    }
+    
+    .comment-input:focus {
+      outline: none;
+      border-color: #0284c7;
+      box-shadow: 0 0 0 3px rgba(2,132,199,0.1);
+    }
+    
+    .comment-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .comment-type-selector {
+      display: flex;
+      gap: 6px;
+    }
+    
+    .comment-type-btn {
+      padding: 4px 8px;
+      border: 1px solid #d1d5db;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 11px;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    
+    .comment-type-btn:hover {
+      background: #f3f4f6;
+      border-color: #9ca3af;
+    }
+    
+    .comment-submit-actions {
+      display: flex;
+      gap: 6px;
+    }
+    
+    .comment-submit-btn {
+      padding: 6px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+    
+    .comment-submit-btn.primary {
+      background: #0284c7;
+      border-color: #0284c7;
+      color: white;
+    }
+    
+    .comment-submit-btn.primary:hover {
+      background: #0369a1;
+    }
+    
+    .comment-submit-btn.secondary {
+      background: white;
+      color: #374151;
+    }
+    
+    .comment-submit-btn.secondary:hover {
+      background: #f9fafb;
+    }
+    
+    .comments-list {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    .comments-list:empty::before {
+      content: "暂无评论，快来抢沙发吧！";
+      display: block;
+      text-align: center;
+      color: #9ca3af;
+      font-size: 13px;
+      padding: 20px;
+      font-style: italic;
+    }
+    
+
+    
+    .comment-item {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 8px;
+      position: relative;
+    }
+    
+    .comment-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    
+    .comment-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid #e5e7eb;
+    }
+    
+    .comment-user-info {
+      flex: 1;
+    }
+    
+    .comment-user-name {
+      font-weight: 600;
+      color: #1f2937;
+      font-size: 13px;
+    }
+    
+    .comment-time {
+      color: #6b7280;
+      font-size: 11px;
+      margin-top: 1px;
+    }
+    
+    .comment-content {
+      color: #374151;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    
+    .comment-delete-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: none;
+      border: none;
+      color: #9ca3af;
+      cursor: pointer;
+      font-size: 12px;
+      padding: 4px;
+      border-radius: 4px;
+      transition: all 0.2s;
+      opacity: 0.7;
+    }
+    
+    .comment-delete-btn:hover {
+      background: #fee2e2;
+      color: #dc2626;
+      opacity: 1;
     }
     
     .text-content { 
@@ -1026,6 +1295,21 @@
         align-items: stretch;
       }
       
+      .header-left {
+        order: -1;
+        align-self: flex-start;
+      }
+      
+      .back-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+        border-radius: 16px;
+      }
+      
+      .back-btn span:last-child {
+        display: none;
+      }
+      
       .header h1 {
         font-size: 20px;
         text-align: center;
@@ -1339,6 +1623,68 @@
         padding: 10px 16px;
         font-size: 14px;
       }
+      
+      .write-comment-btn {
+        padding: 5px 10px;
+        font-size: 12px;
+        border-radius: 16px;
+      }
+      
+      .comments-section {
+        margin: 12px -16px -16px -16px;
+        padding: 12px 16px 16px 16px;
+      }
+      
+      .comment-form {
+        padding: 12px;
+      }
+      
+      .comment-input {
+        min-height: 50px;
+        font-size: 13px;
+        padding: 8px 10px;
+      }
+      
+      .comment-type-selector {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px;
+      }
+      
+      .comment-type-btn {
+        padding: 3px 6px;
+        font-size: 10px;
+        justify-content: center;
+      }
+      
+      .comment-submit-btn {
+        padding: 6px 10px;
+        font-size: 11px;
+      }
+      
+      .comment-item {
+        padding: 10px;
+        margin-bottom: 6px;
+      }
+      
+      .comment-avatar {
+        width: 20px;
+        height: 20px;
+      }
+      
+      .comment-user-name {
+        font-size: 12px;
+      }
+      
+      .comment-time {
+        font-size: 10px;
+      }
+      
+      .comment-content {
+        font-size: 12px;
+      }
+      
+
       
       .large-modal { 
         max-width: 95vw; 
@@ -1725,6 +2071,64 @@
         font-size: 13px;
       }
       
+      .write-comment-btn {
+        padding: 4px 8px;
+        font-size: 11px;
+      }
+      
+      .comments-section {
+        margin: 10px -12px -12px -12px;
+        padding: 10px 12px 12px 12px;
+      }
+      
+      .comment-form {
+        padding: 10px;
+      }
+      
+      .comment-input {
+        min-height: 40px;
+        font-size: 12px;
+        padding: 6px 8px;
+      }
+      
+      .comment-type-btn {
+        padding: 2px 4px;
+        font-size: 9px;
+      }
+      
+      .comment-type-btn span:last-child {
+        display: none;
+      }
+      
+      .comment-submit-btn {
+        padding: 5px 8px;
+        font-size: 10px;
+      }
+      
+      .comment-item {
+        padding: 8px;
+        margin-bottom: 4px;
+      }
+      
+      .comment-avatar {
+        width: 18px;
+        height: 18px;
+      }
+      
+      .comment-user-name {
+        font-size: 11px;
+      }
+      
+      .comment-time {
+        font-size: 9px;
+      }
+      
+      .comment-content {
+        font-size: 11px;
+      }
+      
+
+      
       .large-modal {
         max-width: 98vw;
         max-height: 95vh;
@@ -1801,6 +2205,12 @@
     </div>
     
     <div class="header">
+      <div class="header-left">
+        <button class="back-btn" onclick="goBackToModules()" title="返回模块">
+          <span>←</span>
+          <span>返回模块</span>
+        </button>
+      </div>
       <h1>📚 学习交流小天地</h1>
       <div class="header-actions">
         <div class="user-info" id="userInfo">
@@ -2058,6 +2468,15 @@
     let currentQuestionType = null; // 'word_to_meaning' 或 'meaning_to_word'
     let pendingChallenges = [];
     
+    // 评论功能变量
+    let currentCommentPostId = null;
+    let commentSelectedItems = {
+      audios: [],
+      articles: [],
+      images: [],
+      challenge: null
+    };
+    
     // 检查登录状态
     function checkStoredToken(){
       const tk = localStorage.getItem('authToken');
@@ -2190,7 +2609,13 @@
       extraArea.innerHTML = `
         <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
           <label class="form-label">上传图片</label>
-          <input type="file" id="imageUpload" accept="image/*" onchange="handleImageUpload(event)" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 8px;">
+          <input type="file" accept="image/*,.heic,.heif" onchange="handleImageUpload(event)" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 8px;">
+          <div style="margin-top: 8px; font-size: 12px; color: #6b7280;">
+            支持 JPG、PNG、GIF、WebP、HEIC 格式，最大 10MB<br>
+            <span style="color: #059669;">✓ 自动处理苹果HEIC格式</span> •
+            <span style="color: #059669;">✓ 自动压缩优化</span> •
+            <span style="color: #059669;">✓ 自动旋转纠正</span>
+          </div>
         </div>
       `;
     }
@@ -2198,6 +2623,52 @@
     function handleImageUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
+      
+      console.log('上传文件信息:', {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        lastModified: file.lastModified
+      });
+      
+      // 扩展的文件类型支持
+      const allowedTypes = [
+        'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+        'image/heic', 'image/heif', 'image/avif'
+      ];
+      
+      // 检查文件扩展名（作为MIME类型的后备）
+      const fileExtension = file.name.toLowerCase().split('.').pop();
+      const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif', 'avif'];
+      
+      const isValidType = allowedTypes.includes(file.type) || allowedExtensions.includes(fileExtension);
+      
+      if (!isValidType) {
+        alert('请选择有效的图片格式（JPG、PNG、GIF、WebP、HEIC）\n当前文件类型：' + (file.type || '未知'));
+        event.target.value = '';
+        return;
+      }
+      
+      // 验证文件大小（10MB）
+      if (file.size > 10 * 1024 * 1024) {
+        alert(`图片文件大小不能超过10MB\n当前文件大小：${(file.size / 1024 / 1024).toFixed(2)}MB`);
+        event.target.value = '';
+        return;
+      }
+      
+      // 显示上传进度和状态
+      const uploadBtn = event.target;
+      const originalText = uploadBtn.parentNode.querySelector('label').textContent;
+      const statusDiv = uploadBtn.parentNode.querySelector('div');
+      
+      uploadBtn.disabled = true;
+      uploadBtn.style.opacity = '0.6';
+      uploadBtn.parentNode.querySelector('label').textContent = '正在上传...';
+      statusDiv.innerHTML = `
+        <div style="color: #0284c7; font-weight: 500;">
+          📤 正在处理图片，请稍候...
+        </div>
+      `;
       
       const formData = new FormData();
       formData.append('image', file);
@@ -2217,16 +2688,57 @@
           });
           
           updateContentPreview();
+          
+          // 显示成功状态
+          statusDiv.innerHTML = `
+            <div style="color: #059669; font-weight: 500;">
+              ✅ 图片上传成功！已自动优化处理
+            </div>
+          `;
+          
         } else {
+          console.error('服务器返回错误:', data);
           alert('图片上传失败：' + (data.error || '未知错误'));
+          
+          // 显示错误状态
+          statusDiv.innerHTML = `
+            <div style="color: #dc2626; font-weight: 500;">
+              ❌ 上传失败：${data.error || '未知错误'}
+            </div>
+          `;
         }
       })
       .catch(e => {
-        alert('上传失败：' + e.message);
+        console.error('图片上传错误:', e);
+        alert('上传失败：网络错误或服务器异常');
+        
+        // 显示错误状态
+        statusDiv.innerHTML = `
+          <div style="color: #dc2626; font-weight: 500;">
+            ❌ 网络错误：${e.message}
+          </div>
+        `;
+      })
+      .finally(() => {
+        // 恢复按钮状态
+        uploadBtn.disabled = false;
+        uploadBtn.style.opacity = '1';
+        uploadBtn.parentNode.querySelector('label').textContent = originalText;
+        // 清空文件选择
+        event.target.value = '';
+        
+        // 3秒后恢复状态提示
+        setTimeout(() => {
+          if (statusDiv) {
+            statusDiv.innerHTML = `
+              支持 JPG、PNG、GIF、WebP、HEIC 格式，最大 10MB<br>
+              <span style="color: #059669;">✓ 自动处理苹果HEIC格式</span> •
+              <span style="color: #059669;">✓ 自动压缩优化</span> •
+              <span style="color: #059669;">✓ 自动旋转纠正</span>
+            `;
+          }
+        }, 3000);
       });
-      
-      // 清空文件选择
-      event.target.value = '';
     }
     
     // 创建音频预览组件
@@ -2648,8 +3160,16 @@
         type: 'single'
       };
       
-      selectedItems.audios.push(audioItem);
-      updateContentPreview();
+      if (currentCommentPostId) {
+        // 评论模式
+        commentSelectedItems.audios.push(audioItem);
+        updateCommentPreview(currentCommentPostId);
+        currentCommentPostId = null;
+      } else {
+        // 帖子模式
+        selectedItems.audios.push(audioItem);
+        updateContentPreview();
+      }
       closeModal('audioModal');
     }
     
@@ -2667,8 +3187,16 @@
         type: 'combined'
       };
       
-      selectedItems.audios.push(audioItem);
-      updateContentPreview();
+      if (currentCommentPostId) {
+        // 评论模式
+        commentSelectedItems.audios.push(audioItem);
+        updateCommentPreview(currentCommentPostId);
+        currentCommentPostId = null;
+      } else {
+        // 帖子模式
+        selectedItems.audios.push(audioItem);
+        updateContentPreview();
+      }
       closeModal('audioModal');
     }
     
@@ -2748,8 +3276,16 @@
     // 选择文章项目
     function selectArticleItem(item, itemEl) {
       // 添加到选中列表
-      selectedItems.articles.push(item);
-      updateContentPreview();
+      if (currentCommentPostId) {
+        // 评论模式
+        commentSelectedItems.articles.push(item);
+        updateCommentPreview(currentCommentPostId);
+        currentCommentPostId = null;
+      } else {
+        // 帖子模式
+        selectedItems.articles.push(item);
+        updateContentPreview();
+      }
       closeModal('articleModal');
     }
     
@@ -2995,8 +3531,78 @@
         content.appendChild(articleCard);
       }
       
+      // 添加帖子操作区域
+      const actions = document.createElement('div');
+      actions.className = 'post-actions';
+      
+      // 创建写评论按钮（始终显示）
+      const writeCommentBtn = document.createElement('button');
+      writeCommentBtn.className = 'write-comment-btn';
+      writeCommentBtn.innerHTML = '<span>💬</span><span>写评论</span>';
+      writeCommentBtn.onclick = () => toggleCommentForm(post.id);
+      
+      actions.appendChild(document.createElement('div')); // 占位符
+      actions.appendChild(writeCommentBtn);
+      
+      // 创建评论区域
+      const commentsSection = document.createElement('div');
+      commentsSection.className = 'comments-section';
+      commentsSection.id = `comments-${post.id}`;
+      
+      // 评论包装器
+      const commentsWrapper = document.createElement('div');
+      commentsWrapper.className = 'comments-wrapper';
+      
+      // 评论列表容器
+      const commentsListContainer = document.createElement('div');
+      commentsListContainer.className = 'comments-list-container';
+      
+      const commentsList = document.createElement('div');
+      commentsList.className = 'comments-list';
+      commentsList.id = `commentsList-${post.id}`;
+      
+      commentsListContainer.appendChild(commentsList);
+      
+      // 评论表单
+      const commentForm = document.createElement('div');
+      commentForm.className = 'comment-form';
+      commentForm.id = `commentForm-${post.id}`;
+      commentForm.innerHTML = `
+        <textarea class="comment-input" id="commentInput-${post.id}" placeholder="写下你的评论..."></textarea>
+        <div class="comment-actions">
+          <div class="comment-type-selector">
+            <button class="comment-type-btn" onclick="addCommentContent('${post.id}', 'audio')">
+              <span>🎤</span><span>音频</span>
+            </button>
+            <button class="comment-type-btn" onclick="addCommentContent('${post.id}', 'article')">
+              <span>📝</span><span>文章</span>
+            </button>
+            <button class="comment-type-btn" onclick="addCommentContent('${post.id}', 'image')">
+              <span>🖼️</span><span>图片</span>
+            </button>
+            <button class="comment-type-btn" onclick="addCommentContent('${post.id}', 'challenge')">
+              <span>🏆</span><span>挑战</span>
+            </button>
+          </div>
+          <div class="comment-submit-actions">
+            <button class="comment-submit-btn secondary" onclick="cancelComment('${post.id}')">取消</button>
+            <button class="comment-submit-btn primary" onclick="submitComment('${post.id}')">发表</button>
+          </div>
+        </div>
+        <div id="commentExtra-${post.id}"></div>
+      `;
+      
+      commentsWrapper.appendChild(commentsListContainer);
+      commentsWrapper.appendChild(commentForm);
+      commentsSection.appendChild(commentsWrapper);
+      
       postEl.appendChild(header);
       postEl.appendChild(content);
+      postEl.appendChild(actions);
+      postEl.appendChild(commentsSection);
+      
+      // 加载评论
+      loadComments(post.id);
       
       return postEl;
     }
@@ -3412,8 +4018,16 @@
             mentioned_users: challengeData.selectedUsers
           };
           
-          selectedItems.challenge = challengeItem;
-          updateContentPreview();
+          if (currentCommentPostId) {
+            // 评论模式
+            commentSelectedItems.challenge = challengeItem;
+            updateCommentPreview(currentCommentPostId);
+            currentCommentPostId = null;
+          } else {
+            // 帖子模式
+            selectedItems.challenge = challengeItem;
+            updateContentPreview();
+          }
           closeModal('challengeModal');
           
           // 重置挑战数据
@@ -4102,6 +4716,591 @@
       setTimeout(() => {
         alert.style.display = 'none';
       }, 300);
+    }
+    
+    // ==================== 评论功能 ====================
+    
+    // 显示评论区域（如果有评论）
+    function showCommentsIfNeeded(postId, hasComments) {
+      const commentsSection = document.getElementById(`comments-${postId}`);
+      if (commentsSection) {
+        if (hasComments) {
+          commentsSection.classList.add('has-comments');
+        } else {
+          commentsSection.classList.remove('has-comments');
+        }
+      }
+    }
+    
+    // 切换评论表单显示/隐藏
+    function toggleCommentForm(postId) {
+      const commentForm = document.getElementById(`commentForm-${postId}`);
+      const commentsSection = document.getElementById(`comments-${postId}`);
+      const postElement = document.querySelector(`[data-post-id="${postId}"]`);
+      const writeCommentBtn = postElement ? postElement.querySelector('.write-comment-btn') : null;
+      
+      // 确保评论区域可见
+      if (commentsSection) {
+        commentsSection.classList.add('has-comments');
+      }
+      
+      if (commentForm.classList.contains('active')) {
+        // 隐藏表单
+        commentForm.classList.remove('active');
+        if (writeCommentBtn) {
+          writeCommentBtn.classList.remove('active');
+          writeCommentBtn.innerHTML = '<span>💬</span><span>写评论</span>';
+        }
+        
+        // 清空表单内容
+        const input = document.getElementById(`commentInput-${postId}`);
+        if (input) input.value = '';
+        const extraArea = document.getElementById(`commentExtra-${postId}`);
+        if (extraArea) extraArea.innerHTML = '';
+        
+        // 重置选中项
+        commentSelectedItems = {
+          audios: [],
+          articles: [],
+          images: [],
+          challenge: null
+        };
+      } else {
+        // 显示表单
+        commentForm.classList.add('active');
+        if (writeCommentBtn) {
+          writeCommentBtn.classList.add('active');
+          writeCommentBtn.innerHTML = '<span>✖</span><span>取消</span>';
+        }
+        
+        // 聚焦到输入框
+        setTimeout(() => {
+          const input = document.getElementById(`commentInput-${postId}`);
+          if (input) {
+            input.focus();
+            input.style.height = 'auto';
+            input.style.height = input.scrollHeight + 'px';
+          }
+        }, 300);
+      }
+    }
+    
+    // 加载评论
+    function loadComments(postId) {
+      fetch(`/api/comments/${postId}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            renderComments(postId, data.comments);
+            // 更新评论按钮文字
+            updateCommentButton(postId, data.comments.length);
+          }
+        })
+        .catch(e => console.error('加载评论失败:', e));
+    }
+    
+    // 更新评论区域状态
+    function updateCommentButton(postId, commentCount) {
+      const commentsSection = document.getElementById(`comments-${postId}`);
+      
+      // 如果有评论，自动显示评论区域
+      if (commentsSection) {
+        if (commentCount > 0) {
+          commentsSection.classList.add('has-comments');
+        } else {
+          commentsSection.classList.remove('has-comments');
+        }
+      }
+    }
+    
+    // 渲染评论列表
+    function renderComments(postId, comments) {
+      const container = document.getElementById(`commentsList-${postId}`);
+      if (!container) return;
+      
+      container.innerHTML = '';
+      if (comments.length === 0) {
+        // 空状态由CSS处理，这里不添加任何内容
+        return;
+      }
+      
+      comments.forEach((comment, index) => {
+        const commentEl = createCommentElement(comment, postId);
+        // 添加进入动画
+        commentEl.style.opacity = '0';
+        commentEl.style.transform = 'translateY(10px)';
+        container.appendChild(commentEl);
+        
+        // 延迟显示动画
+        setTimeout(() => {
+          commentEl.style.transition = 'all 0.3s ease';
+          commentEl.style.opacity = '1';
+          commentEl.style.transform = 'translateY(0)';
+        }, index * 50);
+      });
+    }
+    
+    // 创建评论元素
+    function createCommentElement(comment, postId) {
+      const commentEl = document.createElement('div');
+      commentEl.className = 'comment-item';
+      commentEl.setAttribute('data-comment-id', comment.id);
+      
+      const header = document.createElement('div');
+      header.className = 'comment-header';
+      
+      const avatar = document.createElement('img');
+      avatar.className = 'comment-avatar';
+      avatar.src = `/static/${comment.user.avatar}`;
+      avatar.alt = comment.user.display_name;
+      
+      const userInfo = document.createElement('div');
+      userInfo.className = 'comment-user-info';
+      
+      const userName = document.createElement('div');
+      userName.className = 'comment-user-name';
+      userName.textContent = comment.user.display_name;
+      
+      const time = document.createElement('div');
+      time.className = 'comment-time';
+      time.textContent = formatTime(comment.timestamp);
+      
+      userInfo.appendChild(userName);
+      userInfo.appendChild(time);
+      header.appendChild(avatar);
+      header.appendChild(userInfo);
+      
+      // 如果是当前用户的评论，添加删除按钮
+      if (currentUser && comment.user.username === currentUser.username) {
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'comment-delete-btn';
+        deleteBtn.innerHTML = '×';
+        deleteBtn.title = '删除评论';
+        deleteBtn.onclick = () => deleteComment(postId, comment.id);
+        header.appendChild(deleteBtn);
+      }
+      
+      const content = document.createElement('div');
+      content.className = 'comment-content';
+      
+      // 根据评论类型渲染不同内容
+      if (comment.type === 'mixed_content') {
+        let hasContent = false;
+        
+        // 文字内容
+        if (comment.content.text) {
+          const textDiv = document.createElement('div');
+          textDiv.style.cssText = 'margin-bottom: 8px; white-space: pre-wrap;';
+          textDiv.textContent = comment.content.text;
+          content.appendChild(textDiv);
+          hasContent = true;
+        }
+        
+        // 音频内容
+        if (comment.content.audios && comment.content.audios.length > 0) {
+          comment.content.audios.forEach(audio => {
+            const audioCard = createAudioCard(audio);
+            audioCard.style.cssText = 'margin-top: 8px; padding: 8px; font-size: 11px;';
+            content.appendChild(audioCard);
+            hasContent = true;
+          });
+        }
+        
+        // 文章内容
+        if (comment.content.articles && comment.content.articles.length > 0) {
+          comment.content.articles.forEach(article => {
+            const articleCard = createArticleCard(article);
+            articleCard.style.cssText = 'margin-top: 8px; padding: 8px; font-size: 11px;';
+            content.appendChild(articleCard);
+            hasContent = true;
+          });
+        }
+        
+        // 图片内容
+        if (comment.content.images && comment.content.images.length > 0) {
+          comment.content.images.forEach(image => {
+            const imageDiv = document.createElement('div');
+            imageDiv.style.cssText = 'margin-top: 8px;';
+            imageDiv.innerHTML = `<img src="/message_images/${image.filename}" alt="图片" style="max-width: 100%; max-height: 150px; border-radius: 6px;" ondblclick="openImageModal('/message_images/${image.filename}')" title="双击查看大图">`;
+            content.appendChild(imageDiv);
+            hasContent = true;
+          });
+        }
+        
+        // 挑战内容
+        if (comment.content.challenge) {
+          const challengeCard = createChallengeCard(comment.content.challenge);
+          challengeCard.style.cssText = 'margin-top: 8px; padding: 8px; font-size: 11px;';
+          content.appendChild(challengeCard);
+          hasContent = true;
+        }
+      } else {
+        content.textContent = comment.content.text || '';
+      }
+      
+      commentEl.appendChild(header);
+      commentEl.appendChild(content);
+      
+      return commentEl;
+    }
+    
+    // 添加评论内容
+    function addCommentContent(postId, type) {
+      currentCommentPostId = postId;
+      
+      // 重置评论选中项
+      commentSelectedItems = {
+        audios: [],
+        articles: [],
+        images: [],
+        challenge: null
+      };
+      
+      if (type === 'audio') {
+        showAudioSelector();
+      } else if (type === 'article') {
+        showArticleSelector();
+      } else if (type === 'image') {
+        showCommentImageUploader(postId);
+      } else if (type === 'challenge') {
+        showChallengeCreator();
+      }
+    }
+    
+    // 显示评论图片上传器
+    function showCommentImageUploader(postId) {
+      const extraArea = document.getElementById(`commentExtra-${postId}`);
+      extraArea.innerHTML = `
+        <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+          <label style="display: block; margin-bottom: 6px; font-weight: 600; color: #1f2937; font-size: 12px;">上传图片</label>
+          <input type="file" accept="image/*,.heic,.heif" onchange="handleCommentImageUpload(event, '${postId}')" style="width: 100%; padding: 6px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 12px;">
+          <div style="margin-top: 6px; font-size: 10px; color: #6b7280;">
+            支持 JPG、PNG、GIF、WebP、HEIC 格式，最大 10MB<br>
+            <span style="color: #059669;">✓ 自动处理和优化</span>
+          </div>
+        </div>
+      `;
+    }
+    
+    // 处理评论图片上传
+    function handleCommentImageUpload(event, postId) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      console.log('评论上传文件信息:', {
+        name: file.name,
+        type: file.type,
+        size: file.size
+      });
+      
+      // 扩展的文件类型支持
+      const allowedTypes = [
+        'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+        'image/heic', 'image/heif', 'image/avif'
+      ];
+      
+      // 检查文件扩展名（作为MIME类型的后备）
+      const fileExtension = file.name.toLowerCase().split('.').pop();
+      const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif', 'avif'];
+      
+      const isValidType = allowedTypes.includes(file.type) || allowedExtensions.includes(fileExtension);
+      
+      if (!isValidType) {
+        alert('请选择有效的图片格式（JPG、PNG、GIF、WebP、HEIC）\n当前文件类型：' + (file.type || '未知'));
+        event.target.value = '';
+        return;
+      }
+      
+      // 验证文件大小（10MB）
+      if (file.size > 10 * 1024 * 1024) {
+        alert(`图片文件大小不能超过10MB\n当前文件大小：${(file.size / 1024 / 1024).toFixed(2)}MB`);
+        event.target.value = '';
+        return;
+      }
+      
+      // 显示上传进度
+      const uploadBtn = event.target;
+      const statusDiv = uploadBtn.parentNode.querySelector('div');
+      
+      uploadBtn.disabled = true;
+      uploadBtn.style.opacity = '0.6';
+      statusDiv.innerHTML = `
+        <div style="color: #0284c7; font-weight: 500; font-size: 10px;">
+          📤 正在处理图片...
+        </div>
+      `;
+      
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('user_id', currentUser.username);
+      
+      fetch('/api/upload_message_image', {
+        method: 'POST',
+        body: formData
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          // 添加到评论选中列表
+          commentSelectedItems.images.push({
+            filename: data.filename,
+            caption: ''
+          });
+          
+          updateCommentPreview(postId);
+          
+          // 显示成功状态
+          statusDiv.innerHTML = `
+            <div style="color: #059669; font-weight: 500; font-size: 10px;">
+              ✅ 上传成功！
+            </div>
+          `;
+          
+        } else {
+          console.error('服务器返回错误:', data);
+          alert('图片上传失败：' + (data.error || '未知错误'));
+          
+          statusDiv.innerHTML = `
+            <div style="color: #dc2626; font-weight: 500; font-size: 10px;">
+              ❌ ${data.error || '上传失败'}
+            </div>
+          `;
+        }
+      })
+      .catch(e => {
+        console.error('图片上传错误:', e);
+        alert('上传失败：网络错误或服务器异常');
+        
+        statusDiv.innerHTML = `
+          <div style="color: #dc2626; font-weight: 500; font-size: 10px;">
+            ❌ 网络错误
+          </div>
+        `;
+      })
+      .finally(() => {
+        // 恢复按钮状态
+        uploadBtn.disabled = false;
+        uploadBtn.style.opacity = '1';
+        // 清空文件选择
+        event.target.value = '';
+        
+        // 2秒后恢复状态提示
+        setTimeout(() => {
+          if (statusDiv) {
+            statusDiv.innerHTML = `
+              支持 JPG、PNG、GIF、WebP、HEIC 格式，最大 10MB<br>
+              <span style="color: #059669;">✓ 自动处理和优化</span>
+            `;
+          }
+        }, 2000);
+      });
+    }
+    
+    // 更新评论预览
+    function updateCommentPreview(postId) {
+      const extraArea = document.getElementById(`commentExtra-${postId}`);
+      extraArea.innerHTML = '';
+      
+      // 显示所有选中的内容
+      commentSelectedItems.audios.forEach((audio, index) => {
+        const preview = createCommentAudioPreview(audio, index, postId);
+        extraArea.appendChild(preview);
+      });
+      
+      commentSelectedItems.articles.forEach((article, index) => {
+        const preview = createCommentArticlePreview(article, index, postId);
+        extraArea.appendChild(preview);
+      });
+      
+      commentSelectedItems.images.forEach((image, index) => {
+        const preview = createCommentImagePreview(image, index, postId);
+        extraArea.appendChild(preview);
+      });
+      
+      if (commentSelectedItems.challenge) {
+        const preview = createCommentChallengePreview(commentSelectedItems.challenge, 0, postId);
+        extraArea.appendChild(preview);
+      }
+    }
+    
+    // 创建评论音频预览
+    function createCommentAudioPreview(audio, index, postId) {
+      const div = document.createElement('div');
+      div.style.cssText = 'margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;';
+      div.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <label style="font-weight: 600; color: #1f2937; font-size: 12px;">音频 ${index + 1}</label>
+          <button onclick="removeCommentItem('audios', ${index}, '${postId}')" style="background: #ef4444; color: white; border: none; border-radius: 4px; padding: 2px 6px; cursor: pointer; font-size: 10px;">移除</button>
+        </div>
+        <div style="padding: 8px; background: #f0f9ff; border: 1px solid #0284c7; border-radius: 8px; font-size: 11px;">
+          <div style="font-weight: 600; color: #0c4a6e;">${audio.type === 'single' ? audio.filename.replace('.mp3', '') : audio.folder}</div>
+          <div style="color: #0369a1; font-size: 10px;">${audio.type === 'single' ? `来自：${audio.folder}` : `${audio.file_count} 个音频的合集`}</div>
+        </div>
+      `;
+      return div;
+    }
+    
+    // 创建评论文章预览
+    function createCommentArticlePreview(article, index, postId) {
+      const div = document.createElement('div');
+      div.style.cssText = 'margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;';
+      div.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <label style="font-weight: 600; color: #1f2937; font-size: 12px;">文章 ${index + 1}</label>
+          <button onclick="removeCommentItem('articles', ${index}, '${postId}')" style="background: #ef4444; color: white; border: none; border-radius: 4px; padding: 2px 6px; cursor: pointer; font-size: 10px;">移除</button>
+        </div>
+        <div style="padding: 8px; background: #f0fdf4; border: 1px solid #16a34a; border-radius: 8px; font-size: 11px;">
+          <div style="font-weight: 600; color: #14532d;">${article.title}</div>
+          <div style="color: #15803d; font-size: 10px;">${article.category} • ${article.highlight_count} 个高亮词汇</div>
+        </div>
+      `;
+      return div;
+    }
+    
+    // 创建评论图片预览
+    function createCommentImagePreview(image, index, postId) {
+      const div = document.createElement('div');
+      div.style.cssText = 'margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;';
+      div.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <label style="font-weight: 600; color: #1f2937; font-size: 12px;">图片 ${index + 1}</label>
+          <button onclick="removeCommentItem('images', ${index}, '${postId}')" style="background: #ef4444; color: white; border: none; border-radius: 4px; padding: 2px 6px; cursor: pointer; font-size: 10px;">移除</button>
+        </div>
+        <div style="padding: 8px; background: #fef7ff; border: 1px solid #a855f7; border-radius: 8px;">
+          <img src="/message_images/${image.filename}" alt="预览图片" style="max-width: 100%; max-height: 100px; border-radius: 6px;">
+        </div>
+      `;
+      return div;
+    }
+    
+    // 创建评论挑战预览
+    function createCommentChallengePreview(challenge, index, postId) {
+      const div = document.createElement('div');
+      div.style.cssText = 'margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;';
+      div.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <label style="font-weight: 600; color: #1f2937; font-size: 12px;">挑战</label>
+          <button onclick="removeCommentItem('challenge', 0, '${postId}')" style="background: #ef4444; color: white; border: none; border-radius: 4px; padding: 2px 6px; cursor: pointer; font-size: 10px;">移除</button>
+        </div>
+        <div style="padding: 8px; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; font-size: 11px;">
+          <div style="font-weight: 600; color: #92400e;">${challenge.title}</div>
+          ${challenge.description ? `<div style="color: #a16207; font-size: 10px; margin-top: 2px;">${challenge.description}</div>` : ''}
+          <div style="color: #d97706; font-size: 10px; margin-top: 4px;">${challenge.vocabulary_count} 个词汇</div>
+        </div>
+      `;
+      return div;
+    }
+    
+    // 移除评论项目
+    function removeCommentItem(type, index, postId) {
+      if (type === 'challenge') {
+        commentSelectedItems.challenge = null;
+      } else {
+        commentSelectedItems[type].splice(index, 1);
+      }
+      updateCommentPreview(postId);
+    }
+    
+    // 提交评论
+    function submitComment(postId) {
+      const content = document.getElementById(`commentInput-${postId}`).value.trim();
+      
+      if (!content && commentSelectedItems.audios.length === 0 && 
+          commentSelectedItems.articles.length === 0 && 
+          commentSelectedItems.images.length === 0 && 
+          !commentSelectedItems.challenge) {
+        alert('请输入评论内容或添加分享内容');
+        return;
+      }
+      
+      const commentData = {
+        post_id: postId,
+        type: 'mixed_content',
+        content: {
+          text: content,
+          audios: commentSelectedItems.audios,
+          articles: commentSelectedItems.articles,
+          images: commentSelectedItems.images,
+          challenge: commentSelectedItems.challenge
+        }
+      };
+      
+      fetch('/api/comments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify(commentData)
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          // 隐藏评论表单
+          toggleCommentForm(postId);
+          
+          // 重新加载评论
+          loadComments(postId);
+          
+          // 显示成功提示
+          const postElement = document.querySelector(`[data-post-id="${postId}"]`);
+          const writeCommentBtn = postElement ? postElement.querySelector('.write-comment-btn') : null;
+          if (writeCommentBtn) {
+            const originalContent = writeCommentBtn.innerHTML;
+            writeCommentBtn.innerHTML = '<span>✅</span><span>已发表</span>';
+            writeCommentBtn.style.background = '#10b981';
+            writeCommentBtn.style.borderColor = '#10b981';
+            writeCommentBtn.style.color = 'white';
+            setTimeout(() => {
+              writeCommentBtn.innerHTML = originalContent;
+              writeCommentBtn.style.background = '';
+              writeCommentBtn.style.borderColor = '';
+              writeCommentBtn.style.color = '';
+            }, 2000);
+          }
+        } else {
+          alert('发表评论失败：' + (data.error || '未知错误'));
+        }
+      })
+      .catch(e => {
+        alert('发表评论失败：' + e.message);
+      });
+    }
+    
+    // 取消评论
+    function cancelComment(postId) {
+      // 直接调用toggleCommentForm来隐藏表单
+      toggleCommentForm(postId);
+    }
+    
+    // 删除评论
+    function deleteComment(postId, commentId) {
+      if (!confirm('确定要删除这条评论吗？')) {
+        return;
+      }
+      
+      fetch(`/api/comments/${commentId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${authToken}`
+        }
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          loadComments(postId);
+        } else {
+          alert('删除评论失败：' + (data.error || '未知错误'));
+        }
+      })
+      .catch(e => {
+        alert('删除评论失败：' + e.message);
+      });
+    }
+    
+    // 添加返回按钮功能
+    function goBackToModules() {
+      window.location.href = '/';
     }
   </script>
 </body>

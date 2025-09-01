@@ -1274,9 +1274,99 @@ def intensive_delete_image():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-def split_text_intelligently(text, target_segments=None, max_chars=3500):
+@app.route('/intensive_update_title', methods=['POST'])
+def intensive_update_title():
+    """更新精读文章标题"""
+    try:
+        data = request.json or {}
+        old_article_id = data.get('article_id')
+        new_title = (data.get('new_title') or '').strip()
+        
+        if not old_article_id or not new_title:
+            return jsonify({'error': '缺少必要参数'}), 400
+            
+        old_article_path = _article_path(old_article_id)
+        if not os.path.exists(old_article_path):
+            return jsonify({'error': '文章不存在'}), 404
+            
+        # 读取原文章数据
+        with open(old_article_path, 'r', encoding='utf-8') as f:
+            article_data = json.load(f)
+        
+        # 生成新的文章ID（基于新标题）
+        # 保持原创建时间戳，只更新标题部分
+        old_timestamp = old_article_id.split('-')[0]  # 提取时间戳部分
+        title_part = re.sub(r"[^\w\-]+", "-", new_title.strip())[:60].strip('-') or 'article'
+        new_article_id = f"{old_timestamp}-{title_part}"
+        
+        # 检查新ID是否已存在
+        new_article_path = _article_path(new_article_id)
+        if os.path.exists(new_article_path) and new_article_id != old_article_id:
+            return jsonify({'error': '标题冲突，请选择其他标题'}), 400
+        
+        # 如果ID没有变化，只需要更新标题
+        if new_article_id == old_article_id:
+            article_data['title'] = new_title
+            with open(old_article_path, 'w', encoding='utf-8') as f:
+                json.dump(article_data, f, ensure_ascii=False, indent=2)
+            return jsonify({'success': True, 'new_article_id': old_article_id, 'renamed_files': False})
+        
+        # 更新文章数据中的标题和ID
+        article_data['title'] = new_title
+        article_data['id'] = new_article_id
+        
+        # 创建新的文章文件
+        with open(new_article_path, 'w', encoding='utf-8') as f:
+            json.dump(article_data, f, ensure_ascii=False, indent=2)
+        
+        renamed_files = []
+        renamed_dirs = []
+        
+        # 重命名图片目录
+        old_image_dir = os.path.join(INTENSIVE_IMAGES_DIR, old_article_id)
+        new_image_dir = os.path.join(INTENSIVE_IMAGES_DIR, new_article_id)
+        if os.path.exists(old_image_dir):
+            os.makedirs(os.path.dirname(new_image_dir), exist_ok=True)
+            shutil.move(old_image_dir, new_image_dir)
+            renamed_dirs.append(f"图片目录: {old_article_id} -> {new_article_id}")
+        
+        # 重命名音频目录
+        old_audio_dir = os.path.join(VOCAB_AUDIO_DIR, 'articles', old_article_id)
+        new_audio_dir = os.path.join(VOCAB_AUDIO_DIR, 'articles', new_article_id)
+        if os.path.exists(old_audio_dir):
+            os.makedirs(os.path.dirname(new_audio_dir), exist_ok=True)
+            shutil.move(old_audio_dir, new_audio_dir)
+            renamed_dirs.append(f"音频目录: {old_article_id} -> {new_article_id}")
+        
+        # 重命名词汇音频目录
+        old_vocab_audio_dir = os.path.join(VOCAB_AUDIO_DIR, old_article_id)
+        new_vocab_audio_dir = os.path.join(VOCAB_AUDIO_DIR, new_article_id)
+        if os.path.exists(old_vocab_audio_dir):
+            os.makedirs(os.path.dirname(new_vocab_audio_dir), exist_ok=True)
+            shutil.move(old_vocab_audio_dir, new_vocab_audio_dir)
+            renamed_dirs.append(f"词汇音频目录: {old_article_id} -> {new_article_id}")
+        
+        # 删除旧文章文件
+        os.remove(old_article_path)
+        renamed_files.append(f"文章文件: {old_article_id}.json -> {new_article_id}.json")
+        
+        return jsonify({
+            'success': True,
+            'new_article_id': new_article_id,
+            'old_article_id': old_article_id,
+            'renamed_files': True,
+            'details': {
+                'files': renamed_files,
+                'directories': renamed_dirs
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'更新标题失败: {str(e)}'}), 500
+
+def split_text_intelligently(text, target_segments=None, max_chars=2200):
     """
-    智能分割文本，确保句子完整性
+    智能分割文本，确保句子完整性和均匀分配
     :param text: 要分割的文本
     :param target_segments: 目标分段数量，如果指定则平均分割
     :param max_chars: 每段最大字符数
@@ -1284,28 +1374,36 @@ def split_text_intelligently(text, target_segments=None, max_chars=3500):
     if len(text) <= max_chars:
         return [text]
     
-    # 如果指定了目标分段数，计算平均长度
-    if target_segments:
-        avg_length = len(text) // target_segments
-        max_chars = min(max_chars, avg_length + 500)  # 允许一定的弹性
+    import re
+    sentences = re.split(r'(?<=[.!?])\s+', text)
+    
+    # 如果没有指定目标分段数，根据长度自动计算
+    if not target_segments:
+        target_segments = max(2, min(10, len(text) // 2000))
+    
+    # 计算理想的每段长度
+    ideal_length = len(text) / target_segments
     
     segments = []
     current_segment = ""
-    
-    # 更智能的句子分割，处理多种结束标点
-    import re
-    sentences = re.split(r'(?<=[.!?])\s+', text)
     
     for sentence in sentences:
         sentence = sentence.strip()
         if not sentence:
             continue
             
-        # 检查添加这句话后是否超过限制
+        # 检查添加这句话后的长度
         test_segment = current_segment + (' ' if current_segment else '') + sentence
         
-        if len(test_segment) > max_chars and current_segment:
-            # 如果当前段落不为空，先保存它
+        # 决定是否开始新段落
+        should_split = (
+            len(test_segment) > ideal_length and  # 超过理想长度
+            current_segment and  # 当前段落不为空
+            len(segments) < target_segments - 1 and  # 还没到最后一段
+            len(test_segment) > max_chars * 0.6  # 避免过小的段落
+        )
+        
+        if should_split:
             segments.append(current_segment.strip())
             current_segment = sentence
         else:
@@ -1315,17 +1413,27 @@ def split_text_intelligently(text, target_segments=None, max_chars=3500):
     if current_segment:
         segments.append(current_segment.strip())
     
-    # 如果指定了目标分段数但实际分段数不符，进行调整
-    if target_segments and len(segments) != target_segments:
-        return redistribute_segments(segments, target_segments, max_chars)
+    # 如果分段数不够，尝试进一步分割较长的段落
+    while len(segments) < target_segments and len(segments) > 0:
+        # 找到最长的段落进行分割
+        longest_index = max(range(len(segments)), key=lambda i: len(segments[i]))
+        longest_segment = segments[longest_index]
+        
+        if len(longest_segment) > max_chars * 0.8:  # 只分割足够长的段落
+            sub_segments = split_long_segment(longest_segment, len(longest_segment) // 2)
+            if len(sub_segments) > 1:
+                segments[longest_index:longest_index+1] = sub_segments
+            else:
+                break
+        else:
+            break
     
-    # 检查是否有段落仍然过长
+    # 最终检查，确保没有段落超过限制
     final_segments = []
     for segment in segments:
         if len(segment) <= max_chars:
             final_segments.append(segment)
         else:
-            # 对过长段落进行二次分割
             sub_segments = split_long_segment(segment, max_chars)
             final_segments.extend(sub_segments)
     
@@ -1433,8 +1541,8 @@ def generate_article_audio():
         filename = f"article_{timestamp}.mp3"
         final_audio_path = os.path.join(article_audio_dir, filename)
         
-        # 检查文本长度，决定是否需要分段处理
-        MAX_CHARS = 3500  # 保守的字符限制
+        # 检查文本长度，决定是否需要分段处理（增加40%冗余）
+        MAX_CHARS = 2200  # 更保守的字符限制
         
         if len(text) <= MAX_CHARS:
             # 文本较短，直接生成
@@ -1457,8 +1565,11 @@ def generate_article_audio():
             else:
                 return jsonify({'error': f'TTS服务错误: {response.status_code}'}), 500
         else:
-            # 文本较长，需要分段处理
-            segments = split_text_intelligently(text, MAX_CHARS)
+            # 文本较长，需要分段处理（增加40%冗余）
+            base_segments = max(2, min(8, len(text) // 1800))  # 基础分段数（更小的基础单位）
+            target_segments = int(base_segments * 1.4)  # 增加40%冗余
+            target_segments = max(3, min(12, target_segments))  # 3-12段之间
+            segments = split_text_intelligently(text, target_segments, MAX_CHARS)
             
             # 创建临时目录存储分段音频
             temp_dir = os.path.join(article_audio_dir, f"temp_{timestamp}")
@@ -1528,13 +1639,15 @@ def prepare_article_audio():
         return jsonify({'error': '文章不存在'}), 404
     
     try:
-        # 计算最优分段数量
-        MAX_CHARS = 3500
+        # 计算最优分段数量（增加40%冗余）
+        MAX_CHARS = 2200  # 进一步降低单段字符限制
         if len(text) <= MAX_CHARS:
             segments = [text]
         else:
-            # 根据长度计算合适的分段数
-            target_segments = max(2, min(6, len(text) // 2500))  # 2-6段之间
+            # 根据长度计算合适的分段数，增加40%冗余
+            base_segments = max(2, min(8, len(text) // 1800))  # 基础分段数（更小的基础单位）
+            target_segments = int(base_segments * 1.4)  # 增加40%冗余
+            target_segments = max(3, min(12, target_segments))  # 确保在3-12段之间
             segments = split_text_intelligently(text, target_segments, MAX_CHARS)
         
         # 生成任务ID
@@ -1929,23 +2042,30 @@ def upload_message_image():
             
         if file.filename == '':
             return jsonify({'error': '没有选择文件'}), 400
-            
-        if file and _allowed_file(file.filename):
-            # 创建用户专属目录
-            user_dir = os.path.join(MESSAGE_IMAGES_DIR, username)
-            os.makedirs(user_dir, exist_ok=True)
-            
-            # 生成安全的文件名
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            file_ext = os.path.splitext(secure_filename(file.filename))[1]
-            filename = f'{timestamp}_{str(uuid.uuid4())[:8]}{file_ext}'
-            
-            filepath = os.path.join(user_dir, filename)
-            file.save(filepath)
-            
-            # 返回相对路径供前端使用
-            relative_path = f'{username}/{filename}'
-            return jsonify({'success': True, 'filename': relative_path})
+        
+        # 检查文件大小（最大10MB）
+        if file.content_length and file.content_length > 10 * 1024 * 1024:
+            return jsonify({'error': '图片文件大小不能超过10MB'}), 400
+        
+        # 检查MIME类型
+        if not _is_valid_image_file(file):
+            return jsonify({'error': '不支持的图片格式。请上传JPG、PNG、GIF、WebP格式的图片'}), 400
+        
+        # 创建用户专属目录
+        user_dir = os.path.join(MESSAGE_IMAGES_DIR, username)
+        os.makedirs(user_dir, exist_ok=True)
+        
+        # 处理图片并保存
+        try:
+            processed_filename = _process_and_save_image(file, user_dir, username)
+            if processed_filename:
+                # 返回相对路径供前端使用
+                relative_path = f'{username}/{processed_filename}'
+                return jsonify({'success': True, 'filename': relative_path})
+            else:
+                return jsonify({'error': '图片处理失败'}), 500
+        except Exception as process_error:
+            return jsonify({'error': f'图片处理失败: {str(process_error)}'}), 500
             
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -1956,10 +2076,294 @@ def _allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def _is_valid_image_file(file):
+    """检查文件是否为有效的图片文件"""
+    import imghdr
+    
+    # 检查文件扩展名
+    if file.filename and not _allowed_file(file.filename):
+        return False
+    
+    # 检查MIME类型
+    allowed_mimes = {
+        'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 
+        'image/webp', 'image/heic', 'image/heif'
+    }
+    
+    if hasattr(file, 'mimetype') and file.mimetype:
+        if file.mimetype not in allowed_mimes:
+            return False
+    
+    # 通过文件头检查图片格式
+    file.seek(0)  # 重置文件指针
+    try:
+        header = file.read(512)  # 读取文件头
+        file.seek(0)  # 重置文件指针
+        
+        # 检查各种图片格式的文件头
+        if header.startswith(b'\xff\xd8\xff'):  # JPEG
+            return True
+        elif header.startswith(b'\x89PNG\r\n\x1a\n'):  # PNG
+            return True
+        elif header.startswith(b'GIF87a') or header.startswith(b'GIF89a'):  # GIF
+            return True
+        elif header.startswith(b'RIFF') and b'WEBP' in header[:20]:  # WebP
+            return True
+        elif b'ftyp' in header[:20] and (b'heic' in header[:20] or b'heif' in header[:20]):  # HEIC/HEIF
+            return True
+        
+        # 使用imghdr作为后备检查
+        file.seek(0)
+        image_type = imghdr.what(file)
+        return image_type in ['jpeg', 'png', 'gif', 'webp']
+        
+    except Exception:
+        return False
+
+def _process_and_save_image(file, user_dir, username):
+    """处理并保存图片，支持格式转换和压缩"""
+    try:
+        from PIL import Image, ImageOps
+        import io
+        
+        # 生成文件名
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        random_id = str(uuid.uuid4())[:8]
+        
+        # 读取图片
+        file.seek(0)
+        image_data = file.read()
+        
+        # 使用PIL打开图片
+        with Image.open(io.BytesIO(image_data)) as img:
+            # 自动旋转图片（处理EXIF方向信息）
+            img = ImageOps.exif_transpose(img)
+            
+            # 转换为RGB模式（处理RGBA、P等模式）
+            if img.mode in ('RGBA', 'LA', 'P'):
+                # 创建白色背景
+                background = Image.new('RGB', img.size, (255, 255, 255))
+                if img.mode == 'P':
+                    img = img.convert('RGBA')
+                background.paste(img, mask=img.split()[-1] if img.mode in ('RGBA', 'LA') else None)
+                img = background
+            elif img.mode != 'RGB':
+                img = img.convert('RGB')
+            
+            # 压缩大图片
+            max_size = (1920, 1920)  # 最大尺寸
+            if img.size[0] > max_size[0] or img.size[1] > max_size[1]:
+                img.thumbnail(max_size, Image.Resampling.LANCZOS)
+            
+            # 保存为JPEG格式（最佳兼容性）
+            filename = f'{timestamp}_{random_id}.jpg'
+            filepath = os.path.join(user_dir, filename)
+            
+            # 保存图片，设置质量
+            img.save(filepath, 'JPEG', quality=85, optimize=True)
+            
+            return filename
+            
+    except ImportError:
+        # 如果没有PIL，使用原始方法保存
+        print("警告：PIL未安装，使用原始文件保存方法")
+        return _save_original_image(file, user_dir, username)
+    except Exception as e:
+        print(f"图片处理失败: {e}")
+        # 降级到原始方法
+        return _save_original_image(file, user_dir, username)
+
+def _save_original_image(file, user_dir, username):
+    """原始图片保存方法（降级方案）"""
+    try:
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        file_ext = os.path.splitext(secure_filename(file.filename))[1].lower()
+        
+        # 对于HEIC文件，改为JPG扩展名
+        if file_ext in ['.heic', '.heif']:
+            file_ext = '.jpg'
+        
+        filename = f'{timestamp}_{str(uuid.uuid4())[:8]}{file_ext}'
+        filepath = os.path.join(user_dir, filename)
+        
+        file.seek(0)
+        file.save(filepath)
+        
+        return filename
+    except Exception as e:
+        print(f"原始图片保存失败: {e}")
+        return None
+
 @app.route('/message_images/<path:filename>')
 def serve_message_image(filename):
     """提供留言板图片文件"""
     return send_from_directory(MESSAGE_IMAGES_DIR, filename)
+
+# ==================== 评论系统相关API ====================
+
+def _comments_file():
+    """获取评论文件路径"""
+    return os.path.join(MESSAGE_BOARD_DIR, 'comments.json')
+
+def load_comments():
+    """加载评论数据"""
+    comments_file = _comments_file()
+    if os.path.exists(comments_file):
+        try:
+            with open(comments_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except:
+            return []
+    return []
+
+def save_comments(comments):
+    """保存评论数据"""
+    comments_file = _comments_file()
+    with open(comments_file, 'w', encoding='utf-8') as f:
+        json.dump(comments, f, ensure_ascii=False, indent=2)
+
+def generate_comment_id():
+    """生成评论ID"""
+    return f"comment_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{str(uuid.uuid4())[:8]}"
+
+@app.route('/api/comments/<post_id>', methods=['GET'])
+def get_comments(post_id):
+    """获取指定帖子的评论"""
+    try:
+        comments = load_comments()
+        # 筛选出指定帖子的评论，按时间正序排列
+        post_comments = [c for c in comments if c.get('post_id') == post_id]
+        post_comments.sort(key=lambda x: x.get('timestamp', ''))
+        return jsonify({'success': True, 'comments': post_comments})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/comments', methods=['POST'])
+def post_comment():
+    """发表评论"""
+    try:
+        # 验证用户登录状态
+        token = request.headers.get('Authorization')
+        if token and token.startswith('Bearer '):
+            token = token[7:]
+        else:
+            return jsonify({'error': '未登录或token无效'}), 401
+            
+        if not token or not is_token_valid(token):
+            return jsonify({'error': '未登录或token无效'}), 401
+            
+        # 从token获取用户信息
+        tokens = load_tokens()
+        username = tokens.get(token, {}).get('username')
+        
+        if not username:
+            return jsonify({'error': '无法获取用户信息'}), 401
+            
+        users = load_users()
+        if username not in users:
+            return jsonify({'error': '用户不存在'}), 404
+            
+        user_data = users[username]
+        user_info = {
+            'username': user_data['username'],
+            'display_name': user_data['display_name'],
+            'role': user_data['role'],
+            'avatar': user_data['avatar']
+        }
+        
+        data = request.json or {}
+        post_id = data.get('post_id')
+        comment_type = data.get('type', 'text')
+        content = data.get('content', {})
+        
+        if not post_id:
+            return jsonify({'error': '缺少帖子ID'}), 400
+        
+        # 验证帖子是否存在
+        messages = load_messages()
+        post_exists = any(msg.get('id') == post_id for msg in messages)
+        if not post_exists:
+            return jsonify({'error': '帖子不存在'}), 404
+        
+        comment = {
+            'id': generate_comment_id(),
+            'post_id': post_id,
+            'user': user_info,
+            'type': comment_type,
+            'content': content,
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        comments = load_comments()
+        comments.append(comment)
+        save_comments(comments)
+        
+        return jsonify({'success': True, 'comment': comment})
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/comments/<comment_id>', methods=['DELETE'])
+def delete_comment(comment_id):
+    """删除评论"""
+    try:
+        # 验证用户登录状态
+        token = request.headers.get('Authorization')
+        if token and token.startswith('Bearer '):
+            token = token[7:]
+        else:
+            return jsonify({'error': '未登录或token无效'}), 401
+            
+        if not token or not is_token_valid(token):
+            return jsonify({'error': '未登录或token无效'}), 401
+            
+        # 从token获取用户信息
+        tokens = load_tokens()
+        username = tokens.get(token, {}).get('username')
+        
+        if not username:
+            return jsonify({'error': '无法获取用户信息'}), 401
+        
+        comments = load_comments()
+        
+        # 找到要删除的评论
+        comment_to_delete = None
+        comment_index = -1
+        for i, comment in enumerate(comments):
+            if comment.get('id') == comment_id:
+                comment_to_delete = comment
+                comment_index = i
+                break
+        
+        if not comment_to_delete:
+            return jsonify({'error': '评论不存在'}), 404
+            
+        # 检查是否是评论的作者
+        if comment_to_delete.get('user', {}).get('username') != username:
+            return jsonify({'error': '只能删除自己的评论'}), 403
+        
+        # 检查是否有关联的挑战需要删除
+        challenge_id = None
+        if (comment_to_delete.get('type') == 'mixed_content' and 
+            comment_to_delete.get('content', {}).get('challenge')):
+            challenge_id = comment_to_delete['content']['challenge'].get('id')
+        
+        # 删除评论
+        comments.pop(comment_index)
+        save_comments(comments)
+        
+        # 删除关联的挑战记录
+        if challenge_id:
+            try:
+                delete_challenge_record(challenge_id)
+            except Exception as e:
+                # 挑战删除失败不影响评论删除，只记录错误
+                print(f"删除挑战记录失败: {e}")
+        
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/get_audio_list', methods=['GET'])
 def get_audio_list_for_share():
