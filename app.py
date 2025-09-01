@@ -2803,6 +2803,312 @@ def get_challenge_ranking(challenge_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/vocab_summary_challenge', methods=['POST'])
+def create_vocab_summary_challenge():
+    """为词汇汇总创建个人挑战"""
+    try:
+        # 验证token
+        auth_header = request.headers.get('Authorization', '')
+        if not auth_header.startswith('Bearer '):
+            return jsonify({'error': '未授权'}), 401
+        
+        token = auth_header.split(' ')[1]
+        username = verify_token_get_username(token)
+        if not username:
+            return jsonify({'error': '无效token'}), 401
+        
+        data = request.json
+        article_ids = data.get('article_ids', [])
+        word_count = int(data.get('word_count', 20))
+        
+        if not article_ids:
+            return jsonify({'error': '请选择至少一篇文章'}), 400
+        
+        if word_count < 5 or word_count > 50:
+            return jsonify({'error': '词汇数量应在5-50之间'}), 400
+        
+        # 使用改进的词汇提取算法
+        vocabulary = extract_vocabulary_from_articles_improved(article_ids, word_count)
+        
+        if not vocabulary:
+            return jsonify({'error': '从选中的文章中未找到足够的词汇'}), 400
+        
+        # 创建个人挑战数据结构（不保存到文件，直接返回）
+        challenge_id = f'vocab_summary_{int(time.time())}_{username}'
+        challenge_data = {
+            'id': challenge_id,
+            'type': 'vocab_summary',
+            'creator': username,
+            'created_at': datetime.now().isoformat(),
+            'article_ids': article_ids,
+            'vocabulary': vocabulary,
+            'word_count': len(vocabulary)
+        }
+        
+        # 异步生成所有词汇的音频
+        def _generate_vocab_summary_audio():
+            try:
+                for vocab in vocabulary:
+                    word = vocab.get('word', '').strip()
+                    if word:
+                        generate_challenge_vocab_audio(challenge_id, word)
+                        time.sleep(0.5)  # 避免API频率限制
+                print(f"词汇汇总挑战 {challenge_id} 的音频生成完成")
+            except Exception as e:
+                print(f"词汇汇总挑战 {challenge_id} 音频生成失败: {e}")
+        
+        thread = threading.Thread(target=_generate_vocab_summary_audio, daemon=True)
+        thread.start()
+        
+        return jsonify({
+            'success': True,
+            'challenge': challenge_data
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+def extract_vocabulary_from_articles_improved(article_ids, word_count):
+    """改进的词汇提取算法，专为词汇汇总挑战优化"""
+    import random
+    import hashlib
+    from collections import defaultdict
+    
+    # 按文章分组收集词汇
+    articles_vocab = defaultdict(list)
+    
+    for article_id in article_ids:
+        article_path = _article_path(article_id)
+        if os.path.exists(article_path):
+            try:
+                with open(article_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                highlights = data.get('highlights', [])
+                for highlight in highlights:
+                    vocab_item = {
+                        'word': highlight.get('text', '').strip(),
+                        'meaning': highlight.get('meaning', '').strip(),
+                        'article_id': article_id,
+                        'article_title': data.get('title', ''),
+                        'highlight_id': highlight.get('id')
+                    }
+                    if vocab_item['word'] and vocab_item['meaning']:
+                        articles_vocab[article_id].append(vocab_item)
+            except Exception as e:
+                continue
+    
+    # 智能去重：基于词汇内容而不仅仅是文本
+    unique_vocab = []
+    seen_items = set()
+    
+    for article_id, vocabs in articles_vocab.items():
+        # 对每篇文章的词汇进行随机打乱
+        random.shuffle(vocabs)
+        
+        for vocab in vocabs:
+            # 生成基于词汇和含义的唯一标识
+            word_lower = vocab['word'].lower().strip()
+            meaning_lower = vocab['meaning'].lower().strip()
+            
+            # 创建更严格的去重机制
+            vocab_hash = hashlib.md5(f"{word_lower}::{meaning_lower}".encode()).hexdigest()
+            
+            if vocab_hash not in seen_items:
+                seen_items.add(vocab_hash)
+                unique_vocab.append(vocab)
+    
+    # 如果词汇数量不足，返回所有可用词汇
+    if len(unique_vocab) <= word_count:
+        random.shuffle(unique_vocab)
+        return unique_vocab
+    
+    # 多重随机策略选择词汇
+    selected_vocab = []
+    
+    # 策略1：确保每篇文章至少有一个词汇被选中（如果可能）
+    article_representation = {}
+    for vocab in unique_vocab:
+        aid = vocab['article_id']
+        if aid not in article_representation:
+            article_representation[aid] = []
+        article_representation[aid].append(vocab)
+    
+    # 从每篇文章随机选择词汇作为基础
+    for aid, vocabs in article_representation.items():
+        if len(selected_vocab) >= word_count:
+            break
+        
+        # 根据剩余配额决定从这篇文章选择多少个
+        remaining = word_count - len(selected_vocab)
+        articles_left = len([a for a in article_representation.keys() if a >= aid])
+        from_this_article = min(len(vocabs), max(1, remaining // articles_left))
+        
+        # 随机选择
+        selected_from_article = random.sample(vocabs, min(from_this_article, len(vocabs)))
+        selected_vocab.extend(selected_from_article)
+    
+    # 策略2：如果还需要更多词汇，从剩余池中随机选择
+    if len(selected_vocab) < word_count:
+        remaining_vocab = [v for v in unique_vocab if v not in selected_vocab]
+        if remaining_vocab:
+            additional_needed = word_count - len(selected_vocab)
+            additional = random.sample(remaining_vocab, 
+                                     min(additional_needed, len(remaining_vocab)))
+            selected_vocab.extend(additional)
+    
+    # 策略3：最终随机打乱顺序，确保每次挑战顺序不同
+    random.shuffle(selected_vocab)
+    
+    # 返回精确数量的词汇
+    return selected_vocab[:word_count]
+
+@app.route('/api/vocab_challenge_record', methods=['POST'])
+def save_vocab_challenge_record():
+    """保存词汇挑战记录"""
+    try:
+        # 验证token
+        auth_header = request.headers.get('Authorization', '')
+        if not auth_header.startswith('Bearer '):
+            return jsonify({'error': '未授权'}), 401
+        
+        token = auth_header.split(' ')[1]
+        username = verify_token_get_username(token)
+        if not username:
+            return jsonify({'error': '无效token'}), 401
+        
+        data = request.json
+        challenge_record = data.get('challenge_record')
+        
+        if not challenge_record:
+            return jsonify({'error': '挑战记录不能为空'}), 400
+        
+        # 确保记录包含用户信息
+        challenge_record['username'] = username
+        challenge_record['saved_at'] = datetime.now().isoformat()
+        
+        # 保存到用户专用的挑战记录文件
+        user_challenge_file = os.path.join(CHALLENGES_DIR, f'vocab_summary_{username}.json')
+        
+        # 创建目录（如果不存在）
+        os.makedirs(CHALLENGES_DIR, exist_ok=True)
+        
+        # 读取现有记录
+        existing_records = []
+        if os.path.exists(user_challenge_file):
+            try:
+                with open(user_challenge_file, 'r', encoding='utf-8') as f:
+                    existing_records = json.load(f)
+            except:
+                existing_records = []
+        
+        # 添加新记录到开头
+        existing_records.insert(0, challenge_record)
+        
+        # 只保留最近100条记录
+        if len(existing_records) > 100:
+            existing_records = existing_records[:100]
+        
+        # 保存记录
+        with open(user_challenge_file, 'w', encoding='utf-8') as f:
+            json.dump(existing_records, f, ensure_ascii=False, indent=2)
+        
+        return jsonify({'success': True, 'record_count': len(existing_records)})
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/vocab_challenge_records', methods=['GET'])
+def get_vocab_challenge_records():
+    """获取用户的词汇挑战记录"""
+    try:
+        # 验证token
+        auth_header = request.headers.get('Authorization', '')
+        if not auth_header.startswith('Bearer '):
+            return jsonify({'error': '未授权'}), 401
+        
+        token = auth_header.split(' ')[1]
+        username = verify_token_get_username(token)
+        if not username:
+            return jsonify({'error': '无效token'}), 401
+        
+        # 读取用户的挑战记录
+        user_challenge_file = os.path.join(CHALLENGES_DIR, f'vocab_summary_{username}.json')
+        
+        records = []
+        if os.path.exists(user_challenge_file):
+            try:
+                with open(user_challenge_file, 'r', encoding='utf-8') as f:
+                    records = json.load(f)
+            except:
+                records = []
+        
+        return jsonify({'success': True, 'records': records})
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/vocab_wrong_words', methods=['POST'])
+def save_vocab_wrong_words():
+    """保存错词记录"""
+    try:
+        # 验证token
+        auth_header = request.headers.get('Authorization', '')
+        if not auth_header.startswith('Bearer '):
+            return jsonify({'error': '未授权'}), 401
+        
+        token = auth_header.split(' ')[1]
+        username = verify_token_get_username(token)
+        if not username:
+            return jsonify({'error': '无效token'}), 401
+        
+        data = request.json
+        wrong_words = data.get('wrong_words', {})
+        
+        # 保存到用户专用的错词记录文件
+        user_wrong_words_file = os.path.join(CHALLENGES_DIR, f'wrong_words_{username}.json')
+        
+        # 创建目录（如果不存在）
+        os.makedirs(CHALLENGES_DIR, exist_ok=True)
+        
+        # 保存错词记录
+        with open(user_wrong_words_file, 'w', encoding='utf-8') as f:
+            json.dump(wrong_words, f, ensure_ascii=False, indent=2)
+        
+        return jsonify({'success': True, 'word_count': len(wrong_words)})
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/vocab_wrong_words', methods=['GET'])
+def get_vocab_wrong_words():
+    """获取用户的错词记录"""
+    try:
+        # 验证token
+        auth_header = request.headers.get('Authorization', '')
+        if not auth_header.startswith('Bearer '):
+            return jsonify({'error': '未授权'}), 401
+        
+        token = auth_header.split(' ')[1]
+        username = verify_token_get_username(token)
+        if not username:
+            return jsonify({'error': '无效token'}), 401
+        
+        # 读取用户的错词记录
+        user_wrong_words_file = os.path.join(CHALLENGES_DIR, f'wrong_words_{username}.json')
+        
+        wrong_words = {}
+        if os.path.exists(user_wrong_words_file):
+            try:
+                with open(user_wrong_words_file, 'r', encoding='utf-8') as f:
+                    wrong_words = json.load(f)
+            except:
+                wrong_words = {}
+        
+        return jsonify({'success': True, 'wrong_words': wrong_words})
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/cleanup_orphaned_challenges', methods=['POST'])
 def cleanup_orphaned_challenges():
     """清理孤立的挑战记录（没有对应帖子的挑战）"""

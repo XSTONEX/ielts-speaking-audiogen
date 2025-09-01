@@ -29,6 +29,8 @@
     .btn.primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(102, 126, 234, 0.25); }
     .btn.export { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color:#fff; border: none; }
     .btn.export:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(16, 185, 129, 0.25); }
+    .btn.challenge { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color:#fff; border: none; }
+    .btn.challenge:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(245, 158, 11, 0.25); }
     
     /* Main Layout */
     .main { flex: 1; display: flex; overflow: hidden; }
@@ -85,6 +87,93 @@
     .export-item:hover { background: #f8fafc; }
     .export-item-title { font-weight: 500; color: #111827; font-size: 14px; }
     .export-item-desc { color: #6b7280; font-size: 12px; margin-top: 2px; }
+
+    /* Modal Styles */
+    .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000; }
+    .modal-content { background: #fff; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); max-width: 90vw; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #f1f5f9; background: #fafbfc; }
+    .modal-header h3 { margin: 0; color: #111827; font-size: 18px; font-weight: 600; }
+    .modal-close { background: none; border: none; font-size: 24px; color: #6b7280; cursor: pointer; padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px; transition: all 0.2s; }
+    .modal-close:hover { background: #f3f4f6; color: #374151; }
+    .modal-body { padding: 24px; overflow-y: auto; flex: 1; }
+    .modal-footer { display: flex; gap: 12px; justify-content: flex-end; padding: 16px 24px; border-top: 1px solid #f1f5f9; background: #fafbfc; }
+
+    /* Challenge Setup Modal */
+    .challenge-setup { width: 700px; }
+    .setup-section { margin-bottom: 24px; }
+    .setup-section label { display: block; margin-bottom: 8px; font-weight: 500; color: #374151; }
+    .category-filter-buttons { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .category-filter-btn { padding: 8px 16px; border: 2px solid #e5e7eb; border-radius: 20px; background: #fff; color: #6b7280; cursor: pointer; transition: all 0.2s; font-size: 14px; font-weight: 500; }
+    .category-filter-btn:hover { border-color: #d1d5db; background: #f9fafb; }
+    .category-filter-btn.active { border-color: #667eea; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; }
+    .article-selection { border: 1px solid #e5e7eb; border-radius: 12px; max-height: 300px; overflow-y: auto; }
+    .article-category { margin-bottom: 16px; }
+    .article-category:last-child { margin-bottom: 0; }
+    .category-header { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: #f8fafc; border-bottom: 1px solid #e5e7eb; font-weight: 500; color: #374151; }
+    .category-header input[type="checkbox"] { margin: 0; }
+    .article-category .article-list { padding: 0; }
+    .article-category .article-item { margin: 0; border: none; border-bottom: 1px solid #f1f5f9; border-radius: 0; display: flex; align-items: center; gap: 12px; }
+    .article-category .article-item:last-child { border-bottom: none; }
+    .article-category .article-item input[type="checkbox"] { margin: 0; flex-shrink: 0; }
+    .article-category .article-item .article-info { flex: 1; min-width: 0; }
+    .article-category-badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 500; background: #f3f4f6; color: #6b7280; }
+    .article-category-badge[data-category="Reading"] { background: #dbeafe; color: #1e40af; }
+    .article-category-badge[data-category="Listening"] { background: #d1fae5; color: #065f46; }
+    .article-category-badge[data-category="Writing"] { background: #fef3c7; color: #92400e; }
+    .word-count-input { width: 80px; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; }
+    .word-count-slider { margin-top: 12px; }
+    .word-count-slider input[type="range"] { width: 100%; }
+    .slider-labels { display: flex; justify-content: space-between; margin-top: 4px; font-size: 12px; color: #6b7280; }
+    .challenge-stats { display: flex; gap: 24px; padding: 16px; background: #f8fafc; border-radius: 12px; }
+    .stat-item { text-align: center; }
+    .stat-label { display: block; font-size: 12px; color: #6b7280; margin-bottom: 4px; }
+    .stat-value { display: block; font-size: 24px; font-weight: 600; color: #111827; }
+
+    /* Challenge Game Modal */
+    .challenge-game { width: 600px; }
+    .challenge-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #f1f5f9; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; }
+    .challenge-info h3 { margin: 0; font-size: 18px; }
+    .challenge-progress { font-size: 14px; opacity: 0.9; margin-top: 4px; }
+    .challenge-timer { font-size: 20px; font-weight: 600; background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 20px; }
+    .challenge-question-container { padding: 40px 24px; text-align: center; background: #fafbfc; }
+    .challenge-question { font-size: 24px; font-weight: 600; color: #111827; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 12px; }
+    .challenge-word { color: #667eea; }
+    .challenge-audio-btn { background: #667eea; color: #fff; border: none; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
+    .challenge-audio-btn:hover { background: #5a67d8; transform: scale(1.1); }
+    .challenge-options { padding: 0 24px 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .challenge-option { padding: 16px; border: 2px solid #e5e7eb; border-radius: 12px; background: #fff; cursor: pointer; transition: all 0.2s; text-align: center; font-weight: 500; }
+    .challenge-option:hover { border-color: #667eea; background: #f5f7ff; }
+    .challenge-option.correct { border-color: #10b981; background: #ecfdf5; color: #065f46; }
+    .challenge-option.incorrect { border-color: #ef4444; background: #fef2f2; color: #991b1b; }
+    .challenge-controls { display: flex; gap: 12px; justify-content: center; padding: 16px 24px; border-top: 1px solid #f1f5f9; }
+
+    /* Challenge Result Modal */
+    .challenge-result { width: 600px; }
+    .result-summary { text-align: center; margin-bottom: 24px; }
+    .result-score { font-size: 48px; font-weight: 600; color: #667eea; margin-bottom: 8px; }
+    .result-accuracy { font-size: 18px; color: #6b7280; margin-bottom: 16px; }
+    .result-details { display: flex; justify-content: space-around; padding: 16px; background: #f8fafc; border-radius: 12px; }
+    .result-detail { text-align: center; }
+    .result-detail-value { font-size: 20px; font-weight: 600; color: #111827; }
+    .result-detail-label { font-size: 12px; color: #6b7280; margin-top: 4px; }
+    .wrong-words-section { margin-top: 24px; }
+    .wrong-words-section h4 { margin-bottom: 16px; color: #111827; }
+    .wrong-word-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 8px; background: #fef2f2; }
+    .wrong-word-text { font-weight: 600; color: #991b1b; }
+    .wrong-word-meaning { color: #6b7280; }
+
+    /* Challenge History Modal */
+    .challenge-history { width: 800px; }
+    .history-tabs { display: flex; border-bottom: 1px solid #e5e7eb; margin-bottom: 24px; }
+    .tab-btn { padding: 12px 24px; border: none; background: none; cursor: pointer; color: #6b7280; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.2s; }
+    .tab-btn.active { color: #667eea; border-bottom-color: #667eea; }
+    .tab-btn:hover:not(.active) { color: #374151; }
+    .history-content { min-height: 300px; }
+    .history-item { padding: 16px; border: 1px solid #e5e7eb; border-radius: 12px; margin-bottom: 12px; }
+    .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .history-title { font-weight: 600; color: #111827; }
+    .history-date { font-size: 12px; color: #6b7280; }
+    .history-stats { display: flex; gap: 16px; font-size: 14px; color: #6b7280; }
     
     /* Mobile Responsive */
     @media (max-width: 1024px) {
@@ -127,6 +216,8 @@
     <div class="header">
       <div class="title">📚 词汇汇总</div>
       <div class="actions">
+        <button class="btn challenge" onclick="openChallengeSetup()">🏆 词汇挑战</button>
+        <button class="btn" onclick="openChallengeHistory()">📊 挑战记录</button>
         <button class="btn" onclick="location.href='/intensive'">返回精读</button>
         <div class="export-dropdown">
           <button class="btn export" onclick="toggleExportMenu()">导出词汇 ▼</button>
@@ -183,6 +274,152 @@
     </div>
   </div>
 
+  <!-- 挑战设置模态框 -->
+  <div id="challengeSetupModal" class="modal" style="display: none;">
+    <div class="modal-content challenge-setup">
+      <div class="modal-header">
+        <h3>🏆 开始词汇挑战</h3>
+        <button class="modal-close" onclick="closeChallengeSetup()">&times;</button>
+      </div>
+      <div class="modal-body">
+                <div class="setup-section">
+          <label>选择挑战文章</label>
+          
+          <!-- 分类筛选按钮 -->
+          <div class="category-filter-buttons">
+            <button class="category-filter-btn active" onclick="switchCategoryFilter('all')" id="filterAll">
+              📚 全部文章
+            </button>
+            <button class="category-filter-btn" onclick="switchCategoryFilter('Reading')" id="filterReading">
+              📖 Reading
+            </button>
+            <button class="category-filter-btn" onclick="switchCategoryFilter('Listening')" id="filterListening">
+              🎧 Listening  
+            </button>
+            <button class="category-filter-btn" onclick="switchCategoryFilter('Writing')" id="filterWriting">
+              ✍️ Writing
+            </button>
+      </div>
+          
+          <div class="article-selection" id="challengeArticleSelection">
+            <div class="article-category" id="allArticlesCategory">
+              <div class="category-header">
+                <input type="checkbox" id="selectAllArticles" onchange="toggleAllArticlesSelection(this.checked)">
+                <label for="selectAllArticles">全选当前显示的文章</label>
+    </div>
+              <div class="article-list" id="filteredArticles"></div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="setup-section">
+          <label for="challengeWordCount">词汇数量</label>
+          <input type="number" id="challengeWordCount" min="5" max="50" value="20" class="word-count-input">
+          <div class="word-count-slider">
+            <input type="range" min="5" max="50" value="20" id="wordCountSlider" oninput="updateWordCount(this.value)">
+            <div class="slider-labels">
+              <span>5</span>
+              <span>50</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="setup-section">
+          <div class="challenge-stats" id="challengeStats">
+            <div class="stat-item">
+              <span class="stat-label">已选文章</span>
+              <span class="stat-value" id="selectedArticlesCount">0</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">可用词汇</span>
+              <span class="stat-value" id="availableVocabCount">0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="btn" onclick="closeChallengeSetup()">取消</button>
+        <button class="btn primary" onclick="startVocabChallenge()" id="startChallengeBtn" disabled>开始挑战</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 挑战游戏模态框 -->
+  <div id="challengeGameModal" class="modal" style="display: none;">
+    <div class="modal-content challenge-game">
+      <div class="challenge-header">
+        <div class="challenge-info">
+          <h3 id="challengeGameTitle">词汇挑战</h3>
+          <div class="challenge-progress" id="challengeProgress">第 1 题 / 共 20 题</div>
+        </div>
+        <div class="challenge-timer" id="challengeTimer">10s</div>
+      </div>
+      
+      <div class="challenge-question-container">
+        <div class="challenge-question" id="challengeQuestion">
+          Loading...
+        </div>
+      </div>
+      
+      <div class="challenge-options" id="challengeOptions">
+        <!-- 选项将动态生成 -->
+      </div>
+      
+      <div class="challenge-controls">
+        <button class="btn" onclick="skipQuestion()">跳过</button>
+        <button class="btn" onclick="quitChallenge()">退出挑战</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 挑战结果模态框 -->
+  <div id="challengeResultModal" class="modal" style="display: none;">
+    <div class="modal-content challenge-result">
+      <div class="modal-header">
+        <h3>🎉 挑战完成</h3>
+        <button class="modal-close" onclick="closeChallengeResult()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="result-summary" id="resultSummary">
+          <!-- 结果将动态生成 -->
+        </div>
+        <div class="wrong-words-section" id="wrongWordsSection">
+          <!-- 错词将动态生成 -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeChallengeResult()">关闭</button>
+        <button class="btn primary" onclick="reviewWrongWords()">复习错词</button>
+        <button class="btn challenge" onclick="restartChallenge()">再来一次</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 挑战记录模态框 -->
+  <div id="challengeHistoryModal" class="modal" style="display: none;">
+    <div class="modal-content challenge-history">
+      <div class="modal-header">
+        <h3>📊 挑战记录</h3>
+        <button class="modal-close" onclick="closeChallengeHistory()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="history-tabs">
+          <button class="tab-btn active" onclick="switchHistoryTab('recent')" id="recentTab">最近挑战</button>
+          <button class="tab-btn" onclick="switchHistoryTab('wrong')" id="wrongTab">错词汇总</button>
+          <button class="tab-btn" onclick="switchHistoryTab('stats')" id="statsTab">统计数据</button>
+        </div>
+        <div class="history-content" id="historyContent">
+          <!-- 内容将动态生成 -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeChallengeHistory()">关闭</button>
+        <button class="btn primary" onclick="exportChallengeHistory()">导出记录</button>
+      </div>
+    </div>
+  </div>
+  
   <script>
     let currentToken = null;
     let allArticles = [];
@@ -227,6 +464,8 @@
         .then(d => {
           allArticles = d.items || [];
           renderArticleList();
+          // 加载完文章后初始化挑战数据
+          initializeChallengeData();
         })
         .catch(e => {
           console.error('Failed to load articles:', e);
@@ -517,6 +756,1146 @@
         };
         return escape[match];
       });
+    }
+
+    // ==================== 挑战功能 ====================
+    
+    let challengeSelectedArticles = [];
+    let currentChallenge = null;
+    let currentChallengeAnswers = [];
+    let currentQuestionIndex = 0;
+    let currentQuestionType = '';
+    let challengeTimer = null;
+    let questionStartTime = 0;
+    let challengeHistory = [];
+    let wrongWordsRecord = {};
+
+    // 初始化时加载后端数据
+    async function initializeChallengeData() {
+      try {
+        // 加载挑战记录
+        const recordsResponse = await fetch('/api/vocab_challenge_records', {
+          headers: {
+            'Authorization': `Bearer ${currentToken}`
+          }
+        });
+        
+        if (recordsResponse.ok) {
+          const recordsData = await recordsResponse.json();
+          if (recordsData.success) {
+            challengeHistory = recordsData.records || [];
+          }
+        }
+        
+        // 加载错词记录
+        const wrongWordsResponse = await fetch('/api/vocab_wrong_words', {
+          headers: {
+            'Authorization': `Bearer ${currentToken}`
+          }
+        });
+        
+        if (wrongWordsResponse.ok) {
+          const wrongWordsData = await wrongWordsResponse.json();
+          if (wrongWordsData.success) {
+            wrongWordsRecord = wrongWordsData.wrong_words || {};
+          }
+        }
+      } catch (error) {
+        console.warn('加载挑战数据失败:', error);
+        // 如果后端加载失败，尝试从localStorage加载作为备份
+        challengeHistory = JSON.parse(localStorage.getItem('vocabChallengeHistory') || '[]');
+        wrongWordsRecord = JSON.parse(localStorage.getItem('vocabWrongWords') || '{}');
+      }
+    }
+
+    // 打开挑战设置
+    function openChallengeSetup() {
+      document.getElementById('challengeSetupModal').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      loadArticlesForChallenge();
+      updateChallengeStats();
+    }
+
+    // 关闭挑战设置
+    function closeChallengeSetup() {
+      document.getElementById('challengeSetupModal').style.display = 'none';
+      document.body.style.overflow = 'auto';
+      challengeSelectedArticles = [];
+    }
+
+    let currentCategoryFilter = 'all';
+    let allChallengeArticles = []; // 存储所有文章数据
+
+    // 加载文章列表用于挑战
+    function loadArticlesForChallenge() {
+      // 存储所有文章
+      allChallengeArticles = [...allArticles];
+      
+      // 默认显示所有文章
+      switchCategoryFilter('all');
+    }
+
+    // 切换分类筛选
+    function switchCategoryFilter(category) {
+      currentCategoryFilter = category;
+      
+      // 更新按钮状态
+      document.querySelectorAll('.category-filter-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(`filter${category.charAt(0).toUpperCase() + category.slice(1)}`).classList.add('active');
+      
+      // 筛选文章
+      let filteredArticles;
+      if (category === 'all') {
+        filteredArticles = allChallengeArticles;
+      } else {
+        filteredArticles = allChallengeArticles.filter(article => 
+          (article.category || 'Reading') === category
+        );
+      }
+      
+      // 显示筛选后的文章
+      displayFilteredArticles(filteredArticles);
+      
+      // 更新全选按钮状态
+      updateSelectAllButtonState();
+    }
+
+    // 显示筛选后的文章
+    function displayFilteredArticles(articles) {
+      const container = document.getElementById('filteredArticles');
+      
+      if (articles.length === 0) {
+        container.innerHTML = '<div style="padding: 16px; color: #6b7280; text-align: center;">该分类暂无文章</div>';
+        return;
+      }
+
+      container.innerHTML = articles.map(article => `
+        <div class="article-item">
+          <input type="checkbox" id="article_${article.id}" value="${article.id}" 
+                 ${challengeSelectedArticles.includes(article.id) ? 'checked' : ''}
+                 onchange="toggleArticleSelection('${article.id}', this.checked)">
+          <div class="article-info">
+            <div class="article-title">${escapeHtml(article.title || '未命名文章')}</div>
+            <div class="article-meta">
+              <span id="vocab_count_${article.id}">计算中...</span>
+              <span>${new Date(article.updated_at || article.created_at).toLocaleDateString()}</span>
+              <span class="article-category-badge" data-category="${article.category || 'Reading'}">${article.category || 'Reading'}</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+      
+      // 异步获取每篇文章的词汇数量
+      articles.forEach(async (article) => {
+        try {
+          const response = await fetch(`/intensive_article/${article.id}`);
+          const data = await response.json();
+          const vocabCount = data.success ? (data.article.highlights || []).length : 0;
+          const countElement = document.getElementById(`vocab_count_${article.id}`);
+          if (countElement) {
+            countElement.textContent = `${vocabCount} 词汇`;
+          }
+        } catch (error) {
+          const countElement = document.getElementById(`vocab_count_${article.id}`);
+          if (countElement) {
+            countElement.textContent = '0 词汇';
+          }
+        }
+      });
+    }
+
+    // 切换全选
+    function toggleAllArticlesSelection(selected) {
+      // 获取当前显示的文章
+      let currentArticles;
+      if (currentCategoryFilter === 'all') {
+        currentArticles = allChallengeArticles;
+      } else {
+        currentArticles = allChallengeArticles.filter(article => 
+          (article.category || 'Reading') === currentCategoryFilter
+        );
+      }
+      
+      currentArticles.forEach(article => {
+        const checkbox = document.getElementById(`article_${article.id}`);
+        if (checkbox) {
+          checkbox.checked = selected;
+          toggleArticleSelection(article.id, selected);
+        }
+      });
+    }
+
+    // 更新全选按钮状态
+    function updateSelectAllButtonState() {
+      // 获取当前显示的文章
+      let currentArticles;
+      if (currentCategoryFilter === 'all') {
+        currentArticles = allChallengeArticles;
+      } else {
+        currentArticles = allChallengeArticles.filter(article => 
+          (article.category || 'Reading') === currentCategoryFilter
+        );
+      }
+      
+      const selectAllCheckbox = document.getElementById('selectAllArticles');
+      if (selectAllCheckbox && currentArticles.length > 0) {
+        const selectedCount = currentArticles.filter(article => 
+          challengeSelectedArticles.includes(article.id)
+        ).length;
+        
+        selectAllCheckbox.checked = selectedCount === currentArticles.length;
+        selectAllCheckbox.indeterminate = selectedCount > 0 && selectedCount < currentArticles.length;
+      }
+    }
+
+    // 切换文章选择
+    function toggleArticleSelection(articleId, selected) {
+      if (selected) {
+        if (!challengeSelectedArticles.includes(articleId)) {
+          challengeSelectedArticles.push(articleId);
+        }
+      } else {
+        challengeSelectedArticles = challengeSelectedArticles.filter(id => id !== articleId);
+      }
+      
+      updateChallengeStats();
+      updateStartButtonState();
+      updateSelectAllButtonState();
+    }
+
+    // 更新词汇数量
+    function updateWordCount(value) {
+      document.getElementById('challengeWordCount').value = value;
+      updateChallengeStats();
+    }
+
+    // 更新挑战统计
+    async function updateChallengeStats() {
+      const selectedCount = challengeSelectedArticles.length;
+      document.getElementById('selectedArticlesCount').textContent = selectedCount;
+      
+      if (selectedCount === 0) {
+        document.getElementById('availableVocabCount').textContent = '0';
+        return;
+      }
+
+      // 计算可用词汇数量
+      try {
+        const vocabCounts = await Promise.all(
+          challengeSelectedArticles.map(async articleId => {
+            const response = await fetch(`/intensive_article/${articleId}`);
+            const data = await response.json();
+            return data.success ? (data.article.highlights || []).length : 0;
+          })
+        );
+        
+        const totalVocab = vocabCounts.reduce((sum, count) => sum + count, 0);
+        document.getElementById('availableVocabCount').textContent = totalVocab;
+      } catch (error) {
+        console.error('获取词汇统计失败:', error);
+        document.getElementById('availableVocabCount').textContent = '?';
+      }
+    }
+
+    // 更新开始按钮状态
+    function updateStartButtonState() {
+      const startBtn = document.getElementById('startChallengeBtn');
+      const hasSelection = challengeSelectedArticles.length > 0;
+      
+      startBtn.disabled = !hasSelection;
+      startBtn.textContent = hasSelection ? '开始挑战' : '请选择文章';
+    }
+
+    // 开始词汇挑战
+    async function startVocabChallenge() {
+      if (challengeSelectedArticles.length === 0) {
+        alert('请至少选择一篇文章');
+        return;
+      }
+
+      const wordCount = parseInt(document.getElementById('challengeWordCount').value);
+      
+      try {
+        // 创建个人挑战
+        const response = await fetch('/api/vocab_summary_challenge', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${currentToken}`
+          },
+          body: JSON.stringify({
+            article_ids: challengeSelectedArticles,
+            word_count: wordCount
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          currentChallenge = data.challenge;
+          currentChallengeAnswers = [];
+          currentQuestionIndex = 0;
+          
+          // 关闭设置模态框，打开游戏模态框
+          closeChallengeSetup();
+          document.getElementById('challengeGameModal').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+
+          document.getElementById('challengeGameTitle').textContent = `词汇挑战 - ${wordCount}词`;
+          showNextQuestion();
+        } else {
+          alert('创建挑战失败：' + (data.error || '未知错误'));
+        }
+      } catch (error) {
+        console.error('创建挑战失败:', error);
+        alert('创建挑战失败，请重试');
+      }
+    }
+
+    // 显示下一题
+    function showNextQuestion() {
+      if (currentQuestionIndex >= currentChallenge.vocabulary.length) {
+        finishChallenge();
+        return;
+      }
+
+      const vocab = currentChallenge.vocabulary[currentQuestionIndex];
+      const progress = document.getElementById('challengeProgress');
+      progress.textContent = `第 ${currentQuestionIndex + 1} 题 / 共 ${currentChallenge.vocabulary.length} 题`;
+
+      // 随机决定是显示单词还是意思
+      const showWord = Math.random() > 0.5;
+      const question = document.getElementById('challengeQuestion');
+      const optionsContainer = document.getElementById('challengeOptions');
+
+      if (showWord) {
+        // 英文对中文：显示英文单词，选择中文释义
+        currentQuestionType = 'word_to_meaning';
+        question.innerHTML = `
+          <span class="challenge-word">${vocab.word}</span>
+          <button class="challenge-audio-btn" onclick="playChallengeWord('${vocab.word.replace(/'/g, "\\'")}', '${currentChallenge.id}')" title="播放发音">
+            🔊
+          </button>
+        `;
+
+        // 自动播放一次
+        setTimeout(() => {
+          playChallengeWord(vocab.word, currentChallenge.id);
+        }, 100);
+        
+        // 生成选项：正确答案 + 3个错误答案
+        const options = [vocab.meaning];
+        const otherVocab = currentChallenge.vocabulary.filter(v => v.word !== vocab.word);
+        
+        // 使用改进的随机算法生成选项
+        const wrongOptions = generateWrongOptions(otherVocab, vocab.meaning, 'meaning');
+        options.push(...wrongOptions);
+        
+        // 打乱选项顺序
+        shuffleArray(options);
+        renderChallengeOptions(options, vocab.meaning);
+      } else {
+        // 中文对英文：显示中文释义，选择英文单词
+        currentQuestionType = 'meaning_to_word';
+        question.textContent = vocab.meaning;
+        
+        // 生成选项：正确答案 + 3个错误答案
+        const options = [vocab.word];
+        const otherVocab = currentChallenge.vocabulary.filter(v => v.meaning !== vocab.meaning);
+        
+        // 使用改进的随机算法生成选项
+        const wrongOptions = generateWrongOptions(otherVocab, vocab.word, 'word');
+        options.push(...wrongOptions);
+        
+        // 打乱选项顺序
+        shuffleArray(options);
+        renderChallengeOptions(options, vocab.word);
+      }
+
+      // 开始倒计时
+      startQuestionTimer();
+    }
+
+    // 改进的随机选项生成算法
+    function generateWrongOptions(otherVocab, correctAnswer, type) {
+      const wrongOptions = [];
+      const usedOptions = new Set([correctAnswer]);
+      
+      // 创建候选选项池
+      let candidates = otherVocab.map(v => type === 'meaning' ? v.meaning : v.word)
+        .filter(option => option && !usedOptions.has(option));
+      
+      // 去重
+      candidates = [...new Set(candidates)];
+      
+      // 如果候选选项不够，重复使用
+      while (wrongOptions.length < 3 && candidates.length > 0) {
+        // 使用改进的随机选择算法
+        const randomIndex = Math.floor(Math.random() * candidates.length);
+        const selectedOption = candidates[randomIndex];
+        
+        if (!usedOptions.has(selectedOption)) {
+          wrongOptions.push(selectedOption);
+          usedOptions.add(selectedOption);
+        }
+        
+        // 从候选池中移除已选择的选项
+        candidates.splice(randomIndex, 1);
+      }
+      
+      return wrongOptions;
+    }
+
+    // 改进的数组打乱算法 (Fisher-Yates)
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    // 渲染选项
+    function renderChallengeOptions(options, correctAnswer) {
+      const container = document.getElementById('challengeOptions');
+      container.innerHTML = '';
+
+      options.forEach((option, index) => {
+        const optionDiv = document.createElement('div');
+        optionDiv.className = 'challenge-option';
+        optionDiv.textContent = option;
+        optionDiv.onclick = () => selectChallengeOption(option, correctAnswer, optionDiv);
+        container.appendChild(optionDiv);
+      });
+    }
+
+    // 播放挑战词汇音频
+    function playChallengeWord(word, challengeId) {
+      if (!word || !challengeId) {
+        console.warn('Word or challenge ID missing for audio playback');
+        return;
+      }
+      
+      try {
+        // 构造挑战音频URL（使用challenge_前缀作为文章ID）
+        const audioUrl = `/vocab_audio/challenge_${encodeURIComponent(challengeId)}/${encodeURIComponent(word.trim().toLowerCase())}`;
+        
+        // 创建并播放音频
+        const audio = new Audio(audioUrl);
+        audio.onended = () => {
+          console.log(`播放完成: ${word}`);
+        };
+        audio.onerror = (error) => {
+          console.warn(`音频播放失败: ${word}`, error);
+          // 播放失败时尝试使用原始文章音频
+          fallbackToOriginalAudio(word);
+        };
+        audio.play().catch(error => {
+          console.warn(`音频播放失败: ${word}`, error);
+          // 播放失败时尝试使用原始文章音频
+          fallbackToOriginalAudio(word);
+        });
+      } catch (error) {
+        console.warn(`音频播放错误: ${word}`, error);
+        fallbackToOriginalAudio(word);
+      }
+    }
+
+    // 备用音频播放方案
+    function fallbackToOriginalAudio(word) {
+      try {
+        if (window.playWordPronunciation && currentChallenge && currentChallenge.vocabulary) {
+          // 找到这个词汇对应的原始文章ID
+          const vocab = currentChallenge.vocabulary.find(v => v.word === word);
+          if (vocab && vocab.article_id) {
+            window.playWordPronunciation(word, vocab.article_id);
+          }
+        }
+      } catch (error) {
+        console.warn(`备用音频播放也失败: ${word}`, error);
+      }
+    }
+
+    // 选择答案
+    function selectChallengeOption(selectedOption, correctAnswer, optionElement) {
+      // 停止计时器
+      if (challengeTimer) {
+        clearInterval(challengeTimer);
+        challengeTimer = null;
+      }
+
+      const timeTaken = Math.round((Date.now() - questionStartTime) / 1000);
+      const isCorrect = selectedOption === correctAnswer;
+      const vocab = currentChallenge.vocabulary[currentQuestionIndex];
+
+      // 如果是中文对英文题目，播放选中单词的音频
+        if (currentQuestionType === 'meaning_to_word') {
+          playChallengeWord(selectedOption, currentChallenge.id);
+      }
+
+      // 记录答案
+      currentChallengeAnswers.push({
+        question_index: currentQuestionIndex,
+        vocab: vocab,
+        selected_option: selectedOption,
+        correct_answer: correctAnswer,
+        time_taken: timeTaken,
+        is_correct: isCorrect,
+        question_type: currentQuestionType
+      });
+      
+      // 如果答错了，记录到错词本
+      if (!isCorrect) {
+        recordWrongWord(vocab, selectedOption, correctAnswer);
+      }
+
+      // 显示结果
+      const allOptions = document.querySelectorAll('.challenge-option');
+      allOptions.forEach(opt => {
+        opt.style.pointerEvents = 'none';
+        if (opt.textContent === correctAnswer) {
+          opt.classList.add('correct');
+        } else if (opt === optionElement && !isCorrect) {
+          opt.classList.add('incorrect');
+        }
+      });
+
+      // 2秒后显示下一题
+      setTimeout(() => {
+        currentQuestionIndex++;
+        showNextQuestion();
+      }, 2000);
+    }
+
+    // 记录错词
+    function recordWrongWord(vocab, selectedOption, correctAnswer) {
+      const wordKey = `${vocab.word}::${vocab.meaning}`;
+      
+      if (!wrongWordsRecord[wordKey]) {
+        wrongWordsRecord[wordKey] = {
+          word: vocab.word,
+          meaning: vocab.meaning,
+          article_title: vocab.article_title || '',
+          article_id: vocab.article_id || '',
+          wrong_count: 0,
+          last_wrong_at: null,
+          wrong_answers: []
+        };
+      }
+      
+      wrongWordsRecord[wordKey].wrong_count++;
+      wrongWordsRecord[wordKey].last_wrong_at = new Date().toISOString();
+      wrongWordsRecord[wordKey].wrong_answers.push({
+        selected: selectedOption,
+        correct: correctAnswer,
+        timestamp: new Date().toISOString()
+      });
+      
+      // 保存到后端
+      saveWrongWordsToBackend();
+    }
+
+    // 开始问题计时器
+    function startQuestionTimer() {
+      questionStartTime = Date.now();
+      let timeLeft = 15; // 增加到15秒
+      const timerElement = document.getElementById('challengeTimer');
+      
+      timerElement.textContent = `${timeLeft}s`;
+
+      challengeTimer = setInterval(() => {
+        timeLeft--;
+        timerElement.textContent = `${timeLeft}s`;
+
+        if (timeLeft <= 0) {
+          clearInterval(challengeTimer);
+          challengeTimer = null;
+          
+          // 时间到，自动跳过
+          skipQuestion();
+        }
+      }, 1000);
+    }
+
+    // 跳过问题
+    function skipQuestion() {
+      if (challengeTimer) {
+        clearInterval(challengeTimer);
+        challengeTimer = null;
+      }
+      
+      const vocab = currentChallenge.vocabulary[currentQuestionIndex];
+      const timeTaken = 15;
+      
+      // 记录跳过的答案
+      currentChallengeAnswers.push({
+        question_index: currentQuestionIndex,
+        vocab: vocab,
+        selected_option: null,
+        correct_answer: null,
+        time_taken: timeTaken,
+        is_correct: false,
+        question_type: currentQuestionType,
+        skipped: true
+      });
+      
+      // 记录为错词
+      recordWrongWord(vocab, '跳过', currentQuestionType === 'word_to_meaning' ? vocab.meaning : vocab.word);
+      
+      currentQuestionIndex++;
+      showNextQuestion();
+    }
+
+    // 完成挑战
+    function finishChallenge() {
+      // 计算结果
+      const totalQuestions = currentChallenge.vocabulary.length;
+      const correctCount = currentChallengeAnswers.filter(answer => answer.is_correct).length;
+      const accuracy = Math.round((correctCount / totalQuestions) * 100);
+      
+      // 计算时间奖励
+      let timeBonus = 0;
+      currentChallengeAnswers.forEach(answer => {
+        if (answer.is_correct && !answer.skipped) {
+          timeBonus += Math.max(1, 16 - answer.time_taken); // 15秒满分，用时越少奖励越多
+        }
+      });
+      
+      const score = Math.round((correctCount / totalQuestions) * 70 + (timeBonus / (totalQuestions * 15)) * 30);
+      
+      // 保存挑战记录
+      const challengeRecord = {
+        id: Date.now().toString(),
+        timestamp: new Date().toISOString(),
+        article_ids: currentChallenge.article_ids,
+        article_titles: challengeSelectedArticles.map(id => {
+          const article = allArticles.find(a => a.id === id);
+          return article ? article.title : '未知文章';
+        }),
+        total_questions: totalQuestions,
+        correct_count: correctCount,
+        accuracy: accuracy,
+        score: score,
+        time_bonus: timeBonus,
+        answers: currentChallengeAnswers
+      };
+      
+      // 保存到后端
+      saveChallengeRecordToBackend(challengeRecord);
+      
+      challengeHistory.unshift(challengeRecord); // 添加到开头本地缓存
+      
+      // 显示结果
+      showChallengeResult(challengeRecord);
+    }
+
+    // 显示挑战结果
+    function showChallengeResult(result) {
+      document.getElementById('challengeGameModal').style.display = 'none';
+      document.getElementById('challengeResultModal').style.display = 'flex';
+      
+      const wrongAnswers = result.answers.filter(answer => !answer.is_correct);
+      
+      document.getElementById('resultSummary').innerHTML = `
+        <div class="result-score">${result.score}</div>
+        <div class="result-accuracy">正确率 ${result.accuracy}%</div>
+        <div class="result-details">
+          <div class="result-detail">
+            <div class="result-detail-value">${result.correct_count}</div>
+            <div class="result-detail-label">答对题数</div>
+          </div>
+          <div class="result-detail">
+            <div class="result-detail-value">${result.total_questions}</div>
+            <div class="result-detail-label">总题数</div>
+          </div>
+          <div class="result-detail">
+            <div class="result-detail-value">${Math.round(result.time_bonus)}</div>
+            <div class="result-detail-label">时间奖励</div>
+          </div>
+        </div>
+      `;
+      
+      if (wrongAnswers.length > 0) {
+        document.getElementById('wrongWordsSection').innerHTML = `
+          <h4>错词回顾 (${wrongAnswers.length}个)</h4>
+          ${wrongAnswers.map(answer => `
+            <div class="wrong-word-item">
+              <div>
+                <div class="wrong-word-text">${answer.vocab.word}</div>
+                <div class="wrong-word-meaning">${answer.vocab.meaning}</div>
+              </div>
+              <div style="text-align: right; font-size: 12px; color: #6b7280;">
+                ${answer.skipped ? '跳过' : `错选: ${answer.selected_option}`}
+              </div>
+            </div>
+          `).join('')}
+        `;
+      } else {
+        document.getElementById('wrongWordsSection').innerHTML = `
+          <div style="text-align: center; padding: 24px; color: #10b981;">
+            🎉 全部答对！太棒了！
+          </div>
+        `;
+      }
+    }
+
+    // 关闭挑战结果
+    function closeChallengeResult() {
+      document.getElementById('challengeResultModal').style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+
+    // 复习错词
+    function reviewWrongWords() {
+      // 可以实现一个专门的错词复习功能
+      alert('错词复习功能开发中...');
+    }
+
+    // 重新开始挑战
+    function restartChallenge() {
+      closeChallengeResult();
+      openChallengeSetup();
+      
+      // 预选之前的文章
+      challengeSelectedArticles.forEach(articleId => {
+        const checkbox = document.getElementById(`article_${articleId}`);
+        if (checkbox) {
+          checkbox.checked = true;
+        }
+      });
+      updateChallengeStats();
+      updateStartButtonState();
+    }
+
+    // 退出挑战
+    function quitChallenge() {
+      if (confirm('确定要退出当前挑战吗？进度将不会保存。')) {
+      if (challengeTimer) {
+        clearInterval(challengeTimer);
+        challengeTimer = null;
+      }
+        document.getElementById('challengeGameModal').style.display = 'none';
+        document.body.style.overflow = 'auto';
+        
+        currentChallenge = null;
+        currentChallengeAnswers = [];
+        currentQuestionIndex = 0;
+      }
+    }
+
+    // ==================== 挑战记录功能 ====================
+
+    // 打开挑战记录
+    function openChallengeHistory() {
+      document.getElementById('challengeHistoryModal').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      switchHistoryTab('recent');
+    }
+
+    // 关闭挑战记录
+    function closeChallengeHistory() {
+      document.getElementById('challengeHistoryModal').style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+
+    // 切换历史标签页
+    function switchHistoryTab(tab) {
+      // 更新标签按钮状态
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(tab + 'Tab').classList.add('active');
+      
+      const content = document.getElementById('historyContent');
+      
+      switch(tab) {
+        case 'recent':
+          showRecentChallenges();
+          break;
+        case 'wrong':
+          showWrongWordsStats();
+          break;
+        case 'stats':
+          showChallengeStats();
+          break;
+      }
+    }
+
+    // 显示最近挑战
+    function showRecentChallenges() {
+      const content = document.getElementById('historyContent');
+      
+      if (challengeHistory.length === 0) {
+        content.innerHTML = `
+          <div style="text-align: center; padding: 48px; color: #6b7280;">
+            <div style="font-size: 48px; margin-bottom: 16px;">📚</div>
+            <div>还没有挑战记录</div>
+            <div style="margin-top: 8px; font-size: 14px; color: #9ca3af;">开始你的第一个词汇挑战吧！</div>
+            </div>
+        `;
+        return;
+      }
+      
+      content.innerHTML = challengeHistory.map(challenge => `
+        <div class="history-item">
+          <div class="history-header">
+            <div class="history-title">
+              ${challenge.article_titles.join(', ')} (${challenge.total_questions}词)
+            </div>
+            <div class="history-date">
+              ${new Date(challenge.timestamp).toLocaleDateString('zh-CN')} 
+              ${new Date(challenge.timestamp).toLocaleTimeString('zh-CN', {hour: '2-digit', minute: '2-digit'})}
+            </div>
+            </div>
+          <div class="history-stats">
+            <span>正确率: <strong>${challenge.accuracy}%</strong></span>
+            <span>得分: <strong>${challenge.score}</strong></span>
+            <span>答对: <strong>${challenge.correct_count}/${challenge.total_questions}</strong></span>
+            <span>时间奖励: <strong>${Math.round(challenge.time_bonus)}</strong></span>
+          </div>
+          <div style="margin-top: 12px;">
+            <button class="btn" style="font-size: 12px; padding: 4px 8px;" onclick="showChallengeDetail('${challenge.id}')">查看详情</button>
+            <button class="btn" style="font-size: 12px; padding: 4px 8px;" onclick="reviewChallengeWrongWords('${challenge.id}')">复习错词</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // 显示错词统计
+    function showWrongWordsStats() {
+      const content = document.getElementById('historyContent');
+      const wrongWords = Object.values(wrongWordsRecord);
+      
+      if (wrongWords.length === 0) {
+        content.innerHTML = `
+          <div style="text-align: center; padding: 48px; color: #6b7280;">
+            <div style="font-size: 48px; margin-bottom: 16px;">🎉</div>
+            <div>还没有错词记录</div>
+            <div style="margin-top: 8px; font-size: 14px; color: #9ca3af;">继续保持，或者开始更多挑战！</div>
+          </div>
+        `;
+        return;
+      }
+      
+      // 按错误次数排序
+      wrongWords.sort((a, b) => b.wrong_count - a.wrong_count);
+      
+      content.innerHTML = `
+        <div style="margin-bottom: 16px; padding: 16px; background: #fef2f2; border-radius: 12px; border-left: 4px solid #ef4444;">
+          <div style="font-weight: 600; color: #991b1b; margin-bottom: 8px;">错词汇总</div>
+          <div style="color: #6b7280; font-size: 14px;">
+            总计 ${wrongWords.length} 个词汇需要重点复习，累计错误 ${wrongWords.reduce((sum, w) => sum + w.wrong_count, 0)} 次
+          </div>
+        </div>
+        ${wrongWords.map(word => `
+          <div class="history-item" style="border-left: 3px solid #ef4444;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+              <div>
+                <div style="font-weight: 600; color: #111827; font-size: 16px;">${word.word}</div>
+                <div style="color: #6b7280; margin-top: 2px;">${word.meaning}</div>
+                ${word.article_title ? `<div style="color: #9ca3af; font-size: 12px; margin-top: 4px;">来源: ${word.article_title}</div>` : ''}
+              </div>
+              <div style="text-align: right;">
+                <div style="color: #ef4444; font-weight: 600;">错 ${word.wrong_count} 次</div>
+                <div style="color: #6b7280; font-size: 12px;">
+                  ${new Date(word.last_wrong_at).toLocaleDateString('zh-CN')}
+                </div>
+              </div>
+            </div>
+            <div style="margin-top: 8px;">
+              <button class="btn" style="font-size: 12px; padding: 4px 8px;" onclick="practiceWrongWord('${word.word}', '${word.meaning}')">单词练习</button>
+              <button class="btn" style="font-size: 12px; padding: 4px 8px;" onclick="removeFromWrongWords('${word.word}::${word.meaning}')">移出错词本</button>
+            </div>
+          </div>
+        `).join('')}
+      `;
+    }
+
+    // 显示挑战统计
+    function showChallengeStats() {
+      const content = document.getElementById('historyContent');
+      
+      if (challengeHistory.length === 0) {
+        content.innerHTML = `
+          <div style="text-align: center; padding: 48px; color: #6b7280;">
+            <div style="font-size: 48px; margin-bottom: 16px;">📊</div>
+            <div>暂无统计数据</div>
+          </div>
+        `;
+        return;
+      }
+      
+      // 计算统计数据
+      const totalChallenges = challengeHistory.length;
+      const totalQuestions = challengeHistory.reduce((sum, c) => sum + c.total_questions, 0);
+      const totalCorrect = challengeHistory.reduce((sum, c) => sum + c.correct_count, 0);
+      const avgAccuracy = Math.round((totalCorrect / totalQuestions) * 100);
+      const avgScore = Math.round(challengeHistory.reduce((sum, c) => sum + c.score, 0) / totalChallenges);
+      const bestScore = Math.max(...challengeHistory.map(c => c.score));
+      const recentAccuracy = challengeHistory.slice(0, 5).reduce((sum, c) => sum + c.accuracy, 0) / Math.min(5, challengeHistory.length);
+      
+      // 按日期分组统计
+      const dailyStats = {};
+      challengeHistory.forEach(challenge => {
+        const date = new Date(challenge.timestamp).toDateString();
+        if (!dailyStats[date]) {
+          dailyStats[date] = { count: 0, accuracy: 0, totalQuestions: 0, correctAnswers: 0 };
+        }
+        dailyStats[date].count++;
+        dailyStats[date].totalQuestions += challenge.total_questions;
+        dailyStats[date].correctAnswers += challenge.correct_count;
+        dailyStats[date].accuracy = Math.round((dailyStats[date].correctAnswers / dailyStats[date].totalQuestions) * 100);
+      });
+      
+      const sortedDates = Object.keys(dailyStats).sort((a, b) => new Date(b) - new Date(a));
+      
+      content.innerHTML = `
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; text-align: center;">
+            <div style="font-size: 24px; font-weight: 600;">${totalChallenges}</div>
+            <div style="opacity: 0.9;">总挑战次数</div>
+          </div>
+          <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 20px; border-radius: 12px; text-align: center;">
+            <div style="font-size: 24px; font-weight: 600;">${avgAccuracy}%</div>
+            <div style="opacity: 0.9;">平均正确率</div>
+          </div>
+          <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 20px; border-radius: 12px; text-align: center;">
+            <div style="font-size: 24px; font-weight: 600;">${avgScore}</div>
+            <div style="opacity: 0.9;">平均得分</div>
+          </div>
+          <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 20px; border-radius: 12px; text-align: center;">
+            <div style="font-size: 24px; font-weight: 600;">${bestScore}</div>
+            <div style="opacity: 0.9;">最高得分</div>
+          </div>
+        </div>
+        
+        <div style="background: #f8fafc; padding: 20px; border-radius: 12px; margin-bottom: 24px;">
+          <h4 style="margin-bottom: 16px; color: #111827;">近期表现</h4>
+          <div style="display: flex; gap: 24px; margin-bottom: 16px;">
+            <div>
+              <div style="color: #6b7280; font-size: 14px;">最近5次平均正确率</div>
+              <div style="font-size: 20px; font-weight: 600; color: #111827;">${Math.round(recentAccuracy)}%</div>
+            </div>
+            <div>
+              <div style="color: #6b7280; font-size: 14px;">总答题数</div>
+              <div style="font-size: 20px; font-weight: 600; color: #111827;">${totalQuestions}</div>
+            </div>
+            <div>
+              <div style="color: #6b7280; font-size: 14px;">总答对数</div>
+              <div style="font-size: 20px; font-weight: 600; color: #111827;">${totalCorrect}</div>
+            </div>
+          </div>
+        </div>
+        
+        <div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px;">
+          <h4 style="margin-bottom: 16px; color: #111827;">每日练习记录</h4>
+          ${sortedDates.slice(0, 10).map(date => {
+            const stats = dailyStats[date];
+            return `
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f1f5f9;">
+                <div>
+                  <div style="font-weight: 500; color: #111827;">${new Date(date).toLocaleDateString('zh-CN')}</div>
+                  <div style="font-size: 14px; color: #6b7280;">${stats.count} 次挑战</div>
+                </div>
+                <div style="text-align: right;">
+                  <div style="font-weight: 500; color: #111827;">${stats.accuracy}%</div>
+                  <div style="font-size: 14px; color: #6b7280;">${stats.correctAnswers}/${stats.totalQuestions}</div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    // 显示挑战详情
+    function showChallengeDetail(challengeId) {
+      const challenge = challengeHistory.find(c => c.id === challengeId);
+      if (!challenge) return;
+      
+      const wrongAnswers = challenge.answers.filter(a => !a.is_correct);
+      
+      alert(`挑战详情：
+      
+文章：${challenge.article_titles.join(', ')}
+时间：${new Date(challenge.timestamp).toLocaleString('zh-CN')}
+总题数：${challenge.total_questions}
+答对：${challenge.correct_count}
+正确率：${challenge.accuracy}%
+得分：${challenge.score}
+时间奖励：${Math.round(challenge.time_bonus)}
+
+错题：${wrongAnswers.length}个
+${wrongAnswers.map(a => `• ${a.vocab.word} - ${a.vocab.meaning}`).join('\n')}`);
+    }
+
+    // 复习挑战错词
+    function reviewChallengeWrongWords(challengeId) {
+      const challenge = challengeHistory.find(c => c.id === challengeId);
+      if (!challenge) return;
+      
+      const wrongAnswers = challenge.answers.filter(a => !a.is_correct);
+      if (wrongAnswers.length === 0) {
+        alert('这次挑战没有错词！');
+        return;
+      }
+      
+      // 创建一个基于错词的新挑战
+      const wrongVocab = wrongAnswers.map(a => a.vocab);
+      
+      currentChallenge = {
+        id: `review_${challengeId}`,
+        type: 'review',
+        vocabulary: wrongVocab,
+        article_ids: challenge.article_ids
+      };
+      
+      currentChallengeAnswers = [];
+      currentQuestionIndex = 0;
+      
+      closeChallengeHistory();
+      document.getElementById('challengeGameModal').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      
+      document.getElementById('challengeGameTitle').textContent = `错词复习 - ${wrongVocab.length}词`;
+      showNextQuestion();
+    }
+
+    // 练习单个错词
+    function practiceWrongWord(word, meaning) {
+      // 播放发音 - 尝试使用原始文章的音频
+      try {
+        if (window.playWordPronunciation) {
+          // 尝试从错词记录中找到原始文章ID
+          const wordKey = `${word}::${meaning}`;
+          const wrongWordData = wrongWordsRecord[wordKey];
+          
+          if (wrongWordData && wrongWordData.article_id) {
+            window.playWordPronunciation(word, wrongWordData.article_id);
+          } else {
+            // 如果找不到原始文章ID，尝试从当前显示的文章中找
+            const currentDisplayedArticle = currentArticle;
+            if (currentDisplayedArticle) {
+              window.playWordPronunciation(word, currentDisplayedArticle.id);
+            }
+          }
+        }
+      } catch (error) {
+        console.warn(`练习单词音频播放失败: ${word}`, error);
+      }
+      
+      alert(`${word}\n${meaning}\n\n已播放发音，请仔细听并记忆！`);
+    }
+
+    // 从错词本移除
+    function removeFromWrongWords(wordKey) {
+      if (confirm('确定要从错词本中移除这个词汇吗？')) {
+        delete wrongWordsRecord[wordKey];
+        saveWrongWordsToBackend();
+        showWrongWordsStats(); // 刷新显示
+      }
+    }
+
+    // 导出挑战记录
+    function exportChallengeHistory() {
+      if (challengeHistory.length === 0) {
+        alert('暂无挑战记录可导出');
+        return;
+      }
+      
+      let csvContent = '\uFEFF'; // BOM for proper UTF-8 encoding
+      csvContent += '挑战时间,文章,题目数,答对数,正确率,得分,时间奖励\n';
+      
+      challengeHistory.forEach(challenge => {
+        const time = new Date(challenge.timestamp).toLocaleString('zh-CN');
+        const articles = challenge.article_titles.join(';');
+        csvContent += `"${time}","${articles}",${challenge.total_questions},${challenge.correct_count},${challenge.accuracy}%,${challenge.score},${Math.round(challenge.time_bonus)}\n`;
+      });
+      
+      // Download file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `词汇挑战记录_${new Date().toLocaleDateString('zh-CN')}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      alert(`已导出 ${challengeHistory.length} 条挑战记录`);
+    }
+
+    // ==================== 后端持久化功能 ====================
+    
+    // 保存挑战记录到后端
+    async function saveChallengeRecordToBackend(challengeRecord) {
+      try {
+        const response = await fetch('/api/vocab_challenge_record', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${currentToken}`
+          },
+          body: JSON.stringify({
+            challenge_record: challengeRecord
+          })
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            console.log(`挑战记录已保存到后端，总记录数: ${data.record_count}`);
+          }
+        } else {
+          console.warn('保存挑战记录到后端失败');
+          // 备份到localStorage
+          let localHistory = JSON.parse(localStorage.getItem('vocabChallengeHistory') || '[]');
+          localHistory.unshift(challengeRecord);
+          if (localHistory.length > 50) {
+            localHistory = localHistory.slice(0, 50);
+          }
+          localStorage.setItem('vocabChallengeHistory', JSON.stringify(localHistory));
+        }
+      } catch (error) {
+        console.warn('保存挑战记录到后端出错:', error);
+        // 备份到localStorage
+        let localHistory = JSON.parse(localStorage.getItem('vocabChallengeHistory') || '[]');
+        localHistory.unshift(challengeRecord);
+        if (localHistory.length > 50) {
+          localHistory = localHistory.slice(0, 50);
+        }
+        localStorage.setItem('vocabChallengeHistory', JSON.stringify(localHistory));
+      }
+    }
+
+    // 保存错词记录到后端
+    async function saveWrongWordsToBackend() {
+      try {
+        const response = await fetch('/api/vocab_wrong_words', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${currentToken}`
+          },
+          body: JSON.stringify({
+            wrong_words: wrongWordsRecord
+          })
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            console.log(`错词记录已保存到后端，总词汇数: ${data.word_count}`);
+          }
+        } else {
+          console.warn('保存错词记录到后端失败');
+          // 备份到localStorage
+          localStorage.setItem('vocabWrongWords', JSON.stringify(wrongWordsRecord));
+        }
+      } catch (error) {
+        console.warn('保存错词记录到后端出错:', error);
+        // 备份到localStorage
+        localStorage.setItem('vocabWrongWords', JSON.stringify(wrongWordsRecord));
+      }
     }
   </script>
 </body>
