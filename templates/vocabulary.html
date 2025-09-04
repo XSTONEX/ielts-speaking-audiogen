@@ -482,12 +482,13 @@
         }
         
         .delete-btn {
-            background: #f56565;
-            color: white;
+            background: transparent;
+            color: #f56565;
         }
         
         .delete-btn:hover {
-            background: #e53e3e;
+            background: rgba(245, 101, 101, 0.1);
+            color: #e53e3e;
         }
         
         .word-meaning {
@@ -1024,10 +1025,6 @@
             </div>
         </div>
         
-        <!-- 手机端单词显示容器 -->
-        <div class="mobile-words-container show" id="mobile-words-container">
-            <div class="word-grid" id="mobile-word-grid"></div>
-        </div>
         
         <div class="main-content">
             <div class="tabs">
@@ -1066,6 +1063,9 @@
                         <div class="controls">
                             <button class="btn btn-primary" onclick="openUploadModal('listening')">
                                 <span>📁</span> 批量导入CSV
+                            </button>
+                            <button class="btn btn-secondary" onclick="openExportModal('listening')">
+                                <span>📤</span> 导出单词
                             </button>
                             <div class="sort-controls">
                                 <span class="sort-label">排序:</span>
@@ -1111,6 +1111,9 @@
                             <button class="btn btn-primary" onclick="openUploadModal('speaking')">
                                 <span>📁</span> 批量导入CSV
                             </button>
+                            <button class="btn btn-secondary" onclick="openExportModal('speaking')">
+                                <span>📤</span> 导出单词
+                            </button>
                             <div class="sort-controls">
                                 <span class="sort-label">排序:</span>
                                 <select class="sort-select" onchange="sortWords('speaking', this.value)">
@@ -1155,6 +1158,9 @@
                             <button class="btn btn-primary" onclick="openUploadModal('reading')">
                                 <span>📁</span> 批量导入CSV
                             </button>
+                            <button class="btn btn-secondary" onclick="openExportModal('reading')">
+                                <span>📤</span> 导出单词
+                            </button>
                             <div class="sort-controls">
                                 <span class="sort-label">排序:</span>
                                 <select class="sort-select" onchange="sortWords('reading', this.value)">
@@ -1198,6 +1204,9 @@
                         <div class="controls">
                             <button class="btn btn-primary" onclick="openUploadModal('writing')">
                                 <span>📁</span> 批量导入CSV
+                            </button>
+                            <button class="btn btn-secondary" onclick="openExportModal('writing')">
+                                <span>📤</span> 导出单词
                             </button>
                             <div class="sort-controls">
                                 <span class="sort-label">排序:</span>
@@ -1306,6 +1315,87 @@
                     <button type="submit" class="btn btn-primary" id="uploadBtn">
                         <span id="uploadBtnText">开始导入</span>
                         <div class="loading" id="uploadLoading" style="display: none;"></div>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Export Modal -->
+    <div class="modal" id="exportModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">导出单词</h3>
+                <button class="close-btn" onclick="closeExportModal()">&times;</button>
+            </div>
+            
+            <form id="exportForm" onsubmit="exportWords(event)">
+                <div class="form-group">
+                    <label class="form-label">导出范围</label>
+                    <select class="form-select" name="export_scope" id="exportScope" onchange="updateExportOptions()" required>
+                        <option value="subcategory">当前子分类</option>
+                        <option value="category">整个分类</option>
+                        <option value="all">所有单词</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="categoryGroup">
+                    <label class="form-label">选择分类</label>
+                    <select class="form-select" name="category" id="exportCategory" required>
+                        <option value="listening">🎧 Listening</option>
+                        <option value="speaking">🗣️ Speaking</option>
+                        <option value="reading">📖 Reading</option>
+                        <option value="writing">✍️ Writing</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="subcategoryGroup">
+                    <label class="form-label">选择子分类</label>
+                    <select class="form-select" name="subcategory_id" id="exportSubcategory" required>
+                        <!-- 子分类选项将动态生成 -->
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">导出格式</label>
+                    <select class="form-select" name="format" id="exportFormat" required>
+                        <option value="csv">CSV 文件</option>
+                        <option value="txt">TXT 文件</option>
+                        <option value="json">JSON 文件</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">包含字段</label>
+                    <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+                        <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                            <input type="checkbox" name="include_word" checked disabled>
+                            单词 (必选)
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                            <input type="checkbox" name="include_meaning" checked>
+                            词义
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                            <input type="checkbox" name="include_category">
+                            分类
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                            <input type="checkbox" name="include_subcategory">
+                            子分类
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                            <input type="checkbox" name="include_date">
+                            添加日期
+                        </label>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 15px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="closeExportModal()">取消</button>
+                    <button type="submit" class="btn btn-primary" id="exportBtn">
+                        <span id="exportBtnText">开始导出</span>
+                        <div class="loading" id="exportLoading" style="display: none;"></div>
                     </button>
                 </div>
             </form>
@@ -2170,6 +2260,314 @@
                     </div>
                 </div>
             `).join('');
+        }
+        
+        // 导出功能相关函数
+        
+        // 打开导出模态框
+        function openExportModal(category) {
+            document.getElementById('exportCategory').value = category;
+            
+            // 更新子分类选项
+            updateExportSubcategoryOptions(category);
+            
+            // 根据当前状态设置默认值
+            document.getElementById('exportScope').value = 'subcategory';
+            updateExportOptions();
+            
+            document.getElementById('exportModal').classList.add('show');
+        }
+        
+        // 关闭导出模态框
+        function closeExportModal() {
+            document.getElementById('exportModal').classList.remove('show');
+            document.getElementById('exportForm').reset();
+        }
+        
+        // 更新导出选项显示
+        function updateExportOptions() {
+            const scope = document.getElementById('exportScope').value;
+            const categoryGroup = document.getElementById('categoryGroup');
+            const subcategoryGroup = document.getElementById('subcategoryGroup');
+            
+            switch (scope) {
+                case 'subcategory':
+                    categoryGroup.style.display = 'block';
+                    subcategoryGroup.style.display = 'block';
+                    document.getElementById('exportCategory').required = true;
+                    document.getElementById('exportSubcategory').required = true;
+                    break;
+                case 'category':
+                    categoryGroup.style.display = 'block';
+                    subcategoryGroup.style.display = 'none';
+                    document.getElementById('exportCategory').required = true;
+                    document.getElementById('exportSubcategory').required = false;
+                    break;
+                case 'all':
+                    categoryGroup.style.display = 'none';
+                    subcategoryGroup.style.display = 'none';
+                    document.getElementById('exportCategory').required = false;
+                    document.getElementById('exportSubcategory').required = false;
+                    break;
+            }
+        }
+        
+        // 更新导出模态框中的子分类选项
+        function updateExportSubcategoryOptions(category) {
+            const select = document.getElementById('exportSubcategory');
+            const subcategories = vocabularyData.categories[category].subcategories;
+            
+            select.innerHTML = '';
+            Object.entries(subcategories).forEach(([subId, subData]) => {
+                const option = document.createElement('option');
+                option.value = subId;
+                option.textContent = subData.name;
+                if (subId === currentSubcategory) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+        }
+        
+        // 监听导出分类变化
+        document.addEventListener('DOMContentLoaded', function() {
+            const exportCategory = document.getElementById('exportCategory');
+            if (exportCategory) {
+                exportCategory.addEventListener('change', function() {
+                    updateExportSubcategoryOptions(this.value);
+                });
+            }
+        });
+        
+        // 执行导出
+        async function exportWords(event) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const formData = new FormData(form);
+            
+            const exportBtn = document.getElementById('exportBtn');
+            const exportBtnText = document.getElementById('exportBtnText');
+            const exportLoading = document.getElementById('exportLoading');
+            
+            // 显示加载状态
+            exportBtn.disabled = true;
+            exportBtnText.style.display = 'none';
+            exportLoading.style.display = 'inline-block';
+            
+            try {
+                // 收集导出参数
+                const exportParams = {
+                    scope: formData.get('export_scope'),
+                    category: formData.get('category'),
+                    subcategory_id: formData.get('subcategory_id'),
+                    format: formData.get('format'),
+                    include_word: true, // 必选
+                    include_meaning: formData.get('include_meaning') === 'on',
+                    include_category: formData.get('include_category') === 'on',
+                    include_subcategory: formData.get('include_subcategory') === 'on',
+                    include_date: formData.get('include_date') === 'on'
+                };
+                
+                // 根据导出范围收集单词数据
+                let wordsToExport = [];
+                let filename = '';
+                
+                switch (exportParams.scope) {
+                    case 'subcategory':
+                        const subcategoryWords = vocabularyData.categories[exportParams.category].subcategories[exportParams.subcategory_id]?.words || [];
+                        wordsToExport = subcategoryWords.map(word => ({
+                            ...word,
+                            category: exportParams.category,
+                            subcategory: vocabularyData.categories[exportParams.category].subcategories[exportParams.subcategory_id].name
+                        }));
+                        filename = `${exportParams.category}_${vocabularyData.categories[exportParams.category].subcategories[exportParams.subcategory_id].name}_单词`;
+                        break;
+                        
+                    case 'category':
+                        Object.entries(vocabularyData.categories[exportParams.category].subcategories).forEach(([subId, subData]) => {
+                            subData.words.forEach(word => {
+                                wordsToExport.push({
+                                    ...word,
+                                    category: exportParams.category,
+                                    subcategory: subData.name
+                                });
+                            });
+                        });
+                        filename = `${exportParams.category}_分类_单词`;
+                        break;
+                        
+                    case 'all':
+                        Object.entries(vocabularyData.categories).forEach(([categoryName, categoryData]) => {
+                            Object.entries(categoryData.subcategories).forEach(([subId, subData]) => {
+                                subData.words.forEach(word => {
+                                    wordsToExport.push({
+                                        ...word,
+                                        category: categoryName,
+                                        subcategory: subData.name
+                                    });
+                                });
+                            });
+                        });
+                        filename = '所有单词';
+                        break;
+                }
+                
+                if (wordsToExport.length === 0) {
+                    showNotification('没有找到要导出的单词', 'warning');
+                    return;
+                }
+                
+                // 生成导出内容
+                let content = '';
+                let mimeType = '';
+                
+                switch (exportParams.format) {
+                    case 'csv':
+                        content = generateCSV(wordsToExport, exportParams);
+                        mimeType = 'text/csv;charset=utf-8;';
+                        filename += '.csv';
+                        break;
+                        
+                    case 'txt':
+                        content = generateTXT(wordsToExport, exportParams);
+                        mimeType = 'text/plain;charset=utf-8;';
+                        filename += '.txt';
+                        break;
+                        
+                    case 'json':
+                        content = generateJSON(wordsToExport, exportParams);
+                        mimeType = 'application/json;charset=utf-8;';
+                        filename += '.json';
+                        break;
+                }
+                
+                // 下载文件
+                downloadFile(content, filename, mimeType);
+                
+                closeExportModal();
+                showNotification(`成功导出 ${wordsToExport.length} 个单词！`, 'success');
+                
+            } catch (error) {
+                showNotification('导出失败: ' + error.message, 'error');
+            } finally {
+                // 恢复按钮状态
+                exportBtn.disabled = false;
+                exportBtnText.style.display = 'inline';
+                exportLoading.style.display = 'none';
+            }
+        }
+        
+        // 生成CSV格式内容
+        function generateCSV(words, params) {
+            const headers = [];
+            if (params.include_word) headers.push('单词');
+            if (params.include_meaning) headers.push('词义');
+            if (params.include_category) headers.push('分类');
+            if (params.include_subcategory) headers.push('子分类');
+            if (params.include_date) headers.push('添加日期');
+            
+            const csvContent = [headers.join(',')];
+            
+            words.forEach(word => {
+                const row = [];
+                if (params.include_word) row.push(`"${word.word}"`);
+                if (params.include_meaning) row.push(`"${word.meaning || ''}"`);
+                if (params.include_category) row.push(`"${getCategoryDisplayName(word.category)}"`);
+                if (params.include_subcategory) row.push(`"${word.subcategory}"`);
+                if (params.include_date) row.push(`"${formatDate(word.created_at)}"`);
+                
+                csvContent.push(row.join(','));
+            });
+            
+            return csvContent.join('\n');
+        }
+        
+        // 生成TXT格式内容
+        function generateTXT(words, params) {
+            let content = `导出时间: ${new Date().toLocaleString('zh-CN')}\n`;
+            content += `导出单词数量: ${words.length}\n\n`;
+            
+            words.forEach((word, index) => {
+                content += `${index + 1}. ${word.word}`;
+                if (params.include_meaning && word.meaning) {
+                    content += ` - ${word.meaning}`;
+                }
+                if (params.include_category) {
+                    content += ` [${getCategoryDisplayName(word.category)}]`;
+                }
+                if (params.include_subcategory) {
+                    content += ` [${word.subcategory}]`;
+                }
+                if (params.include_date) {
+                    content += ` (${formatDate(word.created_at)})`;
+                }
+                content += '\n';
+            });
+            
+            return content;
+        }
+        
+        // 生成JSON格式内容
+        function generateJSON(words, params) {
+            const exportData = {
+                export_time: new Date().toISOString(),
+                word_count: words.length,
+                words: words.map(word => {
+                    const wordData = {};
+                    if (params.include_word) wordData.word = word.word;
+                    if (params.include_meaning) wordData.meaning = word.meaning;
+                    if (params.include_category) wordData.category = word.category;
+                    if (params.include_subcategory) wordData.subcategory = word.subcategory;
+                    if (params.include_date) wordData.created_at = word.created_at;
+                    return wordData;
+                })
+            };
+            
+            return JSON.stringify(exportData, null, 2);
+        }
+        
+        // 获取分类显示名称
+        function getCategoryDisplayName(category) {
+            const names = {
+                listening: '🎧 Listening',
+                speaking: '🗣️ Speaking',
+                reading: '📖 Reading',
+                writing: '✍️ Writing'
+            };
+            return names[category] || category;
+        }
+        
+        // 下载文件
+        function downloadFile(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = window.URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            link.style.display = 'none';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            window.URL.revokeObjectURL(url);
+        }
+        
+        // 移动端导出功能
+        function openMobileExportModal() {
+            // 设置当前分类和子分类
+            document.getElementById('exportCategory').value = currentCategory;
+            updateExportSubcategoryOptions(currentCategory);
+            
+            // 设置默认导出当前子分类
+            document.getElementById('exportScope').value = 'subcategory';
+            document.getElementById('exportSubcategory').value = currentSubcategory;
+            updateExportOptions();
+            
+            // 打开导出模态框
+            document.getElementById('exportModal').classList.add('show');
         }
     </script>
 </body>
