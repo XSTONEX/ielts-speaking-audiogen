@@ -9,6 +9,7 @@ intensive_articles/
 message_board/
 challenges/
 vocab_audio/
+vocabulary_book/
 __pycache__/
 users.json
 tokens.json
