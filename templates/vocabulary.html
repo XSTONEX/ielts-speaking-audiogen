@@ -1025,6 +1025,10 @@
             </div>
         </div>
         
+        <!-- 手机端单词显示容器 -->
+        <div class="mobile-words-container show" id="mobile-words-container">
+            <div class="word-grid" id="mobile-word-grid"></div>
+        </div>
         
         <div class="main-content">
             <div class="tabs">
@@ -1425,6 +1429,8 @@
             setupTabs();
             setupKeyboardShortcuts();
             setupFileUpload();
+            setupModalCloseHandlers();
+            setupResponsiveHandlers();
             loadVocabularyData();
         });
         
@@ -1493,26 +1499,87 @@
         function setupFileUpload() {
             const fileUpload = document.querySelector('.file-upload');
             
-            fileUpload.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                this.classList.add('drag-over');
-            });
-            
-            fileUpload.addEventListener('dragleave', function(e) {
-                e.preventDefault();
-                this.classList.remove('drag-over');
-            });
-            
-            fileUpload.addEventListener('drop', function(e) {
-                e.preventDefault();
-                this.classList.remove('drag-over');
+            if (fileUpload) {
+                fileUpload.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    this.classList.add('drag-over');
+                });
                 
-                const files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    document.getElementById('csvFile').files = files;
-                    handleFileSelect(document.getElementById('csvFile'));
-                }
+                fileUpload.addEventListener('dragleave', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('drag-over');
+                });
+                
+                fileUpload.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('drag-over');
+                    
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        document.getElementById('csvFile').files = files;
+                        handleFileSelect(document.getElementById('csvFile'));
+                    }
+                });
+            }
+        }
+        
+        // 设置弹窗关闭处理器
+        function setupModalCloseHandlers() {
+            // 为所有弹窗添加背景点击关闭功能
+            const modals = document.querySelectorAll('.modal');
+            
+            modals.forEach(modal => {
+                modal.addEventListener('click', function(e) {
+                    // 如果点击的是弹窗背景（不是内容区域）
+                    if (e.target === modal) {
+                        closeModal(modal);
+                    }
+                });
+                
+                // ESC键关闭弹窗
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && modal.classList.contains('show')) {
+                        closeModal(modal);
+                    }
+                });
             });
+        }
+        
+        // 设置响应式处理器
+        function setupResponsiveHandlers() {
+            let resizeTimer;
+            
+            window.addEventListener('resize', function() {
+                // 防抖处理，避免频繁触发
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(() => {
+                    const isMobile = window.innerWidth <= 768;
+                    
+                    if (isMobile && currentSubcategory) {
+                        // 移动端模式：确保移动端容器显示单词
+                        setTimeout(() => {
+                            renderMobileWords(currentCategory, currentSubcategory);
+                        }, 100);
+                    }
+                }, 250);
+            });
+        }
+        
+        // 通用弹窗关闭函数
+        function closeModal(modal) {
+            modal.classList.remove('show');
+            
+            // 根据弹窗ID执行特定的清理操作
+            if (modal.id === 'addSubcategoryModal') {
+                document.getElementById('addSubcategoryForm').reset();
+            } else if (modal.id === 'editSubcategoryModal') {
+                document.getElementById('editSubcategoryForm').reset();
+            } else if (modal.id === 'uploadModal') {
+                document.getElementById('uploadForm').reset();
+                document.getElementById('fileText').textContent = '点击选择CSV文件或拖拽文件到这里';
+            } else if (modal.id === 'exportModal') {
+                document.getElementById('exportForm').reset();
+            }
         }
         
         // 加载词汇数据
@@ -1523,6 +1590,13 @@
                 
                 if (result.success) {
                     vocabularyData = result.data;
+                    
+                    // 确保移动端界面初始化
+                    const isMobile = window.innerWidth <= 768;
+                    if (isMobile) {
+                        initializeMobileInterface();
+                    }
+                    
                     renderAllCategories();
                 } else {
                     showNotification('加载数据失败: ' + result.error, 'error');
@@ -1532,39 +1606,80 @@
             }
         }
         
+        // 初始化移动端界面
+        function initializeMobileInterface() {
+            const categoryNames = {
+                listening: '🎧 Listening',
+                speaking: '🗣️ Speaking',
+                reading: '📖 Reading',
+                writing: '✍️ Writing'
+            };
+            
+            // 设置默认分类标题
+            const categoryTitleElement = document.getElementById('mobile-category-title');
+            if (categoryTitleElement) {
+                categoryTitleElement.textContent = categoryNames[currentCategory];
+            }
+            
+            // 设置默认子分类标题
+            const subcategoryTitleElement = document.getElementById('mobile-subcategory-title');
+            if (subcategoryTitleElement) {
+                subcategoryTitleElement.textContent = '默认分类';
+            }
+        }
+        
         // 渲染所有分类
         function renderAllCategories() {
             const isMobile = window.innerWidth <= 768;
             
-            Object.keys(vocabularyData.categories).forEach(category => {
-                renderSubcategories(category);
-                
-                // 获取默认子分类
-                const defaultSubcategory = getDefaultSubcategory(vocabularyData.categories[category]);
-                if (defaultSubcategory) {
-                    // 如果是当前分类，设置为当前子分类
-                    if (category === currentCategory) {
-                        currentSubcategory = defaultSubcategory;
-                        // 更新移动端子分类选择器
-                        updateMobileSubcategoryOptions();
-                        
-                        // 在移动端渲染到专用容器
-                        if (isMobile) {
-                            renderMobileWords(category, defaultSubcategory);
-                        } else {
+            try {
+                Object.keys(vocabularyData.categories).forEach(category => {
+                    renderSubcategories(category);
+                    
+                    // 获取默认子分类
+                    const defaultSubcategory = getDefaultSubcategory(vocabularyData.categories[category]);
+                    if (defaultSubcategory) {
+                        // 如果是当前分类，设置为当前子分类
+                        if (category === currentCategory) {
+                            currentSubcategory = defaultSubcategory;
+                            
+                            // 更新移动端子分类选择器
+                            if (isMobile) {
+                                updateMobileSubcategoryOptions();
+                                // 强制渲染移动端单词
+                                renderMobileWords(category, defaultSubcategory);
+                            } else {
+                                renderWords(category, defaultSubcategory);
+                            }
+                        } else if (!isMobile) {
+                            // 桌面端渲染所有分类
                             renderWords(category, defaultSubcategory);
                         }
-                    } else if (!isMobile) {
-                        // 桌面端渲染所有分类
-                        renderWords(category, defaultSubcategory);
                     }
+                });
+                
+                // 确保移动端在初始加载后显示单词
+                if (isMobile && currentSubcategory) {
+                    setTimeout(() => {
+                        renderMobileWords(currentCategory, currentSubcategory);
+                    }, 100);
                 }
-            });
+            } catch (error) {
+                console.error('Error rendering categories:', error);
+                showNotification('渲染分类时出错: ' + error.message, 'error');
+            }
         }
         
         // 渲染子分类列表
         function renderSubcategories(category) {
             const container = document.getElementById(`${category}-subcategories`);
+            
+            // 检查容器是否存在
+            if (!container) {
+                console.warn('Subcategory container not found for category:', category);
+                return;
+            }
+            
             const subcategories = vocabularyData.categories[category].subcategories;
             
             container.innerHTML = '';
@@ -1628,6 +1743,12 @@
             const container = isMobile ? 
                 document.getElementById('mobile-word-grid') : 
                 document.getElementById(`${category}-words`);
+            
+            // 检查容器是否存在
+            if (!container) {
+                console.warn('Word container not found:', isMobile ? 'mobile-word-grid' : `${category}-words`);
+                return;
+            }
             
             // 在手机端，只渲染当前活动分类的单词
             if (isMobile && category !== currentCategory) {
@@ -2116,7 +2237,10 @@
                 writing: '✍️ Writing'
             };
             
-            document.getElementById('mobile-category-title').textContent = categoryNames[category];
+            const titleElement = document.getElementById('mobile-category-title');
+            if (titleElement) {
+                titleElement.textContent = categoryNames[category];
+            }
             
             // 更新选项的活动状态
             document.querySelectorAll('.mobile-category-option').forEach(option => {
@@ -2126,8 +2250,10 @@
             
             // 收起下拉菜单
             mobileCategoryExpanded = false;
-            document.getElementById('mobile-category-dropdown').classList.remove('expanded');
-            document.getElementById('mobile-category-arrow').classList.remove('expanded');
+            const dropdown = document.getElementById('mobile-category-dropdown');
+            const arrow = document.getElementById('mobile-category-arrow');
+            if (dropdown) dropdown.classList.remove('expanded');
+            if (arrow) arrow.classList.remove('expanded');
             
             // 更新子分类选择器
             updateMobileSubcategoryOptions();
@@ -2135,7 +2261,10 @@
             // 在手机端直接渲染到移动端容器
             const isMobile = window.innerWidth <= 768;
             if (isMobile) {
-                renderMobileWords(category, currentSubcategory);
+                // 强制渲染移动端单词，使用延迟确保DOM更新完成
+                setTimeout(() => {
+                    renderMobileWords(category, currentSubcategory);
+                }, 50);
             } else {
                 // 桌面端渲染逻辑
                 renderWords(category, currentSubcategory);
@@ -2147,8 +2276,10 @@
                 tabs.forEach(t => t.classList.remove('active'));
                 panels.forEach(p => p.classList.remove('active'));
                 
-                document.querySelector(`[data-category="${category}"]`).classList.add('active');
-                document.getElementById(`${category}-panel`).classList.add('active');
+                const targetTab = document.querySelector(`[data-category="${category}"]`);
+                const targetPanel = document.getElementById(`${category}-panel`);
+                if (targetTab) targetTab.classList.add('active');
+                if (targetPanel) targetPanel.classList.add('active');
             }
         }
         
@@ -2168,6 +2299,13 @@
         
         function updateMobileSubcategoryOptions() {
             const optionsContainer = document.getElementById('mobile-subcategory-options');
+            
+            // 检查容器是否存在
+            if (!optionsContainer) {
+                console.warn('Mobile subcategory options container not found');
+                return;
+            }
+            
             const subcategories = vocabularyData.categories[currentCategory].subcategories;
             
             // 清空现有选项
@@ -2189,8 +2327,9 @@
             
             // 更新当前子分类显示
             const currentSubcategoryData = subcategories[currentSubcategory];
-            if (currentSubcategoryData) {
-                document.getElementById('mobile-subcategory-title').textContent = currentSubcategoryData.name;
+            const titleElement = document.getElementById('mobile-subcategory-title');
+            if (currentSubcategoryData && titleElement) {
+                titleElement.textContent = currentSubcategoryData.name;
             }
         }
         
@@ -2206,17 +2345,25 @@
             
             // 更新显示的子分类名称
             const subcategoryData = vocabularyData.categories[currentCategory].subcategories[subcategoryId];
-            document.getElementById('mobile-subcategory-title').textContent = subcategoryData.name;
+            const titleElement = document.getElementById('mobile-subcategory-title');
+            if (subcategoryData && titleElement) {
+                titleElement.textContent = subcategoryData.name;
+            }
             
             // 收起下拉菜单
             mobileSubcategoryExpanded = false;
-            document.getElementById('mobile-subcategory-dropdown').classList.remove('expanded');
-            document.getElementById('mobile-subcategory-arrow').classList.remove('expanded');
+            const dropdown = document.getElementById('mobile-subcategory-dropdown');
+            const arrow = document.getElementById('mobile-subcategory-arrow');
+            if (dropdown) dropdown.classList.remove('expanded');
+            if (arrow) arrow.classList.remove('expanded');
             
             // 渲染该子分类的单词
             const isMobile = window.innerWidth <= 768;
             if (isMobile) {
-                renderMobileWords(currentCategory, subcategoryId);
+                // 使用延迟确保DOM更新完成
+                setTimeout(() => {
+                    renderMobileWords(currentCategory, subcategoryId);
+                }, 50);
             } else {
                 renderWords(currentCategory, subcategoryId);
             }
@@ -2225,6 +2372,13 @@
         // 移动端专用单词渲染函数
         function renderMobileWords(category, subcategoryId) {
             const container = document.getElementById('mobile-word-grid');
+            
+            // 检查容器是否存在
+            if (!container) {
+                console.warn('Mobile word grid container not found');
+                return;
+            }
+            
             const words = vocabularyData.categories[category].subcategories[subcategoryId]?.words || [];
             
             if (words.length === 0) {
@@ -2555,20 +2709,6 @@
             window.URL.revokeObjectURL(url);
         }
         
-        // 移动端导出功能
-        function openMobileExportModal() {
-            // 设置当前分类和子分类
-            document.getElementById('exportCategory').value = currentCategory;
-            updateExportSubcategoryOptions(currentCategory);
-            
-            // 设置默认导出当前子分类
-            document.getElementById('exportScope').value = 'subcategory';
-            document.getElementById('exportSubcategory').value = currentSubcategory;
-            updateExportOptions();
-            
-            // 打开导出模态框
-            document.getElementById('exportModal').classList.add('show');
-        }
     </script>
 </body>
 </html>

@@ -1503,8 +1503,8 @@ def split_long_segment(segment, max_chars):
     
     return sub_segments
 
-def generate_tts_segment(text, temp_dir, segment_index):
-    """生成单个文本段的TTS音频"""
+def generate_tts_segment(text, temp_dir, segment_index, max_retries=3):
+    """生成单个文本段的TTS音频，带重试机制"""
     url = "https://api.deerapi.com/v1/audio/speech"
     payload = json.dumps({
         "model": "tts-1",
@@ -1516,15 +1516,71 @@ def generate_tts_segment(text, temp_dir, segment_index):
         'Content-Type': 'application/json'
     }
     
-    response = requests.post(url, headers=headers, data=payload, timeout=30)
+    segment_path = os.path.join(temp_dir, f"segment_{segment_index:03d}.mp3")
     
-    if response.status_code == 200:
-        segment_path = os.path.join(temp_dir, f"segment_{segment_index:03d}.mp3")
-        with open(segment_path, 'wb') as f:
-            f.write(response.content)
+    # 检查是否已存在该分片文件
+    if os.path.exists(segment_path) and os.path.getsize(segment_path) > 0:
+        print(f"分片 {segment_index} 已存在，跳过生成")
         return segment_path
-    else:
-        raise Exception(f'TTS API错误: {response.status_code}')
+    
+    last_error = None
+    for attempt in range(max_retries):
+        try:
+            print(f"正在生成分片 {segment_index}，尝试 {attempt + 1}/{max_retries}")
+            
+            # 使用更长的超时时间，并设置连接和读取超时
+            response = requests.post(
+                url, 
+                headers=headers, 
+                data=payload, 
+                timeout=(10, 60)  # (连接超时, 读取超时)
+            )
+            
+            if response.status_code == 200:
+                # 先写入临时文件，然后重命名，避免写入过程中的问题
+                temp_path = segment_path + '.tmp'
+                with open(temp_path, 'wb') as f:
+                    f.write(response.content)
+                
+                # 验证文件完整性
+                if os.path.getsize(temp_path) > 0:
+                    os.rename(temp_path, segment_path)
+                    print(f"分片 {segment_index} 生成成功")
+                    return segment_path
+                else:
+                    os.remove(temp_path) if os.path.exists(temp_path) else None
+                    raise Exception("生成的音频文件为空")
+            else:
+                raise Exception(f'TTS API错误: {response.status_code}, 响应: {response.text}')
+                
+        except requests.exceptions.Timeout as e:
+            last_error = f"请求超时: {str(e)}"
+            print(f"分片 {segment_index} 第 {attempt + 1} 次尝试超时: {last_error}")
+            if attempt < max_retries - 1:
+                import time
+                # 指数退避：等待 2^attempt 秒
+                wait_time = 2 ** attempt
+                print(f"等待 {wait_time} 秒后重试...")
+                time.sleep(wait_time)
+        except requests.exceptions.RequestException as e:
+            last_error = f"网络请求错误: {str(e)}"
+            print(f"分片 {segment_index} 第 {attempt + 1} 次尝试网络错误: {last_error}")
+            if attempt < max_retries - 1:
+                import time
+                wait_time = 2 ** attempt
+                print(f"等待 {wait_time} 秒后重试...")
+                time.sleep(wait_time)
+        except Exception as e:
+            last_error = str(e)
+            print(f"分片 {segment_index} 第 {attempt + 1} 次尝试出错: {last_error}")
+            if attempt < max_retries - 1:
+                import time
+                wait_time = 1 + attempt
+                print(f"等待 {wait_time} 秒后重试...")
+                time.sleep(wait_time)
+    
+    # 所有重试都失败了
+    raise Exception(f'分片 {segment_index} 生成失败，已重试 {max_retries} 次。最后错误: {last_error}')
 
 @app.route('/generate_article_audio', methods=['POST'])
 def generate_article_audio():
@@ -1608,9 +1664,9 @@ def generate_article_audio():
                 combined_audio.export(final_audio_path, format="mp3")
                 
             finally:
-                # 清理临时文件
-                if os.path.exists(temp_dir):
-                    shutil.rmtree(temp_dir)
+                # 保留临时文件以支持断点续传，只在成功生成最终音频后清理
+                # 临时文件会在后续的清理任务中自动删除
+                pass
         
         # 保存对应的文本文件
         txt_path = final_audio_path.replace('.mp3', '.txt')
@@ -1711,6 +1767,56 @@ def generate_audio_segment():
     except Exception as e:
         return jsonify({'error': f'分段生成失败: {str(e)}'}), 500
 
+@app.route('/check_segment_status', methods=['POST'])
+def check_segment_status():
+    """检查分片音频生成状态，支持断点续传"""
+    data = request.json or {}
+    article_id = data.get('article_id')
+    task_id = data.get('task_id')
+    segments_count = data.get('segments_count', 0)
+    
+    if not all([article_id, task_id, segments_count]):
+        return jsonify({'error': '缺少必要参数'}), 400
+    
+    try:
+        # 检查任务目录
+        article_audio_dir = os.path.join(VOCAB_AUDIO_DIR, 'articles', article_id)
+        task_dir = os.path.join(article_audio_dir, task_id)
+        
+        if not os.path.exists(task_dir):
+            return jsonify({
+                'success': True,
+                'completed_segments': [],
+                'missing_segments': list(range(segments_count)),
+                'total_segments': segments_count,
+                'completion_rate': 0.0
+            })
+        
+        # 检查每个分片的状态
+        completed_segments = []
+        missing_segments = []
+        
+        for i in range(segments_count):
+            segment_path = os.path.join(task_dir, f"segment_{i:03d}.mp3")
+            if os.path.exists(segment_path) and os.path.getsize(segment_path) > 0:
+                completed_segments.append(i)
+            else:
+                missing_segments.append(i)
+        
+        completion_rate = len(completed_segments) / segments_count if segments_count > 0 else 0
+        
+        return jsonify({
+            'success': True,
+            'completed_segments': completed_segments,
+            'missing_segments': missing_segments,
+            'total_segments': segments_count,
+            'completion_rate': completion_rate,
+            'task_dir_exists': True
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'状态检查失败: {str(e)}'}), 500
+
 @app.route('/combine_audio_segments', methods=['POST'])
 def combine_audio_segments():
     """合并音频分段"""
@@ -1766,9 +1872,14 @@ def combine_audio_segments():
         with open(txt_path, 'w', encoding='utf-8') as f:
             f.write(original_text)
         
-        # 清理任务目录
-        if os.path.exists(task_dir):
-            shutil.rmtree(task_dir)
+        # 成功合并后清理任务目录
+        try:
+            if os.path.exists(task_dir):
+                shutil.rmtree(task_dir)
+                print(f"已清理任务目录: {task_dir}")
+        except Exception as cleanup_error:
+            print(f"清理任务目录时出错: {cleanup_error}")
+            # 不影响主要功能，继续执行
         
         # 返回音频访问URL
         audio_url = f"/vocab_audio/articles/{article_id}/{filename}"
@@ -1783,6 +1894,79 @@ def combine_audio_segments():
         
     except Exception as e:
         return jsonify({'error': f'合并失败: {str(e)}'}), 500
+
+@app.route('/find_unfinished_audio_tasks/<article_id>')
+def find_unfinished_audio_tasks(article_id):
+    """查找指定文章的未完成音频生成任务"""
+    try:
+        article_audio_dir = os.path.join(VOCAB_AUDIO_DIR, 'articles', article_id)
+        
+        if not os.path.exists(article_audio_dir):
+            return jsonify({'success': True, 'unfinished_tasks': []})
+        
+        unfinished_tasks = []
+        
+        # 遍历音频目录，查找临时任务目录
+        for item in os.listdir(article_audio_dir):
+            item_path = os.path.join(article_audio_dir, item)
+            
+            if os.path.isdir(item_path) and item.startswith('audio_'):
+                # 这是一个音频生成任务目录
+                task_id = item
+                
+                # 检查目录中的分片文件
+                segment_files = [f for f in os.listdir(item_path) if f.startswith('segment_') and f.endswith('.mp3')]
+                
+                if segment_files:
+                    # 分析分片状态
+                    segment_indices = []
+                    for segment_file in segment_files:
+                        try:
+                            # 从文件名提取索引：segment_001.mp3 -> 1
+                            index = int(segment_file.split('_')[1].split('.')[0])
+                            segment_path = os.path.join(item_path, segment_file)
+                            
+                            # 检查文件是否完整
+                            if os.path.getsize(segment_path) > 0:
+                                segment_indices.append(index)
+                        except (ValueError, IndexError):
+                            continue
+                    
+                    if segment_indices:
+                        # 估算总分片数（基于最大索引 + 一些容错）
+                        max_index = max(segment_indices)
+                        estimated_total = max_index + 1
+                        
+                        # 检查是否有缺失的分片
+                        all_indices = set(range(estimated_total))
+                        completed_indices = set(segment_indices)
+                        missing_indices = sorted(list(all_indices - completed_indices))
+                        
+                        completion_rate = len(completed_indices) / estimated_total if estimated_total > 0 else 0
+                        
+                        # 获取任务创建时间
+                        task_time = os.path.getctime(item_path)
+                        
+                        unfinished_tasks.append({
+                            'task_id': task_id,
+                            'segments_count': estimated_total,
+                            'completed_segments': sorted(list(completed_indices)),
+                            'missing_segments': missing_indices,
+                            'completion_rate': completion_rate,
+                            'created_time': task_time,
+                            'task_dir': item_path
+                        })
+        
+        # 按创建时间排序，最新的在前
+        unfinished_tasks.sort(key=lambda x: x['created_time'], reverse=True)
+        
+        return jsonify({
+            'success': True,
+            'unfinished_tasks': unfinished_tasks
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'查找未完成任务失败: {str(e)}'}), 500
 
 @app.route('/cleanup_article_audio', methods=['POST'])
 def cleanup_article_audio():

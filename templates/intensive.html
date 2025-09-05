@@ -652,6 +652,9 @@
           <button id="generateAudioBtn" class="vocab-btn" onclick="generateArticleAudio()" title="生成英文音频" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; border: none;">
             <span style="margin-right: 4px;">🔊</span>音频
           </button>
+          <button id="resumeAudioBtn" class="vocab-btn" onclick="resumeAudioGeneration()" title="恢复中断的音频生成" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #fff; border: none; display: none;">
+            <span style="margin-right: 4px;">🔄</span>恢复
+          </button>
           <button id="uploadImageBtn" class="vocab-btn" onclick="triggerImageUpload()" title="上传图片" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #fff; border: none;">
             <span style="margin-right: 4px;">📷</span>图片
           </button>
@@ -782,10 +785,15 @@
           showAudioPlayer(audioInfo.audio_url, audioInfo.filename, true);
           currentAudioUrl = audioInfo.audio_url;
           console.log(`自动加载已存在的音频: ${audioInfo.filename} (${new Date(audioInfo.created_time).toLocaleString()})`);
+        } else {
+          // 如果没有完成的音频，检查是否有未完成的任务
+          checkForUnfinishedAudioTasks();
         }
       }).catch(error => {
         console.error('检查音频状态失败:', error);
         updateAudioButton(false);
+        // 即使检查失败，也尝试查找未完成任务
+        checkForUnfinishedAudioTasks();
       });
     }); }
     function checkForJumpHighlight(){ const targetHighlightId = sessionStorage.getItem('jumpToHighlight'); if(targetHighlightId){ sessionStorage.removeItem('jumpToHighlight'); setTimeout(()=>{ scrollToHighlight(targetHighlightId); }, 300); } }
@@ -795,7 +803,7 @@
     function closeHighlightsPanel(){ const panel=document.getElementById('highlightsPanel'); const content=document.getElementById('vContent'); const btn=document.getElementById('vocabToggle'); panel.classList.remove('active'); content.classList.remove('panel-open'); btn.classList.remove('active'); }
     function updatePanelWidth(){ const panel=document.getElementById('highlightsPanel'); const content=document.getElementById('vContent'); if(panel && content){ panel.style.width = panelWidth + 'px'; content.style.setProperty('--panel-width', panelWidth + 'px'); } }
     function scrollToHighlight(hid){ try{ const container=document.getElementById('vContent'); const mark=container.querySelector(`mark.hl[data-hid="${hid}"]`); if(mark){ mark.scrollIntoView({behavior:'smooth', block:'center'}); mark.classList.add('active'); setTimeout(()=>{ mark.classList.remove('active'); }, 1200); } }catch(e){} }
-    function closeViewer(){ document.getElementById('viewer').classList.remove('active'); currentArticle=null; selectionRange=null; highlights=[]; cancelFloat(); cancelMeaning(); closeHighlightsPanel(); closeAudioPanel(); currentAudioInfo=null; updateAudioButton(false); }
+    function closeViewer(){ document.getElementById('viewer').classList.remove('active'); currentArticle=null; selectionRange=null; highlights=[]; cancelFloat(); cancelMeaning(); closeHighlightsPanel(); closeAudioPanel(); currentAudioInfo=null; updateAudioButton(false); document.getElementById('resumeAudioBtn').style.display = 'none'; }
 
     // 拖拽调整侧边栏宽度
     function initResizeHandle(){ 
@@ -1300,33 +1308,61 @@
         // 重新分割文本以获取实际的分段内容
         const segments = await getSegmentTexts(originalText, totalSegments);
         
-        // 逐个生成分段
-        for (let i = 0; i < segments.length; i++) {
-          btn.innerHTML = `<span style="margin-right: 4px;">⏳</span>生成第${i+1}段... (${completedSegments}/${totalSegments})`;
+        // 首先检查已存在的分片状态
+        btn.innerHTML = `<span style="margin-right: 4px;">⏳</span>检查已存在分片...`;
+        const statusResult = await checkSegmentStatus(taskId, totalSegments);
+        
+        if (statusResult.success) {
+          completedSegments = statusResult.completed_segments.length;
+          const missingSegments = statusResult.missing_segments;
           
-          const response = await fetch('/generate_audio_segment', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              article_id: currentArticle.id,
-              task_id: taskId,
-              segment_index: i,
-              text: segments[i]
-            })
-          });
-          
-          const result = await response.json();
-          
-          if (!result.success) {
-            throw new Error(result.error || `第${i+1}段生成失败`);
+          if (completedSegments > 0) {
+            console.log(`发现 ${completedSegments} 个已完成的分片，将跳过这些分片`);
+            btn.innerHTML = `<span style="margin-right: 4px;">⏳</span>发现 ${completedSegments} 个已完成分片...`;
+            await new Promise(resolve => setTimeout(resolve, 1000)); // 显示状态1秒
           }
           
-          completedSegments++;
-          btn.innerHTML = `<span style="margin-right: 4px;">⏳</span>已完成 ${completedSegments}/${totalSegments} 段`;
-          
-          console.log(`第${i+1}段生成完成 (${result.text_length}字符)`);
+          // 只生成缺失的分段
+          for (const segmentIndex of missingSegments) {
+            btn.innerHTML = `<span style="margin-right: 4px;">⏳</span>生成第${segmentIndex+1}段... (${completedSegments}/${totalSegments})`;
+            
+            const success = await generateSingleSegmentWithRetry(
+              taskId, 
+              segmentIndex, 
+              segments[segmentIndex], 
+              3 // 最大重试次数
+            );
+            
+            if (!success) {
+              throw new Error(`第${segmentIndex+1}段生成失败，已重试多次`);
+            }
+            
+            completedSegments++;
+            btn.innerHTML = `<span style="margin-right: 4px;">⏳</span>已完成 ${completedSegments}/${totalSegments} 段`;
+            
+            console.log(`第${segmentIndex+1}段生成完成 (${segments[segmentIndex].length}字符)`);
+          }
+        } else {
+          // 如果状态检查失败，按原逻辑逐个生成
+          for (let i = 0; i < segments.length; i++) {
+            btn.innerHTML = `<span style="margin-right: 4px;">⏳</span>生成第${i+1}段... (${completedSegments}/${totalSegments})`;
+            
+            const success = await generateSingleSegmentWithRetry(
+              taskId, 
+              i, 
+              segments[i], 
+              3 // 最大重试次数
+            );
+            
+            if (!success) {
+              throw new Error(`第${i+1}段生成失败，已重试多次`);
+            }
+            
+            completedSegments++;
+            btn.innerHTML = `<span style="margin-right: 4px;">⏳</span>已完成 ${completedSegments}/${totalSegments} 段`;
+            
+            console.log(`第${i+1}段生成完成 (${segments[i].length}字符)`);
+          }
         }
         
         // 所有分段完成，开始合并
@@ -1435,6 +1471,226 @@
       btn.innerHTML = originalContent;
       btn.style.opacity = '1';
       btn.style.cursor = 'pointer';
+    }
+    
+    // 检查分片状态的辅助函数
+    async function checkSegmentStatus(taskId, segmentsCount) {
+      try {
+        const response = await fetch('/check_segment_status', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            article_id: currentArticle.id,
+            task_id: taskId,
+            segments_count: segmentsCount
+          })
+        });
+        
+        return await response.json();
+      } catch (error) {
+        console.error('检查分片状态失败:', error);
+        return { success: false, error: error.message };
+      }
+    }
+    
+    // 单个分片生成（带重试）的辅助函数
+    async function generateSingleSegmentWithRetry(taskId, segmentIndex, text, maxRetries = 3) {
+      let lastError = null;
+      
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          console.log(`正在生成分片 ${segmentIndex}，尝试 ${attempt + 1}/${maxRetries}`);
+          
+          const response = await fetch('/generate_audio_segment', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              article_id: currentArticle.id,
+              task_id: taskId,
+              segment_index: segmentIndex,
+              text: text
+            })
+          });
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            console.log(`分片 ${segmentIndex} 生成成功`);
+            return true;
+          } else {
+            throw new Error(result.error || '生成失败');
+          }
+          
+        } catch (error) {
+          lastError = error;
+          console.error(`分片 ${segmentIndex} 第 ${attempt + 1} 次尝试失败:`, error.message);
+          
+          if (attempt < maxRetries - 1) {
+            // 指数退避：等待 2^attempt 秒，最少1秒
+            const waitTime = Math.max(1000, Math.min(8000, Math.pow(2, attempt) * 1000));
+            console.log(`等待 ${waitTime/1000} 秒后重试...`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+          }
+        }
+      }
+      
+      console.error(`分片 ${segmentIndex} 生成失败，已重试 ${maxRetries} 次。最后错误:`, lastError?.message);
+      return false;
+    }
+    
+    // 恢复音频生成功能
+    async function resumeAudioGeneration() {
+      if (!currentArticle) {
+        alert('请先打开一篇文章');
+        return;
+      }
+      
+      // 查找未完成的音频任务
+      const unfinishedTask = await findUnfinishedAudioTask();
+      
+      if (!unfinishedTask) {
+        alert('没有找到未完成的音频生成任务');
+        return;
+      }
+      
+      if (!confirm(`发现未完成的音频生成任务（${unfinishedTask.completion_rate.toFixed(1)}% 完成）。\n\n是否继续完成该任务？`)) {
+        return;
+      }
+      
+      const btn = document.getElementById('generateAudioBtn');
+      const resumeBtn = document.getElementById('resumeAudioBtn');
+      const originalContent = btn.innerHTML;
+      
+      try {
+        // 禁用按钮
+        btn.disabled = true;
+        resumeBtn.disabled = true;
+        resumeBtn.style.display = 'none';
+        
+        // 提取英文文本
+        const englishText = extractEnglishText(currentArticle.content_text);
+        
+        if (!englishText || englishText.trim().length === 0) {
+          alert('未找到英文内容可生成音频');
+          return;
+        }
+        
+        // 继续生成剩余分片
+        await continueSegmentGeneration(unfinishedTask, englishText, btn, originalContent);
+        
+      } catch (error) {
+        console.error('恢复音频生成错误:', error);
+        alert(`恢复失败: ${error.message}`);
+      } finally {
+        resetAudioButton(btn, originalContent);
+        resumeBtn.disabled = false;
+      }
+    }
+    
+    // 查找未完成的音频任务
+    async function findUnfinishedAudioTask() {
+      if (!currentArticle) return null;
+      
+      try {
+        // 检查文章音频目录中的临时任务目录
+        const response = await fetch(`/find_unfinished_audio_tasks/${currentArticle.id}`);
+        const data = await response.json();
+        
+        if (data.success && data.unfinished_tasks.length > 0) {
+          // 返回最新的未完成任务
+          return data.unfinished_tasks[0];
+        }
+        
+        return null;
+      } catch (error) {
+        console.error('查找未完成任务失败:', error);
+        return null;
+      }
+    }
+    
+    // 继续分片生成
+    async function continueSegmentGeneration(taskInfo, originalText, btn, originalContent) {
+      const { task_id, segments_count, completed_segments, missing_segments } = taskInfo;
+      
+      // 重新分割文本
+      const segments = await getSegmentTexts(originalText, segments_count);
+      let completedCount = completed_segments.length;
+      
+      btn.innerHTML = `<span style="margin-right: 4px;">⏳</span>恢复生成 (${completedCount}/${segments_count})...`;
+      
+      // 生成缺失的分段
+      for (const segmentIndex of missing_segments) {
+        btn.innerHTML = `<span style="margin-right: 4px;">⏳</span>恢复第${segmentIndex+1}段... (${completedCount}/${segments_count})`;
+        
+        const success = await generateSingleSegmentWithRetry(
+          task_id,
+          segmentIndex,
+          segments[segmentIndex],
+          3
+        );
+        
+        if (!success) {
+          throw new Error(`第${segmentIndex+1}段恢复生成失败`);
+        }
+        
+        completedCount++;
+        btn.innerHTML = `<span style="margin-right: 4px;">⏳</span>已完成 ${completedCount}/${segments_count} 段`;
+        
+        console.log(`第${segmentIndex+1}段恢复生成完成`);
+      }
+      
+      // 合并音频
+      btn.innerHTML = `<span style="margin-right: 4px;">⏳</span>合并音频...`;
+      
+      const combineResponse = await fetch('/combine_audio_segments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          article_id: currentArticle.id,
+          task_id: task_id,
+          segments_count: segments_count,
+          original_text: originalText
+        })
+      });
+      
+      const combineResult = await combineResponse.json();
+      
+      if (combineResult.success) {
+        showAudioPlayer(combineResult.audio_url, combineResult.filename);
+        currentAudioUrl = combineResult.audio_url;
+        updateAudioButton(true);
+        console.log(`音频恢复成功！共${combineResult.segments_count}段`);
+      } else {
+        throw new Error(combineResult.error || '合并失败');
+      }
+    }
+    
+    // 检查未完成的音频任务
+    async function checkForUnfinishedAudioTasks() {
+      if (!currentArticle) return;
+      
+      try {
+        const unfinishedTask = await findUnfinishedAudioTask();
+        const resumeBtn = document.getElementById('resumeAudioBtn');
+        
+        if (unfinishedTask && unfinishedTask.completion_rate < 1.0) {
+          // 显示恢复按钮
+          resumeBtn.style.display = 'inline-block';
+          resumeBtn.title = `恢复未完成的音频生成任务 (${(unfinishedTask.completion_rate * 100).toFixed(1)}% 完成)`;
+          console.log(`发现未完成的音频任务: ${unfinishedTask.task_id} (${(unfinishedTask.completion_rate * 100).toFixed(1)}% 完成)`);
+        } else {
+          resumeBtn.style.display = 'none';
+        }
+      } catch (error) {
+        console.error('检查未完成任务失败:', error);
+        document.getElementById('resumeAudioBtn').style.display = 'none';
+      }
     }
     
     function showAudioPlayer(audioUrl, filename, isExisting = false) {
