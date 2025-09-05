@@ -439,6 +439,17 @@
             background: #f0fff4;
         }
         
+        .word-card.favorited {
+            border-color: #ffc107;
+            background: linear-gradient(135deg, #fffbf0 0%, #fff8e6 100%);
+            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.1);
+        }
+        
+        .word-card.favorited:hover {
+            border-color: #ffb300;
+            box-shadow: 0 8px 25px rgba(255, 193, 7, 0.2);
+        }
+        
         .word-header {
             display: flex;
             justify-content: space-between;
@@ -489,6 +500,27 @@
         .delete-btn:hover {
             background: rgba(245, 101, 101, 0.1);
             color: #e53e3e;
+        }
+        
+        .favorite-btn {
+            background: transparent;
+            color: #e2e8f0;
+            transition: all 0.2s ease;
+        }
+        
+        .favorite-btn:hover {
+            background: rgba(255, 193, 7, 0.1);
+            color: #ffc107;
+            transform: scale(1.1);
+        }
+        
+        .favorite-btn.favorited {
+            color: #ffc107;
+            text-shadow: 0 0 8px rgba(255, 193, 7, 0.3);
+        }
+        
+        .favorite-btn.favorited:hover {
+            color: #ffb300;
         }
         
         .word-meaning {
@@ -687,6 +719,270 @@
             100% { transform: rotate(360deg); }
         }
         
+        /* 挑战功能样式 */
+        .challenge-game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .challenge-progress {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex: 1;
+        }
+        
+        .challenge-progress span {
+            font-size: 1.1rem;
+            font-weight: 600;
+            min-width: 60px;
+        }
+        
+        .progress-bar {
+            flex: 1;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 25px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #48bb78, #38a169, #48bb78);
+            background-size: 200% 100%;
+            animation: progressShimmer 2s ease-in-out infinite;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 25px;
+            box-shadow: 0 2px 12px rgba(72, 187, 120, 0.4), inset 0 1px 3px rgba(255, 255, 255, 0.3);
+        }
+        
+        @keyframes progressShimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        .challenge-game-header .close-btn {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+        
+        .challenge-game-header .close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+        
+        .challenge-content {
+            padding: 40px 30px;
+            background: linear-gradient(180deg, #fafbfc 0%, #ffffff 100%);
+            min-height: 500px;
+        }
+        
+        .challenge-question {
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+        }
+        
+        .challenge-question-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .challenge-question h3 {
+            font-size: 2.2rem;
+            color: #2d3748;
+            font-weight: 700;
+            margin: 0;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        
+        .transparent-play-btn {
+            background: rgba(66, 153, 225, 0.1);
+            color: #4299e1;
+            border: 2px solid rgba(66, 153, 225, 0.2);
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.2rem;
+            margin-left: 10px;
+        }
+        
+        .transparent-play-btn:hover {
+            background: rgba(66, 153, 225, 0.2);
+            border-color: rgba(66, 153, 225, 0.4);
+            transform: scale(1.05);
+        }
+        
+        .challenge-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .challenge-option {
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            border: 3px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 25px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 1.15rem;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            line-height: 1.4;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .challenge-option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .challenge-option:hover {
+            border-color: #667eea;
+            background: linear-gradient(145deg, #f7fafc, #edf2f7);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+        }
+        
+        .challenge-option:hover::before {
+            left: 100%;
+        }
+        
+        .challenge-option.selected {
+            border-color: #667eea;
+            background: linear-gradient(145deg, #edf2f7, #e2e8f0);
+            transform: translateY(-2px);
+        }
+        
+        .challenge-option.correct {
+            border-color: #48bb78;
+            background: linear-gradient(145deg, #f0fff4, #c6f6d5);
+            color: #2f855a;
+            animation: correctPulse 0.6s ease;
+        }
+        
+        .challenge-option.incorrect {
+            border-color: #f56565;
+            background: linear-gradient(145deg, #fed7d7, #feb2b2);
+            color: #c53030;
+            animation: incorrectShake 0.6s ease;
+        }
+        
+        @keyframes correctPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes incorrectShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        
+        .challenge-result-content {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .result-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2d3748;
+        }
+        
+        .stat-label {
+            font-size: 1rem;
+            color: #718096;
+            margin-top: 5px;
+        }
+        
+        .wrong-words {
+            text-align: left;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 12px;
+        }
+        
+        .wrong-words h4 {
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+        
+        .wrong-words-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        
+        .wrong-word-item {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .wrong-word-word {
+            font-weight: 600;
+            color: #2d3748;
+        }
+        
+        .wrong-word-meaning {
+            color: #718096;
+            margin-top: 2px;
+        }
+        
         @media (max-width: 1024px) {
             .tab-panel.active {
                 flex-direction: column;
@@ -793,6 +1089,11 @@
             border-color: #cbd5e0;
         }
         
+        /* 移动端挑战按钮控制 */
+        .mobile-challenge-controls {
+            display: none;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 10px;
@@ -843,7 +1144,12 @@
             .mobile-subcategory-selector {
                 display: block;
             }
-            
+
+            /* 显示移动端挑战按钮 */
+            .mobile-challenge-controls {
+                display: block;
+            }
+
             /* 手机端隐藏添加单词功能 */
             .quick-add {
                 display: none;
@@ -975,6 +1281,96 @@
             .btn[onclick*="openUploadModal"] {
                 display: none;
             }
+            
+            /* 移动端挑战样式优化 */
+            .challenge-game-header {
+                padding: 15px 20px;
+            }
+            
+            .challenge-progress {
+                gap: 10px;
+            }
+            
+            .challenge-progress span {
+                font-size: 1rem;
+                min-width: 50px;
+            }
+            
+            .progress-bar {
+                height: 10px;
+            }
+            
+            .challenge-content {
+                padding: 25px 20px;
+                min-height: 400px;
+            }
+            
+            .challenge-question {
+                margin-bottom: 25px;
+            }
+            
+            .challenge-question-container {
+                gap: 15px;
+                margin-bottom: 20px;
+                flex-direction: row;
+                justify-content: center;
+                align-items: center;
+            }
+            
+            .challenge-question h3 {
+                font-size: 1.6rem;
+            }
+            
+            
+            .transparent-play-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+                margin-left: 0;
+                margin-top: 0;
+            }
+            
+            .challenge-options {
+                grid-template-columns: 1fr;
+                gap: 15px;
+                max-width: none;
+            }
+            
+            .challenge-option {
+                padding: 20px 15px;
+                font-size: 1.1rem;
+                min-height: 70px;
+                border-width: 2px;
+            }
+            
+            .challenge-feedback {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+            
+            .feedback-result {
+                font-size: 1.1rem;
+            }
+            
+            .result-stats {
+                flex-direction: column;
+                gap: 15px;
+                margin-bottom: 20px;
+            }
+            
+            .stat-value {
+                font-size: 1.8rem;
+            }
+            
+            .wrong-words {
+                padding: 15px;
+                margin-top: 20px;
+            }
+            
+            .wrong-words-list {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
         }
     </style>
 </head>
@@ -1027,6 +1423,12 @@
         
         <!-- 手机端单词显示容器 -->
         <div class="mobile-words-container show" id="mobile-words-container">
+            <!-- 移动端挑战按钮 -->
+            <div class="mobile-challenge-controls" style="margin-bottom: 15px; text-align: center;">
+                <button class="btn btn-success" onclick="openMobileChallengeModal()" style="font-size: 0.9rem; padding: 10px 16px; border-radius: 12px;">
+                    <span>🎯</span> 单词挑战
+                </button>
+            </div>
             <div class="word-grid" id="mobile-word-grid"></div>
         </div>
         
@@ -1070,6 +1472,9 @@
                             </button>
                             <button class="btn btn-secondary" onclick="openExportModal('listening')">
                                 <span>📤</span> 导出单词
+                            </button>
+                            <button class="btn btn-success" onclick="openChallengeModal('listening')">
+                                <span>🎯</span> 单词挑战
                             </button>
                             <div class="sort-controls">
                                 <span class="sort-label">排序:</span>
@@ -1118,6 +1523,9 @@
                             <button class="btn btn-secondary" onclick="openExportModal('speaking')">
                                 <span>📤</span> 导出单词
                             </button>
+                            <button class="btn btn-success" onclick="openChallengeModal('speaking')">
+                                <span>🎯</span> 单词挑战
+                            </button>
                             <div class="sort-controls">
                                 <span class="sort-label">排序:</span>
                                 <select class="sort-select" onchange="sortWords('speaking', this.value)">
@@ -1165,6 +1573,9 @@
                             <button class="btn btn-secondary" onclick="openExportModal('reading')">
                                 <span>📤</span> 导出单词
                             </button>
+                            <button class="btn btn-success" onclick="openChallengeModal('reading')">
+                                <span>🎯</span> 单词挑战
+                            </button>
                             <div class="sort-controls">
                                 <span class="sort-label">排序:</span>
                                 <select class="sort-select" onchange="sortWords('reading', this.value)">
@@ -1211,6 +1622,9 @@
                             </button>
                             <button class="btn btn-secondary" onclick="openExportModal('writing')">
                                 <span>📤</span> 导出单词
+                            </button>
+                            <button class="btn btn-success" onclick="openChallengeModal('writing')">
+                                <span>🎯</span> 单词挑战
                             </button>
                             <div class="sort-controls">
                                 <span class="sort-label">排序:</span>
@@ -1406,6 +1820,138 @@
         </div>
     </div>
     
+    <!-- Challenge Setup Modal -->
+    <div class="modal" id="challengeModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">🎯 单词挑战</h3>
+                <button class="close-btn" onclick="closeChallengeModal()">&times;</button>
+            </div>
+            
+            <form id="challengeForm" onsubmit="startChallenge(event)">
+                <div class="form-group">
+                    <label class="form-label">挑战范围</label>
+                    <select class="form-select" name="challenge_scope" id="challengeScope" onchange="updateChallengeOptions()" required>
+                        <option value="subcategory">当前子分类</option>
+                        <option value="category">整个分类</option>
+                        <option value="all">所有单词</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="challengeCategoryGroup">
+                    <label class="form-label">选择分类</label>
+                    <select class="form-select" name="category" id="challengeCategory" required>
+                        <option value="listening">🎧 Listening</option>
+                        <option value="speaking">🗣️ Speaking</option>
+                        <option value="reading">📖 Reading</option>
+                        <option value="writing">✍️ Writing</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="challengeSubcategoryGroup">
+                    <label class="form-label">选择子分类</label>
+                    <select class="form-select" name="subcategory_id" id="challengeSubcategory" required>
+                        <!-- 子分类选项将动态生成 -->
+                    </select>
+                </div>
+                
+                
+                <div class="form-group">
+                    <label class="form-label">题目数量</label>
+                    <select class="form-select" name="question_count" id="questionCount" required>
+                        <option value="5">5 题</option>
+                        <option value="10" selected>10 题</option>
+                        <option value="15">15 题</option>
+                        <option value="20">20 题</option>
+                        <option value="30">30 题</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="favor_favorites" id="favorFavorites" checked style="margin-right: 8px;">
+                        收藏单词优先出现
+                    </label>
+                    <small style="color: #718096; font-size: 0.9rem;">勾选后，收藏的单词会有更高的出现概率</small>
+                </div>
+                
+                <div style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 30px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeChallengeModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">
+                        <span>🚀</span> 开始挑战
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Challenge Game Modal -->
+    <div class="modal" id="challengeGameModal" style="z-index: 1001;">
+        <div class="modal-content" style="max-width: 800px; max-height: 90vh;">
+            <div class="challenge-game-header">
+                <div class="challenge-progress">
+                    <span id="challengeProgress">1 / 10</span>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill" style="width: 10%;"></div>
+                    </div>
+                </div>
+                <button class="close-btn" onclick="closeChallengeGame()" title="退出挑战">&times;</button>
+            </div>
+            
+            <div class="challenge-content">
+                <div class="challenge-question">
+                    <div class="challenge-question-container">
+                        <h3 id="challengeQuestionText">Loading...</h3>
+                        <button id="transparentPlayBtn" class="transparent-play-btn" onclick="playQuestionAudio()" style="display: none;" title="播放音频">
+                            🔊
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="challenge-options" id="challengeOptions">
+                    <!-- 选项将动态生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Challenge Result Modal -->
+    <div class="modal" id="challengeResultModal" style="z-index: 1002;">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3 class="modal-title">🎉 挑战完成</h3>
+                <button class="close-btn" onclick="closeChallengeResult()">&times;</button>
+            </div>
+            
+            <div class="challenge-result-content">
+                <div class="result-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="correctCount">0</div>
+                        <div class="stat-label">正确</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="wrongCount">0</div>
+                        <div class="stat-label">错误</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="accuracyRate">0%</div>
+                        <div class="stat-label">准确率</div>
+                    </div>
+                </div>
+                
+                <div class="wrong-words" id="wrongWordsSection" style="display: none;">
+                    <h4>需要复习的单词：</h4>
+                    <div class="wrong-words-list" id="wrongWordsList"></div>
+                </div>
+                
+                <div style="display: flex; gap: 15px; justify-content: center; margin-top: 30px;">
+                    <button class="btn btn-secondary" onclick="closeChallengeResult()">完成</button>
+                    <button class="btn btn-primary" onclick="restartChallenge()">再来一次</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Notification -->
     <div class="notification" id="notification"></div>
     
@@ -1431,6 +1977,7 @@
             setupFileUpload();
             setupModalCloseHandlers();
             setupResponsiveHandlers();
+            initWordCoverageData();
             loadVocabularyData();
         });
         
@@ -1755,7 +2302,19 @@
                 return;
             }
             
-            const words = vocabularyData.categories[category].subcategories[subcategoryId]?.words || [];
+            let words = vocabularyData.categories[category].subcategories[subcategoryId]?.words || [];
+            
+            // 应用收藏优先排序（默认按最新添加排序）
+            words = [...words].sort((a, b) => {
+                // 第一层：收藏状态排序（收藏的在前）
+                const favoriteCompare = (b.is_favorited ? 1 : 0) - (a.is_favorited ? 1 : 0);
+                if (favoriteCompare !== 0) {
+                    return favoriteCompare;
+                }
+                
+                // 第二层：按创建时间排序（最新的在前）
+                return new Date(b.created_at) - new Date(a.created_at);
+            });
             
             if (words.length === 0) {
                 const subcategoryName = vocabularyData.categories[category].subcategories[subcategoryId]?.name || '未知分类';
@@ -1775,12 +2334,15 @@
             }
             
             container.innerHTML = words.map(word => `
-                <div class="word-card" onclick="playWord('${word.id}')">
+                <div class="word-card ${word.is_favorited ? 'favorited' : ''}" onclick="playWord('${word.id}')">
                     <div class="word-header">
                         <div>
                             <div class="word-title">${word.word}</div>
                         </div>
-                                                  <div class="word-actions">
+                        <div class="word-actions">
+                            <button class="word-action-btn favorite-btn ${word.is_favorited ? 'favorited' : ''}" onclick="event.stopPropagation(); toggleFavorite('${word.id}')" title="${word.is_favorited ? '取消收藏' : '收藏单词'}">
+                                ${word.is_favorited ? '⭐' : '☆'}
+                            </button>
                             <button class="word-action-btn delete-btn" onclick="event.stopPropagation(); deleteWord('${word.id}')" title="删除单词">
                                 🗑️
                             </button>
@@ -2037,6 +2599,70 @@
             }
         }
         
+        // 切换收藏状态
+        async function toggleFavorite(wordId) {
+            try {
+                // 找到单词所在的位置
+                let targetWord = null;
+                let targetCategory = null;
+                let targetSubcategory = null;
+                
+                Object.keys(vocabularyData.categories).forEach(category => {
+                    Object.keys(vocabularyData.categories[category].subcategories).forEach(subId => {
+                        const word = vocabularyData.categories[category].subcategories[subId].words.find(w => w.id === wordId);
+                        if (word) {
+                            targetWord = word;
+                            targetCategory = category;
+                            targetSubcategory = subId;
+                        }
+                    });
+                });
+                
+                if (!targetWord) {
+                    showNotification('找不到指定单词', 'error');
+                    return;
+                }
+                
+                const newFavoriteStatus = !targetWord.is_favorited;
+                
+                const response = await fetch(`/api/vocabulary/${wordId}/favorite`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        is_favorited: newFavoriteStatus
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // 更新本地数据
+                    targetWord.is_favorited = newFavoriteStatus;
+                    
+                    // 重新渲染当前分类的单词（会自动应用收藏优先排序）
+                    const isMobile = window.innerWidth <= 768;
+                    if (isMobile) {
+                        renderMobileWords(targetCategory, targetSubcategory);
+                    } else {
+                        renderWords(targetCategory, targetSubcategory);
+                    }
+                    
+                    // 如果是当前显示的分类，也要重新渲染子分类计数
+                    if (targetCategory === currentCategory) {
+                        renderSubcategories(targetCategory);
+                    }
+                    
+                    showNotification(newFavoriteStatus ? '已收藏' : '已取消收藏', 'success');
+                } else {
+                    showNotification(result.error, 'error');
+                }
+            } catch (error) {
+                showNotification('网络错误: ' + error.message, 'error');
+            }
+        }
+        
         // 删除单词
         async function deleteWord(wordId) {
             if (!confirm('确定要删除这个单词吗？')) {
@@ -2069,26 +2695,39 @@
             }
         }
         
-        // 排序单词
+        // 排序单词（支持收藏优先的两层排序）
         function sortWords(category, sortType) {
             const words = vocabularyData.categories[category].subcategories[currentSubcategory].words;
             
-            switch (sortType) {
-                case 'newest':
-                    words.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-                    break;
-                case 'oldest':
-                    words.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-                    break;
-                case 'alphabetical':
-                    words.sort((a, b) => a.word.toLowerCase().localeCompare(b.word.toLowerCase()));
-                    break;
-                case 'reverse-alphabetical':
-                    words.sort((a, b) => b.word.toLowerCase().localeCompare(a.word.toLowerCase()));
-                    break;
-            }
+            // 定义基础排序函数
+            const sortFunctions = {
+                'newest': (a, b) => new Date(b.created_at) - new Date(a.created_at),
+                'oldest': (a, b) => new Date(a.created_at) - new Date(b.created_at),
+                'alphabetical': (a, b) => a.word.toLowerCase().localeCompare(b.word.toLowerCase()),
+                'reverse-alphabetical': (a, b) => b.word.toLowerCase().localeCompare(a.word.toLowerCase())
+            };
             
-            renderWords(category, currentSubcategory);
+            const baseSortFunction = sortFunctions[sortType];
+            if (!baseSortFunction) return;
+            
+            // 两层排序：先按收藏状态，再按选择的排序方式
+            words.sort((a, b) => {
+                // 第一层：收藏状态排序（收藏的在前）
+                const favoriteCompare = (b.is_favorited ? 1 : 0) - (a.is_favorited ? 1 : 0);
+                if (favoriteCompare !== 0) {
+                    return favoriteCompare;
+                }
+                
+                // 第二层：在相同收藏状态内按选择的方式排序
+                return baseSortFunction(a, b);
+            });
+            
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                renderMobileWords(category, currentSubcategory);
+            } else {
+                renderWords(category, currentSubcategory);
+            }
         }
         
         // 打开上传模态框
@@ -2379,7 +3018,19 @@
                 return;
             }
             
-            const words = vocabularyData.categories[category].subcategories[subcategoryId]?.words || [];
+            let words = vocabularyData.categories[category].subcategories[subcategoryId]?.words || [];
+            
+            // 应用收藏优先排序（默认按最新添加排序）
+            words = [...words].sort((a, b) => {
+                // 第一层：收藏状态排序（收藏的在前）
+                const favoriteCompare = (b.is_favorited ? 1 : 0) - (a.is_favorited ? 1 : 0);
+                if (favoriteCompare !== 0) {
+                    return favoriteCompare;
+                }
+                
+                // 第二层：按创建时间排序（最新的在前）
+                return new Date(b.created_at) - new Date(a.created_at);
+            });
             
             if (words.length === 0) {
                 const subcategoryName = vocabularyData.categories[category].subcategories[subcategoryId]?.name || '未知分类';
@@ -2394,12 +3045,15 @@
             }
             
             container.innerHTML = words.map(word => `
-                <div class="word-card" onclick="playWord('${word.id}')">
+                <div class="word-card ${word.is_favorited ? 'favorited' : ''}" onclick="playWord('${word.id}')">
                     <div class="word-header">
                         <div>
                             <div class="word-title">${word.word}</div>
                         </div>
                         <div class="word-actions">
+                            <button class="word-action-btn favorite-btn ${word.is_favorited ? 'favorited' : ''}" onclick="event.stopPropagation(); toggleFavorite('${word.id}')" title="${word.is_favorited ? '取消收藏' : '收藏单词'}">
+                                ${word.is_favorited ? '⭐' : '☆'}
+                            </button>
                             <button class="word-action-btn delete-btn" onclick="event.stopPropagation(); deleteWord('${word.id}')" title="删除单词">
                                 🗑️
                             </button>
@@ -2708,6 +3362,497 @@
             
             window.URL.revokeObjectURL(url);
         }
+        
+        // 挑战功能相关变量
+        let challengeData = {
+            questions: [],
+            currentQuestionIndex: 0,
+            correctAnswers: 0,
+            wrongAnswers: [],
+            settings: {},
+            currentAudio: null
+        };
+        
+        // 单词覆盖率跟踪（从后端获取）
+        let wordCoverageData = {};
+
+        // 获取认证头信息
+        function getAuthHeaders() {
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+
+            // 从localStorage获取用户信息
+            const authToken = localStorage.getItem('authToken');
+            const currentUser = localStorage.getItem('currentUser');
+
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            }
+            if (currentUser) {
+                headers['X-Current-User'] = currentUser;
+            }
+
+            return headers;
+        }
+
+        // 初始化单词覆盖率数据
+        async function initWordCoverageData() {
+            try {
+                const headers = getAuthHeaders();
+                const response = await fetch('/api/vocabulary/challenge/coverage', {
+                    headers: headers
+                });
+                const result = await response.json();
+                if (result.success) {
+                    wordCoverageData = result.data;
+                } else {
+                    wordCoverageData = {};
+                }
+            } catch (error) {
+                console.warn('Failed to load challenge data:', error);
+                wordCoverageData = {};
+            }
+        }
+
+        // 更新单词覆盖率（记录到后端）
+        function updateWordCoverage(wordId) {
+            // 这里不需要本地更新，因为后端会处理
+            // 前端只需要在挑战结束时调用API记录结果
+        }
+
+        // 记录挑战结果到后端
+        async function saveChallengeResults(challengeData) {
+            try {
+                const results = challengeData.questions.map(q => ({
+                    word_id: q.word.id,
+                    is_correct: q.isCorrect
+                }));
+
+                const headers = getAuthHeaders();
+                const response = await fetch('/api/vocabulary/challenge/record', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({
+                        results: results,
+                        scope: challengeData.settings.scope,
+                        category: challengeData.settings.category,
+                        subcategory_id: challengeData.settings.subcategory_id
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    // 重新加载覆盖率数据
+                    await initWordCoverageData();
+                }
+            } catch (error) {
+                console.warn('Failed to save challenge results:', error);
+            }
+        }
+        
+        // 智能单词选择算法（覆盖率 + 收藏加权）
+        function selectChallengeWords(allWords, count, favorFavorites = true) {
+            if (allWords.length === 0) return [];
+            if (allWords.length <= count) return [...allWords];
+            
+                            // 计算每个单词的权重
+                const weightedWords = allWords.map(word => {
+                    const coverage = wordCoverageData[word.id] || { appear_count: 0, last_appeared: null };
+
+                    // 基础权重：出现次数越少权重越高
+                    let weight = Math.max(1, 10 - coverage.appear_count);
+
+                    // 时间衰减：越久没出现权重越高
+                    if (coverage.last_appeared) {
+                        const daysSinceLastAppeared = (Date.now() - new Date(coverage.last_appeared).getTime()) / (1000 * 60 * 60 * 24);
+                        weight *= Math.min(3, 1 + daysSinceLastAppeared * 0.1);
+                    }
+
+                    // 收藏加权：收藏的单词权重提高
+                    if (favorFavorites && word.is_favorited) {
+                        weight *= 2.5;
+                    }
+
+                    return { word, weight };
+                });
+            
+            // 加权随机选择
+            const selectedWords = [];
+            const availableWords = [...weightedWords];
+            
+            for (let i = 0; i < count && availableWords.length > 0; i++) {
+                // 计算总权重
+                const totalWeight = availableWords.reduce((sum, item) => sum + item.weight, 0);
+                
+                // 随机选择
+                let randomWeight = Math.random() * totalWeight;
+                let selectedIndex = 0;
+                
+                for (let j = 0; j < availableWords.length; j++) {
+                    randomWeight -= availableWords[j].weight;
+                    if (randomWeight <= 0) {
+                        selectedIndex = j;
+                        break;
+                    }
+                }
+                
+                const selected = availableWords.splice(selectedIndex, 1)[0];
+                selectedWords.push(selected.word);
+            }
+            
+            return selectedWords;
+        }
+        
+        // 挑战模态框控制函数
+        function openChallengeModal(category) {
+            document.getElementById('challengeCategory').value = category;
+            updateChallengeSubcategoryOptions(category);
+            
+            // 设置默认值
+            document.getElementById('challengeScope').value = 'subcategory';
+            document.getElementById('challengeSubcategory').value = currentSubcategory;
+            updateChallengeOptions();
+            
+            document.getElementById('challengeModal').classList.add('show');
+        }
+        
+        function closeChallengeModal() {
+            document.getElementById('challengeModal').classList.remove('show');
+            document.getElementById('challengeForm').reset();
+        }
+        
+        function updateChallengeOptions() {
+            const scope = document.getElementById('challengeScope').value;
+            const categoryGroup = document.getElementById('challengeCategoryGroup');
+            const subcategoryGroup = document.getElementById('challengeSubcategoryGroup');
+            
+            switch (scope) {
+                case 'subcategory':
+                    categoryGroup.style.display = 'block';
+                    subcategoryGroup.style.display = 'block';
+                    break;
+                case 'category':
+                    categoryGroup.style.display = 'block';
+                    subcategoryGroup.style.display = 'none';
+                    break;
+                case 'all':
+                    categoryGroup.style.display = 'none';
+                    subcategoryGroup.style.display = 'none';
+                    break;
+            }
+        }
+        
+        function updateChallengeSubcategoryOptions(category) {
+            const select = document.getElementById('challengeSubcategory');
+            const subcategories = vocabularyData.categories[category].subcategories;
+            
+            select.innerHTML = '';
+            Object.entries(subcategories).forEach(([subId, subData]) => {
+                const option = document.createElement('option');
+                option.value = subId;
+                option.textContent = subData.name;
+                if (subId === currentSubcategory) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+        }
+        
+        // 开始挑战
+        function startChallenge(event) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const formData = new FormData(form);
+            
+            challengeData.settings = {
+                scope: formData.get('challenge_scope'),
+                category: formData.get('category'),
+                subcategory_id: formData.get('subcategory_id'),
+                count: parseInt(formData.get('question_count')),
+                favorFavorites: formData.get('favor_favorites') === 'on'
+            };
+            
+            // 收集单词
+            let allWords = [];
+            switch (challengeData.settings.scope) {
+                case 'subcategory':
+                    allWords = vocabularyData.categories[challengeData.settings.category]
+                        .subcategories[challengeData.settings.subcategory_id]?.words || [];
+                    break;
+                case 'category':
+                    Object.values(vocabularyData.categories[challengeData.settings.category].subcategories)
+                        .forEach(subcategory => {
+                            allWords.push(...subcategory.words);
+                        });
+                    break;
+                case 'all':
+                    Object.values(vocabularyData.categories).forEach(category => {
+                        Object.values(category.subcategories).forEach(subcategory => {
+                            allWords.push(...subcategory.words);
+                        });
+                    });
+                    break;
+            }
+            
+            if (allWords.length === 0) {
+                showNotification('没有找到可用的单词', 'warning');
+                return;
+            }
+            
+            if (allWords.length < 4) {
+                showNotification('单词数量不足，至少需要4个单词才能进行挑战', 'warning');
+                return;
+            }
+            
+            // 选择挑战单词
+            const selectedWords = selectChallengeWords(
+                allWords, 
+                challengeData.settings.count, 
+                challengeData.settings.favorFavorites
+            );
+            
+            // 生成题目（混合模式）
+            challengeData.questions = generateQuestions(selectedWords, allWords);
+            challengeData.currentQuestionIndex = 0;
+            challengeData.correctAnswers = 0;
+            challengeData.wrongAnswers = [];
+            
+            // 关闭设置模态框，打开游戏模态框
+            closeChallengeModal();
+            startChallengeGame();
+        }
+        
+        // 生成题目（混合模式）
+        function generateQuestions(selectedWords, allWords) {
+            return selectedWords.map(word => {
+                // 随机选择题目类型（50%概率）
+                const type = Math.random() < 0.5 ? 'word_to_meaning' : 'meaning_to_word';
+                
+                // 生成错误选项
+                const wrongOptions = allWords
+                    .filter(w => w.id !== word.id && (w.meaning || '').trim() !== '') // 确保有意思的单词
+                    .sort(() => Math.random() - 0.5)
+                    .slice(0, 3);
+                
+                const options = [word, ...wrongOptions].sort(() => Math.random() - 0.5);
+                
+                return {
+                    word: word,
+                    type: type,
+                    question: type === 'word_to_meaning' ? word.word : (word.meaning || '暂无释义'),
+                    options: options,
+                    correctAnswer: word.id,
+                    userAnswer: null,
+                    isCorrect: null
+                };
+            });
+        }
+        
+        // 开始挑战游戏
+        function startChallengeGame() {
+            document.getElementById('challengeGameModal').classList.add('show');
+            showQuestion();
+        }
+        
+        // 显示题目
+        function showQuestion() {
+            const question = challengeData.questions[challengeData.currentQuestionIndex];
+            const progress = challengeData.currentQuestionIndex + 1;
+            const total = challengeData.questions.length;
+            
+            // 更新进度
+            document.getElementById('challengeProgress').textContent = `${progress} / ${total}`;
+            document.getElementById('progressFill').style.width = `${(progress / total) * 100}%`;
+            
+            
+            // 显示题目
+            document.getElementById('challengeQuestionText').textContent = question.question;
+            
+            // 显示/隐藏透明播放按钮
+            const transparentPlayBtn = document.getElementById('transparentPlayBtn');
+            if (question.type === 'word_to_meaning') {
+                transparentPlayBtn.style.display = 'flex';
+                transparentPlayBtn.setAttribute('data-word-id', question.word.id);
+                
+                // 自动播放音频
+                setTimeout(() => {
+                    playQuestionAudio();
+                }, 300);
+            } else {
+                transparentPlayBtn.style.display = 'none';
+            }
+            
+            // 生成选项
+            const optionsContainer = document.getElementById('challengeOptions');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'challenge-option';
+                optionDiv.textContent = question.type === 'word_to_meaning' 
+                    ? (option.meaning || '暂无释义')
+                    : option.word;
+                optionDiv.onclick = () => selectOption(index, option.id);
+                optionsContainer.appendChild(optionDiv);
+            });
+            
+            // 隐藏反馈
+            document.getElementById('challengeFeedback').style.display = 'none';
+        }
+        
+        // 选择选项
+        function selectOption(optionIndex, wordId) {
+            const question = challengeData.questions[challengeData.currentQuestionIndex];
+            
+            // 标记用户答案
+            question.userAnswer = wordId;
+            question.isCorrect = wordId === question.correctAnswer;
+            
+            // 更新统计
+            if (question.isCorrect) {
+                challengeData.correctAnswers++;
+            } else {
+                challengeData.wrongAnswers.push(question.word);
+            }
+            
+            // 显示选项状态
+            const options = document.querySelectorAll('.challenge-option');
+            options.forEach((option, index) => {
+                option.onclick = null; // 禁用点击
+                
+                if (index === optionIndex) {
+                    option.classList.add('selected');
+                }
+                
+                // 标记正确答案
+                if (question.options[index].id === question.correctAnswer) {
+                    option.classList.add('correct');
+                } else if (index === optionIndex && !question.isCorrect) {
+                    option.classList.add('incorrect');
+                }
+            });
+            
+            // 如果是意思选单词模式，播放选中的单词音频
+            if (question.type === 'meaning_to_word') {
+                setTimeout(() => {
+                    playWord(wordId);
+                }, 500);
+            }
+            
+            // 延迟后自动进入下一题
+            setTimeout(() => {
+                nextQuestion();
+            }, 1500);
+        }
+        
+        
+        // 下一题
+        function nextQuestion() {
+            challengeData.currentQuestionIndex++;
+            
+            if (challengeData.currentQuestionIndex >= challengeData.questions.length) {
+                // 挑战结束，显示结果
+                showChallengeResult();
+            } else {
+                // 显示下一题
+                showQuestion();
+            }
+        }
+        
+        // 播放题目音频
+        function playQuestionAudio() {
+            const transparentPlayBtn = document.getElementById('transparentPlayBtn');
+            const wordId = transparentPlayBtn.getAttribute('data-word-id');
+            if (wordId) {
+                playWord(wordId);
+            }
+        }
+        
+        // 显示挑战结果
+        async function showChallengeResult() {
+            const total = challengeData.questions.length;
+            const correct = challengeData.correctAnswers;
+            const wrong = total - correct;
+            const accuracy = Math.round((correct / total) * 100);
+            
+            document.getElementById('correctCount').textContent = correct;
+            document.getElementById('wrongCount').textContent = wrong;
+            document.getElementById('accuracyRate').textContent = `${accuracy}%`;
+            
+            // 显示错误单词
+            const wrongWordsSection = document.getElementById('wrongWordsSection');
+            const wrongWordsList = document.getElementById('wrongWordsList');
+            
+            if (challengeData.wrongAnswers.length > 0) {
+                wrongWordsSection.style.display = 'block';
+                wrongWordsList.innerHTML = challengeData.wrongAnswers.map(word => `
+                    <div class="wrong-word-item">
+                        <div class="wrong-word-word">${word.word}</div>
+                        <div class="wrong-word-meaning">${word.meaning || '暂无释义'}</div>
+                    </div>
+                `).join('');
+            } else {
+                wrongWordsSection.style.display = 'none';
+            }
+            
+            // 保存挑战结果到后端
+            await saveChallengeResults(challengeData);
+
+            // 关闭游戏模态框，显示结果模态框
+            document.getElementById('challengeGameModal').classList.remove('show');
+            document.getElementById('challengeResultModal').classList.add('show');
+        }
+        
+        // 关闭挑战游戏
+        function closeChallengeGame() {
+            if (confirm('确定要退出当前挑战吗？进度将不会保存。')) {
+                document.getElementById('challengeGameModal').classList.remove('show');
+                
+                // 停止音频播放
+                if (challengeData.currentAudio) {
+                    challengeData.currentAudio.pause();
+                    challengeData.currentAudio = null;
+                }
+            }
+        }
+        
+        // 关闭挑战结果
+        function closeChallengeResult() {
+            document.getElementById('challengeResultModal').classList.remove('show');
+        }
+        
+        // 重新开始挑战
+        function restartChallenge() {
+            closeChallengeResult();
+            openChallengeModal(challengeData.settings.category);
+        }
+        
+        // 移动端挑战功能
+        function openMobileChallengeModal() {
+            // 设置当前分类和子分类
+            document.getElementById('challengeCategory').value = currentCategory;
+            updateChallengeSubcategoryOptions(currentCategory);
+            
+            // 设置默认导出当前子分类
+            document.getElementById('challengeScope').value = 'subcategory';
+            document.getElementById('challengeSubcategory').value = currentSubcategory;
+            updateChallengeOptions();
+            
+            // 打开挑战模态框
+            document.getElementById('challengeModal').classList.add('show');
+        }
+        
+        // 监听挑战分类变化
+        document.addEventListener('DOMContentLoaded', function() {
+            const challengeCategory = document.getElementById('challengeCategory');
+            if (challengeCategory) {
+                challengeCategory.addEventListener('change', function() {
+                    updateChallengeSubcategoryOptions(this.value);
+                });
+            }
+        });
         
     </script>
 </body>

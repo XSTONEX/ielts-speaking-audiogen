@@ -28,6 +28,7 @@ VOCABULARY_BOOK_DIR = 'vocabulary_book'  # 单词本存储目录
 VOCABULARY_CATEGORIES_DIR = 'vocabulary_book/categories'  # 分类数据存储目录
 VOCABULARY_AUDIO_DIR = 'vocabulary_book/audio'  # 单词本音频存储目录
 VOCABULARY_TASKS_DIR = 'vocabulary_book/tasks'  # 音频生成任务队列目录
+VOCABULARY_CHALLENGE_DIR = 'vocabulary_book/challenges'  # 挑战数据存储目录
 MESSAGE_BOARD_DIR = 'message_board'
 MESSAGE_IMAGES_DIR = 'message_board/images'
 CHALLENGES_DIR = 'challenges'
@@ -39,6 +40,7 @@ os.makedirs(VOCAB_AUDIO_DIR, exist_ok=True)
 os.makedirs(VOCABULARY_BOOK_DIR, exist_ok=True)
 os.makedirs(VOCABULARY_CATEGORIES_DIR, exist_ok=True)
 os.makedirs(VOCABULARY_TASKS_DIR, exist_ok=True)
+os.makedirs(VOCABULARY_CHALLENGE_DIR, exist_ok=True)
 # 创建分类音频目录
 for category in ['listening', 'speaking', 'reading', 'writing']:
     os.makedirs(os.path.join(VOCABULARY_AUDIO_DIR, category), exist_ok=True)
@@ -3363,7 +3365,23 @@ def load_category_data(category):
     if os.path.exists(category_file):
         try:
             with open(category_file, 'r', encoding='utf-8') as f:
-                return json.load(f)
+                data = json.load(f)
+                
+                # 数据迁移：为现有单词添加 is_favorited 字段
+                updated = False
+                for subcategory_id in data['subcategories']:
+                    for word in data['subcategories'][subcategory_id]['words']:
+                        if 'is_favorited' not in word:
+                            word['is_favorited'] = False
+                            updated = True
+                
+                # 如果有更新，直接保存数据（避免递归调用）
+                if updated:
+                    data['metadata']['last_updated'] = datetime.now().isoformat()
+                    with open(category_file, 'w', encoding='utf-8') as f:
+                        json.dump(data, f, ensure_ascii=False, indent=2)
+                
+                return data
         except:
             pass
     
@@ -3769,7 +3787,8 @@ def add_vocabulary_word():
             'word': word,
             'meaning': meaning,
             'created_at': datetime.now().isoformat(),
-            'audio_generated': False
+            'audio_generated': False,
+            'is_favorited': False  # 默认未收藏
         }
         
         # 添加到对应子分类
@@ -3913,6 +3932,153 @@ def delete_vocabulary_word(word_id):
                     except:
                         continue
         
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/vocabulary/<word_id>/favorite', methods=['PUT'])
+def toggle_word_favorite(word_id):
+    """切换单词收藏状态"""
+    try:
+        data = request.json
+        is_favorited = data.get('is_favorited', False)
+        
+        found = False
+        updated_word = None
+        
+        # 在所有分类和子分类中查找并更新
+        for category in ['listening', 'speaking', 'reading', 'writing']:
+            category_data = load_category_data(category)
+            
+            for subcategory_id in category_data['subcategories']:
+                words = category_data['subcategories'][subcategory_id]['words']
+                
+                for word in words:
+                    if word['id'] == word_id:
+                        word['is_favorited'] = is_favorited
+                        updated_word = word
+                        found = True
+                        save_category_data(category, category_data)
+                        break
+                
+                if found:
+                    break
+            
+            if found:
+                break
+        
+        if not found:
+            return jsonify({'success': False, 'error': '单词不存在'}), 404
+        
+        return jsonify({'success': True, 'data': updated_word})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# ==================== 单词挑战相关API ====================
+
+def load_user_challenge_data(user_id):
+    """加载用户的挑战数据"""
+    user_file = os.path.join(VOCABULARY_CHALLENGE_DIR, f'{user_id}.json')
+    if os.path.exists(user_file):
+        try:
+            with open(user_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except:
+            pass
+
+    # 返回默认结构
+    return {
+        "word_coverage": {},
+        "challenge_stats": {
+            "total_challenges": 0,
+            "total_correct": 0,
+            "total_questions": 0,
+            "last_challenge": None
+        },
+        "metadata": {
+            "created_at": datetime.now().isoformat(),
+            "last_updated": datetime.now().isoformat()
+        }
+    }
+
+def save_user_challenge_data(user_id, data):
+    """保存用户的挑战数据"""
+    user_file = os.path.join(VOCABULARY_CHALLENGE_DIR, f'{user_id}.json')
+    data['metadata']['last_updated'] = datetime.now().isoformat()
+    with open(user_file, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+def get_current_user_id():
+    """获取当前用户ID从请求头中获取"""
+    try:
+        # 从请求头中获取用户信息
+        auth_token = request.headers.get('Authorization', '').replace('Bearer ', '')
+        current_user = request.headers.get('X-Current-User', '')
+
+        if current_user:
+            # 如果是JSON字符串，解析并提取username
+            if current_user.startswith('{') and current_user.endswith('}'):
+                try:
+                    user_obj = json.loads(current_user)
+                    return user_obj.get('username', 'default_user')
+                except json.JSONDecodeError:
+                    pass
+
+            # 如果已经是字符串，直接使用
+            return current_user
+
+        # 如果没有用户信息，使用默认值
+        return "default_user"
+    except:
+        return "default_user"
+
+@app.route('/api/vocabulary/challenge/coverage')
+def get_challenge_coverage():
+    """获取用户的挑战覆盖率数据"""
+    try:
+        user_id = get_current_user_id()
+        challenge_data = load_user_challenge_data(user_id)
+        return jsonify({'success': True, 'data': challenge_data['word_coverage']})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/vocabulary/challenge/record', methods=['POST'])
+def record_challenge_result():
+    """记录挑战结果"""
+    try:
+        user_id = get_current_user_id()
+        data = request.json
+        challenge_results = data.get('results', [])
+        scope = data.get('scope')
+        category = data.get('category')
+        subcategory_id = data.get('subcategory_id')
+
+        # 加载用户挑战数据
+        challenge_data = load_user_challenge_data(user_id)
+
+        # 更新单词覆盖率
+        for result in challenge_results:
+            word_id = result['word_id']
+            if word_id not in challenge_data['word_coverage']:
+                challenge_data['word_coverage'][word_id] = {
+                    'appear_count': 0,
+                    'last_appeared': None
+                }
+            challenge_data['word_coverage'][word_id]['appear_count'] += 1
+            challenge_data['word_coverage'][word_id]['last_appeared'] = datetime.now().isoformat()
+
+        # 更新挑战统计
+        total_questions = len(challenge_results)
+        correct_answers = sum(1 for r in challenge_results if r.get('is_correct', False))
+
+        challenge_data['challenge_stats']['total_challenges'] += 1
+        challenge_data['challenge_stats']['total_correct'] += correct_answers
+        challenge_data['challenge_stats']['total_questions'] += total_questions
+        challenge_data['challenge_stats']['last_challenge'] = datetime.now().isoformat()
+
+        # 保存数据
+        save_user_challenge_data(user_id, challenge_data)
+
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
