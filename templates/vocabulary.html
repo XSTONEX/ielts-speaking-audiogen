@@ -1,45 +1,48 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>单词本 - IELTS学习助手</title>
-    
+
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
-    
-    <link href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Crimson+Text:wght@400;600&display=swap" rel="stylesheet">
-    
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Crimson+Text:wght@400;600&display=swap"
+        rel="stylesheet">
+
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: 'PT Serif', 'Crimson Text', ui-serif, 'Times New Roman', 'Georgia', serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             color: #333;
         }
-        
+
         .container {
             max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
         }
-        
+
         .header {
             position: relative;
             text-align: center;
             margin-bottom: 30px;
             color: white;
         }
-        
+
         .back-btn {
             position: absolute;
             left: 0;
@@ -60,38 +63,38 @@
             gap: 8px;
             font-family: 'PT Serif', 'Crimson Text', ui-serif, 'Times New Roman', 'Georgia', serif;
         }
-        
+
         .back-btn:hover {
             background: rgba(255, 255, 255, 0.3);
             border-color: rgba(255, 255, 255, 0.5);
             transform: translateY(-50%) translateX(-2px);
         }
-        
+
         .header h1 {
             font-size: 2.5rem;
             font-weight: 700;
             margin-bottom: 10px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        
+
         .header p {
             font-size: 1.1rem;
             opacity: 0.9;
         }
-        
+
         .main-content {
             background: white;
             border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
             overflow: hidden;
         }
-        
+
         .tabs {
             display: flex;
             background: #f8fafc;
             border-bottom: 1px solid #e2e8f0;
         }
-        
+
         .tab {
             flex: 1;
             padding: 20px;
@@ -105,16 +108,16 @@
             background: none;
             font-family: 'PT Serif', 'Crimson Text', ui-serif, 'Times New Roman', 'Georgia', serif;
         }
-        
+
         .tab:hover {
             background: #e2e8f0;
         }
-        
+
         .tab.active {
             background: white;
             color: #667eea;
         }
-        
+
         .tab.active::after {
             content: '';
             position: absolute;
@@ -124,21 +127,21 @@
             height: 3px;
             background: #667eea;
         }
-        
+
         .tab-content {
             padding: 0;
             min-height: 700px;
         }
-        
+
         .tab-panel {
             display: none;
             height: 100%;
         }
-        
+
         .tab-panel.active {
             display: flex;
         }
-        
+
         .sidebar {
             width: 300px;
             background: #f8fafc;
@@ -149,27 +152,27 @@
             display: flex;
             flex-direction: column;
         }
-        
+
         .content-area {
             flex: 1;
             padding: 30px;
             overflow-y: auto;
             height: 700px;
         }
-        
+
         .sidebar-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
             margin-bottom: 20px;
         }
-        
+
         .sidebar-title {
             font-size: 1.1rem;
             font-weight: 600;
             color: #374151;
         }
-        
+
         .add-subcategory-btn {
             width: 32px;
             height: 32px;
@@ -184,12 +187,12 @@
             font-size: 1.2rem;
             transition: all 0.2s ease;
         }
-        
+
         .add-subcategory-btn:hover {
             background: #5a67d8;
             transform: scale(1.05);
         }
-        
+
         .subcategory-list {
             list-style: none;
             flex: 1;
@@ -197,29 +200,29 @@
             padding-right: 5px;
             margin-right: -5px;
         }
-        
+
         /* 自定义滚动条样式 */
         .subcategory-list::-webkit-scrollbar {
             width: 4px;
         }
-        
+
         .subcategory-list::-webkit-scrollbar-track {
             background: transparent;
         }
-        
+
         .subcategory-list::-webkit-scrollbar-thumb {
             background: #cbd5e0;
             border-radius: 2px;
         }
-        
+
         .subcategory-list::-webkit-scrollbar-thumb:hover {
             background: #a0aec0;
         }
-        
+
         .subcategory-item {
             margin-bottom: 8px;
         }
-        
+
         .subcategory-link {
             display: flex;
             align-items: center;
@@ -233,43 +236,43 @@
             text-decoration: none;
             color: #4a5568;
         }
-        
+
         .subcategory-link:hover {
             border-color: #cbd5e0;
             transform: translateX(3px);
         }
-        
+
         .subcategory-link.active {
             border-color: #667eea;
             background: #edf2f7;
             color: #667eea;
         }
-        
+
         .subcategory-info {
             flex: 1;
         }
-        
+
         .subcategory-name {
             font-weight: 500;
             margin-bottom: 2px;
         }
-        
+
         .subcategory-count {
             font-size: 0.8rem;
             color: #718096;
         }
-        
+
         .subcategory-actions {
             display: flex;
             gap: 5px;
             opacity: 0;
             transition: opacity 0.2s ease;
         }
-        
+
         .subcategory-link:hover .subcategory-actions {
             opacity: 1;
         }
-        
+
         .subcategory-action {
             width: 24px;
             height: 24px;
@@ -282,25 +285,25 @@
             font-size: 0.8rem;
             transition: all 0.2s ease;
         }
-        
+
         .edit-subcategory-btn {
             background: #ed8936;
             color: white;
         }
-        
+
         .edit-subcategory-btn:hover {
             background: #dd6b20;
         }
-        
+
         .delete-subcategory-btn {
             background: #f56565;
             color: white;
         }
-        
+
         .delete-subcategory-btn:hover {
             background: #e53e3e;
         }
-        
+
         .quick-add {
             background: #f7fafc;
             border: 2px dashed #cbd5e0;
@@ -309,18 +312,26 @@
             margin-bottom: 30px;
             transition: all 0.3s ease;
         }
-        
+
         .quick-add:hover {
             border-color: #667eea;
             background: #edf2f7;
         }
-        
+
         .quick-add-form {
             display: flex;
             gap: 15px;
             flex-wrap: wrap;
         }
-        
+
+        .duplicate-warning {
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: #ed8936;
+            width: 100%;
+            text-align: left;
+        }
+
         .quick-input {
             flex: 1;
             min-width: 200px;
@@ -330,12 +341,12 @@
             font-size: 1rem;
             transition: border-color 0.3s ease;
         }
-        
+
         .quick-input:focus {
             outline: none;
             border-color: #667eea;
         }
-        
+
         .controls {
             display: flex;
             gap: 15px;
@@ -343,7 +354,7 @@
             flex-wrap: wrap;
             align-items: center;
         }
-        
+
         .btn {
             padding: 12px 24px;
             border: none;
@@ -357,48 +368,48 @@
             gap: 8px;
             font-size: 0.9rem;
         }
-        
+
         .btn-primary {
             background: #667eea;
             color: white;
         }
-        
+
         .btn-primary:hover {
             background: #5a67d8;
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
         }
-        
+
         .btn-secondary {
             background: #e2e8f0;
             color: #4a5568;
         }
-        
+
         .btn-secondary:hover {
             background: #cbd5e0;
         }
-        
+
         .btn-success {
             background: #48bb78;
             color: white;
         }
-        
+
         .btn-success:hover {
             background: #38a169;
         }
-        
+
         .sort-controls {
             display: flex;
             gap: 10px;
             align-items: center;
             margin-left: auto;
         }
-        
+
         .sort-label {
             font-weight: 500;
             color: #4a5568;
         }
-        
+
         .sort-select {
             padding: 8px 12px;
             border: 2px solid #e2e8f0;
@@ -406,13 +417,13 @@
             font-size: 0.9rem;
             cursor: pointer;
         }
-        
+
         .word-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 15px;
         }
-        
+
         .word-card {
             background: white;
             border: 2px solid #e2e8f0;
@@ -422,41 +433,41 @@
             position: relative;
             cursor: pointer;
         }
-        
+
         .word-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
             border-color: #667eea;
         }
-        
+
         .word-card:active {
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
         }
-        
+
         .word-card.playing {
             border-color: #48bb78;
             background: #f0fff4;
         }
-        
+
         .word-card.favorited {
             border-color: #ffc107;
             background: linear-gradient(135deg, #fffbf0 0%, #fff8e6 100%);
             box-shadow: 0 4px 12px rgba(255, 193, 7, 0.1);
         }
-        
+
         .word-card.favorited:hover {
             border-color: #ffb300;
             box-shadow: 0 8px 25px rgba(255, 193, 7, 0.2);
         }
-        
+
         .word-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 15px;
         }
-        
+
         .word-title {
             font-size: 1.4rem;
             font-weight: 700;
@@ -464,12 +475,12 @@
             margin-bottom: 5px;
             font-family: 'PT Serif', 'Crimson Text', ui-serif, 'Times New Roman', 'Georgia', serif;
         }
-        
+
         .word-actions {
             display: flex;
             gap: 8px;
         }
-        
+
         .word-action-btn {
             width: 32px;
             height: 32px;
@@ -482,47 +493,47 @@
             font-size: 0.9rem;
             transition: all 0.2s ease;
         }
-        
+
         .play-btn {
             background: #48bb78;
             color: white;
         }
-        
+
         .play-btn:hover {
             background: #38a169;
         }
-        
+
         .delete-btn {
             background: transparent;
             color: #f56565;
         }
-        
+
         .delete-btn:hover {
             background: rgba(245, 101, 101, 0.1);
             color: #e53e3e;
         }
-        
+
         .favorite-btn {
             background: transparent;
             color: #e2e8f0;
             transition: all 0.2s ease;
         }
-        
+
         .favorite-btn:hover {
             background: rgba(255, 193, 7, 0.1);
             color: #ffc107;
             transform: scale(1.1);
         }
-        
+
         .favorite-btn.favorited {
             color: #ffc107;
             text-shadow: 0 0 8px rgba(255, 193, 7, 0.3);
         }
-        
+
         .favorite-btn.favorited:hover {
             color: #ffb300;
         }
-        
+
         .word-meaning {
             color: #4a5568;
             font-size: 1rem;
@@ -530,7 +541,7 @@
             margin-bottom: 15px;
             font-family: 'PT Serif', 'Crimson Text', ui-serif, 'Times New Roman', 'Georgia', serif;
         }
-        
+
         .word-meta {
             display: flex;
             justify-content: space-between;
@@ -538,21 +549,21 @@
             font-size: 0.8rem;
             color: #718096;
         }
-        
+
         .audio-status {
             display: flex;
             align-items: center;
             gap: 5px;
         }
-        
+
         .audio-ready {
             color: #48bb78;
         }
-        
+
         .audio-generating {
             color: #ed8936;
         }
-        
+
         .empty-state {
             text-align: center;
             padding: 60px 20px;
@@ -562,18 +573,18 @@
             align-items: center;
             justify-content: center;
         }
-        
+
         .empty-state-icon {
             font-size: 4rem;
             margin-bottom: 20px;
         }
-        
+
         .empty-state h3 {
             font-size: 1.5rem;
             margin-bottom: 10px;
             color: #4a5568;
         }
-        
+
         .modal {
             display: none;
             position: fixed;
@@ -581,16 +592,16 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0, 0, 0, 0.5);
             z-index: 1000;
         }
-        
+
         .modal.show {
             display: flex;
             align-items: center;
             justify-content: center;
         }
-        
+
         .modal-content {
             background: white;
             border-radius: 20px;
@@ -600,20 +611,20 @@
             max-height: 80vh;
             overflow-y: auto;
         }
-        
+
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
         }
-        
+
         .modal-title {
             font-size: 1.5rem;
             font-weight: 700;
             color: #2d3748;
         }
-        
+
         .close-btn {
             background: none;
             border: none;
@@ -621,18 +632,18 @@
             cursor: pointer;
             color: #718096;
         }
-        
+
         .form-group {
             margin-bottom: 20px;
         }
-        
+
         .form-label {
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
             color: #4a5568;
         }
-        
+
         .form-input {
             width: 100%;
             padding: 12px 16px;
@@ -641,12 +652,12 @@
             font-size: 1rem;
             transition: border-color 0.3s ease;
         }
-        
+
         .form-input:focus {
             outline: none;
             border-color: #667eea;
         }
-        
+
         .form-select {
             width: 100%;
             padding: 12px 16px;
@@ -655,7 +666,7 @@
             font-size: 1rem;
             cursor: pointer;
         }
-        
+
         .file-upload {
             border: 2px dashed #cbd5e0;
             border-radius: 10px;
@@ -664,17 +675,17 @@
             cursor: pointer;
             transition: all 0.3s ease;
         }
-        
+
         .file-upload:hover {
             border-color: #667eea;
             background: #f7fafc;
         }
-        
+
         .file-upload.drag-over {
             border-color: #667eea;
             background: #edf2f7;
         }
-        
+
         .notification {
             position: fixed;
             top: 20px;
@@ -687,23 +698,23 @@
             transform: translateX(400px);
             transition: transform 0.3s ease;
         }
-        
+
         .notification.show {
             transform: translateX(0);
         }
-        
+
         .notification.success {
             background: #48bb78;
         }
-        
+
         .notification.error {
             background: #f56565;
         }
-        
+
         .notification.warning {
             background: #ed8936;
         }
-        
+
         .loading {
             display: inline-block;
             width: 20px;
@@ -713,12 +724,17 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
-        
+
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
-        
+
         /* 挑战功能样式 */
         .challenge-game-header {
             display: flex;
@@ -728,20 +744,20 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
-        
+
         .challenge-progress {
             display: flex;
             align-items: center;
             gap: 20px;
             flex: 1;
         }
-        
+
         .challenge-progress span {
             font-size: 1.1rem;
             font-weight: 600;
             min-width: 60px;
         }
-        
+
         .progress-bar {
             flex: 1;
             height: 12px;
@@ -751,7 +767,7 @@
             box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.15);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        
+
         .progress-fill {
             height: 100%;
             background: linear-gradient(90deg, #48bb78, #38a169, #48bb78);
@@ -761,12 +777,17 @@
             border-radius: 25px;
             box-shadow: 0 2px 12px rgba(72, 187, 120, 0.4), inset 0 1px 3px rgba(255, 255, 255, 0.3);
         }
-        
+
         @keyframes progressShimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
+            0% {
+                background-position: -200% 0;
+            }
+
+            100% {
+                background-position: 200% 0;
+            }
         }
-        
+
         .challenge-game-header .close-btn {
             color: white;
             background: rgba(255, 255, 255, 0.1);
@@ -777,24 +798,24 @@
             font-size: 1.2rem;
             transition: all 0.3s ease;
         }
-        
+
         .challenge-game-header .close-btn:hover {
             background: rgba(255, 255, 255, 0.2);
             border-color: rgba(255, 255, 255, 0.4);
         }
-        
+
         .challenge-content {
             padding: 40px 30px;
             background: linear-gradient(180deg, #fafbfc 0%, #ffffff 100%);
             min-height: 500px;
         }
-        
+
         .challenge-question {
             text-align: center;
             margin-bottom: 40px;
             position: relative;
         }
-        
+
         .challenge-question-container {
             display: flex;
             align-items: center;
@@ -802,7 +823,7 @@
             gap: 15px;
             margin-bottom: 20px;
         }
-        
+
         .challenge-question h3 {
             font-size: 2.2rem;
             color: #2d3748;
@@ -810,8 +831,8 @@
             margin: 0;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
-        
-        
+
+
         .transparent-play-btn {
             background: rgba(66, 153, 225, 0.1);
             color: #4299e1;
@@ -827,13 +848,13 @@
             font-size: 1.2rem;
             margin-left: 10px;
         }
-        
+
         .transparent-play-btn:hover {
             background: rgba(66, 153, 225, 0.2);
             border-color: rgba(66, 153, 225, 0.4);
             transform: scale(1.05);
         }
-        
+
         .challenge-options {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -843,7 +864,7 @@
             margin-left: auto;
             margin-right: auto;
         }
-        
+
         .challenge-option {
             background: linear-gradient(145deg, #ffffff, #f8fafc);
             border: 3px solid #e2e8f0;
@@ -863,7 +884,7 @@
             position: relative;
             overflow: hidden;
         }
-        
+
         .challenge-option::before {
             content: '';
             position: absolute;
@@ -874,78 +895,96 @@
             background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
             transition: left 0.5s ease;
         }
-        
+
         .challenge-option:hover {
             border-color: #667eea;
             background: linear-gradient(145deg, #f7fafc, #edf2f7);
             transform: translateY(-3px);
             box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
         }
-        
+
         .challenge-option:hover::before {
             left: 100%;
         }
-        
+
         .challenge-option.selected {
             border-color: #667eea;
             background: linear-gradient(145deg, #edf2f7, #e2e8f0);
             transform: translateY(-2px);
         }
-        
+
         .challenge-option.correct {
             border-color: #48bb78;
             background: linear-gradient(145deg, #f0fff4, #c6f6d5);
             color: #2f855a;
             animation: correctPulse 0.6s ease;
         }
-        
+
         .challenge-option.incorrect {
             border-color: #f56565;
             background: linear-gradient(145deg, #fed7d7, #feb2b2);
             color: #c53030;
             animation: incorrectShake 0.6s ease;
         }
-        
+
         @keyframes correctPulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
         }
-        
+
         @keyframes incorrectShake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
         }
-        
-        
+
+
         .challenge-result-content {
             text-align: center;
             padding: 20px;
         }
-        
+
         .result-stats {
             display: flex;
             justify-content: space-around;
             margin-bottom: 30px;
         }
-        
+
         .stat-item {
             text-align: center;
         }
-        
+
         .stat-value {
             font-size: 2.5rem;
             font-weight: 700;
             color: #2d3748;
         }
-        
+
         .stat-label {
             font-size: 1rem;
             color: #718096;
             margin-top: 5px;
         }
-        
+
         .wrong-words {
             text-align: left;
             margin-top: 30px;
@@ -953,18 +992,18 @@
             background: #f8fafc;
             border-radius: 12px;
         }
-        
+
         .wrong-words h4 {
             color: #2d3748;
             margin-bottom: 15px;
         }
-        
+
         .wrong-words-list {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 10px;
         }
-        
+
         .wrong-word-item {
             background: white;
             border: 1px solid #e2e8f0;
@@ -972,22 +1011,22 @@
             padding: 10px;
             font-size: 0.9rem;
         }
-        
+
         .wrong-word-word {
             font-weight: 600;
             color: #2d3748;
         }
-        
+
         .wrong-word-meaning {
             color: #718096;
             margin-top: 2px;
         }
-        
+
         @media (max-width: 1024px) {
             .tab-panel.active {
                 flex-direction: column;
             }
-            
+
             .sidebar {
                 width: 100%;
                 height: 200px;
@@ -995,29 +1034,29 @@
                 border-bottom: 1px solid #e2e8f0;
                 overflow-y: auto;
             }
-            
+
             .content-area {
                 height: 500px;
             }
         }
-        
+
         /* 移动端折叠式分类选择器 */
         .mobile-category-selector {
             display: none;
             background: white;
             border-radius: 12px;
             margin-bottom: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
-        
+
         .mobile-subcategory-selector {
             display: none;
             background: white;
             border-radius: 12px;
             margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
-        
+
         .mobile-category-header {
             padding: 12px 16px;
             display: flex;
@@ -1027,45 +1066,45 @@
             border-radius: 12px;
             transition: background 0.2s ease;
         }
-        
+
         .mobile-category-header:hover {
             background: #f8fafc;
         }
-        
+
         .mobile-category-title {
             font-weight: 600;
             font-size: 1rem;
             color: #374151;
             font-family: 'PT Serif', 'Crimson Text', ui-serif, 'Times New Roman', 'Georgia', serif;
         }
-        
+
         .mobile-category-arrow {
             transition: transform 0.3s ease;
             font-size: 1.2rem;
             color: #6b7280;
         }
-        
+
         .mobile-category-arrow.expanded {
             transform: rotate(180deg);
         }
-        
+
         .mobile-category-dropdown {
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.3s ease;
         }
-        
+
         .mobile-category-dropdown.expanded {
             max-height: 200px;
         }
-        
+
         .mobile-category-options {
             padding: 0 16px 16px;
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 8px;
         }
-        
+
         .mobile-category-option {
             padding: 10px 12px;
             border: 2px solid #e5e7eb;
@@ -1078,17 +1117,17 @@
             background: white;
             font-family: 'PT Serif', 'Crimson Text', ui-serif, 'Times New Roman', 'Georgia', serif;
         }
-        
+
         .mobile-category-option.active {
             border-color: #667eea;
             background: #edf2f7;
             color: #667eea;
         }
-        
+
         .mobile-category-option:hover {
             border-color: #cbd5e0;
         }
-        
+
         /* 移动端挑战按钮控制 */
         .mobile-challenge-controls {
             display: none;
@@ -1098,16 +1137,16 @@
             .container {
                 padding: 10px;
             }
-            
+
             .header h1 {
                 font-size: 2rem;
             }
-            
+
             .header p {
                 font-size: 1rem;
                 margin-bottom: 10px;
             }
-            
+
             .back-btn {
                 font-size: 0.8rem;
                 padding: 6px 10px;
@@ -1116,31 +1155,31 @@
                 margin-bottom: 10px;
                 align-self: flex-start;
             }
-            
+
             .header {
                 align-items: flex-start;
                 text-align: left;
             }
-            
+
             .header h1 {
                 text-align: center;
                 margin-top: 0;
             }
-            
+
             .header p {
                 text-align: center;
             }
-            
+
             /* 隐藏桌面端的标签页 */
             .tabs {
                 display: none;
             }
-            
+
             /* 显示移动端分类选择器 */
             .mobile-category-selector {
                 display: block;
             }
-            
+
             .mobile-subcategory-selector {
                 display: block;
             }
@@ -1154,11 +1193,11 @@
             .quick-add {
                 display: none;
             }
-            
+
             .controls {
                 display: none;
             }
-            
+
             /* 紧凑的单词网格 - 一行两个，响应式填满 */
             .word-grid {
                 display: grid;
@@ -1167,7 +1206,7 @@
                 width: 100%;
                 box-sizing: border-box;
             }
-            
+
             /* 紧凑的单词卡片 */
             .word-card {
                 padding: 14px;
@@ -1175,55 +1214,56 @@
                 min-height: auto;
                 width: 100%;
                 box-sizing: border-box;
-                min-width: 0; /* 防止内容溢出 */
+                min-width: 0;
+                /* 防止内容溢出 */
                 cursor: pointer;
                 transition: all 0.2s ease;
                 background: #fafbfc;
                 border: 1px solid #e5e7eb;
             }
-            
+
             .word-card:hover {
                 transform: translateY(-2px);
-                box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
                 border-color: #667eea;
                 background: white;
             }
-            
+
             .word-card:active {
                 transform: translateY(0);
-                box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+                box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
             }
-            
+
             .word-card.playing {
                 border-color: #48bb78;
                 background: #f0fff4;
                 transform: translateY(-1px);
                 box-shadow: 0 4px 12px rgba(72, 187, 120, 0.2);
             }
-            
+
             .word-title {
                 font-size: 1.05rem;
                 margin-bottom: 4px;
                 font-weight: 600;
             }
-            
+
             .word-meaning {
                 font-size: 0.82rem;
                 margin-bottom: 10px;
                 line-height: 1.35;
                 color: #5a6570;
             }
-            
+
             .word-meta {
                 font-size: 0.68rem;
                 margin-top: 6px;
                 color: #8b95a1;
             }
-            
+
             .word-actions {
                 gap: 4px;
             }
-            
+
             .word-action-btn {
                 width: 26px;
                 height: 26px;
@@ -1232,83 +1272,83 @@
                 opacity: 0.7;
                 transition: all 0.2s ease;
             }
-            
+
             .word-action-btn:hover {
                 opacity: 1;
                 transform: scale(1.05);
             }
-            
+
             .sidebar {
                 display: none;
             }
-            
+
             .content-area {
                 display: none;
             }
-            
+
             .main-content {
                 display: none;
             }
-            
+
             /* 手机端通用单词容器 */
             .mobile-words-container {
                 display: none;
                 background: white;
                 border-radius: 16px;
-                box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
                 margin: 0 5px;
                 padding: 20px;
                 margin-bottom: 20px;
             }
-            
+
             .mobile-words-container.show {
                 display: block;
             }
-            
+
             .tab-content {
                 padding: 0;
                 min-height: auto;
             }
-            
+
             .tab-panel {
                 display: none !important;
             }
-            
+
             .tab-panel.active {
                 display: block !important;
             }
-            
+
             .btn[onclick*="openUploadModal"] {
                 display: none;
             }
-            
+
             /* 移动端挑战样式优化 */
             .challenge-game-header {
                 padding: 15px 20px;
             }
-            
+
             .challenge-progress {
                 gap: 10px;
             }
-            
+
             .challenge-progress span {
                 font-size: 1rem;
                 min-width: 50px;
             }
-            
+
             .progress-bar {
                 height: 10px;
             }
-            
+
             .challenge-content {
                 padding: 25px 20px;
                 min-height: 400px;
             }
-            
+
             .challenge-question {
                 margin-bottom: 25px;
             }
-            
+
             .challenge-question-container {
                 gap: 15px;
                 margin-bottom: 20px;
@@ -1316,12 +1356,12 @@
                 justify-content: center;
                 align-items: center;
             }
-            
+
             .challenge-question h3 {
                 font-size: 1.6rem;
             }
-            
-            
+
+
             .transparent-play-btn {
                 width: 40px;
                 height: 40px;
@@ -1329,44 +1369,44 @@
                 margin-left: 0;
                 margin-top: 0;
             }
-            
+
             .challenge-options {
                 grid-template-columns: 1fr;
                 gap: 15px;
                 max-width: none;
             }
-            
+
             .challenge-option {
                 padding: 20px 15px;
                 font-size: 1.1rem;
                 min-height: 70px;
                 border-width: 2px;
             }
-            
+
             .challenge-feedback {
                 padding: 15px;
                 margin-bottom: 15px;
             }
-            
+
             .feedback-result {
                 font-size: 1.1rem;
             }
-            
+
             .result-stats {
                 flex-direction: column;
                 gap: 15px;
                 margin-bottom: 20px;
             }
-            
+
             .stat-value {
                 font-size: 1.8rem;
             }
-            
+
             .wrong-words {
                 padding: 15px;
                 margin-top: 20px;
             }
-            
+
             .wrong-words-list {
                 grid-template-columns: 1fr;
                 gap: 8px;
@@ -1374,6 +1414,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="header">
@@ -1383,7 +1424,7 @@
             <h1>📚 单词本</h1>
             <p>管理你的IELTS词汇，按听说读写分类学习，支持子分类管理</p>
         </div>
-        
+
         <!-- 移动端分类选择器 -->
         <div class="mobile-category-selector">
             <div class="mobile-category-header" onclick="toggleMobileCategory()">
@@ -1407,7 +1448,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- 移动端子分类选择器 -->
         <div class="mobile-subcategory-selector">
             <div class="mobile-category-header" onclick="toggleMobileSubcategory()">
@@ -1420,18 +1461,30 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- 手机端单词显示容器 -->
         <div class="mobile-words-container show" id="mobile-words-container">
-            <!-- 移动端挑战按钮 -->
-            <div class="mobile-challenge-controls" style="margin-bottom: 15px; text-align: center;">
-                <button class="btn btn-success" onclick="openMobileChallengeModal()" style="font-size: 0.9rem; padding: 10px 16px; border-radius: 12px;">
+            <!-- 移动端挑战按钮和排序 -->
+            <div class="mobile-challenge-controls"
+                style="margin-bottom: 15px; text-align: center; justify-content: space-between; align-items: center;">
+                <button class="btn btn-success" onclick="openMobileChallengeModal()"
+                    style="font-size: 0.9rem; padding: 10px 16px; border-radius: 12px;">
                     <span>🎯</span> 单词挑战
                 </button>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 0.8rem; color: #4a5568;">排序:</span>
+                    <select class="sort-select" onchange="sortWords(currentCategory, this.value)"
+                        style="font-size: 0.8rem; padding: 6px 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                        <option value="newest">最新</option>
+                        <option value="oldest">最早</option>
+                        <option value="alphabetical">字母</option>
+                        <option value="reverse-alphabetical">字母倒序</option>
+                    </select>
+                </div>
             </div>
             <div class="word-grid" id="mobile-word-grid"></div>
         </div>
-        
+
         <div class="main-content">
             <div class="tabs">
                 <button class="tab active" data-category="listening">🎧 Listening</button>
@@ -1439,14 +1492,15 @@
                 <button class="tab" data-category="reading">📖 Reading</button>
                 <button class="tab" data-category="writing">✍️ Writing</button>
             </div>
-            
+
             <div class="tab-content">
                 <!-- Listening Tab -->
                 <div class="tab-panel active" id="listening-panel">
                     <div class="sidebar">
                         <div class="sidebar-header">
                             <span class="sidebar-title">子分类</span>
-                            <button class="add-subcategory-btn" onclick="showAddSubcategoryModal('listening')" title="添加子分类">
+                            <button class="add-subcategory-btn" onclick="showAddSubcategoryModal('listening')"
+                                title="添加子分类">
                                 ➕
                             </button>
                         </div>
@@ -1454,18 +1508,20 @@
                             <!-- 子分类列表将在这里动态生成 -->
                         </ul>
                     </div>
-                    
+
                     <div class="content-area">
                         <div class="quick-add" id="quick-add-listening">
                             <form class="quick-add-form" onsubmit="quickAddWord(event, 'listening')">
-                                <input type="text" class="quick-input" placeholder="输入单词 (按 Ctrl/Cmd+Enter 快速添加)" name="word" required>
-                                <input type="text" class="quick-input" placeholder="输入词义 (按 Ctrl/Cmd+Enter 快速添加)" name="meaning">
+                                <input type="text" class="quick-input" placeholder="输入单词 (按 Ctrl/Cmd+Enter 快速添加)"
+                                    name="word" required>
+                                <input type="text" class="quick-input" placeholder="输入词义 (按 Ctrl/Cmd+Enter 快速添加)"
+                                    name="meaning">
                                 <button type="submit" class="btn btn-success">
                                     <span>➕</span> 添加
                                 </button>
                             </form>
                         </div>
-                        
+
                         <div class="controls">
                             <button class="btn btn-primary" onclick="openUploadModal('listening')">
                                 <span>📁</span> 批量导入CSV
@@ -1486,17 +1542,18 @@
                                 </select>
                             </div>
                         </div>
-                        
+
                         <div class="word-grid" id="listening-words"></div>
                     </div>
                 </div>
-                
+
                 <!-- Speaking Tab -->
                 <div class="tab-panel" id="speaking-panel">
                     <div class="sidebar">
                         <div class="sidebar-header">
                             <span class="sidebar-title">子分类</span>
-                            <button class="add-subcategory-btn" onclick="showAddSubcategoryModal('speaking')" title="添加子分类">
+                            <button class="add-subcategory-btn" onclick="showAddSubcategoryModal('speaking')"
+                                title="添加子分类">
                                 ➕
                             </button>
                         </div>
@@ -1504,18 +1561,20 @@
                             <!-- 子分类列表将在这里动态生成 -->
                         </ul>
                     </div>
-                    
+
                     <div class="content-area">
                         <div class="quick-add" id="quick-add-speaking">
                             <form class="quick-add-form" onsubmit="quickAddWord(event, 'speaking')">
-                                <input type="text" class="quick-input" placeholder="输入单词 (按 Ctrl/Cmd+Enter 快速添加)" name="word" required>
-                                <input type="text" class="quick-input" placeholder="输入词义 (按 Ctrl/Cmd+Enter 快速添加)" name="meaning">
+                                <input type="text" class="quick-input" placeholder="输入单词 (按 Ctrl/Cmd+Enter 快速添加)"
+                                    name="word" required>
+                                <input type="text" class="quick-input" placeholder="输入词义 (按 Ctrl/Cmd+Enter 快速添加)"
+                                    name="meaning">
                                 <button type="submit" class="btn btn-success">
                                     <span>➕</span> 添加
                                 </button>
                             </form>
                         </div>
-                        
+
                         <div class="controls">
                             <button class="btn btn-primary" onclick="openUploadModal('speaking')">
                                 <span>📁</span> 批量导入CSV
@@ -1536,17 +1595,18 @@
                                 </select>
                             </div>
                         </div>
-                        
+
                         <div class="word-grid" id="speaking-words"></div>
                     </div>
                 </div>
-                
+
                 <!-- Reading Tab -->
                 <div class="tab-panel" id="reading-panel">
                     <div class="sidebar">
                         <div class="sidebar-header">
                             <span class="sidebar-title">子分类</span>
-                            <button class="add-subcategory-btn" onclick="showAddSubcategoryModal('reading')" title="添加子分类">
+                            <button class="add-subcategory-btn" onclick="showAddSubcategoryModal('reading')"
+                                title="添加子分类">
                                 ➕
                             </button>
                         </div>
@@ -1554,18 +1614,20 @@
                             <!-- 子分类列表将在这里动态生成 -->
                         </ul>
                     </div>
-                    
+
                     <div class="content-area">
                         <div class="quick-add" id="quick-add-reading">
                             <form class="quick-add-form" onsubmit="quickAddWord(event, 'reading')">
-                                <input type="text" class="quick-input" placeholder="输入单词 (按 Ctrl/Cmd+Enter 快速添加)" name="word" required>
-                                <input type="text" class="quick-input" placeholder="输入词义 (按 Ctrl/Cmd+Enter 快速添加)" name="meaning">
+                                <input type="text" class="quick-input" placeholder="输入单词 (按 Ctrl/Cmd+Enter 快速添加)"
+                                    name="word" required>
+                                <input type="text" class="quick-input" placeholder="输入词义 (按 Ctrl/Cmd+Enter 快速添加)"
+                                    name="meaning">
                                 <button type="submit" class="btn btn-success">
                                     <span>➕</span> 添加
                                 </button>
                             </form>
                         </div>
-                        
+
                         <div class="controls">
                             <button class="btn btn-primary" onclick="openUploadModal('reading')">
                                 <span>📁</span> 批量导入CSV
@@ -1586,17 +1648,18 @@
                                 </select>
                             </div>
                         </div>
-                        
+
                         <div class="word-grid" id="reading-words"></div>
                     </div>
                 </div>
-                
+
                 <!-- Writing Tab -->
                 <div class="tab-panel" id="writing-panel">
                     <div class="sidebar">
                         <div class="sidebar-header">
                             <span class="sidebar-title">子分类</span>
-                            <button class="add-subcategory-btn" onclick="showAddSubcategoryModal('writing')" title="添加子分类">
+                            <button class="add-subcategory-btn" onclick="showAddSubcategoryModal('writing')"
+                                title="添加子分类">
                                 ➕
                             </button>
                         </div>
@@ -1604,18 +1667,20 @@
                             <!-- 子分类列表将在这里动态生成 -->
                         </ul>
                     </div>
-                    
+
                     <div class="content-area">
                         <div class="quick-add" id="quick-add-writing">
                             <form class="quick-add-form" onsubmit="quickAddWord(event, 'writing')">
-                                <input type="text" class="quick-input" placeholder="输入单词 (按 Ctrl/Cmd+Enter 快速添加)" name="word" required>
-                                <input type="text" class="quick-input" placeholder="输入词义 (按 Ctrl/Cmd+Enter 快速添加)" name="meaning">
+                                <input type="text" class="quick-input" placeholder="输入单词 (按 Ctrl/Cmd+Enter 快速添加)"
+                                    name="word" required>
+                                <input type="text" class="quick-input" placeholder="输入词义 (按 Ctrl/Cmd+Enter 快速添加)"
+                                    name="meaning">
                                 <button type="submit" class="btn btn-success">
                                     <span>➕</span> 添加
                                 </button>
                             </form>
                         </div>
-                        
+
                         <div class="controls">
                             <button class="btn btn-primary" onclick="openUploadModal('writing')">
                                 <span>📁</span> 批量导入CSV
@@ -1636,14 +1701,14 @@
                                 </select>
                             </div>
                         </div>
-                        
+
                         <div class="word-grid" id="writing-words"></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <!-- Add Subcategory Modal -->
     <div class="modal" id="addSubcategoryModal">
         <div class="modal-content">
@@ -1651,14 +1716,14 @@
                 <h3 class="modal-title">添加子分类</h3>
                 <button class="close-btn" onclick="closeAddSubcategoryModal()">&times;</button>
             </div>
-            
+
             <form id="addSubcategoryForm" onsubmit="addSubcategory(event)">
                 <div class="form-group">
                     <label class="form-label">子分类名称</label>
                     <input type="text" class="form-input" name="name" placeholder="输入子分类名称" required>
                     <input type="hidden" name="category" id="addSubcategoryCategory">
                 </div>
-                
+
                 <div style="display: flex; gap: 15px; justify-content: flex-end;">
                     <button type="button" class="btn btn-secondary" onclick="closeAddSubcategoryModal()">取消</button>
                     <button type="submit" class="btn btn-primary">添加</button>
@@ -1666,7 +1731,7 @@
             </form>
         </div>
     </div>
-    
+
     <!-- Edit Subcategory Modal -->
     <div class="modal" id="editSubcategoryModal">
         <div class="modal-content">
@@ -1674,7 +1739,7 @@
                 <h3 class="modal-title">重命名子分类</h3>
                 <button class="close-btn" onclick="closeEditSubcategoryModal()">&times;</button>
             </div>
-            
+
             <form id="editSubcategoryForm" onsubmit="updateSubcategory(event)">
                 <div class="form-group">
                     <label class="form-label">子分类名称</label>
@@ -1682,7 +1747,7 @@
                     <input type="hidden" name="category" id="editSubcategoryCategory">
                     <input type="hidden" name="subcategory_id" id="editSubcategoryId">
                 </div>
-                
+
                 <div style="display: flex; gap: 15px; justify-content: flex-end;">
                     <button type="button" class="btn btn-secondary" onclick="closeEditSubcategoryModal()">取消</button>
                     <button type="submit" class="btn btn-primary">保存</button>
@@ -1690,7 +1755,7 @@
             </form>
         </div>
     </div>
-    
+
     <!-- Upload Modal -->
     <div class="modal" id="uploadModal">
         <div class="modal-content">
@@ -1698,7 +1763,7 @@
                 <h3 class="modal-title">批量导入单词</h3>
                 <button class="close-btn" onclick="closeUploadModal()">&times;</button>
             </div>
-            
+
             <form id="uploadForm" onsubmit="uploadCSV(event)">
                 <div class="form-group">
                     <label class="form-label">选择分类</label>
@@ -1709,25 +1774,26 @@
                         <option value="writing">✍️ Writing</option>
                     </select>
                 </div>
-                
+
                 <div class="form-group">
                     <label class="form-label">选择子分类</label>
                     <select class="form-select" name="subcategory_id" id="uploadSubcategory" required>
                         <!-- 子分类选项将动态生成 -->
                     </select>
                 </div>
-                
+
                 <div class="form-group">
                     <label class="form-label">选择CSV文件</label>
                     <div class="file-upload" onclick="document.getElementById('csvFile').click()">
-                        <input type="file" id="csvFile" name="file" accept=".csv" style="display: none;" onchange="handleFileSelect(this)">
+                        <input type="file" id="csvFile" name="file" accept=".csv" style="display: none;"
+                            onchange="handleFileSelect(this)">
                         <p id="fileText">点击选择CSV文件或拖拽文件到这里</p>
                         <p style="font-size: 0.9rem; color: #718096; margin-top: 10px;">
                             CSV格式：第一列为单词，第二列为词义
                         </p>
                     </div>
                 </div>
-                
+
                 <div style="display: flex; gap: 15px; justify-content: flex-end;">
                     <button type="button" class="btn btn-secondary" onclick="closeUploadModal()">取消</button>
                     <button type="submit" class="btn btn-primary" id="uploadBtn">
@@ -1738,7 +1804,7 @@
             </form>
         </div>
     </div>
-    
+
     <!-- Export Modal -->
     <div class="modal" id="exportModal">
         <div class="modal-content">
@@ -1746,17 +1812,18 @@
                 <h3 class="modal-title">导出单词</h3>
                 <button class="close-btn" onclick="closeExportModal()">&times;</button>
             </div>
-            
+
             <form id="exportForm" onsubmit="exportWords(event)">
                 <div class="form-group">
                     <label class="form-label">导出范围</label>
-                    <select class="form-select" name="export_scope" id="exportScope" onchange="updateExportOptions()" required>
+                    <select class="form-select" name="export_scope" id="exportScope" onchange="updateExportOptions()"
+                        required>
                         <option value="subcategory">当前子分类</option>
                         <option value="category">整个分类</option>
                         <option value="all">所有单词</option>
                     </select>
                 </div>
-                
+
                 <div class="form-group" id="categoryGroup">
                     <label class="form-label">选择分类</label>
                     <select class="form-select" name="category" id="exportCategory" required>
@@ -1766,14 +1833,14 @@
                         <option value="writing">✍️ Writing</option>
                     </select>
                 </div>
-                
+
                 <div class="form-group" id="subcategoryGroup">
                     <label class="form-label">选择子分类</label>
                     <select class="form-select" name="subcategory_id" id="exportSubcategory" required>
                         <!-- 子分类选项将动态生成 -->
                     </select>
                 </div>
-                
+
                 <div class="form-group">
                     <label class="form-label">导出格式</label>
                     <select class="form-select" name="format" id="exportFormat" required>
@@ -1782,7 +1849,7 @@
                         <option value="json">JSON 文件</option>
                     </select>
                 </div>
-                
+
                 <div class="form-group">
                     <label class="form-label">包含字段</label>
                     <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
@@ -1808,7 +1875,7 @@
                         </label>
                     </div>
                 </div>
-                
+
                 <div style="display: flex; gap: 15px; justify-content: flex-end;">
                     <button type="button" class="btn btn-secondary" onclick="closeExportModal()">取消</button>
                     <button type="submit" class="btn btn-primary" id="exportBtn">
@@ -1819,7 +1886,7 @@
             </form>
         </div>
     </div>
-    
+
     <!-- Challenge Setup Modal -->
     <div class="modal" id="challengeModal">
         <div class="modal-content">
@@ -1827,17 +1894,18 @@
                 <h3 class="modal-title">🎯 单词挑战</h3>
                 <button class="close-btn" onclick="closeChallengeModal()">&times;</button>
             </div>
-            
+
             <form id="challengeForm" onsubmit="startChallenge(event)">
                 <div class="form-group">
                     <label class="form-label">挑战范围</label>
-                    <select class="form-select" name="challenge_scope" id="challengeScope" onchange="updateChallengeOptions()" required>
+                    <select class="form-select" name="challenge_scope" id="challengeScope"
+                        onchange="updateChallengeOptions()" required>
                         <option value="subcategory">当前子分类</option>
                         <option value="category">整个分类</option>
                         <option value="all">所有单词</option>
                     </select>
                 </div>
-                
+
                 <div class="form-group" id="challengeCategoryGroup">
                     <label class="form-label">选择分类</label>
                     <select class="form-select" name="category" id="challengeCategory" required>
@@ -1847,15 +1915,15 @@
                         <option value="writing">✍️ Writing</option>
                     </select>
                 </div>
-                
+
                 <div class="form-group" id="challengeSubcategoryGroup">
                     <label class="form-label">选择子分类</label>
                     <select class="form-select" name="subcategory_id" id="challengeSubcategory" required>
                         <!-- 子分类选项将动态生成 -->
                     </select>
                 </div>
-                
-                
+
+
                 <div class="form-group">
                     <label class="form-label">题目数量</label>
                     <select class="form-select" name="question_count" id="questionCount" required>
@@ -1866,15 +1934,16 @@
                         <option value="30">30 题</option>
                     </select>
                 </div>
-                
+
                 <div class="form-group">
                     <label class="form-label">
-                        <input type="checkbox" name="favor_favorites" id="favorFavorites" checked style="margin-right: 8px;">
+                        <input type="checkbox" name="favor_favorites" id="favorFavorites" checked
+                            style="margin-right: 8px;">
                         收藏单词优先出现
                     </label>
                     <small style="color: #718096; font-size: 0.9rem;">勾选后，收藏的单词会有更高的出现概率</small>
                 </div>
-                
+
                 <div style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 30px;">
                     <button type="button" class="btn btn-secondary" onclick="closeChallengeModal()">取消</button>
                     <button type="submit" class="btn btn-primary">
@@ -1884,7 +1953,7 @@
             </form>
         </div>
     </div>
-    
+
     <!-- Challenge Game Modal -->
     <div class="modal" id="challengeGameModal" style="z-index: 1001;">
         <div class="modal-content" style="max-width: 800px; max-height: 90vh;">
@@ -1897,24 +1966,25 @@
                 </div>
                 <button class="close-btn" onclick="closeChallengeGame()" title="退出挑战">&times;</button>
             </div>
-            
+
             <div class="challenge-content">
                 <div class="challenge-question">
                     <div class="challenge-question-container">
                         <h3 id="challengeQuestionText">Loading...</h3>
-                        <button id="transparentPlayBtn" class="transparent-play-btn" onclick="playQuestionAudio()" style="display: none;" title="播放音频">
+                        <button id="transparentPlayBtn" class="transparent-play-btn" onclick="playQuestionAudio()"
+                            style="display: none;" title="播放音频">
                             🔊
                         </button>
                     </div>
                 </div>
-                
+
                 <div class="challenge-options" id="challengeOptions">
                     <!-- 选项将动态生成 -->
                 </div>
             </div>
         </div>
     </div>
-    
+
     <!-- Challenge Result Modal -->
     <div class="modal" id="challengeResultModal" style="z-index: 1002;">
         <div class="modal-content" style="max-width: 600px;">
@@ -1922,7 +1992,7 @@
                 <h3 class="modal-title">🎉 挑战完成</h3>
                 <button class="close-btn" onclick="closeChallengeResult()">&times;</button>
             </div>
-            
+
             <div class="challenge-result-content">
                 <div class="result-stats">
                     <div class="stat-item">
@@ -1938,12 +2008,12 @@
                         <div class="stat-label">准确率</div>
                     </div>
                 </div>
-                
+
                 <div class="wrong-words" id="wrongWordsSection" style="display: none;">
                     <h4>需要复习的单词：</h4>
                     <div class="wrong-words-list" id="wrongWordsList"></div>
                 </div>
-                
+
                 <div style="display: flex; gap: 15px; justify-content: center; margin-top: 30px;">
                     <button class="btn btn-secondary" onclick="closeChallengeResult()">完成</button>
                     <button class="btn btn-primary" onclick="restartChallenge()">再来一次</button>
@@ -1951,10 +2021,10 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Notification -->
     <div class="notification" id="notification"></div>
-    
+
     <script>
         let vocabularyData = {
             categories: {
@@ -1966,67 +2036,73 @@
         };
         let currentCategory = 'listening';
         let currentSubcategory = 'default';
+        let currentSortType = 'newest'; // 新增：当前排序方式
         let currentAudio = null;
         let mobileCategoryExpanded = false;
         let mobileSubcategoryExpanded = false;
-        
+
         // 初始化
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
+            loadUserPreferences(); // 新增：加载用户偏好设置
             setupTabs();
             setupKeyboardShortcuts();
             setupFileUpload();
             setupModalCloseHandlers();
             setupResponsiveHandlers();
+            setupDuplicateCheck(); // 新增：设置重复检查
             initWordCoverageData();
             loadVocabularyData();
         });
-        
+
         // 设置标签页
         function setupTabs() {
             const tabs = document.querySelectorAll('.tab');
             const panels = document.querySelectorAll('.tab-panel');
-            
+
             tabs.forEach(tab => {
                 tab.addEventListener('click', () => {
                     const category = tab.dataset.category;
-                    
+
                     // 更新标签页状态
                     tabs.forEach(t => t.classList.remove('active'));
                     panels.forEach(p => p.classList.remove('active'));
-                    
+
                     tab.classList.add('active');
                     document.getElementById(`${category}-panel`).classList.add('active');
-                    
+
                     currentCategory = category;
-                    
+
                     // 获取该分类的默认子分类
                     const defaultSubcategory = getDefaultSubcategory(vocabularyData.categories[category]);
                     currentSubcategory = defaultSubcategory || 'default';
-                    
+
+                    // 保存用户偏好设置
+                    saveUserPreferences();
+
                     // 渲染子分类和单词
                     renderSubcategories(category);
                     renderWords(category, currentSubcategory);
                 });
             });
         }
-        
+
         // 设置键盘快捷键
         function setupKeyboardShortcuts() {
-            document.addEventListener('keydown', function(e) {
+            document.addEventListener('keydown', function (e) {
                 // Ctrl+Enter (Windows/Linux) 或 Cmd+Enter (Mac) 快速添加单词
                 const isModifierPressed = e.ctrlKey || e.metaKey;
-                
+
                 if (isModifierPressed && e.key === 'Enter') {
                     // 检查焦点是否在输入框中
                     const activeElement = document.activeElement;
                     const isInInputField = activeElement && (
-                        activeElement.tagName === 'INPUT' || 
+                        activeElement.tagName === 'INPUT' ||
                         activeElement.tagName === 'TEXTAREA'
                     );
-                    
+
                     if (isInInputField) {
                         e.preventDefault();
-                        
+
                         // 查找最近的表单
                         const form = activeElement.closest('form');
                         if (form && form.classList.contains('quick-add-form')) {
@@ -2041,26 +2117,26 @@
                 }
             });
         }
-        
+
         // 设置文件上传
         function setupFileUpload() {
             const fileUpload = document.querySelector('.file-upload');
-            
+
             if (fileUpload) {
-                fileUpload.addEventListener('dragover', function(e) {
+                fileUpload.addEventListener('dragover', function (e) {
                     e.preventDefault();
                     this.classList.add('drag-over');
                 });
-                
-                fileUpload.addEventListener('dragleave', function(e) {
+
+                fileUpload.addEventListener('dragleave', function (e) {
                     e.preventDefault();
                     this.classList.remove('drag-over');
                 });
-                
-                fileUpload.addEventListener('drop', function(e) {
+
+                fileUpload.addEventListener('drop', function (e) {
                     e.preventDefault();
                     this.classList.remove('drag-over');
-                    
+
                     const files = e.dataTransfer.files;
                     if (files.length > 0) {
                         document.getElementById('csvFile').files = files;
@@ -2069,39 +2145,39 @@
                 });
             }
         }
-        
+
         // 设置弹窗关闭处理器
         function setupModalCloseHandlers() {
             // 为所有弹窗添加背景点击关闭功能
             const modals = document.querySelectorAll('.modal');
-            
+
             modals.forEach(modal => {
-                modal.addEventListener('click', function(e) {
+                modal.addEventListener('click', function (e) {
                     // 如果点击的是弹窗背景（不是内容区域）
                     if (e.target === modal) {
                         closeModal(modal);
                     }
                 });
-                
+
                 // ESC键关闭弹窗
-                document.addEventListener('keydown', function(e) {
+                document.addEventListener('keydown', function (e) {
                     if (e.key === 'Escape' && modal.classList.contains('show')) {
                         closeModal(modal);
                     }
                 });
             });
         }
-        
+
         // 设置响应式处理器
         function setupResponsiveHandlers() {
             let resizeTimer;
-            
-            window.addEventListener('resize', function() {
+
+            window.addEventListener('resize', function () {
                 // 防抖处理，避免频繁触发
                 clearTimeout(resizeTimer);
                 resizeTimer = setTimeout(() => {
                     const isMobile = window.innerWidth <= 768;
-                    
+
                     if (isMobile && currentSubcategory) {
                         // 移动端模式：确保移动端容器显示单词
                         setTimeout(() => {
@@ -2111,11 +2187,141 @@
                 }, 250);
             });
         }
-        
+
+        // 加载用户偏好设置
+        function loadUserPreferences() {
+            try {
+                const preferences = JSON.parse(localStorage.getItem('vocabularyPreferences') || '{}');
+
+                // 恢复分类
+                if (preferences.category) {
+                    currentCategory = preferences.category;
+                }
+
+                // 恢复子分类
+                if (preferences.subcategory) {
+                    currentSubcategory = preferences.subcategory;
+                }
+
+                // 恢复排序方式
+                if (preferences.sortType) {
+                    currentSortType = preferences.sortType;
+                }
+
+                // 更新UI状态
+                updateUIFromPreferences();
+            } catch (error) {
+                console.warn('Failed to load user preferences:', error);
+            }
+        }
+
+        // 保存用户偏好设置
+        function saveUserPreferences() {
+            try {
+                const preferences = {
+                    category: currentCategory,
+                    subcategory: currentSubcategory,
+                    sortType: currentSortType
+                };
+                localStorage.setItem('vocabularyPreferences', JSON.stringify(preferences));
+            } catch (error) {
+                console.warn('Failed to save user preferences:', error);
+            }
+        }
+
+        // 根据偏好设置更新UI
+        function updateUIFromPreferences() {
+            // 更新标签页
+            const tabs = document.querySelectorAll('.tab');
+            const panels = document.querySelectorAll('.tab-panel');
+
+            tabs.forEach(t => t.classList.remove('active'));
+            panels.forEach(p => p.classList.remove('active'));
+
+            const targetTab = document.querySelector(`[data-category="${currentCategory}"]`);
+            const targetPanel = document.getElementById(`${currentCategory}-panel`);
+
+            if (targetTab) targetTab.classList.add('active');
+            if (targetPanel) targetPanel.classList.add('active');
+
+            // 更新移动端分类选择器
+            const categoryNames = {
+                listening: '🎧 Listening',
+                speaking: '🗣️ Speaking',
+                reading: '📖 Reading',
+                writing: '✍️ Writing'
+            };
+
+            const categoryTitleElement = document.getElementById('mobile-category-title');
+            if (categoryTitleElement) {
+                categoryTitleElement.textContent = categoryNames[currentCategory];
+            }
+
+            // 更新排序选择器（包括移动端的）
+            const sortSelects = document.querySelectorAll('.sort-select');
+            sortSelects.forEach(select => {
+                select.value = currentSortType;
+            });
+        }
+
+        // 设置重复检查功能
+        function setupDuplicateCheck() {
+            const wordInputs = document.querySelectorAll('input[name="word"]');
+
+            wordInputs.forEach(input => {
+                input.addEventListener('input', function () {
+                    checkDuplicateWord(this);
+                });
+            });
+        }
+
+        // 检查重复单词
+        function checkDuplicateWord(input) {
+            const word = input.value.trim().toLowerCase();
+            const form = input.closest('form');
+
+            // 在表单中查找警告元素
+            let duplicateWarning = form.querySelector('.duplicate-warning');
+
+            // 如果没有警告元素，创建一个
+            if (!duplicateWarning) {
+                duplicateWarning = document.createElement('div');
+                duplicateWarning.className = 'duplicate-warning';
+                duplicateWarning.style.cssText = `
+                    margin-top: 10px;
+                    font-size: 0.8rem;
+                    color: #ed8936;
+                    display: none;
+                    width: 100%;
+                    text-align: left;
+                `;
+                // 将警告信息插入到表单末尾
+                form.appendChild(duplicateWarning);
+            }
+
+            if (word.length === 0) {
+                duplicateWarning.style.display = 'none';
+                return;
+            }
+
+            // 检查当前子分类中的重复单词
+            const currentWords = vocabularyData.categories[currentCategory]?.subcategories[currentSubcategory]?.words || [];
+            const isDuplicate = currentWords.some(existingWord =>
+                existingWord.word.toLowerCase() === word
+            );
+
+            if (isDuplicate) {
+                duplicateWarning.textContent = '⚠️ 此单词在此分类中已存在';
+                duplicateWarning.style.display = 'block';
+            } else {
+                duplicateWarning.style.display = 'none';
+            }
+        }
+
         // 通用弹窗关闭函数
         function closeModal(modal) {
             modal.classList.remove('show');
-            
+
             // 根据弹窗ID执行特定的清理操作
             if (modal.id === 'addSubcategoryModal') {
                 document.getElementById('addSubcategoryForm').reset();
@@ -2128,23 +2334,28 @@
                 document.getElementById('exportForm').reset();
             }
         }
-        
+
         // 加载词汇数据
         async function loadVocabularyData() {
             try {
                 const response = await fetch('/api/vocabulary');
                 const result = await response.json();
-                
+
                 if (result.success) {
                     vocabularyData = result.data;
-                    
+
                     // 确保移动端界面初始化
                     const isMobile = window.innerWidth <= 768;
                     if (isMobile) {
                         initializeMobileInterface();
                     }
-                    
+
                     renderAllCategories();
+
+                    // 数据加载完成后，应用用户偏好设置
+                    setTimeout(() => {
+                        applyUserPreferencesAfterLoad();
+                    }, 100);
                 } else {
                     showNotification('加载数据失败: ' + result.error, 'error');
                 }
@@ -2152,7 +2363,46 @@
                 showNotification('网络错误: ' + error.message, 'error');
             }
         }
-        
+
+        // 数据加载后应用用户偏好设置
+        function applyUserPreferencesAfterLoad() {
+            try {
+                const preferences = JSON.parse(localStorage.getItem('vocabularyPreferences') || '{}');
+
+                // 如果有保存的子分类，验证它是否存在
+                if (preferences.subcategory && preferences.category) {
+                    const categoryData = vocabularyData.categories[preferences.category];
+                    if (categoryData && categoryData.subcategories[preferences.subcategory]) {
+                        // 子分类存在，直接使用
+                        currentSubcategory = preferences.subcategory;
+                    } else {
+                        // 子分类不存在，获取默认子分类
+                        const defaultSubcategory = getDefaultSubcategory(vocabularyData.categories[preferences.category || currentCategory]);
+                        currentSubcategory = defaultSubcategory || 'default';
+                    }
+                }
+
+                // 重新渲染当前分类和子分类
+                const isMobile = window.innerWidth <= 768;
+                if (isMobile) {
+                    updateMobileSubcategoryOptions();
+                    renderMobileWords(currentCategory, currentSubcategory);
+                } else {
+                    renderSubcategories(currentCategory);
+                    renderWords(currentCategory, currentSubcategory);
+                }
+
+                // 更新排序选择器的值
+                const sortSelects = document.querySelectorAll('.sort-select');
+                sortSelects.forEach(select => {
+                    select.value = currentSortType;
+                });
+
+            } catch (error) {
+                console.warn('Failed to apply user preferences after load:', error);
+            }
+        }
+
         // 初始化移动端界面
         function initializeMobileInterface() {
             const categoryNames = {
@@ -2161,35 +2411,35 @@
                 reading: '📖 Reading',
                 writing: '✍️ Writing'
             };
-            
+
             // 设置默认分类标题
             const categoryTitleElement = document.getElementById('mobile-category-title');
             if (categoryTitleElement) {
                 categoryTitleElement.textContent = categoryNames[currentCategory];
             }
-            
+
             // 设置默认子分类标题
             const subcategoryTitleElement = document.getElementById('mobile-subcategory-title');
             if (subcategoryTitleElement) {
                 subcategoryTitleElement.textContent = '默认分类';
             }
         }
-        
+
         // 渲染所有分类
         function renderAllCategories() {
             const isMobile = window.innerWidth <= 768;
-            
+
             try {
                 Object.keys(vocabularyData.categories).forEach(category => {
                     renderSubcategories(category);
-                    
+
                     // 获取默认子分类
                     const defaultSubcategory = getDefaultSubcategory(vocabularyData.categories[category]);
                     if (defaultSubcategory) {
                         // 如果是当前分类，设置为当前子分类
                         if (category === currentCategory) {
                             currentSubcategory = defaultSubcategory;
-                            
+
                             // 更新移动端子分类选择器
                             if (isMobile) {
                                 updateMobileSubcategoryOptions();
@@ -2204,7 +2454,7 @@
                         }
                     }
                 });
-                
+
                 // 确保移动端在初始加载后显示单词
                 if (isMobile && currentSubcategory) {
                     setTimeout(() => {
@@ -2216,27 +2466,27 @@
                 showNotification('渲染分类时出错: ' + error.message, 'error');
             }
         }
-        
+
         // 渲染子分类列表
         function renderSubcategories(category) {
             const container = document.getElementById(`${category}-subcategories`);
-            
+
             // 检查容器是否存在
             if (!container) {
                 console.warn('Subcategory container not found for category:', category);
                 return;
             }
-            
+
             const subcategories = vocabularyData.categories[category].subcategories;
-            
+
             container.innerHTML = '';
-            
+
             Object.entries(subcategories).forEach(([subId, subData]) => {
                 const li = document.createElement('li');
                 li.className = 'subcategory-item';
-                
+
                 const isActive = subId === currentSubcategory && category === currentCategory;
-                
+
                 li.innerHTML = `
                     <div class="subcategory-link ${isActive ? 'active' : ''}" onclick="selectSubcategory('${category}', '${subId}')">
                         <div class="subcategory-info">
@@ -2253,76 +2503,86 @@
                         </div>
                     </div>
                 `;
-                
+
                 container.appendChild(li);
             });
         }
-        
+
         // 选择子分类
         function selectSubcategory(category, subcategoryId) {
             currentCategory = category;
             currentSubcategory = subcategoryId;
-            
+
+            // 保存用户偏好设置
+            saveUserPreferences();
+
             // 更新子分类列表的活动状态
             renderSubcategories(category);
-            
+
             // 渲染该子分类的单词
             renderWords(category, subcategoryId);
         }
-        
+
         // 获取默认子分类（按字母顺序排序后的第一个）
         function getDefaultSubcategory(categoryData) {
             const subcategories = Object.entries(categoryData.subcategories);
             if (subcategories.length === 0) {
                 return null;
             }
-            
+
             // 按名称字母顺序排序
             subcategories.sort((a, b) => a[1].name.localeCompare(b[1].name));
             return subcategories[0][0]; // 返回第一个子分类的ID
         }
-        
+
         // 渲染单词列表
         function renderWords(category, subcategoryId) {
             const isMobile = window.innerWidth <= 768;
-            
+
             // 在手机端使用专用容器
-            const container = isMobile ? 
-                document.getElementById('mobile-word-grid') : 
+            const container = isMobile ?
+                document.getElementById('mobile-word-grid') :
                 document.getElementById(`${category}-words`);
-            
+
             // 检查容器是否存在
             if (!container) {
                 console.warn('Word container not found:', isMobile ? 'mobile-word-grid' : `${category}-words`);
                 return;
             }
-            
+
             // 在手机端，只渲染当前活动分类的单词
             if (isMobile && category !== currentCategory) {
                 return;
             }
-            
+
             let words = vocabularyData.categories[category].subcategories[subcategoryId]?.words || [];
-            
-            // 应用收藏优先排序（默认按最新添加排序）
+
+            // 应用当前的排序方式
             words = [...words].sort((a, b) => {
                 // 第一层：收藏状态排序（收藏的在前）
                 const favoriteCompare = (b.is_favorited ? 1 : 0) - (a.is_favorited ? 1 : 0);
                 if (favoriteCompare !== 0) {
                     return favoriteCompare;
                 }
-                
-                // 第二层：按创建时间排序（最新的在前）
-                return new Date(b.created_at) - new Date(a.created_at);
+
+                // 第二层：按当前排序方式排序
+                const sortFunctions = {
+                    'newest': new Date(b.created_at) - new Date(a.created_at),
+                    'oldest': new Date(a.created_at) - new Date(b.created_at),
+                    'alphabetical': a.word.toLowerCase().localeCompare(b.word.toLowerCase()),
+                    'reverse-alphabetical': b.word.toLowerCase().localeCompare(a.word.toLowerCase())
+                };
+
+                return sortFunctions[currentSortType] || sortFunctions['newest'];
             });
-            
+
             if (words.length === 0) {
                 const subcategoryName = vocabularyData.categories[category].subcategories[subcategoryId]?.name || '未知分类';
-                
+
                 // 检查是否为手机端，如果是则不显示添加功能的提示
                 const isMobile = window.innerWidth <= 768;
                 const addTip = isMobile ? '暂无单词' : '使用上方的快速添加功能或批量导入CSV文件来添加单词';
-                
+
                 container.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-state-icon">📝</div>
@@ -2332,7 +2592,7 @@
                 `;
                 return;
             }
-            
+
             container.innerHTML = words.map(word => `
                 <div class="word-card ${word.is_favorited ? 'favorited' : ''}" onclick="playWord('${word.id}')">
                     <div class="word-header">
@@ -2358,33 +2618,33 @@
                 </div>
             `).join('');
         }
-        
+
         // 显示添加子分类模态框
         function showAddSubcategoryModal(category) {
             document.getElementById('addSubcategoryCategory').value = category;
             document.getElementById('addSubcategoryModal').classList.add('show');
         }
-        
+
         // 关闭添加子分类模态框
         function closeAddSubcategoryModal() {
             document.getElementById('addSubcategoryModal').classList.remove('show');
             document.getElementById('addSubcategoryForm').reset();
         }
-        
+
         // 添加子分类
         async function addSubcategory(event) {
             event.preventDefault();
-            
+
             const form = event.target;
             const formData = new FormData(form);
             const category = formData.get('category');
             const name = formData.get('name').trim();
-            
+
             if (!name) {
                 showNotification('子分类名称不能为空', 'warning');
                 return;
             }
-            
+
             try {
                 const response = await fetch('/api/vocabulary/subcategories', {
                     method: 'POST',
@@ -2396,9 +2656,9 @@
                         name: name
                     })
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (result.success) {
                     // 更新本地数据
                     vocabularyData.categories[category].subcategories[result.data.id] = {
@@ -2406,7 +2666,7 @@
                         created_at: result.data.created_at,
                         words: []
                     };
-                    
+
                     renderSubcategories(category);
                     closeAddSubcategoryModal();
                     showNotification('子分类添加成功！', 'success');
@@ -2417,7 +2677,7 @@
                 showNotification('网络错误: ' + error.message, 'error');
             }
         }
-        
+
         // 显示编辑子分类模态框
         function showEditSubcategoryModal(category, subcategoryId, currentName) {
             document.getElementById('editSubcategoryCategory').value = category;
@@ -2425,28 +2685,28 @@
             document.querySelector('#editSubcategoryForm input[name="name"]').value = currentName;
             document.getElementById('editSubcategoryModal').classList.add('show');
         }
-        
+
         // 关闭编辑子分类模态框
         function closeEditSubcategoryModal() {
             document.getElementById('editSubcategoryModal').classList.remove('show');
             document.getElementById('editSubcategoryForm').reset();
         }
-        
+
         // 更新子分类
         async function updateSubcategory(event) {
             event.preventDefault();
-            
+
             const form = event.target;
             const formData = new FormData(form);
             const category = formData.get('category');
             const subcategoryId = formData.get('subcategory_id');
             const newName = formData.get('name').trim();
-            
+
             if (!newName) {
                 showNotification('子分类名称不能为空', 'warning');
                 return;
             }
-            
+
             try {
                 const response = await fetch(`/api/vocabulary/subcategories/${category}/${subcategoryId}`, {
                     method: 'PUT',
@@ -2457,13 +2717,13 @@
                         name: newName
                     })
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (result.success) {
                     // 更新本地数据
                     vocabularyData.categories[category].subcategories[subcategoryId].name = newName;
-                    
+
                     renderSubcategories(category);
                     closeEditSubcategoryModal();
                     showNotification('子分类名称更新成功！', 'success');
@@ -2474,33 +2734,33 @@
                 showNotification('网络错误: ' + error.message, 'error');
             }
         }
-        
+
         // 删除子分类
         async function deleteSubcategory(category, subcategoryId) {
             const subcategoryName = vocabularyData.categories[category].subcategories[subcategoryId].name;
             const wordCount = vocabularyData.categories[category].subcategories[subcategoryId].words.length;
-            
+
             if (!confirm(`确定要删除子分类 "${subcategoryName}" 吗？\n这将同时删除其中的 ${wordCount} 个单词。`)) {
                 return;
             }
-            
+
             try {
                 const response = await fetch(`/api/vocabulary/subcategories/${category}/${subcategoryId}`, {
                     method: 'DELETE'
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (result.success) {
                     // 从本地数据中移除
                     delete vocabularyData.categories[category].subcategories[subcategoryId];
-                    
+
                     // 如果删除的是当前选中的子分类，切换到默认分类
                     if (currentSubcategory === subcategoryId) {
                         currentSubcategory = 'default';
                         renderWords(category, 'default');
                     }
-                    
+
                     renderSubcategories(category);
                     showNotification('子分类删除成功', 'success');
                 } else {
@@ -2510,21 +2770,21 @@
                 showNotification('网络错误: ' + error.message, 'error');
             }
         }
-        
+
         // 快速添加单词
         async function quickAddWord(event, category) {
             event.preventDefault();
-            
+
             const form = event.target;
             const formData = new FormData(form);
             const word = formData.get('word').trim();
             const meaning = formData.get('meaning').trim();
-            
+
             if (!word) {
                 showNotification('请输入单词', 'warning');
                 return;
             }
-            
+
             try {
                 const response = await fetch('/api/vocabulary/add', {
                     method: 'POST',
@@ -2538,14 +2798,21 @@
                         meaning: meaning
                     })
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (result.success) {
                     // 添加到本地数据
                     vocabularyData.categories[category].subcategories[currentSubcategory].words.push(result.data);
                     renderWords(category, currentSubcategory);
                     renderSubcategories(category); // 更新单词计数
+
+                    // 清除重复检查警告
+                    const duplicateWarnings = form.querySelectorAll('.duplicate-warning');
+                    duplicateWarnings.forEach(warning => {
+                        warning.style.display = 'none';
+                    });
+
                     form.reset();
                     showNotification('单词添加成功！', 'success');
                 } else {
@@ -2555,7 +2822,7 @@
                 showNotification('网络错误: ' + error.message, 'error');
             }
         }
-        
+
         // 播放单词发音
         async function playWord(wordId) {
             // 停止当前播放的音频
@@ -2567,24 +2834,24 @@
                     card.classList.remove('playing');
                 });
             }
-            
+
             try {
                 const audio = new Audio(`/vocabulary_audio/${wordId}`);
                 currentAudio = audio;
-                
+
                 // 找到对应的卡片并添加播放状态
                 const wordCard = document.querySelector(`[onclick*="${wordId}"]`);
                 if (wordCard) {
                     wordCard.classList.add('playing');
                 }
-                
+
                 audio.onended = () => {
                     if (wordCard) {
                         wordCard.classList.remove('playing');
                     }
                     currentAudio = null;
                 };
-                
+
                 audio.onerror = () => {
                     showNotification('音频播放失败，可能还在生成中...', 'warning');
                     if (wordCard) {
@@ -2592,13 +2859,13 @@
                     }
                     currentAudio = null;
                 };
-                
+
                 await audio.play();
             } catch (error) {
                 showNotification('音频播放失败: ' + error.message, 'error');
             }
         }
-        
+
         // 切换收藏状态
         async function toggleFavorite(wordId) {
             try {
@@ -2606,7 +2873,7 @@
                 let targetWord = null;
                 let targetCategory = null;
                 let targetSubcategory = null;
-                
+
                 Object.keys(vocabularyData.categories).forEach(category => {
                     Object.keys(vocabularyData.categories[category].subcategories).forEach(subId => {
                         const word = vocabularyData.categories[category].subcategories[subId].words.find(w => w.id === wordId);
@@ -2617,14 +2884,14 @@
                         }
                     });
                 });
-                
+
                 if (!targetWord) {
                     showNotification('找不到指定单词', 'error');
                     return;
                 }
-                
+
                 const newFavoriteStatus = !targetWord.is_favorited;
-                
+
                 const response = await fetch(`/api/vocabulary/${wordId}/favorite`, {
                     method: 'PUT',
                     headers: {
@@ -2634,13 +2901,13 @@
                         is_favorited: newFavoriteStatus
                     })
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (result.success) {
                     // 更新本地数据
                     targetWord.is_favorited = newFavoriteStatus;
-                    
+
                     // 重新渲染当前分类的单词（会自动应用收藏优先排序）
                     const isMobile = window.innerWidth <= 768;
                     if (isMobile) {
@@ -2648,12 +2915,12 @@
                     } else {
                         renderWords(targetCategory, targetSubcategory);
                     }
-                    
+
                     // 如果是当前显示的分类，也要重新渲染子分类计数
                     if (targetCategory === currentCategory) {
                         renderSubcategories(targetCategory);
                     }
-                    
+
                     showNotification(newFavoriteStatus ? '已收藏' : '已取消收藏', 'success');
                 } else {
                     showNotification(result.error, 'error');
@@ -2662,29 +2929,29 @@
                 showNotification('网络错误: ' + error.message, 'error');
             }
         }
-        
+
         // 删除单词
         async function deleteWord(wordId) {
             if (!confirm('确定要删除这个单词吗？')) {
                 return;
             }
-            
+
             try {
                 const response = await fetch(`/api/vocabulary/${wordId}`, {
                     method: 'DELETE'
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (result.success) {
                     // 从本地数据中移除
                     Object.keys(vocabularyData.categories).forEach(category => {
                         Object.keys(vocabularyData.categories[category].subcategories).forEach(subId => {
-                            vocabularyData.categories[category].subcategories[subId].words = 
+                            vocabularyData.categories[category].subcategories[subId].words =
                                 vocabularyData.categories[category].subcategories[subId].words.filter(word => word.id !== wordId);
                         });
                     });
-                    
+
                     renderAllCategories();
                     showNotification('单词删除成功', 'success');
                 } else {
@@ -2694,11 +2961,17 @@
                 showNotification('网络错误: ' + error.message, 'error');
             }
         }
-        
+
         // 排序单词（支持收藏优先的两层排序）
         function sortWords(category, sortType) {
             const words = vocabularyData.categories[category].subcategories[currentSubcategory].words;
-            
+
+            // 更新当前排序方式
+            currentSortType = sortType;
+
+            // 保存用户偏好设置
+            saveUserPreferences();
+
             // 定义基础排序函数
             const sortFunctions = {
                 'newest': (a, b) => new Date(b.created_at) - new Date(a.created_at),
@@ -2706,10 +2979,10 @@
                 'alphabetical': (a, b) => a.word.toLowerCase().localeCompare(b.word.toLowerCase()),
                 'reverse-alphabetical': (a, b) => b.word.toLowerCase().localeCompare(a.word.toLowerCase())
             };
-            
+
             const baseSortFunction = sortFunctions[sortType];
             if (!baseSortFunction) return;
-            
+
             // 两层排序：先按收藏状态，再按选择的排序方式
             words.sort((a, b) => {
                 // 第一层：收藏状态排序（收藏的在前）
@@ -2717,11 +2990,11 @@
                 if (favoriteCompare !== 0) {
                     return favoriteCompare;
                 }
-                
+
                 // 第二层：在相同收藏状态内按选择的方式排序
                 return baseSortFunction(a, b);
             });
-            
+
             const isMobile = window.innerWidth <= 768;
             if (isMobile) {
                 renderMobileWords(category, currentSubcategory);
@@ -2729,22 +3002,22 @@
                 renderWords(category, currentSubcategory);
             }
         }
-        
+
         // 打开上传模态框
         function openUploadModal(category) {
             document.getElementById('uploadCategory').value = category;
-            
+
             // 更新子分类选项
             updateUploadSubcategoryOptions(category);
-            
+
             document.getElementById('uploadModal').classList.add('show');
         }
-        
+
         // 更新上传模态框中的子分类选项
         function updateUploadSubcategoryOptions(category) {
             const select = document.getElementById('uploadSubcategory');
             const subcategories = vocabularyData.categories[category].subcategories;
-            
+
             select.innerHTML = '';
             Object.entries(subcategories).forEach(([subId, subData]) => {
                 const option = document.createElement('option');
@@ -2756,24 +3029,24 @@
                 select.appendChild(option);
             });
         }
-        
+
         // 监听上传分类变化
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const uploadCategory = document.getElementById('uploadCategory');
             if (uploadCategory) {
-                uploadCategory.addEventListener('change', function() {
+                uploadCategory.addEventListener('change', function () {
                     updateUploadSubcategoryOptions(this.value);
                 });
             }
         });
-        
+
         // 关闭上传模态框
         function closeUploadModal() {
             document.getElementById('uploadModal').classList.remove('show');
             document.getElementById('uploadForm').reset();
             document.getElementById('fileText').textContent = '点击选择CSV文件或拖拽文件到这里';
         }
-        
+
         // 处理文件选择
         function handleFileSelect(input) {
             const file = input.files[0];
@@ -2781,31 +3054,31 @@
                 document.getElementById('fileText').textContent = `已选择: ${file.name}`;
             }
         }
-        
+
         // 上传CSV
         async function uploadCSV(event) {
             event.preventDefault();
-            
+
             const form = event.target;
             const formData = new FormData(form);
-            
+
             const uploadBtn = document.getElementById('uploadBtn');
             const uploadBtnText = document.getElementById('uploadBtnText');
             const uploadLoading = document.getElementById('uploadLoading');
-            
+
             // 显示加载状态
             uploadBtn.disabled = true;
             uploadBtnText.style.display = 'none';
             uploadLoading.style.display = 'inline-block';
-            
+
             try {
                 const response = await fetch('/api/vocabulary/upload_csv', {
                     method: 'POST',
                     body: formData
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (result.success) {
                     showNotification(`成功导入 ${result.added_count} 个单词${result.skipped_count > 0 ? `，跳过 ${result.skipped_count} 个重复单词` : ''}`, 'success');
                     closeUploadModal();
@@ -2822,19 +3095,19 @@
                 uploadLoading.style.display = 'none';
             }
         }
-        
+
         // 显示通知
         function showNotification(message, type = 'success') {
             const notification = document.getElementById('notification');
             notification.textContent = message;
             notification.className = `notification ${type}`;
             notification.classList.add('show');
-            
+
             setTimeout(() => {
                 notification.classList.remove('show');
             }, 3000);
         }
-        
+
         // 格式化日期
         function formatDate(dateString) {
             const date = new Date(dateString);
@@ -2844,13 +3117,13 @@
                 day: 'numeric'
             });
         }
-        
+
         // 移动端分类选择器功能
         function toggleMobileCategory() {
             mobileCategoryExpanded = !mobileCategoryExpanded;
             const dropdown = document.getElementById('mobile-category-dropdown');
             const arrow = document.getElementById('mobile-category-arrow');
-            
+
             if (mobileCategoryExpanded) {
                 dropdown.classList.add('expanded');
                 arrow.classList.add('expanded');
@@ -2859,15 +3132,18 @@
                 arrow.classList.remove('expanded');
             }
         }
-        
+
         function selectMobileCategory(category) {
             // 更新当前分类
             currentCategory = category;
-            
+
             // 获取该分类的默认子分类
             const defaultSubcategory = getDefaultSubcategory(vocabularyData.categories[category]);
             currentSubcategory = defaultSubcategory || 'default';
-            
+
+            // 保存用户偏好设置
+            saveUserPreferences();
+
             // 更新移动端选择器显示
             const categoryNames = {
                 listening: '🎧 Listening',
@@ -2875,28 +3151,28 @@
                 reading: '📖 Reading',
                 writing: '✍️ Writing'
             };
-            
+
             const titleElement = document.getElementById('mobile-category-title');
             if (titleElement) {
                 titleElement.textContent = categoryNames[category];
             }
-            
+
             // 更新选项的活动状态
             document.querySelectorAll('.mobile-category-option').forEach(option => {
                 option.classList.remove('active');
             });
             event.target.classList.add('active');
-            
+
             // 收起下拉菜单
             mobileCategoryExpanded = false;
             const dropdown = document.getElementById('mobile-category-dropdown');
             const arrow = document.getElementById('mobile-category-arrow');
             if (dropdown) dropdown.classList.remove('expanded');
             if (arrow) arrow.classList.remove('expanded');
-            
+
             // 更新子分类选择器
             updateMobileSubcategoryOptions();
-            
+
             // 在手机端直接渲染到移动端容器
             const isMobile = window.innerWidth <= 768;
             if (isMobile) {
@@ -2907,26 +3183,26 @@
             } else {
                 // 桌面端渲染逻辑
                 renderWords(category, currentSubcategory);
-                
+
                 // 同步桌面端标签页状态
                 const tabs = document.querySelectorAll('.tab');
                 const panels = document.querySelectorAll('.tab-panel');
-                
+
                 tabs.forEach(t => t.classList.remove('active'));
                 panels.forEach(p => p.classList.remove('active'));
-                
+
                 const targetTab = document.querySelector(`[data-category="${category}"]`);
                 const targetPanel = document.getElementById(`${category}-panel`);
                 if (targetTab) targetTab.classList.add('active');
                 if (targetPanel) targetPanel.classList.add('active');
             }
         }
-        
+
         function toggleMobileSubcategory() {
             mobileSubcategoryExpanded = !mobileSubcategoryExpanded;
             const dropdown = document.getElementById('mobile-subcategory-dropdown');
             const arrow = document.getElementById('mobile-subcategory-arrow');
-            
+
             if (mobileSubcategoryExpanded) {
                 dropdown.classList.add('expanded');
                 arrow.classList.add('expanded');
@@ -2935,26 +3211,26 @@
                 arrow.classList.remove('expanded');
             }
         }
-        
+
         function updateMobileSubcategoryOptions() {
             const optionsContainer = document.getElementById('mobile-subcategory-options');
-            
+
             // 检查容器是否存在
             if (!optionsContainer) {
                 console.warn('Mobile subcategory options container not found');
                 return;
             }
-            
+
             const subcategories = vocabularyData.categories[currentCategory].subcategories;
-            
+
             // 清空现有选项
             optionsContainer.innerHTML = '';
-            
+
             // 按字母顺序排序子分类
-            const sortedSubcategories = Object.entries(subcategories).sort((a, b) => 
+            const sortedSubcategories = Object.entries(subcategories).sort((a, b) =>
                 a[1].name.localeCompare(b[1].name)
             );
-            
+
             // 生成子分类选项
             sortedSubcategories.forEach(([subId, subData]) => {
                 const option = document.createElement('div');
@@ -2963,7 +3239,7 @@
                 option.onclick = () => selectMobileSubcategory(subId);
                 optionsContainer.appendChild(option);
             });
-            
+
             // 更新当前子分类显示
             const currentSubcategoryData = subcategories[currentSubcategory];
             const titleElement = document.getElementById('mobile-subcategory-title');
@@ -2971,31 +3247,34 @@
                 titleElement.textContent = currentSubcategoryData.name;
             }
         }
-        
+
         function selectMobileSubcategory(subcategoryId) {
             // 更新当前子分类
             currentSubcategory = subcategoryId;
-            
+
+            // 保存用户偏好设置
+            saveUserPreferences();
+
             // 更新选项的活动状态
             document.querySelectorAll('#mobile-subcategory-options .mobile-category-option').forEach(option => {
                 option.classList.remove('active');
             });
             event.target.classList.add('active');
-            
+
             // 更新显示的子分类名称
             const subcategoryData = vocabularyData.categories[currentCategory].subcategories[subcategoryId];
             const titleElement = document.getElementById('mobile-subcategory-title');
             if (subcategoryData && titleElement) {
                 titleElement.textContent = subcategoryData.name;
             }
-            
+
             // 收起下拉菜单
             mobileSubcategoryExpanded = false;
             const dropdown = document.getElementById('mobile-subcategory-dropdown');
             const arrow = document.getElementById('mobile-subcategory-arrow');
             if (dropdown) dropdown.classList.remove('expanded');
             if (arrow) arrow.classList.remove('expanded');
-            
+
             // 渲染该子分类的单词
             const isMobile = window.innerWidth <= 768;
             if (isMobile) {
@@ -3007,31 +3286,38 @@
                 renderWords(currentCategory, subcategoryId);
             }
         }
-        
+
         // 移动端专用单词渲染函数
         function renderMobileWords(category, subcategoryId) {
             const container = document.getElementById('mobile-word-grid');
-            
+
             // 检查容器是否存在
             if (!container) {
                 console.warn('Mobile word grid container not found');
                 return;
             }
-            
+
             let words = vocabularyData.categories[category].subcategories[subcategoryId]?.words || [];
-            
-            // 应用收藏优先排序（默认按最新添加排序）
+
+            // 应用当前的排序方式
             words = [...words].sort((a, b) => {
                 // 第一层：收藏状态排序（收藏的在前）
                 const favoriteCompare = (b.is_favorited ? 1 : 0) - (a.is_favorited ? 1 : 0);
                 if (favoriteCompare !== 0) {
                     return favoriteCompare;
                 }
-                
-                // 第二层：按创建时间排序（最新的在前）
-                return new Date(b.created_at) - new Date(a.created_at);
+
+                // 第二层：按当前排序方式排序
+                const sortFunctions = {
+                    'newest': new Date(b.created_at) - new Date(a.created_at),
+                    'oldest': new Date(a.created_at) - new Date(b.created_at),
+                    'alphabetical': a.word.toLowerCase().localeCompare(b.word.toLowerCase()),
+                    'reverse-alphabetical': b.word.toLowerCase().localeCompare(a.word.toLowerCase())
+                };
+
+                return sortFunctions[currentSortType] || sortFunctions['newest'];
             });
-            
+
             if (words.length === 0) {
                 const subcategoryName = vocabularyData.categories[category].subcategories[subcategoryId]?.name || '未知分类';
                 container.innerHTML = `
@@ -3043,7 +3329,7 @@
                 `;
                 return;
             }
-            
+
             container.innerHTML = words.map(word => `
                 <div class="word-card ${word.is_favorited ? 'favorited' : ''}" onclick="playWord('${word.id}')">
                     <div class="word-header">
@@ -3069,35 +3355,35 @@
                 </div>
             `).join('');
         }
-        
+
         // 导出功能相关函数
-        
+
         // 打开导出模态框
         function openExportModal(category) {
             document.getElementById('exportCategory').value = category;
-            
+
             // 更新子分类选项
             updateExportSubcategoryOptions(category);
-            
+
             // 根据当前状态设置默认值
             document.getElementById('exportScope').value = 'subcategory';
             updateExportOptions();
-            
+
             document.getElementById('exportModal').classList.add('show');
         }
-        
+
         // 关闭导出模态框
         function closeExportModal() {
             document.getElementById('exportModal').classList.remove('show');
             document.getElementById('exportForm').reset();
         }
-        
+
         // 更新导出选项显示
         function updateExportOptions() {
             const scope = document.getElementById('exportScope').value;
             const categoryGroup = document.getElementById('categoryGroup');
             const subcategoryGroup = document.getElementById('subcategoryGroup');
-            
+
             switch (scope) {
                 case 'subcategory':
                     categoryGroup.style.display = 'block';
@@ -3119,12 +3405,12 @@
                     break;
             }
         }
-        
+
         // 更新导出模态框中的子分类选项
         function updateExportSubcategoryOptions(category) {
             const select = document.getElementById('exportSubcategory');
             const subcategories = vocabularyData.categories[category].subcategories;
-            
+
             select.innerHTML = '';
             Object.entries(subcategories).forEach(([subId, subData]) => {
                 const option = document.createElement('option');
@@ -3136,33 +3422,33 @@
                 select.appendChild(option);
             });
         }
-        
+
         // 监听导出分类变化
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const exportCategory = document.getElementById('exportCategory');
             if (exportCategory) {
-                exportCategory.addEventListener('change', function() {
+                exportCategory.addEventListener('change', function () {
                     updateExportSubcategoryOptions(this.value);
                 });
             }
         });
-        
+
         // 执行导出
         async function exportWords(event) {
             event.preventDefault();
-            
+
             const form = event.target;
             const formData = new FormData(form);
-            
+
             const exportBtn = document.getElementById('exportBtn');
             const exportBtnText = document.getElementById('exportBtnText');
             const exportLoading = document.getElementById('exportLoading');
-            
+
             // 显示加载状态
             exportBtn.disabled = true;
             exportBtnText.style.display = 'none';
             exportLoading.style.display = 'inline-block';
-            
+
             try {
                 // 收集导出参数
                 const exportParams = {
@@ -3176,11 +3462,11 @@
                     include_subcategory: formData.get('include_subcategory') === 'on',
                     include_date: formData.get('include_date') === 'on'
                 };
-                
+
                 // 根据导出范围收集单词数据
                 let wordsToExport = [];
                 let filename = '';
-                
+
                 switch (exportParams.scope) {
                     case 'subcategory':
                         const subcategoryWords = vocabularyData.categories[exportParams.category].subcategories[exportParams.subcategory_id]?.words || [];
@@ -3191,7 +3477,7 @@
                         }));
                         filename = `${exportParams.category}_${vocabularyData.categories[exportParams.category].subcategories[exportParams.subcategory_id].name}_单词`;
                         break;
-                        
+
                     case 'category':
                         Object.entries(vocabularyData.categories[exportParams.category].subcategories).forEach(([subId, subData]) => {
                             subData.words.forEach(word => {
@@ -3204,7 +3490,7 @@
                         });
                         filename = `${exportParams.category}_分类_单词`;
                         break;
-                        
+
                     case 'all':
                         Object.entries(vocabularyData.categories).forEach(([categoryName, categoryData]) => {
                             Object.entries(categoryData.subcategories).forEach(([subId, subData]) => {
@@ -3220,42 +3506,42 @@
                         filename = '所有单词';
                         break;
                 }
-                
+
                 if (wordsToExport.length === 0) {
                     showNotification('没有找到要导出的单词', 'warning');
                     return;
                 }
-                
+
                 // 生成导出内容
                 let content = '';
                 let mimeType = '';
-                
+
                 switch (exportParams.format) {
                     case 'csv':
                         content = generateCSV(wordsToExport, exportParams);
                         mimeType = 'text/csv;charset=utf-8;';
                         filename += '.csv';
                         break;
-                        
+
                     case 'txt':
                         content = generateTXT(wordsToExport, exportParams);
                         mimeType = 'text/plain;charset=utf-8;';
                         filename += '.txt';
                         break;
-                        
+
                     case 'json':
                         content = generateJSON(wordsToExport, exportParams);
                         mimeType = 'application/json;charset=utf-8;';
                         filename += '.json';
                         break;
                 }
-                
+
                 // 下载文件
                 downloadFile(content, filename, mimeType);
-                
+
                 closeExportModal();
                 showNotification(`成功导出 ${wordsToExport.length} 个单词！`, 'success');
-                
+
             } catch (error) {
                 showNotification('导出失败: ' + error.message, 'error');
             } finally {
@@ -3265,7 +3551,7 @@
                 exportLoading.style.display = 'none';
             }
         }
-        
+
         // 生成CSV格式内容
         function generateCSV(words, params) {
             const headers = [];
@@ -3274,9 +3560,9 @@
             if (params.include_category) headers.push('分类');
             if (params.include_subcategory) headers.push('子分类');
             if (params.include_date) headers.push('添加日期');
-            
+
             const csvContent = [headers.join(',')];
-            
+
             words.forEach(word => {
                 const row = [];
                 if (params.include_word) row.push(`"${word.word}"`);
@@ -3284,18 +3570,18 @@
                 if (params.include_category) row.push(`"${getCategoryDisplayName(word.category)}"`);
                 if (params.include_subcategory) row.push(`"${word.subcategory}"`);
                 if (params.include_date) row.push(`"${formatDate(word.created_at)}"`);
-                
+
                 csvContent.push(row.join(','));
             });
-            
+
             return csvContent.join('\n');
         }
-        
+
         // 生成TXT格式内容
         function generateTXT(words, params) {
             let content = `导出时间: ${new Date().toLocaleString('zh-CN')}\n`;
             content += `导出单词数量: ${words.length}\n\n`;
-            
+
             words.forEach((word, index) => {
                 content += `${index + 1}. ${word.word}`;
                 if (params.include_meaning && word.meaning) {
@@ -3312,10 +3598,10 @@
                 }
                 content += '\n';
             });
-            
+
             return content;
         }
-        
+
         // 生成JSON格式内容
         function generateJSON(words, params) {
             const exportData = {
@@ -3331,10 +3617,10 @@
                     return wordData;
                 })
             };
-            
+
             return JSON.stringify(exportData, null, 2);
         }
-        
+
         // 获取分类显示名称
         function getCategoryDisplayName(category) {
             const names = {
@@ -3345,24 +3631,24 @@
             };
             return names[category] || category;
         }
-        
+
         // 下载文件
         function downloadFile(content, filename, mimeType) {
             const blob = new Blob([content], { type: mimeType });
             const url = window.URL.createObjectURL(blob);
-            
+
             const link = document.createElement('a');
             link.href = url;
             link.download = filename;
             link.style.display = 'none';
-            
+
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            
+
             window.URL.revokeObjectURL(url);
         }
-        
+
         // 挑战功能相关变量
         let challengeData = {
             questions: [],
@@ -3372,7 +3658,7 @@
             settings: {},
             currentAudio: null
         };
-        
+
         // 单词覆盖率跟踪（从后端获取）
         let wordCoverageData = {};
 
@@ -3450,45 +3736,45 @@
                 console.warn('Failed to save challenge results:', error);
             }
         }
-        
+
         // 智能单词选择算法（覆盖率 + 收藏加权）
         function selectChallengeWords(allWords, count, favorFavorites = true) {
             if (allWords.length === 0) return [];
             if (allWords.length <= count) return [...allWords];
-            
-                            // 计算每个单词的权重
-                const weightedWords = allWords.map(word => {
-                    const coverage = wordCoverageData[word.id] || { appear_count: 0, last_appeared: null };
 
-                    // 基础权重：出现次数越少权重越高
-                    let weight = Math.max(1, 10 - coverage.appear_count);
+            // 计算每个单词的权重
+            const weightedWords = allWords.map(word => {
+                const coverage = wordCoverageData[word.id] || { appear_count: 0, last_appeared: null };
 
-                    // 时间衰减：越久没出现权重越高
-                    if (coverage.last_appeared) {
-                        const daysSinceLastAppeared = (Date.now() - new Date(coverage.last_appeared).getTime()) / (1000 * 60 * 60 * 24);
-                        weight *= Math.min(3, 1 + daysSinceLastAppeared * 0.1);
-                    }
+                // 基础权重：出现次数越少权重越高
+                let weight = Math.max(1, 10 - coverage.appear_count);
 
-                    // 收藏加权：收藏的单词权重提高
-                    if (favorFavorites && word.is_favorited) {
-                        weight *= 2.5;
-                    }
+                // 时间衰减：越久没出现权重越高
+                if (coverage.last_appeared) {
+                    const daysSinceLastAppeared = (Date.now() - new Date(coverage.last_appeared).getTime()) / (1000 * 60 * 60 * 24);
+                    weight *= Math.min(3, 1 + daysSinceLastAppeared * 0.1);
+                }
 
-                    return { word, weight };
-                });
-            
+                // 收藏加权：收藏的单词权重提高
+                if (favorFavorites && word.is_favorited) {
+                    weight *= 2.5;
+                }
+
+                return { word, weight };
+            });
+
             // 加权随机选择
             const selectedWords = [];
             const availableWords = [...weightedWords];
-            
+
             for (let i = 0; i < count && availableWords.length > 0; i++) {
                 // 计算总权重
                 const totalWeight = availableWords.reduce((sum, item) => sum + item.weight, 0);
-                
+
                 // 随机选择
                 let randomWeight = Math.random() * totalWeight;
                 let selectedIndex = 0;
-                
+
                 for (let j = 0; j < availableWords.length; j++) {
                     randomWeight -= availableWords[j].weight;
                     if (randomWeight <= 0) {
@@ -3496,37 +3782,37 @@
                         break;
                     }
                 }
-                
+
                 const selected = availableWords.splice(selectedIndex, 1)[0];
                 selectedWords.push(selected.word);
             }
-            
+
             return selectedWords;
         }
-        
+
         // 挑战模态框控制函数
         function openChallengeModal(category) {
             document.getElementById('challengeCategory').value = category;
             updateChallengeSubcategoryOptions(category);
-            
+
             // 设置默认值
             document.getElementById('challengeScope').value = 'subcategory';
             document.getElementById('challengeSubcategory').value = currentSubcategory;
             updateChallengeOptions();
-            
+
             document.getElementById('challengeModal').classList.add('show');
         }
-        
+
         function closeChallengeModal() {
             document.getElementById('challengeModal').classList.remove('show');
             document.getElementById('challengeForm').reset();
         }
-        
+
         function updateChallengeOptions() {
             const scope = document.getElementById('challengeScope').value;
             const categoryGroup = document.getElementById('challengeCategoryGroup');
             const subcategoryGroup = document.getElementById('challengeSubcategoryGroup');
-            
+
             switch (scope) {
                 case 'subcategory':
                     categoryGroup.style.display = 'block';
@@ -3542,11 +3828,11 @@
                     break;
             }
         }
-        
+
         function updateChallengeSubcategoryOptions(category) {
             const select = document.getElementById('challengeSubcategory');
             const subcategories = vocabularyData.categories[category].subcategories;
-            
+
             select.innerHTML = '';
             Object.entries(subcategories).forEach(([subId, subData]) => {
                 const option = document.createElement('option');
@@ -3558,14 +3844,14 @@
                 select.appendChild(option);
             });
         }
-        
+
         // 开始挑战
         function startChallenge(event) {
             event.preventDefault();
-            
+
             const form = event.target;
             const formData = new FormData(form);
-            
+
             challengeData.settings = {
                 scope: formData.get('challenge_scope'),
                 category: formData.get('category'),
@@ -3573,7 +3859,7 @@
                 count: parseInt(formData.get('question_count')),
                 favorFavorites: formData.get('favor_favorites') === 'on'
             };
-            
+
             // 收集单词
             let allWords = [];
             switch (challengeData.settings.scope) {
@@ -3595,49 +3881,49 @@
                     });
                     break;
             }
-            
+
             if (allWords.length === 0) {
                 showNotification('没有找到可用的单词', 'warning');
                 return;
             }
-            
+
             if (allWords.length < 4) {
                 showNotification('单词数量不足，至少需要4个单词才能进行挑战', 'warning');
                 return;
             }
-            
+
             // 选择挑战单词
             const selectedWords = selectChallengeWords(
-                allWords, 
-                challengeData.settings.count, 
+                allWords,
+                challengeData.settings.count,
                 challengeData.settings.favorFavorites
             );
-            
+
             // 生成题目（混合模式）
             challengeData.questions = generateQuestions(selectedWords, allWords);
             challengeData.currentQuestionIndex = 0;
             challengeData.correctAnswers = 0;
             challengeData.wrongAnswers = [];
-            
+
             // 关闭设置模态框，打开游戏模态框
             closeChallengeModal();
             startChallengeGame();
         }
-        
+
         // 生成题目（混合模式）
         function generateQuestions(selectedWords, allWords) {
             return selectedWords.map(word => {
                 // 随机选择题目类型（50%概率）
                 const type = Math.random() < 0.5 ? 'word_to_meaning' : 'meaning_to_word';
-                
+
                 // 生成错误选项
                 const wrongOptions = allWords
                     .filter(w => w.id !== word.id && (w.meaning || '').trim() !== '') // 确保有意思的单词
                     .sort(() => Math.random() - 0.5)
                     .slice(0, 3);
-                
+
                 const options = [word, ...wrongOptions].sort(() => Math.random() - 0.5);
-                
+
                 return {
                     word: word,
                     type: type,
@@ -3649,33 +3935,33 @@
                 };
             });
         }
-        
+
         // 开始挑战游戏
         function startChallengeGame() {
             document.getElementById('challengeGameModal').classList.add('show');
             showQuestion();
         }
-        
+
         // 显示题目
         function showQuestion() {
             const question = challengeData.questions[challengeData.currentQuestionIndex];
             const progress = challengeData.currentQuestionIndex + 1;
             const total = challengeData.questions.length;
-            
+
             // 更新进度
             document.getElementById('challengeProgress').textContent = `${progress} / ${total}`;
             document.getElementById('progressFill').style.width = `${(progress / total) * 100}%`;
-            
-            
+
+
             // 显示题目
             document.getElementById('challengeQuestionText').textContent = question.question;
-            
+
             // 显示/隐藏透明播放按钮
             const transparentPlayBtn = document.getElementById('transparentPlayBtn');
             if (question.type === 'word_to_meaning') {
                 transparentPlayBtn.style.display = 'flex';
                 transparentPlayBtn.setAttribute('data-word-id', question.word.id);
-                
+
                 // 自动播放音频
                 setTimeout(() => {
                     playQuestionAudio();
@@ -3683,49 +3969,49 @@
             } else {
                 transparentPlayBtn.style.display = 'none';
             }
-            
+
             // 生成选项
             const optionsContainer = document.getElementById('challengeOptions');
             optionsContainer.innerHTML = '';
-            
+
             question.options.forEach((option, index) => {
                 const optionDiv = document.createElement('div');
                 optionDiv.className = 'challenge-option';
-                optionDiv.textContent = question.type === 'word_to_meaning' 
+                optionDiv.textContent = question.type === 'word_to_meaning'
                     ? (option.meaning || '暂无释义')
                     : option.word;
                 optionDiv.onclick = () => selectOption(index, option.id);
                 optionsContainer.appendChild(optionDiv);
             });
-            
+
             // 隐藏反馈
             document.getElementById('challengeFeedback').style.display = 'none';
         }
-        
+
         // 选择选项
         function selectOption(optionIndex, wordId) {
             const question = challengeData.questions[challengeData.currentQuestionIndex];
-            
+
             // 标记用户答案
             question.userAnswer = wordId;
             question.isCorrect = wordId === question.correctAnswer;
-            
+
             // 更新统计
             if (question.isCorrect) {
                 challengeData.correctAnswers++;
             } else {
                 challengeData.wrongAnswers.push(question.word);
             }
-            
+
             // 显示选项状态
             const options = document.querySelectorAll('.challenge-option');
             options.forEach((option, index) => {
                 option.onclick = null; // 禁用点击
-                
+
                 if (index === optionIndex) {
                     option.classList.add('selected');
                 }
-                
+
                 // 标记正确答案
                 if (question.options[index].id === question.correctAnswer) {
                     option.classList.add('correct');
@@ -3733,25 +4019,25 @@
                     option.classList.add('incorrect');
                 }
             });
-            
+
             // 如果是意思选单词模式，播放选中的单词音频
             if (question.type === 'meaning_to_word') {
                 setTimeout(() => {
                     playWord(wordId);
                 }, 500);
             }
-            
+
             // 延迟后自动进入下一题
             setTimeout(() => {
                 nextQuestion();
             }, 1500);
         }
-        
-        
+
+
         // 下一题
         function nextQuestion() {
             challengeData.currentQuestionIndex++;
-            
+
             if (challengeData.currentQuestionIndex >= challengeData.questions.length) {
                 // 挑战结束，显示结果
                 showChallengeResult();
@@ -3760,7 +4046,7 @@
                 showQuestion();
             }
         }
-        
+
         // 播放题目音频
         function playQuestionAudio() {
             const transparentPlayBtn = document.getElementById('transparentPlayBtn');
@@ -3769,22 +4055,22 @@
                 playWord(wordId);
             }
         }
-        
+
         // 显示挑战结果
         async function showChallengeResult() {
             const total = challengeData.questions.length;
             const correct = challengeData.correctAnswers;
             const wrong = total - correct;
             const accuracy = Math.round((correct / total) * 100);
-            
+
             document.getElementById('correctCount').textContent = correct;
             document.getElementById('wrongCount').textContent = wrong;
             document.getElementById('accuracyRate').textContent = `${accuracy}%`;
-            
+
             // 显示错误单词
             const wrongWordsSection = document.getElementById('wrongWordsSection');
             const wrongWordsList = document.getElementById('wrongWordsList');
-            
+
             if (challengeData.wrongAnswers.length > 0) {
                 wrongWordsSection.style.display = 'block';
                 wrongWordsList.innerHTML = challengeData.wrongAnswers.map(word => `
@@ -3796,7 +4082,7 @@
             } else {
                 wrongWordsSection.style.display = 'none';
             }
-            
+
             // 保存挑战结果到后端
             await saveChallengeResults(challengeData);
 
@@ -3804,12 +4090,12 @@
             document.getElementById('challengeGameModal').classList.remove('show');
             document.getElementById('challengeResultModal').classList.add('show');
         }
-        
+
         // 关闭挑战游戏
         function closeChallengeGame() {
             if (confirm('确定要退出当前挑战吗？进度将不会保存。')) {
                 document.getElementById('challengeGameModal').classList.remove('show');
-                
+
                 // 停止音频播放
                 if (challengeData.currentAudio) {
                     challengeData.currentAudio.pause();
@@ -3817,43 +4103,44 @@
                 }
             }
         }
-        
+
         // 关闭挑战结果
         function closeChallengeResult() {
             document.getElementById('challengeResultModal').classList.remove('show');
         }
-        
+
         // 重新开始挑战
         function restartChallenge() {
             closeChallengeResult();
             openChallengeModal(challengeData.settings.category);
         }
-        
+
         // 移动端挑战功能
         function openMobileChallengeModal() {
             // 设置当前分类和子分类
             document.getElementById('challengeCategory').value = currentCategory;
             updateChallengeSubcategoryOptions(currentCategory);
-            
+
             // 设置默认导出当前子分类
             document.getElementById('challengeScope').value = 'subcategory';
             document.getElementById('challengeSubcategory').value = currentSubcategory;
             updateChallengeOptions();
-            
+
             // 打开挑战模态框
             document.getElementById('challengeModal').classList.add('show');
         }
-        
+
         // 监听挑战分类变化
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const challengeCategory = document.getElementById('challengeCategory');
             if (challengeCategory) {
-                challengeCategory.addEventListener('change', function() {
+                challengeCategory.addEventListener('change', function () {
                     updateChallengeSubcategoryOptions(this.value);
                 });
             }
         });
-        
+
     </script>
 </body>
+
 </html>
