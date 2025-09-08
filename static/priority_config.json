@@ -1,0 +1,103 @@
+{
+  "P1": {
+    "high_freq": [
+      {"name": "Katherine Mansfield", "chinese": "新西兰作家", "folder_mapping": "Katherine Mansfield"},
+      {"name": "Footprints in the Mud", "chinese": "恐龙脚印", "folder_mapping": "Footprints in the Mud"},
+      {"name": "Dolls through the ages", "chinese": "玩偶的变迁史", "folder_mapping": "Dolls through the ages"},
+      {"name": "A Brief History of Tea", "chinese": "茶叶的历史", "folder_mapping": "A Brief History of Tea"},
+      {"name": "A survivor's story", "chinese": "新西兰猫头鹰", "folder_mapping": "A survivor's story"},
+      {"name": "Fishbourne Roman Palace", "chinese": "罗马宫殿", "folder_mapping": "Fishbourne Roman Palace"},
+      {"name": "Rubber", "chinese": "橡胶工艺发展史", "folder_mapping": "Rubber"},
+      {"name": "The Development of The Silk Industry", "chinese": "丝绸产业发展", "folder_mapping": "The Development of The Silk Industry"},
+      {"name": "The History of Tea", "chinese": "茶叶的历史", "folder_mapping": "The History of Tea"},
+      {"name": "The Impact of the Potato", "chinese": "土豆的影响", "folder_mapping": "The Impact of the Potato"},
+      {"name": "The Pearls", "chinese": "珍珠", "folder_mapping": "The Pearls"},
+      {"name": "William Gilbert and Magnetism", "chinese": "电磁学之父", "folder_mapping": "William Gilbert and Magnetism"}
+    ],
+    "low_freq": [
+      {"name": "The extinction of the cave bear", "chinese": "洞熊的灭绝", "folder_mapping": "The extinction of the cave bear"},
+      {"name": "The Pyramid of Cestius", "chinese": "罗马金字塔", "folder_mapping": "The Pyramid of Cestius"},
+      {"name": "The Development of Plastics", "chinese": "塑料的发展史", "folder_mapping": "The Development of Plastics"},
+      {"name": "Listening to the Ocean", "chinese": "海洋探测", "folder_mapping": "Listening to the Ocean"},
+      {"name": "What Lucy Taught Us", "chinese": "露西化石", "folder_mapping": "What Lucy Taught Us"},
+      {"name": "Wood", "chinese": "新西兰木材产业", "folder_mapping": "Wood"},
+      {"name": "Tunnelling under the Thames", "chinese": "泰晤士河隧道", "folder_mapping": "Tunnelling under the Thames"},
+      {"name": "The Blockbuster Phenomenon", "chinese": "博物馆爆款现象", "folder_mapping": "The Blockbuster Phenomenon"}
+    ]
+  },
+  "P2": {
+    "high_freq": [
+      {"name": "Will Eating Less Make You Live Longer", "chinese": "节食与长寿", "folder_mapping": "Will Eating Less Make You Live Longer"},
+      {"name": "The Constant Evolution of the Humble Tomato", "chinese": "番茄的演化", "folder_mapping": "The Constant Evolution of the Humble Tomato"},
+      {"name": "Mind Music", "chinese": "脑海中的音乐", "folder_mapping": "Mind Music"},
+      {"name": "Herbal Medicines", "chinese": "新西兰草药", "folder_mapping": "Herbal Medicines"},
+      {"name": "The Importance of Law", "chinese": "法律的意义", "folder_mapping": "The Importance of Law"},
+      {"name": "Should space be explored by robots or by humans", "chinese": "人机太空探索", "folder_mapping": "Should space be explored by robots or by humans"},
+      {"name": "Muscle Loss", "chinese": "肌肉流失", "folder_mapping": "Muscle Loss"},
+      {"name": "Stress Less", "chinese": "工作压力", "folder_mapping": "Stress Less"},
+      {"name": "A new look for Talbot Park", "chinese": "奥克兰社区改造", "folder_mapping": "A new look for Talbot Park"},
+      {"name": "Bird Migration", "chinese": "鸟类迁徙", "folder_mapping": "Bird Migration"},
+      {"name": "Corporate Social Responsibility", "chinese": "企业社会责任", "folder_mapping": "Corporate Social Responsibility"},
+      {"name": "Early Approaches to Organisational Design", "chinese": "组织设计", "folder_mapping": "Early Approaches to Organisational Design"},
+      {"name": "How Well Do We Concentrate?", "chinese": "多任务处理", "folder_mapping": "How Well Do We Concentrate?"},
+      {"name": "Investment in shares versus investment in other assets", "chinese": "回报数据分析", "folder_mapping": "Investment in shares versus investment in other assets"},
+      {"name": "Learning from the Romans", "chinese": "罗马混凝土", "folder_mapping": "Learning from the Romans"},
+      {"name": "Playing soccer", "chinese": "街头足球", "folder_mapping": "Playing soccer"},
+      {"name": "Roller coaster", "chinese": "过山车", "folder_mapping": "Roller coaster"},
+      {"name": "Solving the problem of waste disposal", "chinese": "垃圾处理", "folder_mapping": "Solving the problem of waste disposal"},
+      {"name": "Surviving city life", "chinese": "动物适应城市", "folder_mapping": "Surviving city life"},
+      {"name": "The conquest of malaria in Italy", "chinese": "意大利疟疾防治", "folder_mapping": "The conquest of malaria in Italy"},
+      {"name": "The fascinating world of attine ants", "chinese": "切叶蚁", "folder_mapping": "The fascinating world of attine ants"},
+      {"name": "The return of monkey life", "chinese": "猴群回归", "folder_mapping": "The return of monkey life"}
+    ],
+    "low_freq": [
+      {"name": "A unique golden textile", "chinese": "蜘蛛丝", "folder_mapping": "A unique golden textile"},
+      {"name": "How are deserts formed", "chinese": "沙漠成因", "folder_mapping": "How are deserts formed"},
+      {"name": "Intelligent behaviour in birds", "chinese": "鸟类智慧行为", "folder_mapping": "Intelligent behaviour in birds"},
+      {"name": "The plan to bring an asteroid to Earth", "chinese": "捕获小行星", "folder_mapping": "The plan to bring an asteroid to Earth"},
+      {"name": "The Tasmanian Tiger", "chinese": "袋狼", "folder_mapping": "The Tasmanian Tiger"},
+      {"name": "A study of western celebrity", "chinese": "西方名人", "folder_mapping": "A study of western celebrity"}
+    ]
+  },
+  "P3": {
+    "high_freq": [
+      {"name": "Whale Culture", "chinese": "鲸鱼文化", "folder_mapping": "Whale Culture"},
+      {"name": "Science and Filmmaking", "chinese": "电影科学(CGI)", "folder_mapping": "Science and Filmmaking"},
+      {"name": "A closer examination of a study on verbal and non-verbal messages", "chinese": "语言表达研究", "folder_mapping": "A closer examination of a study on verbal and non-verbal messages"},
+      {"name": "Elephant Communication", "chinese": "大象交流", "folder_mapping": "Elephant Communication"},
+      {"name": "Flower Power", "chinese": "鲜花的力量", "folder_mapping": "Flower Power"},
+      {"name": "Grimm's Fairy Tales", "chinese": "格林童话", "folder_mapping": "Grimm's Fairy Tales"},
+      {"name": "Insect-inspired robots", "chinese": "昆虫机器人", "folder_mapping": "Insect-inspired robots"},
+      {"name": "Language Strategy in Multinational Companies", "chinese": "跨国公司语言策略", "folder_mapping": "Language Strategy in Multinational Companies"},
+      {"name": "Living dunes", "chinese": "流动沙丘", "folder_mapping": "Living dunes"},
+      {"name": "Pacific Navigation and Voyaging", "chinese": "太平洋航海", "folder_mapping": "Pacific Navigation and Voyaging"},
+      {"name": "Robert Louis Stevenson", "chinese": "苏格兰作家", "folder_mapping": "Robert Louis Stevenson"},
+      {"name": "Some views on the use of headphones", "chinese": "耳机使用", "folder_mapping": "Some views on the use of headphones"},
+      {"name": "The benefits of learning an instrument", "chinese": "学乐器的好处", "folder_mapping": "The benefits of learning an instrument"},
+      {"name": "The Fruit Book", "chinese": "果实之书", "folder_mapping": "The Fruit Book"},
+      {"name": "The fluoridation controversy", "chinese": "氟化水争议", "folder_mapping": "The fluoridation controversy"},
+      {"name": "The New Zealand writer Margaret Mahy", "chinese": "新西兰女作家", "folder_mapping": "The New Zealand writer Margaret Mahy"},
+      {"name": "The tuatara – past and future", "chinese": "新西兰蜥蜴", "folder_mapping": "The tuatara – past and future"},
+      {"name": "Voynich Manuscript", "chinese": "伏尼契手稿", "folder_mapping": "Voynich Manuscript"},
+      {"name": "What makes a musical expert?", "chinese": "音乐天赋", "folder_mapping": "What makes a musical expert?"},
+      {"name": "Yawning", "chinese": "打哈欠", "folder_mapping": "Yawning"}
+    ],
+    "low_freq": [
+      {"name": "Unlocking the mystery of dreams", "chinese": "梦的解析", "folder_mapping": "Unlocking the mystery of dreams"},
+      {"name": "Video Games' Unexpected Benefits to the Human Brain", "chinese": "电子游戏的好处", "folder_mapping": "Video Games' Unexpected Benefits to the Human Brain"},
+      {"name": "The Significant Role of Mother Tongue in Education", "chinese": "母语教育", "folder_mapping": "The Significant Role of Mother Tongue in Education"},
+      {"name": "The Pirahã people of Brazil", "chinese": "巴西皮拉罕部落语言", "folder_mapping": "The Pirahã people of Brazil"},
+      {"name": "The hazards of multitasking", "chinese": "多任务处理", "folder_mapping": "The hazards of multitasking"},
+      {"name": "The Exploration of Mars", "chinese": "火星探索", "folder_mapping": "The Exploration of Mars"},
+      {"name": "The Analysis of Fear", "chinese": "猴子恐惧实验", "folder_mapping": "The Analysis of Fear"},
+      {"name": "The Art of Deception", "chinese": "欺骗的艺术", "folder_mapping": "The Art of Deception"},
+      {"name": "Jean Piaget (1896–1980)", "chinese": "让·皮亚杰", "folder_mapping": "Jean Piaget (1896–1980)"},
+      {"name": "Decisions, Decisions", "chinese": "决策之间", "folder_mapping": "Decisions, Decisions"},
+      {"name": "Charles Darwin and Evolutionary Psychology", "chinese": "进化心理学", "folder_mapping": "Charles Darwin and Evolutionary Psychology"},
+      {"name": "Music Language We All Speak", "chinese": "音乐语言", "folder_mapping": "Music Language We All Speak"},
+      {"name": "Does class size matter?", "chinese": "课堂规模", "folder_mapping": "Does class size matter?"},
+      {"name": "Marketing and the information age", "chinese": "信息时代营销", "folder_mapping": "Marketing and the information age"},
+      {"name": "Neanderthal Technology", "chinese": "尼安德特人的生存技艺", "folder_mapping": "Neanderthal Technology"}
+    ]
+  }
+}

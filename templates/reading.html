@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <title>IELTS 阅读真题</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    
+
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
@@ -12,101 +13,940 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="192x192" href="/static/android-chrome-192x192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="/static/android-chrome-512x512.png">
-    
-    <link href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Crimson+Text:wght@400;600&display=swap" rel="stylesheet">
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Crimson+Text:wght@400;600&display=swap"
+        rel="stylesheet">
     <style>
-        body { font-family: 'PT Serif', 'Crimson Text', ui-serif, 'Times New Roman', 'Georgia', serif; background: #f6f8fc; margin: 0; }
-        .container { max-width: 1100px; margin: 24px auto; background: #fff; border-radius: 16px; box-shadow: 0 8px 32px rgba(31,38,135,0.12); padding: 22px 22px 28px; }
-        h2 { text-align: center; color: #334155; margin: 6px 0 14px; }
-        .toolbar { display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap; margin-bottom: 12px; }
-        .toolbar button { padding: 8px 14px; border:none; border-radius:8px; cursor:pointer; background:#4f46e5; color:#fff; font-weight:600; }
-        .grid { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
-        .card { border:1px solid #e5e7eb; border-radius:12px; padding:12px 14px; background:#fafafa; }
-        .card h3 { margin:0 0 8px; font-size:16px; color:#374151; }
-        .item { background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:10px 12px; margin:10px 0; }
-        .item-title { display:flex; justify-content:space-between; align-items:center; gap:10px; }
-        .tag { font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid #c7d2fe; color:#4f46e5; background:#eef2ff; }
-        .badge { font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid #d1fae5; color:#059669; background:#ecfdf5; }
-        .btn { padding:6px 10px; border:none; border-radius:8px; cursor:pointer; background:#10b981; color:#fff; font-weight:600; }
-        .btn.secondary { background:#6366f1; }
-        .btn.outline { background:#fff; color:#111827; border:1px solid #e5e7eb; }
-        .muted { color:#6b7280; font-size:13px; }
-        .empty { color:#9ca3af; font-size:14px; }
-        .footer { text-align:center; margin-top: 8px; }
-        .viewer { position: fixed; z-index: 10000; left:0; top:0; right:0; bottom:0; background: rgba(30,41,59,0.92); display:none; }
-        .viewer .frame { position:absolute; left:0; top:0; right:0; bottom:0; }
-        .viewer .close { position:absolute; right:16px; top:12px; background:#ef4444; color:#fff; border:none; border-radius:10px; padding:8px 12px; cursor:pointer; font-weight:700; box-shadow:0 2px 8px rgba(0,0,0,0.2); }
-        .part-tabs { display:flex; gap:8px; justify-content:center; margin: 8px 0 12px; }
-        .part-tabs button { padding:8px 14px; border-radius:999px; border:1px solid #e5e7eb; background:#fff; cursor:pointer; }
-        .part-tabs button.active { background:#4f46e5; color:#fff; border-color:#4f46e5; }
-        @media (max-width: 900px){ .grid { grid-template-columns: 1fr; } }
+        body {
+            font-family: 'PT Serif', 'Crimson Text', ui-serif, 'Times New Roman', 'Georgia', serif;
+            background: #f6f8fc;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 24px auto;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.12);
+            padding: 22px 22px 28px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #334155;
+            margin: 6px 0 14px;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .toolbar button {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: #4f46e5;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .card {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 12px 14px;
+            background: #fafafa;
+        }
+
+        .card h3 {
+            margin: 0 0 8px;
+            font-size: 16px;
+            color: #374151;
+        }
+
+        .item {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin: 10px 0;
+        }
+
+        .item-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tag {
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            border: 1px solid #c7d2fe;
+            color: #4f46e5;
+            background: #eef2ff;
+        }
+
+        .badge {
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            border: 1px solid #d1fae5;
+            color: #059669;
+            background: #ecfdf5;
+        }
+
+        .btn {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: #10b981;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .btn.secondary {
+            background: #6366f1;
+        }
+
+        .btn.outline {
+            background: #fff;
+            color: #111827;
+            border: 1px solid #e5e7eb;
+        }
+
+        .btn.complete {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .btn.complete:hover {
+            background: #bbf7d0;
+        }
+
+        .btn.complete.incomplete {
+            background: #f9fafb;
+            color: #9ca3af;
+            border: 1px solid #e5e7eb;
+        }
+
+        .btn.complete.incomplete:hover {
+            background: #f3f4f6;
+        }
+
+        .item-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .muted {
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .empty {
+            color: #9ca3af;
+            font-size: 14px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        .viewer {
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(30, 41, 59, 0.92);
+            display: none;
+        }
+
+        .viewer .frame {
+            position: absolute;
+            left: 0;
+            top: 0;
+            right: 0;
+            bottom: 0;
+        }
+
+        .viewer .close {
+            position: absolute;
+            right: 16px;
+            top: 12px;
+            background: #ef4444;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .part-tabs {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            align-items: center;
+            margin: 8px 0 12px;
+            position: relative;
+        }
+
+        .part-tabs button {
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid #e5e7eb;
+            background: #fff;
+            cursor: pointer;
+        }
+
+        .part-tabs button.active {
+            background: #4f46e5;
+            color: #fff;
+            border-color: #4f46e5;
+        }
+
+        .priority-btn {
+            background: transparent;
+            color: #f59e0b;
+            border: 1px solid #f59e0b;
+            margin: 0 8px;
+            position: absolute;
+            right: 0;
+        }
+
+        .priority-btn:hover {
+            background: #f59e0b;
+            color: #fff;
+        }
+
+        /* 优先级弹窗样式 */
+        .priority-modal {
+            position: fixed;
+            z-index: 10001;
+            left: 0;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(30, 41, 59, 0.95);
+            display: none;
+            overflow-y: auto;
+        }
+
+        .priority-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb;
+            position: sticky;
+            top: 0;
+            z-index: 10002;
+        }
+
+        .priority-modal-header h2 {
+            margin: 0;
+            color: #374151;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .priority-modal-header .close {
+            background: #ef4444;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .priority-modal-header .close:hover {
+            background: #dc2626;
+        }
+
+        .priority-modal-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #fff;
+            min-height: calc(100vh - 80px);
+        }
+
+        .priority-tabs {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            background: #f9fafb;
+        }
+
+        .priority-tabs button {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            background: #fff;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .priority-tabs button.active {
+            background: #4f46e5;
+            color: #fff;
+            border-color: #4f46e5;
+        }
+
+        .priority-content {
+            padding: 24px;
+        }
+
+        .priority-section {
+            margin-bottom: 32px;
+        }
+
+        .priority-table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .priority-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .priority-table th {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            padding: 16px 20px;
+            text-align: left;
+            font-weight: 600;
+            color: #334155;
+            border-bottom: 2px solid #e2e8f0;
+            font-size: 14px;
+            letter-spacing: 0.025em;
+        }
+
+        .priority-table th:first-child {
+            text-align: center;
+        }
+
+        .priority-table td {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+            transition: background-color 0.2s ease;
+        }
+
+        .priority-table th:first-child,
+        .priority-table td:first-child {
+            text-align: center !important;
+        }
+
+        .priority-table tbody tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .priority-table tr.missing {
+            background: linear-gradient(135deg, #fefefe 0%, #fafafa 100%);
+            border-left: 4px solid #e5e7eb;
+        }
+
+        .priority-table tr.missing:hover {
+            background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f4 100%);
+        }
+
+        .priority-table tr.missing .priority-title {
+            color: #9ca3af;
+            font-style: italic;
+        }
+
+        .priority-table tr.missing .priority-chinese {
+            color: #d1d5db;
+        }
+
+        .priority-table tr.completed {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border-left: 4px solid #22c55e;
+        }
+
+        .priority-table tr.completed:hover {
+            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+        }
+
+        .priority-table .priority-status.completed {
+            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+            color: #166534;
+            border: 1px solid #86efac;
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .priority-table .priority-number {
+            font-size: 12px;
+            color: #64748b;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            min-width: 32px;
+            text-align: center !important;
+            display: block;
+            margin: 0 auto;
+            width: fit-content;
+        }
+
+        .priority-table .priority-title {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .priority-table .priority-chinese {
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.3;
+            margin-top: 2px;
+        }
+
+        .priority-table .jump-to-article {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .priority-table .jump-to-article:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        }
+
+        .priority-table .jump-to-article:disabled {
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+            color: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .priority-section {
+            margin-bottom: 40px;
+        }
+
+        .priority-section h3 {
+            color: #1e293b;
+            margin-bottom: 20px;
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: -0.025em;
+        }
+
+        .priority-section h3 .badge {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .priority-section h3 .badge.high {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #dc2626;
+            border: 1px solid #fca5a5;
+        }
+
+        .priority-section h3 .badge.low {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #d97706;
+            border: 1px solid #fcd34d;
+        }
+
+        .priority-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 16px;
+        }
+
+        .priority-item {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            background: #fff;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .priority-item:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .priority-item.missing {
+            background: #f9fafb;
+            border-color: #d1d5db;
+        }
+
+        .priority-item.missing .priority-title {
+            color: #9ca3af;
+        }
+
+        .priority-item.missing .priority-chinese {
+            color: #d1d5db;
+        }
+
+        .priority-item.completed .priority-status {
+            background: #dcfce7;
+            color: #166534;
+            border-color: #86efac;
+        }
+
+        .priority-title {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 4px;
+            font-size: 16px;
+        }
+
+        .priority-chinese {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .priority-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+
+        .priority-status {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+            background: #f9fafb;
+            color: #6b7280;
+        }
+
+        .priority-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .priority-actions .btn {
+            font-size: 12px;
+            padding: 6px 10px;
+        }
+
+        .jump-to-article {
+            background: #3b82f6;
+            color: #fff;
+        }
+
+        .jump-to-article:hover {
+            background: #2563eb;
+        }
+
+        .jump-to-article:disabled {
+            background: #d1d5db;
+            color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        /* 高亮样式 */
+        .item.highlighted {
+            animation: highlightPulse 2s ease-in-out;
+            border-color: #f59e0b !important;
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.3) !important;
+        }
+
+        @keyframes highlightPulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.02);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .priority-list {
+                grid-template-columns: 1fr;
+            }
+
+            .priority-modal-header {
+                padding: 16px 20px;
+            }
+
+            .priority-modal-header h2 {
+                font-size: 20px;
+            }
+
+            .priority-tabs {
+                padding: 16px 20px;
+            }
+
+            .priority-content {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
     <script>
         let SERVER_PASSWORD = null;
         let currentToken = null;
         let readingData = null;
         let activePart = 'P1';
+        let completedItems = {};
+        let priorityData = null;
+        let priorityPart = 'P1';
+        let jumpTarget = null;
 
-        function fetchServerPassword(){
-            return fetch('/get_password').then(r=>r.json()).then(d=>{ SERVER_PASSWORD = d.password; });
+        function fetchServerPassword() {
+            return fetch('/get_password').then(r => r.json()).then(d => { SERVER_PASSWORD = d.password; });
         }
-        function checkStoredToken(){
+        function checkStoredToken() {
             const tk = localStorage.getItem('authToken');
-            if(!tk) return Promise.resolve(false);
-            return fetch('/verify_token',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:tk})})
-                .then(r=>r.json()).then(d=>{ if(d.valid){ currentToken=tk; return true;} localStorage.removeItem('authToken'); return false; })
-                .catch(()=>{ localStorage.removeItem('authToken'); return false; });
+            if (!tk) return Promise.resolve(false);
+            return fetch('/verify_token', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: tk }) })
+                .then(r => r.json()).then(d => { if (d.valid) { currentToken = tk; return true; } localStorage.removeItem('authToken'); return false; })
+                .catch(() => { localStorage.removeItem('authToken'); return false; });
         }
-        function checkPassword(){
+        function checkPassword() {
             const input = document.getElementById('authPassword').value;
-            fetch('/verify_password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:input})})
-            .then(r=>r.json()).then(d=>{
-                if(d.success){ currentToken=d.token; localStorage.setItem('authToken', d.token); document.getElementById('authOverlay').style.display='none'; document.body.style.overflow=''; loadReading(); }
-                else { document.getElementById('authError').style.display=''; document.getElementById('authPassword').value=''; document.getElementById('authPassword').focus(); }
-            }).catch(()=>{ document.getElementById('authError').style.display=''; });
+            fetch('/verify_password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: input }) })
+                .then(r => r.json()).then(d => {
+                    if (d.success) { currentToken = d.token; localStorage.setItem('authToken', d.token); document.getElementById('authOverlay').style.display = 'none'; document.body.style.overflow = ''; loadCompletedStatus(); render(); }
+                    else { document.getElementById('authError').style.display = ''; document.getElementById('authPassword').value = ''; document.getElementById('authPassword').focus(); }
+                }).catch(() => { document.getElementById('authError').style.display = ''; });
         }
 
-        function loadReading(){
-            fetch('/list_reading').then(r=>r.json()).then(data=>{ readingData = data; render(); });
+        function loadReading() {
+            fetch('/list_reading').then(r => r.json()).then(data => { readingData = data; loadCompletedStatus(); render(); });
         }
 
-        function setActivePart(part){ activePart = part; render(); }
+        function loadPriorityData() {
+            if (!priorityData) {
+                fetch('/static/priority_config.json').then(r => r.json()).then(data => { priorityData = data; });
+            }
+        }
 
-        function render(){
-            if(!readingData) return;
+        function openPriorityModal() {
+            loadPriorityData();
+            setTimeout(() => {
+                if (priorityData) {
+                    renderPriorityContent();
+                    document.getElementById('priorityModal').style.display = 'block';
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    alert('优先级数据加载失败，请稍后再试');
+                }
+            }, 100);
+        }
+
+        function closePriorityModal() {
+            document.getElementById('priorityModal').style.display = 'none';
+            document.body.style.overflow = '';
+            if (jumpTarget) {
+                jumpToArticle(jumpTarget);
+                jumpTarget = null;
+            }
+        }
+
+        function setPriorityPart(part) {
+            priorityPart = part;
+            renderPriorityTabs();
+            renderPriorityContent();
+        }
+
+        function renderPriorityTabs() {
+            ['P1', 'P2', 'P3'].forEach(p => {
+                const btn = document.getElementById('priority-tab-' + p);
+                if (btn) btn.className = (p === priorityPart ? 'active' : '');
+            });
+        }
+
+        function renderPriorityContent() {
+            if (!priorityData) return;
+
+            const partData = priorityData[priorityPart];
+            let html = '';
+
+            // 高频部分
+            if (partData.high_freq && partData.high_freq.length > 0) {
+                html += `<div class="priority-section">`;
+                html += `<h3>高频真题 <span class="badge high">HIGH</span></h3>`;
+                html += `<div class="priority-table-container">`;
+                html += `<table class="priority-table">`;
+                html += `<thead><tr><th>序号</th><th>英文标题</th><th>中文翻译</th><th>状态</th><th>操作</th></tr></thead>`;
+                html += `<tbody>`;
+                partData.high_freq.forEach((item, index) => {
+                    html += renderPriorityTableRow(item, index + 1, 'high');
+                });
+                html += `</tbody></table></div></div>`;
+            }
+
+            // 低频部分
+            if (partData.low_freq && partData.low_freq.length > 0) {
+                html += `<div class="priority-section">`;
+                html += `<h3>低频真题 <span class="badge low">LOW</span></h3>`;
+                html += `<div class="priority-table-container">`;
+                html += `<table class="priority-table">`;
+                html += `<thead><tr><th>序号</th><th>英文标题</th><th>中文翻译</th><th>状态</th><th>操作</th></tr></thead>`;
+                html += `<tbody>`;
+                partData.low_freq.forEach((item, index) => {
+                    html += renderPriorityTableRow(item, index + 1, 'low');
+                });
+                html += `</tbody></table></div></div>`;
+            }
+
+            document.getElementById('priorityContent').innerHTML = html;
+        }
+
+        function renderPriorityTableRow(item, number, frequency) {
+            const articleInfo = findMatchingArticle(item.folder_mapping);
+            const isAvailable = !!articleInfo;
+            const itemKey = isAvailable ? articleInfo.key : priorityPart + '_' + item.folder_mapping;
+            const isCompleted = isItemCompleted(itemKey);
+
+            let rowClass = '';
+            if (!isAvailable) rowClass = 'missing';
+            if (isCompleted) rowClass += ' completed';
+
+            return `<tr class="${rowClass}">` +
+                `<td class="priority-number">#${number}</td>` +
+                `<td class="priority-title">${item.name}</td>` +
+                `<td class="priority-chinese">${item.chinese}</td>` +
+                `<td><span class="priority-status ${isCompleted ? 'completed' : ''}">${isCompleted ? '已完成' : '未完成'}</span></td>` +
+                `<td class="priority-actions">` +
+                `<button class="btn jump-to-article" ${!isAvailable ? 'disabled' : ''} onclick="jumpToArticleFromPriority('${item.folder_mapping}')">跳转</button>` +
+                `</td>` +
+                `</tr>`;
+        }
+
+        function findMatchingArticle(folderName) {
+            if (!readingData || !readingData[priorityPart]) return null;
+
+            const groups = readingData[priorityPart];
+            for (const group of groups) {
+                if (group.items) {
+                    for (const item of group.items) {
+                        // 尝试多种匹配方式
+                        if (item.path && item.path.includes(folderName)) {
+                            return {
+                                item: item,
+                                key: priorityPart + '_' + (item.path || '') + '_' + item.name
+                            };
+                        }
+                        if (item.name && item.name === folderName) {
+                            return {
+                                item: item,
+                                key: priorityPart + '_' + (item.path || '') + '_' + item.name
+                            };
+                        }
+                        // 尝试文件夹名匹配
+                        if (item.path && item.path.split('/').pop() === folderName) {
+                            return {
+                                item: item,
+                                key: priorityPart + '_' + (item.path || '') + '_' + item.name
+                            };
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        function isArticleAvailable(folderName) {
+            return !!findMatchingArticle(folderName);
+        }
+
+        function jumpToArticleFromPriority(folderName) {
+            jumpTarget = folderName;
+            closePriorityModal();
+        }
+
+        function jumpToArticle(folderName) {
+            // 切换到对应part
+            if (priorityPart !== activePart) {
+                setActivePart(priorityPart);
+            }
+
+            // 使用findMatchingArticle找到匹配的文章
+            const articleInfo = findMatchingArticle(folderName);
+            if (articleInfo) {
+                highlightArticle(articleInfo.item.path || '', articleInfo.item.name);
+            }
+        }
+
+        function highlightArticle(path, name) {
+            const itemKey = activePart + '_' + path + '_' + name;
+            const itemElements = document.querySelectorAll('.item');
+
+            // 先移除所有高亮
+            itemElements.forEach(el => el.classList.remove('highlighted'));
+
+            // 查找匹配的元素并高亮
+            for (const element of itemElements) {
+                const titleElement = element.querySelector('strong');
+                if (titleElement && titleElement.textContent === name) {
+                    element.classList.add('highlighted');
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                    // 3秒后移除高亮
+                    setTimeout(() => {
+                        element.classList.remove('highlighted');
+                    }, 3000);
+                    break;
+                }
+            }
+        }
+
+        function loadCompletedStatus() {
+            const userKey = currentToken ? 'completed_' + currentToken : 'completed_guest';
+            const stored = localStorage.getItem(userKey);
+            completedItems = stored ? JSON.parse(stored) : {};
+        }
+
+        function saveCompletedStatus() {
+            const userKey = currentToken ? 'completed_' + currentToken : 'completed_guest';
+            localStorage.setItem(userKey, JSON.stringify(completedItems));
+        }
+
+        function toggleCompletedStatus(itemPath) {
+            const isCompleted = completedItems[itemPath];
+            if (isCompleted) {
+                // 只有取消时需要确认
+                if (confirm('确定要取消标记这篇文章为已完成吗？')) {
+                    completedItems[itemPath] = false;
+                    saveCompletedStatus();
+                    render();
+                    // 如果优先级弹窗是打开的，也更新它
+                    if (document.getElementById('priorityModal').style.display === 'block') {
+                        renderPriorityContent();
+                    }
+                }
+            } else {
+                // 标记完成时直接操作
+                completedItems[itemPath] = true;
+                saveCompletedStatus();
+                render();
+                // 如果优先级弹窗是打开的，也更新它
+                if (document.getElementById('priorityModal').style.display === 'block') {
+                    renderPriorityContent();
+                }
+            }
+        }
+
+        function isItemCompleted(itemPath) {
+            return completedItems[itemPath] === true;
+        }
+
+        function setActivePart(part) { activePart = part; render(); }
+
+        function render() {
+            if (!readingData) return;
             // tabs
-            ['P1','P2','P3'].forEach(p=>{
-                const btn = document.getElementById('tab-'+p);
-                if(btn) btn.className = (p===activePart? 'active':'');
+            ['P1', 'P2', 'P3'].forEach(p => {
+                const btn = document.getElementById('tab-' + p);
+                if (btn) btn.className = (p === activePart ? 'active' : '');
             });
 
             const list = readingData[activePart] || [];
             let html = '';
-            list.forEach(group=>{
+            list.forEach(group => {
                 const items = group.items || [];
-                html += `<div class="card">`+
+                html += `<div class="card">` +
                     `<h3>${group.category} <span class="muted">（${items.length} 篇）</span></h3>`;
-                if(items.length===0){
+                if (items.length === 0) {
                     html += `<div class="empty">暂无题目</div>`;
                 } else {
-                    items.forEach(it=>{
-                        const encodedPath = (it.path||'').split('/').map(encodeURIComponent).join('/');
-                        const hasHtml = (it.html||[]).length>0;
-                        const hasPdf = (it.pdf||[]).length>0;
-                        const htmlCount = (it.html||[]).length;
-                        const pdfCount = (it.pdf||[]).length;
-                        html += `<div class="item">`+
-                            `<div class="item-title">`+
-                            `<div><strong>${it.name}</strong> <span class="tag">${activePart}</span></div>`+
-                            `<div>`+
-                            `${hasHtml? `<span class="badge">HTML×${htmlCount}</span>`: ''}`+
-                            `${hasPdf? `<span class="badge" style="background:#f0f9ff;border-color:#bae6fd;color:#0284c7;margin-left:6px;">PDF×${pdfCount}</span>`: ''}`+
-                            `</div>`+
-                            `</div>`+
-                            `<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">`+
-                            `${(it.html||[]).map(f=>`<button class=\"btn secondary\" onclick=\"openHtml('${encodedPath}/${encodeURIComponent(f)}')\">打开 HTML</button>`).join('')}`+
-                            `${(it.pdf||[]).map(f=>`<a class=\"btn outline\" href=\"/reading_exam/${encodedPath}/${encodeURIComponent(f)}\" target=\"_blank\">下载 PDF</a>`).join('')}`+
-                            `</div>`+
+                    items.forEach(it => {
+                        const encodedPath = (it.path || '').split('/').map(encodeURIComponent).join('/');
+                        const itemKey = activePart + '_' + (it.path || '') + '_' + it.name;
+                        const isCompleted = isItemCompleted(itemKey);
+                        const hasHtml = (it.html || []).length > 0;
+                        const hasPdf = (it.pdf || []).length > 0;
+                        const htmlCount = (it.html || []).length;
+                        const pdfCount = (it.pdf || []).length;
+                        html += `<div class="item">` +
+                            `<div class="item-title">` +
+                            `<div><strong>${it.name}</strong> <span class="tag">${activePart}</span></div>` +
+                            `<div>` +
+                            `${hasHtml ? `<span class="badge">HTML×${htmlCount}</span>` : ''}` +
+                            `${hasPdf ? `<span class="badge" style="background:#f0f9ff;border-color:#bae6fd;color:#0284c7;margin-left:6px;">PDF×${pdfCount}</span>` : ''}` +
+                            `</div>` +
+                            `</div>` +
+                            `<div class="item-actions">` +
+                            `<div style="display:flex;gap:8px;flex-wrap:wrap;">` +
+                            `${(it.html || []).map(f => `<button class=\"btn secondary\" onclick=\"openHtml('${encodedPath}/${encodeURIComponent(f)}')\" title=\"打开文件：${f}\">打开 HTML</button>`).join('')}` +
+                            `${(it.pdf || []).map(f => `<a class=\"btn outline\" href=\"/reading_exam/${encodedPath}/${encodeURIComponent(f)}\" target=\"_blank\" title=\"下载文件：${f}\">下载 PDF</a>`).join('')}` +
+                            `</div>` +
+                            `<button class="btn complete ${isCompleted ? '' : 'incomplete'}" onclick="toggleCompletedStatus('${itemKey.replace(/'/g, '\\\'')}')" title="${isCompleted ? '点击取消标记完成' : '点击标记为已完成'}">${isCompleted ? '已完成' : '标记完成'}</button>` +
+                            `</div>` +
                             `</div>`;
                     });
                 }
@@ -115,28 +955,30 @@
             document.getElementById('list').innerHTML = html;
         }
 
-        function openHtml(rel){
+        function openHtml(rel) {
             const url = '/reading_view/' + rel;
             const v = document.getElementById('viewer');
             const frame = document.getElementById('viewerFrame');
             frame.src = url;
             v.style.display = 'block';
         }
-        function closeViewer(){
+        function closeViewer() {
             const v = document.getElementById('viewer');
             const frame = document.getElementById('viewerFrame');
             frame.src = '';
             v.style.display = 'none';
         }
 
-        window.onload = function(){
+        window.onload = function () {
             if (document.getElementById('authOverlay')) {
                 document.body.style.overflow = 'hidden';
                 checkStoredToken().then(valid => {
-                    if(valid){
-                        document.getElementById('authOverlay').style.display='none';
-                        document.body.style.overflow='';
+                    if (valid) {
+                        document.getElementById('authOverlay').style.display = 'none';
+                        document.body.style.overflow = '';
+                        loadCompletedStatus();
                         loadReading();
+                        loadPriorityData(); // 预加载优先级数据
                     } else {
                         document.getElementById('authPassword').focus();
                         fetchServerPassword();
@@ -145,37 +987,63 @@
                 return;
             }
             loadReading();
+            loadPriorityData(); // 预加载优先级数据
         }
     </script>
 </head>
-<body>
-<div id="authOverlay" style="position:fixed;z-index:10000;left:0;top:0;width:100vw;height:100vh;background:rgba(240,245,255,0.98);display:flex;align-items:center;justify-content:center;">
-    <div style="background:#fff;border-radius:14px;box-shadow:0 8px 32px 0 rgba(31,38,135,0.15);padding:38px 32px 32px 32px;max-width:90vw;min-width:320px;text-align:center;">
-        <h2 style="color:#3b4a6b;margin-bottom:18px;">请输入访问密码</h2>
-        <input id="authPassword" type="password" placeholder="Password" style="padding:12px 16px;font-size:17px;border-radius:8px;border:1.5px solid #d1d5db;width:80%;max-width:260px;outline:none;" autofocus onkeydown="if(event.key==='Enter'){checkPassword();}">
-        <div id="authError" style="color:#e94e77;margin-top:14px;display:none;font-size:15px;">密码错误，请重试。</div>
-        <button onclick="checkPassword()" style="margin-top:22px;width:60%;max-width:180px;">进入</button>
-    </div>
-  </div>
-<div class="container">
-    <div class="toolbar">
-        <button class="btn outline" onclick="location.href='/'">返回模块选择</button>
-    </div>
-    <h2>IELTS 阅读真题</h2>
-    <div class="part-tabs">
-        <button id="tab-P1" class="active" onclick="setActivePart('P1')">Part 1</button>
-        <button id="tab-P2" onclick="setActivePart('P2')">Part 2</button>
-        <button id="tab-P3" onclick="setActivePart('P3')">Part 3</button>
-    </div>
-    <div class="grid" id="list"></div>
-    <div class="footer muted">点击 HTML 按钮可全屏预览；PDF 将在新标签页下载/打开。</div>
-</div>
 
-<div id="viewer" class="viewer">
-    <button class="close" onclick="closeViewer()">关闭</button>
-    <iframe id="viewerFrame" class="frame" src="" frameborder="0" style="width:100%;height:100%;background:#fff;"></iframe>
-  </div>
+<body>
+    <div id="authOverlay"
+        style="position:fixed;z-index:10000;left:0;top:0;width:100vw;height:100vh;background:rgba(240,245,255,0.98);display:flex;align-items:center;justify-content:center;">
+        <div
+            style="background:#fff;border-radius:14px;box-shadow:0 8px 32px 0 rgba(31,38,135,0.15);padding:38px 32px 32px 32px;max-width:90vw;min-width:320px;text-align:center;">
+            <h2 style="color:#3b4a6b;margin-bottom:18px;">请输入访问密码</h2>
+            <input id="authPassword" type="password" placeholder="Password"
+                style="padding:12px 16px;font-size:17px;border-radius:8px;border:1.5px solid #d1d5db;width:80%;max-width:260px;outline:none;"
+                autofocus onkeydown="if(event.key==='Enter'){checkPassword();}">
+            <div id="authError" style="color:#e94e77;margin-top:14px;display:none;font-size:15px;">密码错误，请重试。</div>
+            <button onclick="checkPassword()" style="margin-top:22px;width:60%;max-width:180px;">进入</button>
+        </div>
+    </div>
+    <div class="container">
+        <div class="toolbar">
+            <button class="btn outline" onclick="location.href='/'">返回模块选择</button>
+        </div>
+        <h2>IELTS 阅读真题</h2>
+        <div class="part-tabs">
+            <button id="tab-P1" class="active" onclick="setActivePart('P1')">Part 1</button>
+            <button id="tab-P2" onclick="setActivePart('P2')">Part 2</button>
+            <button id="tab-P3" onclick="setActivePart('P3')">Part 3</button>
+            <button class="btn priority-btn" onclick="openPriorityModal()">真题优先级</button>
+        </div>
+        <div class="grid" id="list"></div>
+        <div class="footer muted">点击 HTML 按钮可全屏预览；PDF 将在新标签页下载/打开。</div>
+    </div>
+
+    <div id="viewer" class="viewer">
+        <button class="close" onclick="closeViewer()">关闭</button>
+        <iframe id="viewerFrame" class="frame" src="" frameborder="0"
+            style="width:100%;height:100%;background:#fff;"></iframe>
+    </div>
+
+    <div id="priorityModal" class="priority-modal">
+        <div class="priority-modal-header">
+            <h2>真题优先级列表</h2>
+            <button class="close" onclick="closePriorityModal()">关闭</button>
+        </div>
+        <div class="priority-modal-content">
+            <div class="priority-tabs">
+                <button id="priority-tab-P1" class="active" onclick="setPriorityPart('P1')">Part 1</button>
+                <button id="priority-tab-P2" onclick="setPriorityPart('P2')">Part 2</button>
+                <button id="priority-tab-P3" onclick="setPriorityPart('P3')">Part 3</button>
+            </div>
+            <div id="priorityContent" class="priority-content">
+                <!-- 优先级内容将在这里动态生成 -->
+            </div>
+        </div>
+    </div>
 </body>
+
 </html>
 
-
+</html>
