@@ -1479,6 +1479,14 @@
                         <option value="oldest">最早</option>
                         <option value="alphabetical">字母</option>
                         <option value="reverse-alphabetical">字母倒序</option>
+                        <option value="alphabetical-pure">字母表序（纯）</option>
+                        <option value="reverse-alphabetical-pure">字母表倒序（纯）</option>
+                        <option value="newest-pure">时间倒序（纯）</option>
+                        <option value="oldest-pure">时间正序（纯）</option>
+                        <option value="length-asc">单词短到长</option>
+                        <option value="length-desc">单词长到短</option>
+                        <option value="random">随机打乱</option>
+                        <option value="audio-first">音频已生成优先</option>
                     </select>
                 </div>
             </div>
@@ -1539,6 +1547,14 @@
                                     <option value="oldest">最早添加</option>
                                     <option value="alphabetical">字母顺序</option>
                                     <option value="reverse-alphabetical">字母倒序</option>
+                                    <option value="alphabetical-pure">字母表序（纯）</option>
+                                    <option value="reverse-alphabetical-pure">字母表倒序（纯）</option>
+                                    <option value="newest-pure">时间倒序（纯）</option>
+                                    <option value="oldest-pure">时间正序（纯）</option>
+                                    <option value="length-asc">单词短到长</option>
+                                    <option value="length-desc">单词长到短</option>
+                                    <option value="random">随机打乱</option>
+                                    <option value="audio-first">音频已生成优先</option>
                                 </select>
                             </div>
                         </div>
@@ -1592,6 +1608,14 @@
                                     <option value="oldest">最早添加</option>
                                     <option value="alphabetical">字母顺序</option>
                                     <option value="reverse-alphabetical">字母倒序</option>
+                                    <option value="alphabetical-pure">字母表序（纯）</option>
+                                    <option value="reverse-alphabetical-pure">字母表倒序（纯）</option>
+                                    <option value="newest-pure">时间倒序（纯）</option>
+                                    <option value="oldest-pure">时间正序（纯）</option>
+                                    <option value="length-asc">单词短到长</option>
+                                    <option value="length-desc">单词长到短</option>
+                                    <option value="random">随机打乱</option>
+                                    <option value="audio-first">音频已生成优先</option>
                                 </select>
                             </div>
                         </div>
@@ -1645,6 +1669,14 @@
                                     <option value="oldest">最早添加</option>
                                     <option value="alphabetical">字母顺序</option>
                                     <option value="reverse-alphabetical">字母倒序</option>
+                                    <option value="alphabetical-pure">字母表序（纯）</option>
+                                    <option value="reverse-alphabetical-pure">字母表倒序（纯）</option>
+                                    <option value="newest-pure">时间倒序（纯）</option>
+                                    <option value="oldest-pure">时间正序（纯）</option>
+                                    <option value="length-asc">单词短到长</option>
+                                    <option value="length-desc">单词长到短</option>
+                                    <option value="random">随机打乱</option>
+                                    <option value="audio-first">音频已生成优先</option>
                                 </select>
                             </div>
                         </div>
@@ -1698,6 +1730,14 @@
                                     <option value="oldest">最早添加</option>
                                     <option value="alphabetical">字母顺序</option>
                                     <option value="reverse-alphabetical">字母倒序</option>
+                                    <option value="alphabetical-pure">字母表序（纯）</option>
+                                    <option value="reverse-alphabetical-pure">字母表倒序（纯）</option>
+                                    <option value="newest-pure">时间倒序（纯）</option>
+                                    <option value="oldest-pure">时间正序（纯）</option>
+                                    <option value="length-asc">单词短到长</option>
+                                    <option value="length-desc">单词长到短</option>
+                                    <option value="random">随机打乱</option>
+                                    <option value="audio-first">音频已生成优先</option>
                                 </select>
                             </div>
                         </div>
@@ -2559,21 +2599,51 @@
 
             // 应用当前的排序方式
             words = [...words].sort((a, b) => {
-                // 第一层：收藏状态排序（收藏的在前）
-                const favoriteCompare = (b.is_favorited ? 1 : 0) - (a.is_favorited ? 1 : 0);
-                if (favoriteCompare !== 0) {
-                    return favoriteCompare;
-                }
-
-                // 第二层：按当前排序方式排序
+                // 定义所有排序函数
                 const sortFunctions = {
-                    'newest': new Date(b.created_at) - new Date(a.created_at),
-                    'oldest': new Date(a.created_at) - new Date(b.created_at),
-                    'alphabetical': a.word.toLowerCase().localeCompare(b.word.toLowerCase()),
-                    'reverse-alphabetical': b.word.toLowerCase().localeCompare(a.word.toLowerCase())
+                    // 原有的收藏优先排序
+                    'newest': (a, b) => new Date(b.created_at) - new Date(a.created_at),
+                    'oldest': (a, b) => new Date(a.created_at) - new Date(b.created_at),
+                    'alphabetical': (a, b) => a.word.toLowerCase().localeCompare(b.word.toLowerCase()),
+                    'reverse-alphabetical': (a, b) => b.word.toLowerCase().localeCompare(a.word.toLowerCase()),
+
+                    // 无视收藏的纯排序
+                    'newest-pure': (a, b) => new Date(b.created_at) - new Date(a.created_at),
+                    'oldest-pure': (a, b) => new Date(a.created_at) - new Date(b.created_at),
+                    'alphabetical-pure': (a, b) => a.word.toLowerCase().localeCompare(b.word.toLowerCase()),
+                    'reverse-alphabetical-pure': (a, b) => b.word.toLowerCase().localeCompare(a.word.toLowerCase()),
+
+                    // 其他排序方式
+                    'length-asc': (a, b) => a.word.length - b.word.length,
+                    'length-desc': (a, b) => b.word.length - a.word.length,
+                    'random': () => Math.random() - 0.5,
+                    'audio-first': (a, b) => {
+                        const aHasAudio = a.audio_generated ? 1 : 0;
+                        const bHasAudio = b.audio_generated ? 1 : 0;
+                        if (aHasAudio !== bHasAudio) {
+                            return bHasAudio - aHasAudio;
+                        }
+                        return a.word.toLowerCase().localeCompare(b.word.toLowerCase());
+                    }
                 };
 
-                return sortFunctions[currentSortType] || sortFunctions['newest'];
+                const baseSortFunction = sortFunctions[currentSortType] || sortFunctions['newest'];
+
+                // 判断是否为无视收藏的排序
+                const isPureSort = currentSortType.includes('-pure') ||
+                    ['length-asc', 'length-desc', 'random', 'audio-first'].includes(currentSortType);
+
+                if (isPureSort) {
+                    // 纯排序：只按选择的排序方式排序，无视收藏状态
+                    return baseSortFunction(a, b);
+                } else {
+                    // 两层排序：先按收藏状态，再按选择的排序方式
+                    const favoriteCompare = (b.is_favorited ? 1 : 0) - (a.is_favorited ? 1 : 0);
+                    if (favoriteCompare !== 0) {
+                        return favoriteCompare;
+                    }
+                    return baseSortFunction(a, b);
+                }
             });
 
             if (words.length === 0) {
@@ -2944,15 +3014,52 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    // 从本地数据中移除
+                    // 从本地数据中移除单词
+                    let deletedWord = null;
+                    let deletedFromCategory = null;
+                    let deletedFromSubcategory = null;
+
                     Object.keys(vocabularyData.categories).forEach(category => {
                         Object.keys(vocabularyData.categories[category].subcategories).forEach(subId => {
-                            vocabularyData.categories[category].subcategories[subId].words =
-                                vocabularyData.categories[category].subcategories[subId].words.filter(word => word.id !== wordId);
+                            const words = vocabularyData.categories[category].subcategories[subId].words;
+                            const wordIndex = words.findIndex(word => word.id === wordId);
+                            if (wordIndex !== -1) {
+                                deletedWord = words[wordIndex];
+                                deletedFromCategory = category;
+                                deletedFromSubcategory = subId;
+                                vocabularyData.categories[category].subcategories[subId].words.splice(wordIndex, 1);
+                            }
                         });
                     });
 
-                    renderAllCategories();
+                    // 只重新渲染受影响的分类和子分类
+                    if (deletedFromCategory && deletedFromSubcategory) {
+                        const isMobile = window.innerWidth <= 768;
+
+                        // 更新子分类列表（只更新受影响的分类）
+                        if (!isMobile) {
+                            renderSubcategories(deletedFromCategory);
+                        } else {
+                            updateMobileSubcategoryOptions();
+                        }
+
+                        // 如果删除的是当前显示的分类和子分类，重新渲染单词列表
+                        if (deletedFromCategory === currentCategory && deletedFromSubcategory === currentSubcategory) {
+                            if (isMobile) {
+                                renderMobileWords(currentCategory, currentSubcategory);
+                            } else {
+                                renderWords(currentCategory, currentSubcategory);
+                            }
+                        } else if (deletedFromCategory === currentCategory) {
+                            // 如果只是分类相同但子分类不同，只需要更新子分类列表
+                            if (!isMobile) {
+                                renderSubcategories(deletedFromCategory);
+                            } else {
+                                updateMobileSubcategoryOptions();
+                            }
+                        }
+                    }
+
                     showNotification('单词删除成功', 'success');
                 } else {
                     showNotification(result.error, 'error');
@@ -2962,7 +3069,7 @@
             }
         }
 
-        // 排序单词（支持收藏优先的两层排序）
+        // 排序单词（支持多种排序方式）
         function sortWords(category, sortType) {
             const words = vocabularyData.categories[category].subcategories[currentSubcategory].words;
 
@@ -2972,28 +3079,58 @@
             // 保存用户偏好设置
             saveUserPreferences();
 
-            // 定义基础排序函数
+            // 定义所有排序函数
             const sortFunctions = {
+                // 原有的收藏优先排序
                 'newest': (a, b) => new Date(b.created_at) - new Date(a.created_at),
                 'oldest': (a, b) => new Date(a.created_at) - new Date(b.created_at),
                 'alphabetical': (a, b) => a.word.toLowerCase().localeCompare(b.word.toLowerCase()),
-                'reverse-alphabetical': (a, b) => b.word.toLowerCase().localeCompare(a.word.toLowerCase())
+                'reverse-alphabetical': (a, b) => b.word.toLowerCase().localeCompare(a.word.toLowerCase()),
+
+                // 无视收藏的纯排序
+                'newest-pure': (a, b) => new Date(b.created_at) - new Date(a.created_at),
+                'oldest-pure': (a, b) => new Date(a.created_at) - new Date(b.created_at),
+                'alphabetical-pure': (a, b) => a.word.toLowerCase().localeCompare(b.word.toLowerCase()),
+                'reverse-alphabetical-pure': (a, b) => b.word.toLowerCase().localeCompare(a.word.toLowerCase()),
+
+                // 其他排序方式
+                'length-asc': (a, b) => a.word.length - b.word.length,
+                'length-desc': (a, b) => b.word.length - a.word.length,
+                'random': () => Math.random() - 0.5,
+                'audio-first': (a, b) => {
+                    // 有音频的优先，无音频的其次
+                    const aHasAudio = a.audio_generated ? 1 : 0;
+                    const bHasAudio = b.audio_generated ? 1 : 0;
+                    if (aHasAudio !== bHasAudio) {
+                        return bHasAudio - aHasAudio; // 有音频的排在前面
+                    }
+                    // 如果音频状态相同，按字母顺序排序
+                    return a.word.toLowerCase().localeCompare(b.word.toLowerCase());
+                }
             };
 
             const baseSortFunction = sortFunctions[sortType];
             if (!baseSortFunction) return;
 
-            // 两层排序：先按收藏状态，再按选择的排序方式
-            words.sort((a, b) => {
-                // 第一层：收藏状态排序（收藏的在前）
-                const favoriteCompare = (b.is_favorited ? 1 : 0) - (a.is_favorited ? 1 : 0);
-                if (favoriteCompare !== 0) {
-                    return favoriteCompare;
-                }
+            // 判断是否为无视收藏的排序
+            const isPureSort = sortType.includes('-pure') || ['length-asc', 'length-desc', 'random', 'audio-first'].includes(sortType);
 
-                // 第二层：在相同收藏状态内按选择的方式排序
-                return baseSortFunction(a, b);
-            });
+            if (isPureSort) {
+                // 纯排序：只按选择的排序方式排序，无视收藏状态
+                words.sort(baseSortFunction);
+            } else {
+                // 两层排序：先按收藏状态，再按选择的排序方式
+                words.sort((a, b) => {
+                    // 第一层：收藏状态排序（收藏的在前）
+                    const favoriteCompare = (b.is_favorited ? 1 : 0) - (a.is_favorited ? 1 : 0);
+                    if (favoriteCompare !== 0) {
+                        return favoriteCompare;
+                    }
+
+                    // 第二层：在相同收藏状态内按选择的方式排序
+                    return baseSortFunction(a, b);
+                });
+            }
 
             const isMobile = window.innerWidth <= 768;
             if (isMobile) {
@@ -3301,21 +3438,51 @@
 
             // 应用当前的排序方式
             words = [...words].sort((a, b) => {
-                // 第一层：收藏状态排序（收藏的在前）
-                const favoriteCompare = (b.is_favorited ? 1 : 0) - (a.is_favorited ? 1 : 0);
-                if (favoriteCompare !== 0) {
-                    return favoriteCompare;
-                }
-
-                // 第二层：按当前排序方式排序
+                // 定义所有排序函数
                 const sortFunctions = {
-                    'newest': new Date(b.created_at) - new Date(a.created_at),
-                    'oldest': new Date(a.created_at) - new Date(b.created_at),
-                    'alphabetical': a.word.toLowerCase().localeCompare(b.word.toLowerCase()),
-                    'reverse-alphabetical': b.word.toLowerCase().localeCompare(a.word.toLowerCase())
+                    // 原有的收藏优先排序
+                    'newest': (a, b) => new Date(b.created_at) - new Date(a.created_at),
+                    'oldest': (a, b) => new Date(a.created_at) - new Date(b.created_at),
+                    'alphabetical': (a, b) => a.word.toLowerCase().localeCompare(b.word.toLowerCase()),
+                    'reverse-alphabetical': (a, b) => b.word.toLowerCase().localeCompare(a.word.toLowerCase()),
+
+                    // 无视收藏的纯排序
+                    'newest-pure': (a, b) => new Date(b.created_at) - new Date(a.created_at),
+                    'oldest-pure': (a, b) => new Date(a.created_at) - new Date(b.created_at),
+                    'alphabetical-pure': (a, b) => a.word.toLowerCase().localeCompare(b.word.toLowerCase()),
+                    'reverse-alphabetical-pure': (a, b) => b.word.toLowerCase().localeCompare(a.word.toLowerCase()),
+
+                    // 其他排序方式
+                    'length-asc': (a, b) => a.word.length - b.word.length,
+                    'length-desc': (a, b) => b.word.length - a.word.length,
+                    'random': () => Math.random() - 0.5,
+                    'audio-first': (a, b) => {
+                        const aHasAudio = a.audio_generated ? 1 : 0;
+                        const bHasAudio = b.audio_generated ? 1 : 0;
+                        if (aHasAudio !== bHasAudio) {
+                            return bHasAudio - aHasAudio;
+                        }
+                        return a.word.toLowerCase().localeCompare(b.word.toLowerCase());
+                    }
                 };
 
-                return sortFunctions[currentSortType] || sortFunctions['newest'];
+                const baseSortFunction = sortFunctions[currentSortType] || sortFunctions['newest'];
+
+                // 判断是否为无视收藏的排序
+                const isPureSort = currentSortType.includes('-pure') ||
+                    ['length-asc', 'length-desc', 'random', 'audio-first'].includes(currentSortType);
+
+                if (isPureSort) {
+                    // 纯排序：只按选择的排序方式排序，无视收藏状态
+                    return baseSortFunction(a, b);
+                } else {
+                    // 两层排序：先按收藏状态，再按选择的排序方式
+                    const favoriteCompare = (b.is_favorited ? 1 : 0) - (a.is_favorited ? 1 : 0);
+                    if (favoriteCompare !== 0) {
+                        return favoriteCompare;
+                    }
+                    return baseSortFunction(a, b);
+                }
             });
 
             if (words.length === 0) {
