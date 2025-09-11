@@ -43,9 +43,29 @@
             display: flex;
             gap: 10px;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
             flex-wrap: wrap;
             margin-bottom: 12px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: #374151;
         }
 
         .toolbar button {
@@ -717,6 +737,8 @@
         let priorityPart = 'P1';
         let jumpTarget = null;
 
+        let currentUser = null;
+
         function fetchServerPassword() {
             return fetch('/get_password').then(r => r.json()).then(d => { SERVER_PASSWORD = d.password; });
         }
@@ -724,16 +746,45 @@
             const tk = localStorage.getItem('authToken');
             if (!tk) return Promise.resolve(false);
             return fetch('/verify_token', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: tk }) })
-                .then(r => r.json()).then(d => { if (d.valid) { currentToken = tk; return true; } localStorage.removeItem('authToken'); return false; })
-                .catch(() => { localStorage.removeItem('authToken'); return false; });
+                .then(r => r.json()).then(d => {
+                    if (d.valid) {
+                        currentToken = tk;
+                        if (d.user) {
+                            currentUser = d.user;
+                        }
+                        return true;
+                    }
+                    localStorage.removeItem('authToken');
+                    currentUser = null;
+                    return false;
+                })
+                .catch(() => {
+                    localStorage.removeItem('authToken');
+                    currentUser = null;
+                    return false;
+                });
         }
         function checkPassword() {
             const input = document.getElementById('authPassword').value;
             fetch('/verify_password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: input }) })
                 .then(r => r.json()).then(d => {
-                    if (d.success) { currentToken = d.token; localStorage.setItem('authToken', d.token); document.getElementById('authOverlay').style.display = 'none'; document.body.style.overflow = ''; loadCompletedStatus(); render(); }
-                    else { document.getElementById('authError').style.display = ''; document.getElementById('authPassword').value = ''; document.getElementById('authPassword').focus(); }
-                }).catch(() => { document.getElementById('authError').style.display = ''; });
+                    if (d.success) {
+                        currentToken = d.token;
+                        localStorage.setItem('authToken', d.token);
+                        document.getElementById('authOverlay').style.display = 'none';
+                        document.body.style.overflow = '';
+                        loadUserInfo();
+                        loadCompletedStatus();
+                        render();
+                    }
+                    else {
+                        document.getElementById('authError').style.display = '';
+                        document.getElementById('authPassword').value = '';
+                        document.getElementById('authPassword').focus();
+                    }
+                }).catch(() => {
+                    document.getElementById('authError').style.display = '';
+                });
         }
 
         function loadReading() {
@@ -917,15 +968,116 @@
             }
         }
 
+        function loadUserInfo() {
+            if (!currentToken) return;
+
+            fetch('/api/user/info', {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + currentToken,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (d.success) {
+                    currentUser = d.user;
+                    updateUserDisplay();
+                }
+            })
+            .catch(() => {
+                console.log('Failed to load user info');
+            });
+        }
+
         function loadCompletedStatus() {
-            const userKey = currentToken ? 'completed_' + currentToken : 'completed_guest';
-            const stored = localStorage.getItem(userKey);
-            completedItems = stored ? JSON.parse(stored) : {};
+            if (!currentToken) {
+                // 如果没有token，使用localStorage作为后备
+                const stored = localStorage.getItem('completed_guest');
+                completedItems = stored ? JSON.parse(stored) : {};
+                return;
+            }
+
+            fetch('/api/user/completed_status', {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + currentToken,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (d.success) {
+                    completedItems = d.completed_items || {};
+                } else {
+                    console.log('Failed to load completed status:', d.error);
+                    completedItems = {};
+                }
+            })
+            .catch(() => {
+                console.log('Failed to load completed status from server, using localStorage');
+                // 如果API调用失败，使用localStorage作为后备
+                const stored = localStorage.getItem('completed_guest');
+                completedItems = stored ? JSON.parse(stored) : {};
+            });
         }
 
         function saveCompletedStatus() {
-            const userKey = currentToken ? 'completed_' + currentToken : 'completed_guest';
-            localStorage.setItem(userKey, JSON.stringify(completedItems));
+            if (!currentToken) {
+                // 如果没有token，使用localStorage
+                localStorage.setItem('completed_guest', JSON.stringify(completedItems));
+                return;
+            }
+
+            fetch('/api/user/completed_status', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + currentToken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    completed_items: completedItems
+                })
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (!d.success) {
+                    console.log('Failed to save completed status:', d.error);
+                    // 如果API保存失败，尝试保存到localStorage作为后备
+                    localStorage.setItem('completed_guest', JSON.stringify(completedItems));
+                }
+            })
+            .catch(() => {
+                console.log('Failed to save completed status to server, using localStorage');
+                // 如果API调用失败，使用localStorage作为后备
+                localStorage.setItem('completed_guest', JSON.stringify(completedItems));
+            });
+        }
+
+        function updateUserDisplay() {
+            const userInfoDiv = document.getElementById('userInfo');
+            const userAvatarDiv = document.getElementById('userAvatar');
+            const userDisplayNameSpan = document.getElementById('userDisplayName');
+
+            if (currentUser && currentUser.display_name) {
+                // 显示用户信息
+                userInfoDiv.style.display = 'flex';
+                userDisplayNameSpan.textContent = currentUser.display_name;
+
+                // 设置头像
+                if (currentUser.avatar) {
+                    userAvatarDiv.innerHTML = `<img src="/static/${currentUser.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="头像">`;
+                } else {
+                    // 使用默认头像（显示姓名的第一个字母）
+                    const initial = currentUser.display_name.charAt(0).toUpperCase();
+                    userAvatarDiv.innerHTML = initial;
+                }
+
+                console.log('Current user:', currentUser.display_name);
+            } else {
+                // 隐藏用户信息
+                userInfoDiv.style.display = 'none';
+            }
         }
 
         function toggleCompletedStatus(itemPath) {
@@ -1028,6 +1180,7 @@
                     if (valid) {
                         document.getElementById('authOverlay').style.display = 'none';
                         document.body.style.overflow = '';
+                        loadUserInfo();
                         loadCompletedStatus();
                         loadReading();
                         loadPriorityData(); // 预加载优先级数据
@@ -1060,6 +1213,10 @@
     <div class="container">
         <div class="toolbar">
             <button class="btn outline" onclick="location.href='/'">返回模块选择</button>
+            <div id="userInfo" class="user-info" style="display: none;">
+                <div id="userAvatar" class="user-avatar"></div>
+                <span id="userDisplayName"></span>
+            </div>
         </div>
         <h2>IELTS 阅读真题</h2>
         <div class="part-tabs">

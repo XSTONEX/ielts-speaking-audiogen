@@ -10,6 +10,7 @@ message_board/
 challenges/
 vocab_audio/
 vocabulary_book/
+user_data/
 __pycache__/
 users.json
 tokens.json
