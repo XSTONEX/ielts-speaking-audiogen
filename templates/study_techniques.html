@@ -1,0 +1,2082 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>学习技巧</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/static/android-chrome-192x192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/static/android-chrome-512x512.png">
+  
+  <link href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Crimson+Text:wght@400;600&display=swap" rel="stylesheet">
+  
+  <!-- Markdown解析库 -->
+  <script src="https://cdn.jsdelivr.net/npm/marked@5.1.1/marked.min.js"></script>
+  
+  <style>
+    body { 
+      font-family: 'PT Serif', 'Crimson Text', ui-serif, 'Times New Roman', 'Georgia', serif; 
+      background: linear-gradient(135deg, #e0e7ff 0%, #f4f6fa 100%); 
+      margin: 0; 
+      min-height: 100vh; 
+      padding: 20px; 
+      box-sizing: border-box; 
+    }
+    
+    .container { 
+      max-width: 1200px; 
+      margin: 0 auto; 
+      background: #fff; 
+      border-radius: 20px; 
+      box-shadow: 0 16px 48px rgba(31,38,135,0.20); 
+      padding: 24px; 
+    }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    
+    .header h1 { 
+      margin: 0; 
+      color: #1f2937; 
+      font-size: 28px; 
+      letter-spacing: 0.3px; 
+    }
+    
+    .back-btn {
+      background: #f3f4f6;
+      border: 1px solid #d1d5db;
+      padding: 8px 16px;
+      border-radius: 8px;
+      text-decoration: none;
+      color: #374151;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    
+    .back-btn:hover {
+      background: #e5e7eb;
+      transform: translateY(-1px);
+    }
+    
+    .categories {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    
+    .category-tab {
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: center;
+      flex: none;
+      min-width: 100px;
+    }
+    
+    .category-tab.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-color: #667eea;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+    }
+    
+    .category-tab:hover:not(.active) {
+      border-color: #c7d2fe;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(31,38,135,0.1);
+    }
+    
+    .category-icon {
+      font-size: 16px;
+      margin-right: 6px;
+    }
+    
+    .category-name {
+      font-weight: 600;
+      font-size: 14px;
+      display: inline;
+    }
+    
+    .category-desc {
+      display: none;
+    }
+    
+    .content-area {
+      display: none;
+    }
+    
+    .content-area.active {
+      display: block;
+    }
+    
+    .modules {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto auto;
+      gap: 24px;
+    }
+    
+    .module {
+      background: #fafafa;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 20px;
+      min-height: 400px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .module.techniques {
+      grid-column: 1 / -1;
+      min-height: 300px;
+    }
+    
+    .module-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .module-title {
+      font-weight: 700;
+      font-size: 18px;
+      color: #1f2937;
+    }
+    
+    .add-btn {
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 60px;
+    }
+    
+    .add-btn:hover {
+      background: linear-gradient(135deg, #2563eb, #1e40af);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    }
+    
+    .add-btn:active {
+      transform: translateY(0);
+    }
+    
+    .items {
+      max-height: 350px;
+      overflow-y: visible;
+      overflow-x: hidden;
+    }
+    
+    .item {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 8px;
+      transition: all 0.2s;
+    }
+    
+    .item:hover {
+      box-shadow: 0 2px 8px rgba(31,38,135,0.1);
+    }
+    
+    .word-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    
+    .word-main {
+      flex: 1;
+    }
+    
+    .word-primary {
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 4px;
+      cursor: pointer;
+      transition: color 0.2s;
+      position: relative;
+    }
+    
+    .word-primary:hover {
+      color: #3b82f6;
+    }
+    
+    .word-clickable {
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+    
+    .word-clickable:hover {
+      background: #eff6ff;
+      color: #1d4ed8;
+    }
+    
+    
+    /* 单词和词义两行布局 */
+    .word-with-definition {
+      display: inline-block;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin: 4px;
+      transition: all 0.2s ease;
+      min-width: 120px;
+      vertical-align: top;
+    }
+
+    .word-with-definition:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .word-text {
+      font-weight: 600;
+      color: #1e293b;
+      font-size: 14px;
+      margin-bottom: 4px;
+      text-align: center;
+    }
+
+    .word-definition {
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.4;
+      text-align: center;
+      font-style: italic;
+    }
+
+    .synonyms {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-start;
+      align-items: flex-start;
+    }
+
+    .hypernym-chain {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      justify-content: flex-start;
+    }
+
+    .hypernym-separator {
+      color: #64748b;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .hypernym-arrow {
+      color: #3b82f6;
+      font-size: 16px;
+      font-weight: bold;
+      margin: 0 8px;
+    }
+    
+    .word-definition {
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 8px;
+    }
+    
+    .synonyms {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    
+    .synonym {
+      background: #f3f4f6;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #374151;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .synonym:hover {
+      background: #3b82f6;
+      color: white;
+    }
+    
+    .hypernym-chain {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    
+    .hypernym-arrow {
+      color: #9ca3af;
+      font-size: 14px;
+    }
+    
+    .hypernym-word {
+      background: #f0f9ff;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #0369a1;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid #bae6fd;
+    }
+    
+    .hypernym-word:hover {
+      background: #0369a1;
+      color: white;
+    }
+    
+    .hypernym-word.target {
+      background: #1d4ed8;
+      color: white;
+      font-weight: 600;
+    }
+    
+    .technique-item {
+      border-left: 4px solid #3b82f6;
+      padding-left: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .technique-item:hover {
+      background: #f8fafc;
+      border-radius: 8px;
+    }
+    
+    .technique-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    
+    .technique-title {
+      font-weight: 600;
+      color: #1f2937;
+      font-size: 16px;
+    }
+    
+    .technique-toggle {
+      background: none;
+      border: none;
+      color: #6b7280;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 4px;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+    
+    .technique-toggle:hover {
+      background: #e5e7eb;
+      color: #374151;
+    }
+    
+    .technique-content {
+      line-height: 1.6;
+      color: #374151;
+      margin-top: 12px;
+      display: none;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    
+    .technique-content.expanded {
+      display: block;
+    }
+    
+    /* 全屏模态框样式 */
+    .fullscreen-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: white;
+      z-index: 2000;
+      overflow-y: auto;
+    }
+    
+    .fullscreen-modal.show {
+      display: block;
+    }
+    
+    .fullscreen-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 40px;
+      border-bottom: 1px solid #e5e7eb;
+      background: #f9fafb;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .fullscreen-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1f2937;
+      margin: 0;
+    }
+    
+    .fullscreen-actions {
+      display: flex;
+      gap: 12px;
+    }
+    
+    .fullscreen-content {
+      padding: 40px;
+      max-width: 1000px;
+      margin: 0 auto;
+      line-height: 1.8;
+      font-size: 16px;
+    }
+    
+    .fullscreen-edit-area {
+      display: none;
+      padding: 40px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    
+    .fullscreen-edit-area.active {
+      display: block;
+    }
+    
+    .fullscreen-textarea {
+      width: 100%;
+      min-height: 500px;
+      padding: 20px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 16px;
+      line-height: 1.6;
+      resize: vertical;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .fullscreen-close {
+      background: #6b7280;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+    
+    .fullscreen-close:hover {
+      background: #4b5563;
+    }
+    
+    .fullscreen-edit-btn, .fullscreen-save-btn {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+    
+    .fullscreen-edit-btn:hover, .fullscreen-save-btn:hover {
+      background: #2563eb;
+    }
+    
+    /* 响应式设计 */
+    @media (max-width: 768px) {
+      .container {
+        padding: 16px;
+        margin: 0;
+      }
+      
+      .header {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      
+      .header h1 {
+        font-size: 24px;
+        margin-bottom: 8px;
+      }
+      
+      .categories {
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 20px;
+      }
+      
+      .category-tab {
+        padding: 10px 16px;
+        font-size: 14px;
+        min-width: 80px;
+      }
+      
+      .modules {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      
+      .module.techniques {
+        grid-column: 1;
+      }
+      
+      .module {
+        padding: 16px;
+        min-height: 200px;
+      }
+      
+      .module-header {
+        flex-direction: column;
+        gap: 12px;
+        text-align: center;
+      }
+      
+      .module-title {
+        font-size: 16px;
+      }
+      
+      .add-btn {
+        font-size: 14px;
+        padding: 10px 20px;
+        width: 100%;
+        max-width: 120px;
+      }
+      
+      .item {
+        padding: 12px;
+      }
+      
+      .word-item {
+        flex-direction: column;
+        gap: 12px;
+      }
+      
+      .item-actions {
+        justify-content: center;
+        margin-left: 0;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      
+      .action-btn {
+        flex: 1;
+        min-width: 60px;
+        font-size: 12px;
+      }
+      
+      .synonyms {
+        gap: 8px;
+        line-height: 1.8;
+      }
+      
+      .synonym {
+        padding: 4px 8px;
+        font-size: 14px;
+      }
+      
+      .hypernym-chain {
+        font-size: 14px;
+        line-height: 1.6;
+      }
+      
+      .technique-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+      
+      .technique-toggle {
+        align-self: flex-end;
+      }
+      
+      .items {
+        overflow-y: visible;
+        overflow-x: hidden;
+      }
+
+      .word-with-definition {
+        min-width: 100px;
+        padding: 6px 8px;
+        margin: 2px;
+        font-size: 12px;
+      }
+
+      .word-text {
+        font-size: 13px;
+        margin-bottom: 2px;
+      }
+
+      .word-definition {
+        font-size: 11px;
+      }
+
+      .synonyms {
+        gap: 4px;
+      }
+
+      .hypernym-chain {
+        gap: 8px;
+      }
+      
+      /* 模态框移动端适配 */
+      .modal-content {
+        width: 95vw;
+        max-height: 90vh;
+        padding: 20px;
+        margin: 5vh auto;
+      }
+      
+      .modal-header {
+        font-size: 18px;
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      
+      .form-input, .form-textarea {
+        font-size: 16px;
+        padding: 12px;
+      }
+      
+      .synonym-input-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        padding: 12px;
+      }
+      
+      .remove-synonym {
+        justify-self: center;
+        width: 80px;
+      }
+      
+      .add-synonym {
+        font-size: 14px;
+        padding: 12px;
+      }
+      
+      .btn {
+        padding: 14px 24px;
+        font-size: 16px;
+        width: 100%;
+        margin-bottom: 8px;
+      }
+      
+      .modal-actions {
+        flex-direction: column;
+        gap: 12px;
+      }
+      
+      /* 全屏模态框移动端适配 */
+      .fullscreen-header {
+        padding: 16px 20px;
+        flex-direction: column;
+        gap: 12px;
+        text-align: center;
+      }
+      
+      .fullscreen-title {
+        font-size: 20px;
+      }
+      
+      .fullscreen-actions {
+        order: -1;
+        justify-content: center;
+      }
+      
+      .fullscreen-content {
+        padding: 20px;
+        font-size: 15px;
+        line-height: 1.7;
+      }
+      
+      .fullscreen-edit-area {
+        padding: 20px;
+      }
+      
+      .fullscreen-textarea {
+        font-size: 16px;
+        padding: 16px;
+        min-height: 400px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .container {
+        padding: 12px;
+      }
+      
+      .header h1 {
+        font-size: 22px;
+      }
+      
+      .categories {
+        gap: 6px;
+      }
+      
+      .category-tab {
+        padding: 8px 12px;
+        font-size: 13px;
+        min-width: 70px;
+      }
+      
+      .module {
+        padding: 12px;
+      }
+      
+      .add-btn {
+        font-size: 12px;
+        padding: 8px 16px;
+      }
+      
+      .synonym, .hypernym-word {
+        font-size: 13px;
+        padding: 3px 6px;
+      }
+
+      .word-with-definition {
+        min-width: 80px;
+        padding: 4px 6px;
+        margin: 1px;
+        font-size: 11px;
+      }
+
+      .word-text {
+        font-size: 12px;
+        margin-bottom: 1px;
+      }
+
+      .word-definition {
+        font-size: 10px;
+      }
+
+      .synonyms {
+        gap: 2px;
+      }
+
+      .hypernym-chain {
+        gap: 4px;
+      }
+
+      .hypernym-separator {
+        font-size: 12px;
+      }
+
+      .hypernym-arrow {
+        font-size: 14px;
+        margin: 0 4px;
+      }
+    }
+    
+    .item-actions {
+      display: flex;
+      gap: 6px;
+      margin-left: 12px;
+    }
+    
+    .action-btn {
+      background: #f8fafc;
+      color: #475569;
+      border: 1px solid #e2e8f0;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      min-width: 50px;
+      text-align: center;
+    }
+    
+    .action-btn:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+      transform: translateY(-1px);
+    }
+    
+    .action-btn.delete {
+      color: #dc2626;
+      border-color: #fca5a5;
+      background: #fef2f2;
+    }
+    
+    .action-btn.delete:hover {
+      background: #fee2e2;
+      border-color: #dc2626;
+      transform: translateY(-1px);
+    }
+    
+    /* 模态框样式 */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      backdrop-filter: blur(4px);
+    }
+    
+    .modal.show {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal-content {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      width: min(600px, 90vw);
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+    
+    .modal-header {
+      font-weight: 700;
+      font-size: 18px;
+      margin-bottom: 16px;
+      color: #1f2937;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .form-label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: #374151;
+    }
+    
+    .form-input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+      box-sizing: border-box;
+      font-family: inherit;
+    }
+    
+    .form-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .form-textarea {
+      resize: none;
+      min-height: 80px;
+      font-family: inherit;
+    }
+    
+    .synonym-inputs {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .synonym-input-row {
+      display: grid;
+      grid-template-columns: 1fr 2fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 8px;
+      background: #f8fafc;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+    
+    .remove-synonym {
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 6px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    
+    .add-synonym {
+      background: #10b981;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+    
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid #e5e7eb;
+    }
+    
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 80px;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      color: white;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    }
+    
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #2563eb, #1e40af);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    }
+    
+    .btn-secondary {
+      background: #f8fafc;
+      color: #475569;
+      border: 2px solid #e2e8f0;
+    }
+    
+    .btn-secondary:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+      transform: translateY(-2px);
+    }
+    
+    .loading {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #f3f4f6;
+      border-top: 2px solid #3b82f6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .audio-playing {
+      color: #10b981 !important;
+      transform: scale(1.05);
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        padding: 16px;
+        border-radius: 16px;
+      }
+      
+      .categories {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+      
+      .modules {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      
+      .module {
+        padding: 16px;
+      }
+      
+      .modal-content {
+        width: 95vw;
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>学习技巧</h1>
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <div id="userDisplay"></div>
+        <a href="/" class="back-btn">← 返回主页</a>
+      </div>
+    </div>
+    
+    <div class="categories">
+      <div class="category-tab active" data-category="listening">
+        <span class="category-icon">🎧</span>
+        <span class="category-name">Listening</span>
+      </div>
+      <div class="category-tab" data-category="speaking">
+        <span class="category-icon">🎤</span>
+        <span class="category-name">Speaking</span>
+      </div>
+      <div class="category-tab" data-category="reading">
+        <span class="category-icon">📖</span>
+        <span class="category-name">Reading</span>
+      </div>
+      <div class="category-tab" data-category="writing">
+        <span class="category-icon">✍️</span>
+        <span class="category-name">Writing</span>
+      </div>
+    </div>
+    
+    <div id="content-listening" class="content-area active">
+      <div class="modules">
+        <div class="module">
+          <div class="module-header">
+            <div class="module-title">📝 词汇替换</div>
+            <button class="add-btn" onclick="openSynonymModal('listening')">添加</button>
+          </div>
+          <div class="items" id="synonyms-listening"></div>
+        </div>
+        
+        <div class="module">
+          <div class="module-header">
+            <div class="module-title">🔗 上下义词</div>
+            <button class="add-btn" onclick="openHypernymModal('listening')">添加</button>
+          </div>
+          <div class="items" id="hypernyms-listening"></div>
+        </div>
+        
+        <div class="module techniques">
+          <div class="module-header">
+            <div class="module-title">💡 做题技巧</div>
+            <button class="add-btn" onclick="openTechniqueModal('listening')">添加</button>
+          </div>
+          <div class="items" id="techniques-listening"></div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="content-speaking" class="content-area">
+      <div class="modules">
+        <div class="module">
+          <div class="module-header">
+            <div class="module-title">📝 词汇替换</div>
+            <button class="add-btn" onclick="openSynonymModal('speaking')">添加</button>
+          </div>
+          <div class="items" id="synonyms-speaking"></div>
+        </div>
+        
+        <div class="module">
+          <div class="module-header">
+            <div class="module-title">🔗 上下义词</div>
+            <button class="add-btn" onclick="openHypernymModal('speaking')">添加</button>
+          </div>
+          <div class="items" id="hypernyms-speaking"></div>
+        </div>
+        
+        <div class="module techniques">
+          <div class="module-header">
+            <div class="module-title">💡 做题技巧</div>
+            <button class="add-btn" onclick="openTechniqueModal('speaking')">添加</button>
+          </div>
+          <div class="items" id="techniques-speaking"></div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="content-reading" class="content-area">
+      <div class="modules">
+        <div class="module">
+          <div class="module-header">
+            <div class="module-title">📝 词汇替换</div>
+            <button class="add-btn" onclick="openSynonymModal('reading')">添加</button>
+          </div>
+          <div class="items" id="synonyms-reading"></div>
+        </div>
+        
+        <div class="module">
+          <div class="module-header">
+            <div class="module-title">🔗 上下义词</div>
+            <button class="add-btn" onclick="openHypernymModal('reading')">添加</button>
+          </div>
+          <div class="items" id="hypernyms-reading"></div>
+        </div>
+        
+        <div class="module techniques">
+          <div class="module-header">
+            <div class="module-title">💡 做题技巧</div>
+            <button class="add-btn" onclick="openTechniqueModal('reading')">添加</button>
+          </div>
+          <div class="items" id="techniques-reading"></div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="content-writing" class="content-area">
+      <div class="modules">
+        <div class="module">
+          <div class="module-header">
+            <div class="module-title">📝 词汇替换</div>
+            <button class="add-btn" onclick="openSynonymModal('writing')">添加</button>
+          </div>
+          <div class="items" id="synonyms-writing"></div>
+        </div>
+        
+        <div class="module">
+          <div class="module-header">
+            <div class="module-title">🔗 上下义词</div>
+            <button class="add-btn" onclick="openHypernymModal('writing')">添加</button>
+          </div>
+          <div class="items" id="hypernyms-writing"></div>
+        </div>
+        
+        <div class="module techniques">
+          <div class="module-header">
+            <div class="module-title">💡 做题技巧</div>
+            <button class="add-btn" onclick="openTechniqueModal('writing')">添加</button>
+          </div>
+          <div class="items" id="techniques-writing"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 同义词模态框 -->
+  <div id="synonymModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">添加词汇替换</div>
+      <form id="synonymForm">
+        <div class="form-group">
+          <label class="form-label">同义词组</label>
+          <div id="synonymInputs" class="synonym-inputs">
+            <div class="synonym-input-row">
+              <input type="text" placeholder="同义词" class="form-input synonym-word">
+              <input type="text" placeholder="释义" class="form-input synonym-def">
+              <button type="button" class="remove-synonym" onclick="removeSynonymInput(this)">删除</button>
+            </div>
+          </div>
+          <button type="button" class="add-synonym" onclick="addSynonymInput()">+ 添加同义词</button>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+          <button type="submit" class="btn btn-primary">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <!-- 上下义词模态框 -->
+  <div id="hypernymModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">添加上下义词</div>
+      <form id="hypernymForm">
+        <div class="form-group">
+          <label class="form-label">上义词</label>
+          <div id="hypernymUpperInputs" class="synonym-inputs">
+            <div class="synonym-input-row">
+              <input type="text" placeholder="上义词" class="form-input hypernym-word">
+              <input type="text" placeholder="释义" class="form-input hypernym-def">
+              <button type="button" class="remove-synonym" onclick="removeHypernymInput(this, 'upper')">删除</button>
+            </div>
+          </div>
+          <button type="button" class="add-synonym" onclick="addHypernymInput('upper')">+ 添加上义词</button>
+        </div>
+        <div class="form-group">
+          <label class="form-label">下义词</label>
+          <div id="hypernymLowerInputs" class="synonym-inputs">
+            <div class="synonym-input-row">
+              <input type="text" placeholder="下义词" class="form-input hypernym-word">
+              <input type="text" placeholder="释义" class="form-input hypernym-def">
+              <button type="button" class="remove-synonym" onclick="removeHypernymInput(this, 'lower')">删除</button>
+            </div>
+          </div>
+          <button type="button" class="add-synonym" onclick="addHypernymInput('lower')">+ 添加下义词</button>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+          <button type="submit" class="btn btn-primary">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <!-- 做题技巧模态框 -->
+  <div id="techniqueModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">添加做题技巧</div>
+      <form id="techniqueForm">
+        <div class="form-group">
+          <label class="form-label">标题</label>
+          <input type="text" id="techniqueTitle" class="form-input" placeholder="请输入技巧标题" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">内容（支持Markdown语法）</label>
+          <textarea id="techniqueContent" class="form-input form-textarea" placeholder="请输入技巧内容，支持Markdown语法如 **粗体** *斜体* # 标题 - 列表等" style="min-height: 150px;"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+          <button type="submit" class="btn btn-primary">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let currentToken = null;
+    let currentUser = null;
+    let currentCategory = 'listening';
+    
+    // 身份验证相关
+    function checkStoredToken(){
+      const tk = localStorage.getItem('authToken');
+      if(!tk) return Promise.resolve(false);
+      return fetch('/verify_token',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({token:tk})})
+        .then(r=>r.json()).then(d=>{ 
+          if(d.valid){ 
+            currentToken=tk; 
+            const userStr = localStorage.getItem('currentUser');
+            if(userStr) {
+              try {
+                currentUser = JSON.parse(userStr);
+              } catch(e) {}
+            }
+            return true;
+          } 
+          localStorage.removeItem('authToken'); 
+          localStorage.removeItem('currentUser');
+          return false; 
+        })
+        .catch(()=>{ 
+          localStorage.removeItem('authToken'); 
+          localStorage.removeItem('currentUser');
+          return false; 
+        });
+    }
+    
+    function redirectToLogin() {
+      window.location.href = '/login';
+    }
+    
+    function showUserInfo() {
+      if(currentUser) {
+        const userDisplay = document.getElementById('userDisplay');
+        if(userDisplay) {
+          userDisplay.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <img src="/static/${currentUser.avatar}" alt="${currentUser.display_name}" style="width: 24px; height: 24px; border-radius: 50%;">
+              <span style="color: #374151; font-weight: 600;">${currentUser.display_name}</span>
+            </div>
+          `;
+        }
+      }
+    }
+    
+    // 分类切换
+    function switchCategory(category) {
+      currentCategory = category;
+      
+      // 更新分类标签状态
+      document.querySelectorAll('.category-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      document.querySelector(`[data-category="${category}"]`).classList.add('active');
+      
+      // 更新内容区域
+      document.querySelectorAll('.content-area').forEach(area => {
+        area.classList.remove('active');
+      });
+      document.getElementById(`content-${category}`).classList.add('active');
+      
+      // 加载数据
+      loadData(category);
+    }
+    
+    // 初始化事件监听
+    function initEventListeners() {
+      document.querySelectorAll('.category-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          switchCategory(tab.dataset.category);
+        });
+      });
+    }
+    
+    // 加载数据
+    async function loadData(category) {
+      try {
+        const [synonyms, hypernyms, techniques] = await Promise.all([
+          fetch(`/api/study_techniques/synonyms/${category}`, {
+            headers: { 'Authorization': `Bearer ${currentToken}` }
+          }).then(r => r.json()),
+          fetch(`/api/study_techniques/hypernyms/${category}`, {
+            headers: { 'Authorization': `Bearer ${currentToken}` }
+          }).then(r => r.json()),
+          fetch(`/api/study_techniques/techniques/${category}`, {
+            headers: { 'Authorization': `Bearer ${currentToken}` }
+          }).then(r => r.json())
+        ]);
+        
+        // 存储数据到全局变量
+        if (!currentData[category]) currentData[category] = {};
+        currentData[category].synonyms = synonyms;
+        currentData[category].hypernyms = hypernyms;
+        currentData[category].techniques = techniques;
+        
+        renderSynonyms(category, synonyms);
+        renderHypernyms(category, hypernyms);
+        renderTechniques(category, techniques);
+      } catch (error) {
+        console.error('Failed to load data:', error);
+      }
+    }
+    
+    // 渲染同义词
+    function renderSynonyms(category, data) {
+      const container = document.getElementById(`synonyms-${category}`);
+      container.innerHTML = '';
+      
+      if (data && data.length > 0) {
+        data.forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'item';
+          div.innerHTML = `
+            <div class="word-item">
+              <div class="word-main">
+                <div class="synonyms">
+                  ${item.synonyms.map(syn =>
+                    `<div class="word-with-definition">
+                      <div class="word-text">${syn.word}</div>
+                      ${syn.definition ? `<div class="word-definition">${syn.definition}</div>` : ''}
+                    </div>`
+                  ).join('')}
+                </div>
+              </div>
+              <div class="item-actions">
+                <button class="action-btn" onclick="editSynonym('${category}', '${item.id}')">编辑</button>
+                <button class="action-btn delete" onclick="deleteSynonym('${category}', '${item.id}')">删除</button>
+              </div>
+            </div>
+          `;
+          container.appendChild(div);
+        });
+      } else {
+        container.innerHTML = '<div style="text-align: center; color: #9ca3af; padding: 20px;">暂无词汇替换数据</div>';
+      }
+    }
+    
+    // 渲染上下义词
+    function renderHypernyms(category, data) {
+      const container = document.getElementById(`hypernyms-${category}`);
+      container.innerHTML = '';
+      
+      if (data && data.length > 0) {
+        data.forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'item';
+          
+          let chainHtml = '<div class="hypernym-chain">';
+          
+          // 渲染上义词
+          if (item.upper_words && item.upper_words.length > 0) {
+            item.upper_words.forEach((upper, index) => {
+              if (index > 0) chainHtml += '<span class="hypernym-separator">, </span>';
+              chainHtml += `<div class="word-with-definition">
+                <div class="word-text">${upper.word}</div>
+                ${upper.definition ? `<div class="word-definition">${upper.definition}</div>` : ''}
+              </div>`;
+            });
+            chainHtml += '<span class="hypernym-arrow"> → </span>';
+          }
+          
+          // 渲染下义词
+          if (item.lower_words && item.lower_words.length > 0) {
+            item.lower_words.forEach((lower, index) => {
+              if (index > 0) chainHtml += '<span class="hypernym-separator">, </span>';
+              chainHtml += `<div class="word-with-definition">
+                <div class="word-text">${lower.word}</div>
+                ${lower.definition ? `<div class="word-definition">${lower.definition}</div>` : ''}
+              </div>`;
+            });
+          }
+          
+          chainHtml += '</div>';
+          
+          div.innerHTML = `
+            <div class="word-item">
+              <div class="word-main">
+                ${chainHtml}
+              </div>
+              <div class="item-actions">
+                <button class="action-btn" onclick="editHypernym('${category}', '${item.id}')">编辑</button>
+                <button class="action-btn delete" onclick="deleteHypernym('${category}', '${item.id}')">删除</button>
+              </div>
+            </div>
+          `;
+          container.appendChild(div);
+        });
+      } else {
+        container.innerHTML = '<div style="text-align: center; color: #9ca3af; padding: 20px;">暂无上下义词数据</div>';
+      }
+    }
+    
+    // 渲染做题技巧
+    function renderTechniques(category, data) {
+      const container = document.getElementById(`techniques-${category}`);
+      container.innerHTML = '';
+      
+      if (data && data.length > 0) {
+        data.forEach((item, index) => {
+          const div = document.createElement('div');
+          div.className = 'item technique-item';
+          const contentId = `technique-content-${category}-${index}`;
+          div.innerHTML = `
+            <div class="word-item">
+              <div class="word-main">
+                <div class="technique-header">
+                  <div class="technique-title">${item.title}</div>
+                  <button class="technique-toggle" onclick="toggleTechnique('${contentId}', this)">展开 ▼</button>
+                </div>
+                <div class="technique-content" id="${contentId}">
+                  ${marked.parse(item.content)}
+                </div>
+              </div>
+              <div class="item-actions">
+                <button class="action-btn" onclick="openFullscreenTechnique('${category}', '${item.id}')">全屏</button>
+                <button class="action-btn" onclick="editTechnique('${category}', '${item.id}')">编辑</button>
+                <button class="action-btn delete" onclick="deleteTechnique('${category}', '${item.id}')">删除</button>
+              </div>
+            </div>
+          `;
+          container.appendChild(div);
+        });
+      } else {
+        container.innerHTML = '<div style="text-align: center; color: #9ca3af; padding: 20px;">暂无做题技巧数据</div>';
+      }
+    }
+    
+    // 切换技巧内容显示
+    function toggleTechnique(contentId, button) {
+      const content = document.getElementById(contentId);
+      const isExpanded = content.classList.contains('expanded');
+      
+      if (isExpanded) {
+        content.classList.remove('expanded');
+        button.innerHTML = '展开 ▼';
+      } else {
+        content.classList.add('expanded');
+        button.innerHTML = '收起 ▲';
+      }
+    }
+    
+    
+    // 模态框操作
+    function openSynonymModal(category) {
+      document.getElementById('synonymForm').reset();
+      document.getElementById('synonymInputs').innerHTML = `
+        <div class="synonym-input-row">
+          <input type="text" placeholder="同义词" class="form-input synonym-word">
+          <input type="text" placeholder="释义" class="form-input synonym-def">
+          <button type="button" class="remove-synonym" onclick="removeSynonymInput(this)">删除</button>
+        </div>
+      `;
+      document.getElementById('synonymModal').classList.add('show');
+    }
+    
+    function openHypernymModal(category) {
+      document.getElementById('hypernymForm').reset();
+      
+      // 重置上义词输入
+      document.getElementById('hypernymUpperInputs').innerHTML = `
+        <div class="synonym-input-row">
+          <input type="text" placeholder="上义词" class="form-input hypernym-word">
+          <input type="text" placeholder="释义" class="form-input hypernym-def">
+          <button type="button" class="remove-synonym" onclick="removeHypernymInput(this, 'upper')">删除</button>
+        </div>
+      `;
+      
+      // 重置下义词输入
+      document.getElementById('hypernymLowerInputs').innerHTML = `
+        <div class="synonym-input-row">
+          <input type="text" placeholder="下义词" class="form-input hypernym-word">
+          <input type="text" placeholder="释义" class="form-input hypernym-def">
+          <button type="button" class="remove-synonym" onclick="removeHypernymInput(this, 'lower')">删除</button>
+        </div>
+      `;
+      
+      document.getElementById('hypernymModal').classList.add('show');
+    }
+    
+    function openTechniqueModal(category) {
+      document.getElementById('techniqueForm').reset();
+      document.getElementById('techniqueModal').classList.add('show');
+    }
+    
+    function closeModal() {
+      document.querySelectorAll('.modal').forEach(modal => {
+        modal.classList.remove('show');
+      });
+      
+      // 重置编辑状态和模态框标题
+      editingItem = null;
+      document.querySelector('#synonymModal .modal-header').textContent = '添加词汇替换';
+      document.querySelector('#hypernymModal .modal-header').textContent = '添加上下义词';
+      document.querySelector('#techniqueModal .modal-header').textContent = '添加做题技巧';
+    }
+    
+    // 全屏功能
+    function openFullscreenTechnique(category, id) {
+      const data = currentData[category]?.techniques || [];
+      const item = data.find(item => item.id === id);
+      if (!item) return;
+      
+      fullscreenTechnique = {category, id, item};
+      document.getElementById('fullscreenTitle').textContent = item.title;
+      document.getElementById('fullscreenContent').innerHTML = marked.parse(item.content);
+      document.getElementById('fullscreenTextarea').value = item.content;
+      
+      // 重置到查看模式
+      document.getElementById('fullscreenContent').style.display = 'block';
+      document.getElementById('fullscreenEditArea').classList.remove('active');
+      document.getElementById('fullscreenEditBtn').style.display = 'inline-block';
+      document.getElementById('fullscreenSaveBtn').style.display = 'none';
+      
+      document.getElementById('fullscreenModal').classList.add('show');
+    }
+    
+    function closeFullscreenModal() {
+      document.getElementById('fullscreenModal').classList.remove('show');
+      fullscreenTechnique = null;
+    }
+    
+    function enterFullscreenEditMode() {
+      document.getElementById('fullscreenContent').style.display = 'none';
+      document.getElementById('fullscreenEditArea').classList.add('active');
+      document.getElementById('fullscreenEditBtn').style.display = 'none';
+      document.getElementById('fullscreenSaveBtn').style.display = 'inline-block';
+    }
+    
+    async function saveFullscreenEdit() {
+      if (!fullscreenTechnique) return;
+      
+      const newContent = document.getElementById('fullscreenTextarea').value;
+      
+      try {
+        const response = await fetch(`/api/study_techniques/techniques/${fullscreenTechnique.category}/${fullscreenTechnique.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${currentToken}`
+          },
+          body: JSON.stringify({
+            title: fullscreenTechnique.item.title,
+            content: newContent
+          })
+        });
+        
+        if (response.ok) {
+          // 更新显示
+          document.getElementById('fullscreenContent').innerHTML = marked.parse(newContent);
+          fullscreenTechnique.item.content = newContent;
+          
+          // 退出编辑模式
+          document.getElementById('fullscreenContent').style.display = 'block';
+          document.getElementById('fullscreenEditArea').classList.remove('active');
+          document.getElementById('fullscreenEditBtn').style.display = 'inline-block';
+          document.getElementById('fullscreenSaveBtn').style.display = 'none';
+          
+          // 刷新列表数据
+          loadData(fullscreenTechnique.category);
+        } else {
+          alert('保存失败，请重试');
+        }
+      } catch (error) {
+        console.error('Save failed:', error);
+        alert('保存失败，请重试');
+      }
+    }
+    
+    function addSynonymInput() {
+      const container = document.getElementById('synonymInputs');
+      const div = document.createElement('div');
+      div.className = 'synonym-input-row';
+      div.innerHTML = `
+        <input type="text" placeholder="同义词" class="form-input synonym-word">
+        <input type="text" placeholder="释义" class="form-input synonym-def">
+        <button type="button" class="remove-synonym" onclick="removeSynonymInput(this)">删除</button>
+      `;
+      container.appendChild(div);
+    }
+    
+    function removeSynonymInput(button) {
+      const container = document.getElementById('synonymInputs');
+      if (container.children.length > 1) {
+        button.parentElement.remove();
+      }
+    }
+    
+    function addHypernymInput(type) {
+      const container = document.getElementById(`hypernym${type === 'upper' ? 'Upper' : 'Lower'}Inputs`);
+      const div = document.createElement('div');
+      div.className = 'synonym-input-row';
+      div.innerHTML = `
+        <input type="text" placeholder="${type === 'upper' ? '上义词' : '下义词'}" class="form-input hypernym-word">
+        <input type="text" placeholder="释义" class="form-input hypernym-def">
+        <button type="button" class="remove-synonym" onclick="removeHypernymInput(this, '${type}')">删除</button>
+      `;
+      container.appendChild(div);
+    }
+    
+    function removeHypernymInput(button, type) {
+      const container = document.getElementById(`hypernym${type === 'upper' ? 'Upper' : 'Lower'}Inputs`);
+      if (container.children.length > 1) {
+        button.parentElement.remove();
+      }
+    }
+    
+    // 表单提交
+    async function submitSynonym() {
+      const synonyms = [];
+      document.querySelectorAll('#synonymInputs .synonym-input-row').forEach(row => {
+        const wordInput = row.querySelector('.synonym-word');
+        const defInput = row.querySelector('.synonym-def');
+        if (wordInput && wordInput.value.trim()) {
+          synonyms.push({
+            word: wordInput.value.trim(),
+            definition: defInput ? defInput.value.trim() : ''
+          });
+        }
+      });
+      
+      if (synonyms.length === 0) {
+        alert('请至少添加一个同义词');
+        return;
+      }
+      
+      try {
+        let url = `/api/study_techniques/synonyms/${currentCategory}`;
+        let method = 'POST';
+        
+        // 如果是编辑模式
+        if (editingItem && editingItem.type === 'synonym') {
+          url += `/${editingItem.id}`;
+          method = 'PUT';
+        }
+        
+        const response = await fetch(url, {
+          method: method,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${currentToken}`
+          },
+          body: JSON.stringify({
+            synonyms
+          })
+        });
+        
+        if (response.ok) {
+          closeModal();
+          editingItem = null;
+          loadData(currentCategory);
+        } else {
+          alert('保存失败，请重试');
+        }
+      } catch (error) {
+        console.error('Submit failed:', error);
+        alert('保存失败，请重试');
+      }
+    }
+    
+    async function submitHypernym() {
+      // 收集上义词
+      const upperWords = [];
+      document.querySelectorAll('#hypernymUpperInputs .synonym-input-row').forEach(row => {
+        const wordInput = row.querySelector('.hypernym-word');
+        const defInput = row.querySelector('.hypernym-def');
+        if (wordInput && wordInput.value.trim()) {
+          upperWords.push({
+            word: wordInput.value.trim(),
+            definition: defInput ? defInput.value.trim() : ''
+          });
+        }
+      });
+      
+      // 收集下义词
+      const lowerWords = [];
+      document.querySelectorAll('#hypernymLowerInputs .synonym-input-row').forEach(row => {
+        const wordInput = row.querySelector('.hypernym-word');
+        const defInput = row.querySelector('.hypernym-def');
+        if (wordInput && wordInput.value.trim()) {
+          lowerWords.push({
+            word: wordInput.value.trim(),
+            definition: defInput ? defInput.value.trim() : ''
+          });
+        }
+      });
+      
+      if (upperWords.length === 0 && lowerWords.length === 0) {
+        alert('请至少添加一个上义词或下义词');
+        return;
+      }
+      
+      try {
+        let url = `/api/study_techniques/hypernyms/${currentCategory}`;
+        let method = 'POST';
+        
+        // 如果是编辑模式
+        if (editingItem && editingItem.type === 'hypernym') {
+          url += `/${editingItem.id}`;
+          method = 'PUT';
+        }
+        
+        const response = await fetch(url, {
+          method: method,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${currentToken}`
+          },
+          body: JSON.stringify({
+            upper_words: upperWords,
+            lower_words: lowerWords
+          })
+        });
+        
+        if (response.ok) {
+          closeModal();
+          editingItem = null;
+          loadData(currentCategory);
+        } else {
+          alert('保存失败，请重试');
+        }
+      } catch (error) {
+        console.error('Submit failed:', error);
+        alert('保存失败，请重试');
+      }
+    }
+    
+    async function submitTechnique() {
+      const title = document.getElementById('techniqueTitle').value;
+      const content = document.getElementById('techniqueContent').value;
+      
+      try {
+        let url = `/api/study_techniques/techniques/${currentCategory}`;
+        let method = 'POST';
+        
+        // 如果是编辑模式
+        if (editingItem && editingItem.type === 'technique') {
+          url += `/${editingItem.id}`;
+          method = 'PUT';
+        }
+        
+        const response = await fetch(url, {
+          method: method,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${currentToken}`
+          },
+          body: JSON.stringify({
+            title,
+            content
+          })
+        });
+        
+        if (response.ok) {
+          closeModal();
+          editingItem = null;
+          loadData(currentCategory);
+        } else {
+          alert('保存失败，请重试');
+        }
+      } catch (error) {
+        console.error('Submit failed:', error);
+        alert('保存失败，请重试');
+      }
+    }
+    
+    // 删除操作
+    async function deleteSynonym(category, id) {
+      if (!confirm('确定要删除这个词汇替换吗？')) return;
+      
+      try {
+        const response = await fetch(`/api/study_techniques/synonyms/${category}/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${currentToken}` }
+        });
+        
+        if (response.ok) {
+          loadData(category);
+        } else {
+          alert('删除失败，请重试');
+        }
+      } catch (error) {
+        console.error('Delete failed:', error);
+        alert('删除失败，请重试');
+      }
+    }
+    
+    async function deleteHypernym(category, id) {
+      if (!confirm('确定要删除这个上下义词吗？')) return;
+      
+      try {
+        const response = await fetch(`/api/study_techniques/hypernyms/${category}/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${currentToken}` }
+        });
+        
+        if (response.ok) {
+          loadData(category);
+        } else {
+          alert('删除失败，请重试');
+        }
+      } catch (error) {
+        console.error('Delete failed:', error);
+        alert('删除失败，请重试');
+      }
+    }
+    
+    async function deleteTechnique(category, id) {
+      if (!confirm('确定要删除这个做题技巧吗？')) return;
+      
+      try {
+        const response = await fetch(`/api/study_techniques/techniques/${category}/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${currentToken}` }
+        });
+        
+        if (response.ok) {
+          loadData(category);
+        } else {
+          alert('删除失败，请重试');
+        }
+      } catch (error) {
+        console.error('Delete failed:', error);
+        alert('删除失败，请重试');
+      }
+    }
+    
+    // 编辑功能
+    function editSynonym(category, id) {
+      // 找到要编辑的项目
+      const data = currentData[category]?.synonyms || [];
+      const item = data.find(item => item.id === id);
+      if (!item) return;
+      
+      // 清空并填充同义词输入
+      const container = document.getElementById('synonymInputs');
+      container.innerHTML = '';
+      item.synonyms.forEach(syn => {
+        const div = document.createElement('div');
+        div.className = 'synonym-input-row';
+        div.innerHTML = `
+          <input type="text" placeholder="同义词" class="form-input synonym-word" value="${syn.word}">
+          <input type="text" placeholder="释义" class="form-input synonym-def" value="${syn.definition || ''}">
+          <button type="button" class="remove-synonym" onclick="removeSynonymInput(this)">删除</button>
+        `;
+        container.appendChild(div);
+      });
+      
+      // 设置编辑模式
+      editingItem = {type: 'synonym', category, id};
+      document.querySelector('#synonymModal .modal-header').textContent = '编辑词汇替换';
+      document.getElementById('synonymModal').classList.add('show');
+    }
+    
+    function editHypernym(category, id) {
+      // 找到要编辑的项目
+      const data = currentData[category]?.hypernyms || [];
+      const item = data.find(item => item.id === id);
+      if (!item) return;
+      
+      // 填充上义词
+      const upperContainer = document.getElementById('hypernymUpperInputs');
+      upperContainer.innerHTML = '';
+      (item.upper_words || []).forEach(upper => {
+        const div = document.createElement('div');
+        div.className = 'synonym-input-row';
+        div.innerHTML = `
+          <input type="text" placeholder="上义词" class="form-input hypernym-word" value="${upper.word}">
+          <input type="text" placeholder="释义" class="form-input hypernym-def" value="${upper.definition || ''}">
+          <button type="button" class="remove-synonym" onclick="removeHypernymInput(this, 'upper')">删除</button>
+        `;
+        upperContainer.appendChild(div);
+      });
+      
+      // 如果没有上义词，添加一个空的输入框
+      if (!item.upper_words || item.upper_words.length === 0) {
+        const div = document.createElement('div');
+        div.className = 'synonym-input-row';
+        div.innerHTML = `
+          <input type="text" placeholder="上义词" class="form-input hypernym-word">
+          <input type="text" placeholder="释义" class="form-input hypernym-def">
+          <button type="button" class="remove-synonym" onclick="removeHypernymInput(this, 'upper')">删除</button>
+        `;
+        upperContainer.appendChild(div);
+      }
+      
+      // 填充下义词
+      const lowerContainer = document.getElementById('hypernymLowerInputs');
+      lowerContainer.innerHTML = '';
+      (item.lower_words || []).forEach(lower => {
+        const div = document.createElement('div');
+        div.className = 'synonym-input-row';
+        div.innerHTML = `
+          <input type="text" placeholder="下义词" class="form-input hypernym-word" value="${lower.word}">
+          <input type="text" placeholder="释义" class="form-input hypernym-def" value="${lower.definition || ''}">
+          <button type="button" class="remove-synonym" onclick="removeHypernymInput(this, 'lower')">删除</button>
+        `;
+        lowerContainer.appendChild(div);
+      });
+      
+      // 如果没有下义词，添加一个空的输入框
+      if (!item.lower_words || item.lower_words.length === 0) {
+        const div = document.createElement('div');
+        div.className = 'synonym-input-row';
+        div.innerHTML = `
+          <input type="text" placeholder="下义词" class="form-input hypernym-word">
+          <input type="text" placeholder="释义" class="form-input hypernym-def">
+          <button type="button" class="remove-synonym" onclick="removeHypernymInput(this, 'lower')">删除</button>
+        `;
+        lowerContainer.appendChild(div);
+      }
+      
+      // 设置编辑模式
+      editingItem = {type: 'hypernym', category, id};
+      document.querySelector('#hypernymModal .modal-header').textContent = '编辑上下义词';
+      document.getElementById('hypernymModal').classList.add('show');
+    }
+    
+    function editTechnique(category, id) {
+      // 找到要编辑的项目
+      const data = currentData[category]?.techniques || [];
+      const item = data.find(item => item.id === id);
+      if (!item) return;
+      
+      // 填充表单
+      document.getElementById('techniqueTitle').value = item.title;
+      document.getElementById('techniqueContent').value = item.content;
+      
+      // 设置编辑模式
+      editingItem = {type: 'technique', category, id};
+      document.querySelector('#techniqueModal .modal-header').textContent = '编辑做题技巧';
+      document.getElementById('techniqueModal').classList.add('show');
+    }
+    
+    // 全局变量存储当前数据和编辑状态
+    let currentData = {};
+    let editingItem = null;
+    let fullscreenTechnique = null;
+
+    
+    // 表单事件绑定
+    document.getElementById('synonymForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      submitSynonym();
+    });
+
+    // 页面初始化
+    document.addEventListener('DOMContentLoaded', function() {
+      loadInitialData();
+    });
+    
+    document.getElementById('hypernymForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      submitHypernym();
+    });
+    
+    document.getElementById('techniqueForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      submitTechnique();
+    });
+    
+    // 点击模态框外部关闭
+    document.querySelectorAll('.modal').forEach(modal => {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          closeModal();
+        }
+      });
+    });
+    
+    // 初始化
+    window.onload = function(){
+      checkStoredToken().then(valid=>{
+        if(valid) {
+          showUserInfo();
+          initEventListeners();
+          loadData('listening');
+        } else {
+          redirectToLogin();
+        }
+      });
+    }
+  </script>
+  
+  <!-- 全屏模态框 -->
+  <div id="fullscreenModal" class="fullscreen-modal">
+    <div class="fullscreen-header">
+      <h1 class="fullscreen-title" id="fullscreenTitle">技巧详情</h1>
+      <div class="fullscreen-actions">
+        <button class="fullscreen-edit-btn" id="fullscreenEditBtn" onclick="enterFullscreenEditMode()">编辑</button>
+        <button class="fullscreen-save-btn" id="fullscreenSaveBtn" onclick="saveFullscreenEdit()" style="display: none;">保存</button>
+        <button class="fullscreen-close" onclick="closeFullscreenModal()">关闭</button>
+      </div>
+    </div>
+    <div class="fullscreen-content" id="fullscreenContent"></div>
+    <div class="fullscreen-edit-area" id="fullscreenEditArea">
+      <textarea class="fullscreen-textarea" id="fullscreenTextarea" placeholder="请输入技巧内容，支持Markdown语法"></textarea>
+    </div>
+  </div>
+</body>
+</html>

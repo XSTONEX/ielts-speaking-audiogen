@@ -11,6 +11,7 @@ challenges/
 vocab_audio/
 vocabulary_book/
 user_data/
+study_techniques/
 __pycache__/
 users.json
 tokens.json
