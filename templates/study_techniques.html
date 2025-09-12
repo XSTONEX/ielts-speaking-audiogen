@@ -475,6 +475,65 @@
       line-height: 1.8;
       font-size: 16px;
     }
+
+    /* 全屏词汇显示样式 */
+    .fullscreen-content .word-with-definition {
+      display: inline-block;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin: 6px;
+      transition: all 0.2s ease;
+      min-width: 120px;
+      vertical-align: top;
+      font-size: 16px;
+    }
+
+    .fullscreen-content .word-with-definition:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .fullscreen-content .word-text {
+      font-weight: 600;
+      color: #1e293b;
+      font-size: 16px;
+      margin-bottom: 6px;
+      text-align: center;
+    }
+
+    .fullscreen-content .word-definition {
+      font-size: 14px;
+      color: #64748b;
+      line-height: 1.4;
+      text-align: center;
+      font-style: italic;
+    }
+
+    .fullscreen-content .hypernym-chain {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      justify-content: center;
+      padding: 8px;
+    }
+
+    .fullscreen-content .hypernym-separator {
+      color: #64748b;
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .fullscreen-content .hypernym-arrow {
+      color: #3b82f6;
+      font-size: 18px;
+      font-weight: bold;
+      margin: 0 12px;
+    }
     
     .fullscreen-edit-area {
       display: none;
@@ -738,11 +797,42 @@
       .fullscreen-edit-area {
         padding: 20px;
       }
-      
+
       .fullscreen-textarea {
         font-size: 16px;
         padding: 16px;
         min-height: 400px;
+      }
+
+      /* 全屏词汇移动端适配 */
+      .fullscreen-content .word-with-definition {
+        min-width: 100px;
+        padding: 8px 12px;
+        margin: 4px;
+        font-size: 14px;
+      }
+
+      .fullscreen-content .word-text {
+        font-size: 14px;
+        margin-bottom: 4px;
+      }
+
+      .fullscreen-content .word-definition {
+        font-size: 12px;
+      }
+
+      .fullscreen-content .hypernym-chain {
+        gap: 8px;
+        padding: 4px;
+      }
+
+      .fullscreen-content .hypernym-separator {
+        font-size: 14px;
+      }
+
+      .fullscreen-content .hypernym-arrow {
+        font-size: 16px;
+        margin: 0 8px;
       }
     }
     
@@ -808,6 +898,37 @@
       }
 
       .hypernym-arrow {
+        font-size: 14px;
+        margin: 0 4px;
+      }
+
+      /* 全屏词汇480px以下适配 */
+      .fullscreen-content .word-with-definition {
+        min-width: 80px;
+        padding: 6px 8px;
+        margin: 2px;
+        font-size: 12px;
+      }
+
+      .fullscreen-content .word-text {
+        font-size: 12px;
+        margin-bottom: 2px;
+      }
+
+      .fullscreen-content .word-definition {
+        font-size: 10px;
+      }
+
+      .fullscreen-content .hypernym-chain {
+        gap: 4px;
+        padding: 2px;
+      }
+
+      .fullscreen-content .hypernym-separator {
+        font-size: 12px;
+      }
+
+      .fullscreen-content .hypernym-arrow {
         font-size: 14px;
         margin: 0 4px;
       }
@@ -1087,7 +1208,10 @@
         <div class="module">
           <div class="module-header">
             <div class="module-title">📝 词汇替换</div>
-            <button class="add-btn" onclick="openSynonymModal('listening')">添加</button>
+            <div style="display: flex; gap: 8px;">
+              <button class="add-btn" onclick="openFullscreenSynonyms('listening')">全屏</button>
+              <button class="add-btn" onclick="openSynonymModal('listening')">添加</button>
+            </div>
           </div>
           <div class="items" id="synonyms-listening"></div>
         </div>
@@ -1095,7 +1219,10 @@
         <div class="module">
           <div class="module-header">
             <div class="module-title">🔗 上下义词</div>
-            <button class="add-btn" onclick="openHypernymModal('listening')">添加</button>
+            <div style="display: flex; gap: 8px;">
+              <button class="add-btn" onclick="openFullscreenHypernyms('listening')">全屏</button>
+              <button class="add-btn" onclick="openHypernymModal('listening')">添加</button>
+            </div>
           </div>
           <div class="items" id="hypernyms-listening"></div>
         </div>
@@ -1115,15 +1242,21 @@
         <div class="module">
           <div class="module-header">
             <div class="module-title">📝 词汇替换</div>
-            <button class="add-btn" onclick="openSynonymModal('speaking')">添加</button>
+            <div style="display: flex; gap: 8px;">
+              <button class="add-btn" onclick="openFullscreenSynonyms('speaking')">全屏</button>
+              <button class="add-btn" onclick="openSynonymModal('speaking')">添加</button>
+            </div>
           </div>
           <div class="items" id="synonyms-speaking"></div>
         </div>
-        
+
         <div class="module">
           <div class="module-header">
             <div class="module-title">🔗 上下义词</div>
-            <button class="add-btn" onclick="openHypernymModal('speaking')">添加</button>
+            <div style="display: flex; gap: 8px;">
+              <button class="add-btn" onclick="openFullscreenHypernyms('speaking')">全屏</button>
+              <button class="add-btn" onclick="openHypernymModal('speaking')">添加</button>
+            </div>
           </div>
           <div class="items" id="hypernyms-speaking"></div>
         </div>
@@ -1143,15 +1276,21 @@
         <div class="module">
           <div class="module-header">
             <div class="module-title">📝 词汇替换</div>
-            <button class="add-btn" onclick="openSynonymModal('reading')">添加</button>
+            <div style="display: flex; gap: 8px;">
+              <button class="add-btn" onclick="openFullscreenSynonyms('reading')">全屏</button>
+              <button class="add-btn" onclick="openSynonymModal('reading')">添加</button>
+            </div>
           </div>
           <div class="items" id="synonyms-reading"></div>
         </div>
-        
+
         <div class="module">
           <div class="module-header">
             <div class="module-title">🔗 上下义词</div>
-            <button class="add-btn" onclick="openHypernymModal('reading')">添加</button>
+            <div style="display: flex; gap: 8px;">
+              <button class="add-btn" onclick="openFullscreenHypernyms('reading')">全屏</button>
+              <button class="add-btn" onclick="openHypernymModal('reading')">添加</button>
+            </div>
           </div>
           <div class="items" id="hypernyms-reading"></div>
         </div>
@@ -1171,15 +1310,21 @@
         <div class="module">
           <div class="module-header">
             <div class="module-title">📝 词汇替换</div>
-            <button class="add-btn" onclick="openSynonymModal('writing')">添加</button>
+            <div style="display: flex; gap: 8px;">
+              <button class="add-btn" onclick="openFullscreenSynonyms('writing')">全屏</button>
+              <button class="add-btn" onclick="openSynonymModal('writing')">添加</button>
+            </div>
           </div>
           <div class="items" id="synonyms-writing"></div>
         </div>
-        
+
         <div class="module">
           <div class="module-header">
             <div class="module-title">🔗 上下义词</div>
-            <button class="add-btn" onclick="openHypernymModal('writing')">添加</button>
+            <div style="display: flex; gap: 8px;">
+              <button class="add-btn" onclick="openFullscreenHypernyms('writing')">全屏</button>
+              <button class="add-btn" onclick="openHypernymModal('writing')">添加</button>
+            </div>
           </div>
           <div class="items" id="hypernyms-writing"></div>
         </div>
@@ -1577,22 +1722,124 @@
     }
     
     // 全屏功能
+    function openFullscreenSynonyms(category) {
+      const data = currentData[category]?.synonyms || [];
+      if (data.length === 0) {
+        alert('暂无词汇替换数据');
+        return;
+      }
+
+      let contentHtml = '<div style="display: flex; flex-direction: column; gap: 16px;">';
+
+      data.forEach(item => {
+        contentHtml += '<div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; background: white;">';
+        contentHtml += '<div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-start;">';
+
+        item.synonyms.forEach(syn => {
+          contentHtml += `
+            <div class="word-with-definition">
+              <div class="word-text">${syn.word}</div>
+              ${syn.definition ? `<div class="word-definition">${syn.definition}</div>` : ''}
+            </div>
+          `;
+        });
+
+        contentHtml += '</div></div>';
+      });
+
+      contentHtml += '</div>';
+
+      document.getElementById('fullscreenTitle').textContent = `${getCategoryName(category)} - 词汇替换`;
+      document.getElementById('fullscreenContent').innerHTML = contentHtml;
+
+      // 隐藏编辑功能
+      document.getElementById('fullscreenEditBtn').style.display = 'none';
+      document.getElementById('fullscreenSaveBtn').style.display = 'none';
+
+      document.getElementById('fullscreenModal').classList.add('show');
+    }
+
+    function openFullscreenHypernyms(category) {
+      const data = currentData[category]?.hypernyms || [];
+      if (data.length === 0) {
+        alert('暂无上下义词数据');
+        return;
+      }
+
+      let contentHtml = '<div style="display: flex; flex-direction: column; gap: 16px;">';
+
+      data.forEach(item => {
+        contentHtml += '<div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; background: white;">';
+        contentHtml += '<div class="hypernym-chain">';
+
+        // 渲染上义词
+        if (item.upper_words && item.upper_words.length > 0) {
+          item.upper_words.forEach((upper, index) => {
+            if (index > 0) contentHtml += '<span class="hypernym-separator">, </span>';
+            contentHtml += `
+              <div class="word-with-definition">
+                <div class="word-text">${upper.word}</div>
+                ${upper.definition ? `<div class="word-definition">${upper.definition}</div>` : ''}
+              </div>
+            `;
+          });
+          contentHtml += '<span class="hypernym-arrow"> → </span>';
+        }
+
+        // 渲染下义词
+        if (item.lower_words && item.lower_words.length > 0) {
+          item.lower_words.forEach((lower, index) => {
+            if (index > 0) contentHtml += '<span class="hypernym-separator">, </span>';
+            contentHtml += `
+              <div class="word-with-definition">
+                <div class="word-text">${lower.word}</div>
+                ${lower.definition ? `<div class="word-definition">${lower.definition}</div>` : ''}
+              </div>
+            `;
+          });
+        }
+
+        contentHtml += '</div></div>';
+      });
+
+      contentHtml += '</div>';
+
+      document.getElementById('fullscreenTitle').textContent = `${getCategoryName(category)} - 上下义词`;
+      document.getElementById('fullscreenContent').innerHTML = contentHtml;
+
+      // 隐藏编辑功能
+      document.getElementById('fullscreenEditBtn').style.display = 'none';
+      document.getElementById('fullscreenSaveBtn').style.display = 'none';
+
+      document.getElementById('fullscreenModal').classList.add('show');
+    }
+
+    function getCategoryName(category) {
+      const names = {
+        'listening': 'Listening',
+        'speaking': 'Speaking',
+        'reading': 'Reading',
+        'writing': 'Writing'
+      };
+      return names[category] || category;
+    }
+
     function openFullscreenTechnique(category, id) {
       const data = currentData[category]?.techniques || [];
       const item = data.find(item => item.id === id);
       if (!item) return;
-      
+
       fullscreenTechnique = {category, id, item};
       document.getElementById('fullscreenTitle').textContent = item.title;
       document.getElementById('fullscreenContent').innerHTML = marked.parse(item.content);
       document.getElementById('fullscreenTextarea').value = item.content;
-      
+
       // 重置到查看模式
       document.getElementById('fullscreenContent').style.display = 'block';
       document.getElementById('fullscreenEditArea').classList.remove('active');
       document.getElementById('fullscreenEditBtn').style.display = 'inline-block';
       document.getElementById('fullscreenSaveBtn').style.display = 'none';
-      
+
       document.getElementById('fullscreenModal').classList.add('show');
     }
     
@@ -2027,7 +2274,7 @@
 
     // 页面初始化
     document.addEventListener('DOMContentLoaded', function() {
-      loadInitialData();
+      // 初始化将在window.onload中处理
     });
     
     document.getElementById('hypernymForm').addEventListener('submit', (e) => {
