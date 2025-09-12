@@ -250,38 +250,6 @@
             margin-top: 8px;
         }
 
-        .viewer {
-            position: fixed;
-            z-index: 10000;
-            left: 0;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(30, 41, 59, 0.92);
-            display: none;
-        }
-
-        .viewer .frame {
-            position: absolute;
-            left: 0;
-            top: 0;
-            right: 0;
-            bottom: 0;
-        }
-
-        .viewer .close {
-            position: absolute;
-            right: 16px;
-            top: 12px;
-            background: #ef4444;
-            color: #fff;
-            border: none;
-            border-radius: 10px;
-            padding: 8px 12px;
-            cursor: pointer;
-            font-weight: 700;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        }
 
         .part-tabs {
             display: flex;
@@ -1146,7 +1114,7 @@
                             `</div>` +
                             `<div class="item-actions">` +
                             `<div style="display:flex;gap:8px;flex-wrap:wrap;">` +
-                            `${(it.html || []).map(f => `<button class=\"btn secondary\" onclick=\"openHtml('${encodedPath}/${encodeURIComponent(f)}')\" title=\"打开文件：${f}\">打开 HTML</button>`).join('')}` +
+                            `${(it.html || []).map(f => `<a class=\"btn secondary\" href=\"/reading_view/${encodedPath}/${encodeURIComponent(f)}\" target=\"_blank\" title=\"打开文件：${f}\">打开 HTML</a>`).join('')}` +
                             `${(it.pdf || []).map(f => `<a class=\"btn outline\" href=\"/reading_exam/${encodedPath}/${encodeURIComponent(f)}\" target=\"_blank\" title=\"下载文件：${f}\">下载 PDF</a>`).join('')}` +
                             `</div>` +
                             `<button class="btn complete ${isCompleted ? '' : 'incomplete'}" onclick="toggleCompletedStatus('${itemKey.replace(/'/g, '\\\'')}')" title="${isCompleted ? '点击取消标记完成' : '点击标记为已完成'}">${isCompleted ? '已完成' : '标记完成'}</button>` +
@@ -1159,19 +1127,6 @@
             document.getElementById('list').innerHTML = html;
         }
 
-        function openHtml(rel) {
-            const url = '/reading_view/' + rel;
-            const v = document.getElementById('viewer');
-            const frame = document.getElementById('viewerFrame');
-            frame.src = url;
-            v.style.display = 'block';
-        }
-        function closeViewer() {
-            const v = document.getElementById('viewer');
-            const frame = document.getElementById('viewerFrame');
-            frame.src = '';
-            v.style.display = 'none';
-        }
 
         window.onload = function () {
             if (document.getElementById('authOverlay')) {
@@ -1226,14 +1181,9 @@
             <button class="btn priority-btn" onclick="openPriorityModal()">真题优先级</button>
         </div>
         <div class="grid" id="list"></div>
-        <div class="footer muted">点击 HTML 按钮可全屏预览；PDF 将在新标签页下载/打开。</div>
+        <div class="footer muted">点击 HTML 按钮将在新标签页打开；PDF 将在新标签页下载/打开。</div>
     </div>
 
-    <div id="viewer" class="viewer">
-        <button class="close" onclick="closeViewer()">关闭</button>
-        <iframe id="viewerFrame" class="frame" src="" frameborder="0"
-            style="width:100%;height:100%;background:#fff;"></iframe>
-    </div>
 
     <div id="priorityModal" class="priority-modal">
         <div class="priority-modal-header">
