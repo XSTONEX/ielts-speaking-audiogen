@@ -370,6 +370,61 @@
             padding: 24px;
         }
 
+        /* 统计信息样式 */
+        .priority-stats {
+            margin-bottom: 32px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+        }
+
+        .stat-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.2s ease;
+            border: 1px solid #e5e7eb;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+
+        .stat-card.missing {
+            background: linear-gradient(135deg, #fefefe 0%, #fafafa 100%);
+            border-color: #d1d5db;
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 4px;
+            line-height: 1;
+        }
+
+        .stat-card.missing .stat-number {
+            color: #6b7280;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #64748b;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
         .priority-section {
             margin-bottom: 32px;
         }
@@ -552,6 +607,12 @@
             border: 1px solid #fcd34d;
         }
 
+        .priority-section h3 .badge.unmentioned {
+            background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+            color: #5b21b6;
+            border: 1px solid #a78bfa;
+        }
+
         .priority-list {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -687,6 +748,33 @@
             .priority-content {
                 padding: 20px;
             }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+                gap: 12px;
+            }
+
+            .stat-card {
+                padding: 12px;
+            }
+
+            .stat-number {
+                font-size: 24px;
+            }
+
+            .stat-label {
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            }
+
+            .priority-stats {
+                padding: 16px;
+            }
         }
 
         @media (max-width: 900px) {
@@ -800,11 +888,118 @@
             });
         }
 
+        function calculatePriorityStats(partData) {
+            const stats = {
+                highTotal: 0,
+                highAvailable: 0,
+                highCompleted: 0,
+                highRemaining: 0,
+                highMissing: 0,
+                lowTotal: 0,
+                lowAvailable: 0,
+                lowCompleted: 0,
+                lowRemaining: 0,
+                lowMissing: 0,
+                unmentionedTotal: 0,
+                unmentionedAvailable: 0,
+                unmentionedCompleted: 0,
+                unmentionedRemaining: 0
+            };
+
+            // 计算高频统计
+            if (partData.high_freq) {
+                stats.highTotal = partData.high_freq.length;
+                partData.high_freq.forEach(item => {
+                    const articleInfo = findMatchingArticle(item.folder_mapping);
+                    if (articleInfo) {
+                        stats.highAvailable++;
+                        const itemKey = articleInfo.key;
+                        if (isItemCompleted(itemKey)) {
+                            stats.highCompleted++;
+                        } else {
+                            stats.highRemaining++;
+                        }
+                    } else {
+                        stats.highMissing++;
+                    }
+                });
+            }
+
+            // 计算低频统计
+            if (partData.low_freq) {
+                stats.lowTotal = partData.low_freq.length;
+                partData.low_freq.forEach(item => {
+                    const articleInfo = findMatchingArticle(item.folder_mapping);
+                    if (articleInfo) {
+                        stats.lowAvailable++;
+                        const itemKey = articleInfo.key;
+                        if (isItemCompleted(itemKey)) {
+                            stats.lowCompleted++;
+                        } else {
+                            stats.lowRemaining++;
+                        }
+                    } else {
+                        stats.lowMissing++;
+                    }
+                });
+            }
+
+            // 计算未提到的文章统计
+            if (partData.unmentioned) {
+                stats.unmentionedTotal = partData.unmentioned.length;
+                partData.unmentioned.forEach(item => {
+                    const articleInfo = findMatchingArticle(item.folder_mapping);
+                    if (articleInfo) {
+                        stats.unmentionedAvailable++;
+                        const itemKey = articleInfo.key;
+                        if (isItemCompleted(itemKey)) {
+                            stats.unmentionedCompleted++;
+                        } else {
+                            stats.unmentionedRemaining++;
+                        }
+                    }
+                });
+            }
+
+            return stats;
+        }
+
+        function renderPriorityStats(stats) {
+            return `<div class="priority-stats">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.highRemaining}</div>
+                        <div class="stat-label">高频待完成</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.lowRemaining}</div>
+                        <div class="stat-label">低频待完成</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.unmentionedRemaining}</div>
+                        <div class="stat-label">未提到待完成</div>
+                    </div>
+                    <div class="stat-card missing">
+                        <div class="stat-number">${stats.highMissing}</div>
+                        <div class="stat-label">高频缺失</div>
+                    </div>
+                    <div class="stat-card missing">
+                        <div class="stat-number">${stats.lowMissing}</div>
+                        <div class="stat-label">低频缺失</div>
+                    </div>
+                </div>
+            </div>`;
+        }
+
         function renderPriorityContent() {
             if (!priorityData) return;
 
             const partData = priorityData[priorityPart];
             let html = '';
+
+            // 添加统计信息
+            const stats = calculatePriorityStats(partData);
+            html += renderPriorityStats(stats);
 
             // 高频部分
             if (partData.high_freq && partData.high_freq.length > 0) {
@@ -830,6 +1025,20 @@
                 html += `<tbody>`;
                 partData.low_freq.forEach((item, index) => {
                     html += renderPriorityTableRow(item, index + 1, 'low');
+                });
+                html += `</tbody></table></div></div>`;
+            }
+
+            // 未提到的文章部分
+            if (partData.unmentioned && partData.unmentioned.length > 0) {
+                html += `<div class="priority-section">`;
+                html += `<h3>未提到的文章 <span class="badge unmentioned">UNMENTIONED</span></h3>`;
+                html += `<div class="priority-table-container">`;
+                html += `<table class="priority-table">`;
+                html += `<thead><tr><th>序号</th><th>英文标题</th><th>中文翻译</th><th>状态</th><th>操作</th></tr></thead>`;
+                html += `<tbody>`;
+                partData.unmentioned.forEach((item, index) => {
+                    html += renderPriorityTableRow(item, index + 1, 'unmentioned');
                 });
                 html += `</tbody></table></div></div>`;
             }
