@@ -424,18 +424,23 @@
     
     .image-modal-content {
       position: relative;
+      width: 100%;
+      height: 100%;
       max-width: 90vw;
       max-height: 90vh;
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: center;
       z-index: 1;
+      gap: 16px;
+      margin: auto;
     }
     
     .image-modal-close {
       position: absolute;
-      top: -50px;
-      right: 0;
+      top: 20px;
+      right: 20px;
       width: 40px;
       height: 40px;
       background: rgba(255, 255, 255, 0.1);
@@ -449,6 +454,7 @@
       font-size: 18px;
       transition: all 0.2s ease;
       backdrop-filter: blur(8px);
+      z-index: 1001;
     }
     
     .image-modal-close:hover {
@@ -458,17 +464,25 @@
     
     .image-modal img {
       max-width: 100%;
-      max-height: calc(90vh - 80px);
+      max-height: calc(90vh - 120px);
+      width: auto;
+      height: auto;
       border-radius: 8px;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      object-fit: contain;
+      flex-shrink: 0;
     }
     
     .image-modal-nav {
       position: absolute;
       top: 50%;
-      transform: translateY(-50%);
+      left: 50%;
+      transform: translate(-50%, -50%);
       display: flex;
-      gap: 20px;
+      justify-content: space-between;
+      width: calc(100vw - 40px);
+      max-width: calc(90vw + 40px);
+      pointer-events: none;
     }
     
     .image-modal-nav button {
@@ -485,6 +499,7 @@
       font-size: 20px;
       transition: all 0.2s ease;
       backdrop-filter: blur(8px);
+      pointer-events: auto;
     }
     
     .image-modal-nav button:hover {
@@ -503,24 +518,49 @@
       transform: none;
     }
     
-    #prevImageBtn {
-      left: -80px;
-    }
-    
-    #nextImageBtn {
-      right: -80px;
-    }
     
     .image-modal-info {
-      position: absolute;
-      bottom: -50px;
-      left: 50%;
-      transform: translateX(-50%);
       display: flex;
+      flex-direction: column;
       align-items: center;
       gap: 12px;
       color: rgba(255, 255, 255, 0.8);
       font-size: 14px;
+      text-align: center;
+    }
+
+    .image-modal-info .counter-and-delete {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 8px 16px;
+      border-radius: 20px;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .image-modal-info #imageCounter {
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .image-modal-info #deleteImageBtn {
+      background: rgba(239, 68, 68, 0.9);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 6px 12px;
+      border-radius: 16px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(8px);
+    }
+
+    .image-modal-info #deleteImageBtn:hover {
+      background: rgba(220, 38, 38, 0.95);
+      transform: translateY(-1px);
     }
     
           @media (max-width: 768px) {
@@ -569,10 +609,12 @@
       .images-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
       .image-delete-btn { opacity: 1; width: 20px; height: 20px; font-size: 10px; }
       .image-modal-nav button { width: 40px; height: 40px; font-size: 16px; }
-      #prevImageBtn { left: -60px; }
-      #nextImageBtn { right: -60px; }
-      .image-modal-close { top: -40px; width: 35px; height: 35px; font-size: 16px; }
-      .image-modal-info { bottom: -40px; font-size: 12px; }
+      .image-modal-nav { width: calc(100vw - 20px); max-width: calc(90vw + 20px); }
+      .image-modal-close { top: 15px; right: 15px; width: 35px; height: 35px; font-size: 16px; }
+      .image-modal-info { font-size: 12px; }
+      .image-modal-info .counter-and-delete { padding: 6px 12px; }
+      .image-modal-info #deleteImageBtn { padding: 4px 8px; font-size: 12px; }
+      .image-modal img { max-height: calc(80vh - 80px); }
       .edit-title-btn { opacity: 1; }
       .title-edit-input { font-size: 16px; padding: 6px 10px; }
       .title-edit-save, .title-edit-cancel { width: 28px; height: 28px; font-size: 12px; }
@@ -723,8 +765,10 @@
         <button id="nextImageBtn" onclick="showNextImage()" title="下一张">›</button>
       </div>
       <div class="image-modal-info">
-        <span id="imageCounter">1 / 1</span>
-        <button id="deleteImageBtn" onclick="deleteCurrentImage()" title="删除图片" style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; margin-left: 12px;">删除</button>
+        <div class="counter-and-delete">
+          <span id="imageCounter">1 / 1</span>
+          <button id="deleteImageBtn" onclick="deleteCurrentImage()" title="删除图片">删除</button>
+        </div>
       </div>
     </div>
   </div>
@@ -735,13 +779,112 @@
     function fetchServerPassword(){ return fetch('/get_password').then(r=>r.json()); }
     function checkStoredToken(){ const tk=localStorage.getItem('authToken'); if(!tk) return Promise.resolve(false); return fetch('/verify_token',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({token:tk})}).then(r=>r.json()).then(d=>{ if(d.valid){ currentToken=tk; return true;} localStorage.removeItem('authToken'); return false; }).catch(()=>{ localStorage.removeItem('authToken'); return false; }); }
     function checkPassword(){ const val=document.getElementById('authPassword').value; fetch('/verify_password',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({password:val})}).then(r=>r.json()).then(d=>{ if(d.success){ currentToken=d.token; localStorage.setItem('authToken', d.token); document.getElementById('authOverlay').style.display='none'; document.body.style.overflow=''; loadList(); } else { document.getElementById('authError').style.display=''; document.getElementById('authPassword').value=''; document.getElementById('authPassword').focus(); } }).catch(()=>{ document.getElementById('authError').style.display=''; }); }
-    window.onload=function(){ checkStoredToken().then(valid=>{ if(valid){ if(document.getElementById('authOverlay')){ document.getElementById('authOverlay').style.display='none'; document.body.style.overflow=''; } loadList(); checkURLHash(); initResizeHandle(); } else { window.location.href='/login'; } }); }
-    function checkURLHash(){ const hash = window.location.hash; if(hash && hash.startsWith('#article-')){ const articleId = hash.replace('#article-', ''); if(articleId){ setTimeout(()=>{ openArticle(articleId); }, 500); } } }
+    window.onload=function(){ checkStoredToken().then(valid=>{ if(valid){ if(document.getElementById('authOverlay')){ document.getElementById('authOverlay').style.display='none'; document.body.style.overflow=''; } loadList(); initPageState(); initResizeHandle(); } else { window.location.href='/login'; } }); }
+    function initPageState(){
+      const hash = window.location.hash;
+
+      if(hash && hash.startsWith('#article-')){
+        // 如果有文章hash，获取文章信息并设置正确的分类，然后打开文章
+        const articleId = hash.replace('#article-', '');
+        if(articleId){
+          // 先获取文章信息以确定分类
+          fetch(`/intensive_article/${articleId}`)
+            .then(r => r.json())
+            .then(d => {
+              if(d.success){
+                const articleCategory = d.article.category || 'Reading';
+                // 设置正确的分类状态
+                activeCat = articleCategory;
+                localStorage.setItem('activeCategory', articleCategory);
+                // 更新UI显示
+                ['Reading','Listening','Writing'].forEach(c => {
+                  const el = document.getElementById('tab-'+c);
+                  if(el) el.className = (c === activeCat ? 'active' : '');
+                });
+                // 然后打开文章（不设置hash，因为已经有了）
+                openArticleDirect(articleId, d.article);
+              } else {
+                // 文章不存在，清除hash并恢复分类状态
+                window.location.hash = '';
+                initCategoryState();
+              }
+            })
+            .catch(() => {
+              // 获取失败，清除hash并恢复分类状态
+              window.location.hash = '';
+              initCategoryState();
+            });
+        }
+      } else {
+        // 没有文章hash，从localStorage恢复分类状态
+        initCategoryState();
+      }
+    }
+
+    function initCategoryState(){
+      const savedCategory = localStorage.getItem('activeCategory');
+      if(savedCategory && ['Reading', 'Listening', 'Writing'].includes(savedCategory)){
+        activeCat = savedCategory;
+        // 更新UI显示
+        ['Reading','Listening','Writing'].forEach(c => {
+          const el = document.getElementById('tab-'+c);
+          if(el) el.className = (c === activeCat ? 'active' : '');
+        });
+      }
+    }
+
+    // 直接打开文章而不设置hash（用于页面初始化）
+    function openArticleDirect(id, articleData){
+      const art = articleData;
+      currentArticle = art;
+      highlights = art.highlights || [];
+      currentImages = art.images || [];
+      document.getElementById('vTitle').textContent = `${art.title || '未命名'}`;
+      document.getElementById('vCategory').value = art.category || 'Reading';
+      const contentDiv = document.getElementById('vContent');
+      contentDiv.innerHTML = `<div id="articleImages" class="article-images" style="display: none;"><h4>📷 文章图片</h4><div class="images-grid" id="imagesGrid"></div></div><div class=\"reader\">${art.content_html || ''}</div>`;
+      document.getElementById('viewer').classList.add('active');
+      loadArticleImages();
+      bindSelection(contentDiv, art);
+      restoreHighlights(contentDiv, art);
+      closeHighlightsPanel();
+      checkForJumpHighlight();
+
+      // 检查音频文件状态并更新按钮
+      checkExistingAudio(id).then(audioInfo => {
+        updateAudioButton(audioInfo.exists);
+        currentAudioInfo = audioInfo.exists ? audioInfo : null;
+
+        // 如果有现有音频，自动显示播放器
+        if (audioInfo.exists) {
+          showAudioPlayer(audioInfo.audio_url, audioInfo.filename, true);
+          currentAudioUrl = audioInfo.audio_url;
+          console.log(`自动加载已存在的音频: ${audioInfo.filename} (${new Date(audioInfo.created_time).toLocaleString()})`);
+        } else {
+          // 如果没有完成的音频，检查是否有未完成的任务
+          checkForUnfinishedAudioTasks();
+        }
+      }).catch(error => {
+        console.error('检查音频状态失败:', error);
+        updateAudioButton(false);
+        // 即使检查失败，也尝试查找未完成任务
+        checkForUnfinishedAudioTasks();
+      });
+    }
 
     function createArticle(){ const title=document.getElementById('title').value.trim(); const category=document.getElementById('category').value; const content=document.getElementById('content').value; if(!content.trim()){ showCreateMsg('请粘贴文章内容', true); return; } fetch('/intensive_create',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({title, category, content})}).then(r=>r.json()).then(d=>{ if(d.success){ showCreateMsg('创建成功', false); document.getElementById('content').value=''; document.getElementById('title').value=''; loadList(); openArticle(d.id); } else { showCreateMsg(d.error||'创建失败', true); } }); }
     function showCreateMsg(msg, isErr){ const el=document.getElementById('createMsg'); el.textContent=msg; el.style.color=isErr?'#ef4444':'#6b7280'; setTimeout(()=>{ el.textContent=''; }, 1500); }
     let allItems=[]; let activeCat='Reading';
-    function setActiveCat(cat){ activeCat=cat; ['Reading','Listening','Writing'].forEach(c=>{ const el=document.getElementById('tab-'+c); if(el) el.className = (c===activeCat? 'active': ''); }); renderList(); }
+    function setActiveCat(cat){
+      activeCat=cat;
+      // 保存当前分类到localStorage
+      localStorage.setItem('activeCategory', cat);
+      ['Reading','Listening','Writing'].forEach(c=>{
+        const el=document.getElementById('tab-'+c);
+        if(el) el.className = (c===activeCat? 'active': '');
+      });
+      renderList();
+    }
     function loadList(){ fetch('/intensive_list').then(r=>r.json()).then(d=>{ allItems = d.items||[]; renderList(); }); }
     function renderList(){ const wrap=document.getElementById('list'); const empty=document.getElementById('empty'); wrap.innerHTML=''; const filtered = (allItems||[]).filter(it=> (it.category||'Reading')===activeCat ); if(!filtered.length){ empty.style.display=''; return; } empty.style.display='none'; filtered.forEach(it=>{ const div=document.createElement('div'); div.className='card'; div.style.cursor='pointer'; 
       
@@ -773,7 +916,11 @@
       const delBtn=document.createElement('button'); delBtn.className='icon-btn'; delBtn.setAttribute('title','删除'); delBtn.setAttribute('aria-label','删除'); delBtn.textContent='✕'; delBtn.onclick=function(e){ e.stopPropagation(); if(!confirm('确定删除这篇文章吗？此操作不可恢复。')) return; fetch('/intensive_delete_article',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id: it.id})}).then(r=>r.json()).then(d=>{ if(d.success){ renderAfterDelete(it.id); } else { alert(d.error||'删除失败'); } }); }; div.onclick=function(){ openArticle(it.id); }; div.appendChild(delBtn); wrap.appendChild(div); }); }
     function renderAfterDelete(id){ allItems = (allItems||[]).filter(x=>x.id!==id); renderList(); if(window.clearArticlePronunciationCache){ window.clearArticlePronunciationCache(id); } }
 
-    function openArticle(id){ fetch(`/intensive_article/${id}`).then(r=>r.json()).then(d=>{ if(!d.success){ alert(d.error||'加载失败'); return; } const art=d.article; currentArticle=art; highlights = art.highlights||[]; currentImages = art.images||[]; document.getElementById('vTitle').textContent = `${art.title||'未命名'}`; document.getElementById('vCategory').value = art.category||'Reading'; const contentDiv=document.getElementById('vContent'); contentDiv.innerHTML = `<div id="articleImages" class="article-images" style="display: none;"><h4>📷 文章图片</h4><div class="images-grid" id="imagesGrid"></div></div><div class=\"reader\">${art.content_html || ''}</div>`; document.getElementById('viewer').classList.add('active'); loadArticleImages(); bindSelection(contentDiv, art); restoreHighlights(contentDiv, art); closeHighlightsPanel(); checkForJumpHighlight(); 
+    function openArticle(id){
+      // 设置URL hash以便刷新时保持状态
+      window.location.hash = `#article-${id}`;
+
+      fetch(`/intensive_article/${id}`).then(r=>r.json()).then(d=>{ if(!d.success){ alert(d.error||'加载失败'); return; } const art=d.article; currentArticle=art; highlights = art.highlights||[]; currentImages = art.images||[]; document.getElementById('vTitle').textContent = `${art.title||'未命名'}`; document.getElementById('vCategory').value = art.category||'Reading'; const contentDiv=document.getElementById('vContent'); contentDiv.innerHTML = `<div id="articleImages" class="article-images" style="display: none;"><h4>📷 文章图片</h4><div class="images-grid" id="imagesGrid"></div></div><div class=\"reader\">${art.content_html || ''}</div>`; document.getElementById('viewer').classList.add('active'); loadArticleImages(); bindSelection(contentDiv, art); restoreHighlights(contentDiv, art); closeHighlightsPanel(); checkForJumpHighlight(); 
       
       // 检查音频文件状态并更新按钮
       checkExistingAudio(id).then(audioInfo => {
@@ -803,7 +950,24 @@
     function closeHighlightsPanel(){ const panel=document.getElementById('highlightsPanel'); const content=document.getElementById('vContent'); const btn=document.getElementById('vocabToggle'); panel.classList.remove('active'); content.classList.remove('panel-open'); btn.classList.remove('active'); }
     function updatePanelWidth(){ const panel=document.getElementById('highlightsPanel'); const content=document.getElementById('vContent'); if(panel && content){ panel.style.width = panelWidth + 'px'; content.style.setProperty('--panel-width', panelWidth + 'px'); } }
     function scrollToHighlight(hid){ try{ const container=document.getElementById('vContent'); const mark=container.querySelector(`mark.hl[data-hid="${hid}"]`); if(mark){ mark.scrollIntoView({behavior:'smooth', block:'center'}); mark.classList.add('active'); setTimeout(()=>{ mark.classList.remove('active'); }, 1200); } }catch(e){} }
-    function closeViewer(){ document.getElementById('viewer').classList.remove('active'); currentArticle=null; selectionRange=null; highlights=[]; cancelFloat(); cancelMeaning(); closeHighlightsPanel(); closeAudioPanel(); currentAudioInfo=null; updateAudioButton(false); document.getElementById('resumeAudioBtn').style.display = 'none'; }
+    function closeViewer(){
+      document.getElementById('viewer').classList.remove('active');
+      currentArticle=null;
+      selectionRange=null;
+      highlights=[];
+      cancelFloat();
+      cancelMeaning();
+      closeHighlightsPanel();
+      closeAudioPanel();
+      currentAudioInfo=null;
+      updateAudioButton(false);
+      document.getElementById('resumeAudioBtn').style.display = 'none';
+
+      // 清除URL hash，返回列表视图
+      if(window.location.hash && window.location.hash.startsWith('#article-')){
+        window.location.hash = '';
+      }
+    }
 
     // 拖拽调整侧边栏宽度
     function initResizeHandle(){ 

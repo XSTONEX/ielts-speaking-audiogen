@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """
 一次性脚本：重新生成失败的词汇音频任务
+功能：
+  - 重新生成失败的音频任务
+  - 自动检测超时的processing任务（超过30分钟），将其标记为失败后重新处理
 用法：
   python3 retry_failed_vocab_audio.py              # 默认重置模式：重置并重新生成所有失败任务
   python3 retry_failed_vocab_audio.py --no-reset  # 不重置：只处理当前失败的任务
@@ -11,7 +14,7 @@ import json
 import time
 import sys
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
 # 加载环境变量
@@ -127,6 +130,45 @@ def update_category_word_status(category, subcategory_id, word_id, audio_generat
         print(f"❌ 更新分类状态失败: {e}")
         return False
 
+def is_task_timeout(task):
+    """检查任务是否超时（processing状态超过30分钟）"""
+    if task.get('status') != 'processing':
+        return False
+
+    created_at_str = task.get('created_at')
+    if not created_at_str:
+        return False
+
+    try:
+        # 解析创建时间
+        created_at = datetime.fromisoformat(created_at_str.replace('Z', '+00:00'))
+        # 计算时间差
+        time_diff = datetime.now() - created_at
+        # 检查是否超过30分钟
+        return time_diff > timedelta(minutes=30)
+    except Exception as e:
+        print(f"⚠️ 解析创建时间失败: {created_at_str} - {e}")
+        return False
+
+def mark_processing_task_as_failed(task_file):
+    """将超时的processing任务标记为failed"""
+    try:
+        with open(task_file, 'r', encoding='utf-8') as f:
+            task = json.load(f)
+
+        task['status'] = 'failed'
+        task['error'] = '任务处理超时（超过30分钟）'
+        task['last_updated'] = datetime.now().isoformat()
+        task['attempts'] = task.get('attempts', 0) + 1
+
+        with open(task_file, 'w', encoding='utf-8') as f:
+            json.dump(task, f, ensure_ascii=False, indent=2)
+
+        return task.get('word', 'unknown')
+    except Exception as e:
+        print(f"❌ 标记任务失败失败: {e}")
+        return None
+
 def reset_failed_tasks():
     """重置所有失败任务的重试计数"""
     print("🔄 重置失败任务的重试计数...")
@@ -177,6 +219,7 @@ def main():
 
     # 统计信息
     total_failed_tasks = 0
+    timeout_tasks_marked = 0
     successful_regenerations = 0
     failed_regenerations = 0
     skipped_tasks = 0
@@ -207,9 +250,26 @@ def main():
             with open(task_file, 'r', encoding='utf-8') as f:
                 task = json.load(f)
 
+            # 检查任务状态
+            task_status = task.get('status', 'unknown')
+            word = task.get('word', 'unknown')
+
+            # 检查是否是超时的processing任务
+            if task_status == 'processing' and is_task_timeout(task):
+                print(f"⏰ 发现超时任务，将标记为失败: {word} (ID: {task.get('id', 'unknown')})")
+                marked_word = mark_processing_task_as_failed(task_file)
+                if marked_word:
+                    task_status = 'failed'  # 更新状态以便继续处理
+                    timeout_tasks_marked += 1
+                    print(f"✅ 已将超时任务标记为失败: {marked_word}")
+                else:
+                    print(f"❌ 标记超时任务失败失败: {word}")
+                    skipped_tasks += 1
+                    continue
+
             # 只处理失败的任务
-            if task.get('status') != 'failed':
-                print(f"⏭️ 跳过非失败任务: {task.get('word', 'unknown')} ({task.get('status', 'unknown')})")
+            if task_status != 'failed':
+                print(f"⏭️ 跳过非失败任务: {word} ({task_status})")
                 skipped_tasks += 1
                 continue
 
@@ -269,6 +329,7 @@ def main():
     print("📊 重新生成统计报告")
     print("="*60)
     print(f"📁 总任务文件数: {len(task_files)}")
+    print(f"⏰ 标记超时任务数: {timeout_tasks_marked}")
     print(f"❌ 失败任务数: {total_failed_tasks}")
     print(f"⏭️  跳过任务数: {skipped_tasks}")
     print(f"✅ 重新生成成功: {successful_regenerations}")
