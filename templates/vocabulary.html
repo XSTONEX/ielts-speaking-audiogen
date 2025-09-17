@@ -27,13 +27,17 @@
             font-family: 'PT Serif', 'Crimson Text', ui-serif, 'Times New Roman', 'Georgia', serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
+            height: 100vh;
             color: #333;
         }
 
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 20px 20px 40px 20px; /* 底部增加padding留出空间 */
+            min-height: calc(100vh - 80px); /* 减去padding的空间 */
+            display: flex;
+            flex-direction: column;
         }
 
         .header {
@@ -87,6 +91,9 @@
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
             overflow: hidden;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
         }
 
         .tabs {
@@ -130,12 +137,14 @@
 
         .tab-content {
             padding: 0;
-            min-height: 700px;
+            flex: 1;
+            min-height: calc(100vh - 240px); /* 自适应屏幕高度，留出底部空间 */
         }
 
         .tab-panel {
             display: none;
             height: 100%;
+            flex: 1;
         }
 
         .tab-panel.active {
@@ -148,7 +157,7 @@
             border-right: 1px solid #e2e8f0;
             padding: 20px;
             overflow: hidden;
-            height: 700px;
+            height: calc(100vh - 240px); /* 自适应屏幕高度，留出底部空间 */
             display: flex;
             flex-direction: column;
         }
@@ -157,7 +166,7 @@
             flex: 1;
             padding: 30px;
             overflow-y: auto;
-            height: 700px;
+            height: calc(100vh - 240px); /* 自适应屏幕高度，留出底部空间 */
         }
 
         .sidebar-header {
@@ -1286,6 +1295,10 @@
                 display: none;
             }
 
+            .tab-content {
+                min-height: calc(100vh - 340px); /* 移动端调整header高度，留出底部空间 */
+            }
+
             .main-content {
                 display: none;
             }
@@ -1299,6 +1312,7 @@
                 margin: 0 5px;
                 padding: 20px;
                 margin-bottom: 20px;
+                min-height: calc(100vh - 390px); /* 移动端自适应高度，留出底部空间 */
             }
 
             .mobile-words-container.show {

@@ -13,5 +13,6 @@ vocabulary_book/
 user_data/
 study_techniques/
 __pycache__/
+.vscode/
 users.json
 tokens.json

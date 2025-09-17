@@ -211,10 +211,36 @@
     
     .word-item {
       display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
+      flex-direction: column;
+      gap: 12px;
     }
-    
+
+    .word-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .word-group-title {
+      font-weight: 600;
+      color: #1f2937;
+      font-size: 14px;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .word-group-title:hover {
+      color: #3b82f6;
+    }
+
+    .word-group-title.editing {
+      border: 1px solid #3b82f6;
+      border-radius: 4px;
+      padding: 4px 8px;
+      background: white;
+      outline: none;
+    }
+
     .word-main {
       flex: 1;
     }
@@ -652,9 +678,18 @@
         padding: 12px;
       }
       
-      .word-item {
+      .word-header {
         flex-direction: column;
-        gap: 12px;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .word-group-title {
+        margin-right: 0;
+      }
+
+      .word-main {
+        margin-right: 0;
       }
       
       .item-actions {
@@ -937,7 +972,8 @@
     .item-actions {
       display: flex;
       gap: 6px;
-      margin-left: 12px;
+      margin-left: auto;
+      flex-shrink: 0;
     }
     
     .action-btn {
@@ -1346,6 +1382,10 @@
       <div class="modal-header">添加词汇替换</div>
       <form id="synonymForm">
         <div class="form-group">
+          <label class="form-label">组标题（可选）</label>
+          <input type="text" id="synonymTitle" class="form-input" placeholder="请输入词汇组的标题">
+        </div>
+        <div class="form-group">
           <label class="form-label">同义词组</label>
           <div id="synonymInputs" class="synonym-inputs">
             <div class="synonym-input-row">
@@ -1369,6 +1409,10 @@
     <div class="modal-content">
       <div class="modal-header">添加上下义词</div>
       <form id="hypernymForm">
+        <div class="form-group">
+          <label class="form-label">组标题（可选）</label>
+          <input type="text" id="hypernymTitle" class="form-input" placeholder="请输入上下义词组的标题">
+        </div>
         <div class="form-group">
           <label class="form-label">上义词</label>
           <div id="hypernymUpperInputs" class="synonym-inputs">
@@ -1532,13 +1576,20 @@
     function renderSynonyms(category, data) {
       const container = document.getElementById(`synonyms-${category}`);
       container.innerHTML = '';
-      
+
       if (data && data.length > 0) {
-        data.forEach(item => {
+        data.forEach((item, index) => {
           const div = document.createElement('div');
           div.className = 'item';
           div.innerHTML = `
             <div class="word-item">
+              <div class="word-header">
+                <div class="word-group-title" onclick="editTitle(this, '${category}', '${item.id}', 'synonym')" contenteditable="false">${item.title || '同义词组 ' + (index + 1)}</div>
+                <div class="item-actions">
+                  <button class="action-btn" onclick="editSynonym('${category}', '${item.id}')">编辑</button>
+                  <button class="action-btn delete" onclick="deleteSynonym('${category}', '${item.id}')">删除</button>
+                </div>
+              </div>
               <div class="word-main">
                 <div class="synonyms">
                   ${item.synonyms.map(syn =>
@@ -1548,10 +1599,6 @@
                     </div>`
                   ).join('')}
                 </div>
-              </div>
-              <div class="item-actions">
-                <button class="action-btn" onclick="editSynonym('${category}', '${item.id}')">编辑</button>
-                <button class="action-btn delete" onclick="deleteSynonym('${category}', '${item.id}')">删除</button>
               </div>
             </div>
           `;
@@ -1566,14 +1613,14 @@
     function renderHypernyms(category, data) {
       const container = document.getElementById(`hypernyms-${category}`);
       container.innerHTML = '';
-      
+
       if (data && data.length > 0) {
-        data.forEach(item => {
+        data.forEach((item, index) => {
           const div = document.createElement('div');
           div.className = 'item';
-          
+
           let chainHtml = '<div class="hypernym-chain">';
-          
+
           // 渲染上义词
           if (item.upper_words && item.upper_words.length > 0) {
             item.upper_words.forEach((upper, index) => {
@@ -1585,7 +1632,7 @@
             });
             chainHtml += '<span class="hypernym-arrow"> → </span>';
           }
-          
+
           // 渲染下义词
           if (item.lower_words && item.lower_words.length > 0) {
             item.lower_words.forEach((lower, index) => {
@@ -1596,17 +1643,20 @@
               </div>`;
             });
           }
-          
+
           chainHtml += '</div>';
-          
+
           div.innerHTML = `
             <div class="word-item">
+              <div class="word-header">
+                <div class="word-group-title" onclick="editTitle(this, '${category}', '${item.id}', 'hypernym')" contenteditable="false">${item.title || '上下义词组 ' + (index + 1)}</div>
+                <div class="item-actions">
+                  <button class="action-btn" onclick="editHypernym('${category}', '${item.id}')">编辑</button>
+                  <button class="action-btn delete" onclick="deleteHypernym('${category}', '${item.id}')">删除</button>
+                </div>
+              </div>
               <div class="word-main">
                 ${chainHtml}
-              </div>
-              <div class="item-actions">
-                <button class="action-btn" onclick="editHypernym('${category}', '${item.id}')">编辑</button>
-                <button class="action-btn delete" onclick="deleteHypernym('${category}', '${item.id}')">删除</button>
               </div>
             </div>
           `;
@@ -1652,11 +1702,129 @@
       }
     }
     
+    // 编辑标题
+    function editTitle(element, category, id, type) {
+      const originalText = element.textContent.trim();
+
+      element.contentEditable = true;
+      element.classList.add('editing');
+      element.focus();
+
+      // 选中全部文本
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+
+      function saveTitle() {
+        const newTitle = element.textContent.trim();
+        if (newTitle && newTitle !== originalText) {
+          updateTitle(category, id, type, newTitle);
+        } else {
+          element.textContent = originalText;
+        }
+        element.contentEditable = false;
+        element.classList.remove('editing');
+      }
+
+      function cancelEdit() {
+        element.textContent = originalText;
+        element.contentEditable = false;
+        element.classList.remove('editing');
+      }
+
+      element.onblur = saveTitle;
+      element.onkeydown = function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          saveTitle();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          cancelEdit();
+        }
+      };
+    }
+
+    // 更新标题
+    async function updateTitle(category, id, type, newTitle) {
+      console.log('Updating title:', {category, id, type, newTitle});
+
+      try {
+        // 找到对应的item
+        let item;
+        if (currentData[category]) {
+          if (type === 'synonym') {
+            item = currentData[category].synonyms.find(item => item.id === id);
+          } else if (type === 'hypernym') {
+            item = currentData[category].hypernyms.find(item => item.id === id);
+          }
+        }
+
+        if (!item) {
+          console.error('Item not found:', {category, id, type});
+          return;
+        }
+
+        let url;
+        if (type === 'synonym') {
+          url = `/api/study_techniques/synonyms/${category}/${id}`;
+        } else if (type === 'hypernym') {
+          url = `/api/study_techniques/hypernyms/${category}/${id}`;
+        }
+
+        const requestData = {
+          title: newTitle,
+          // 保留原有数据
+          ...(type === 'synonym' ? { synonyms: item.synonyms } : {
+            upper_words: item.upper_words || [],
+            lower_words: item.lower_words || []
+          })
+        };
+
+        console.log('Sending request:', {url, data: requestData});
+
+        const response = await fetch(url, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${currentToken}`
+          },
+          body: JSON.stringify(requestData)
+        });
+
+        console.log('Response status:', response.status);
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log('Update successful:', result);
+
+          // 更新本地数据
+          if (currentData[category]) {
+            if (type === 'synonym') {
+              const item = currentData[category].synonyms.find(item => item.id === id);
+              if (item) item.title = newTitle;
+            } else if (type === 'hypernym') {
+              const item = currentData[category].hypernyms.find(item => item.id === id);
+              if (item) item.title = newTitle;
+            }
+          }
+        } else {
+          const errorText = await response.text();
+          console.error('Failed to update title:', response.status, errorText);
+          alert('更新标题失败，请重试');
+        }
+      } catch (error) {
+        console.error('Error updating title:', error);
+        alert('更新标题时发生错误，请重试');
+      }
+    }
+
     // 切换技巧内容显示
     function toggleTechnique(contentId, button) {
       const content = document.getElementById(contentId);
       const isExpanded = content.classList.contains('expanded');
-      
+
       if (isExpanded) {
         content.classList.remove('expanded');
         button.innerHTML = '展开 ▼';
@@ -1670,6 +1838,7 @@
     // 模态框操作
     function openSynonymModal(category) {
       document.getElementById('synonymForm').reset();
+      document.getElementById('synonymTitle').value = '';
       document.getElementById('synonymInputs').innerHTML = `
         <div class="synonym-input-row">
           <input type="text" placeholder="同义词" class="form-input synonym-word">
@@ -1682,7 +1851,8 @@
     
     function openHypernymModal(category) {
       document.getElementById('hypernymForm').reset();
-      
+      document.getElementById('hypernymTitle').value = '';
+
       // 重置上义词输入
       document.getElementById('hypernymUpperInputs').innerHTML = `
         <div class="synonym-input-row">
@@ -1733,6 +1903,7 @@
 
       data.forEach(item => {
         contentHtml += '<div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; background: white;">';
+        contentHtml += `<h3 style="margin: 0 0 12px 0; color: #1f2937; font-size: 16px; font-weight: 600;">${item.title || '未命名'}</h3>`;
         contentHtml += '<div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-start;">';
 
         item.synonyms.forEach(syn => {
@@ -1770,6 +1941,7 @@
 
       data.forEach(item => {
         contentHtml += '<div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; background: white;">';
+        contentHtml += `<h3 style="margin: 0 0 12px 0; color: #1f2937; font-size: 16px; font-weight: 600;">${item.title || '未命名'}</h3>`;
         contentHtml += '<div class="hypernym-chain">';
 
         // 渲染上义词
@@ -1946,38 +2118,52 @@
           });
         }
       });
-      
+
       if (synonyms.length === 0) {
         alert('请至少添加一个同义词');
         return;
       }
-      
+
+      const title = document.getElementById('synonymTitle').value.trim();
+      console.log('Submitting synonym:', {synonyms, title, currentToken: currentToken ? 'exists' : 'null'});
+
       try {
         let url = `/api/study_techniques/synonyms/${currentCategory}`;
         let method = 'POST';
-        
+
         // 如果是编辑模式
         if (editingItem && editingItem.type === 'synonym') {
           url += `/${editingItem.id}`;
           method = 'PUT';
         }
-        
+
+        const requestData = {
+          synonyms,
+          ...(title ? {title} : {})
+        };
+
+        console.log('Sending request:', {url, method, data: requestData});
+
         const response = await fetch(url, {
           method: method,
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${currentToken}`
           },
-          body: JSON.stringify({
-            synonyms
-          })
+          body: JSON.stringify(requestData)
         });
-        
+
+        console.log('Response status:', response.status);
+
         if (response.ok) {
+          const result = await response.json();
+          console.log('Submit successful:', result);
           closeModal();
           editingItem = null;
           loadData(currentCategory);
         } else {
+          const errorText = await response.text();
+          console.error('Submit failed:', response.status, errorText);
           alert('保存失败，请重试');
         }
       } catch (error) {
@@ -1999,7 +2185,7 @@
           });
         }
       });
-      
+
       // 收集下义词
       const lowerWords = [];
       document.querySelectorAll('#hypernymLowerInputs .synonym-input-row').forEach(row => {
@@ -2012,39 +2198,53 @@
           });
         }
       });
-      
+
       if (upperWords.length === 0 && lowerWords.length === 0) {
         alert('请至少添加一个上义词或下义词');
         return;
       }
-      
+
+      const title = document.getElementById('hypernymTitle').value.trim();
+      console.log('Submitting hypernym:', {upperWords, lowerWords, title, currentToken: currentToken ? 'exists' : 'null'});
+
       try {
         let url = `/api/study_techniques/hypernyms/${currentCategory}`;
         let method = 'POST';
-        
+
         // 如果是编辑模式
         if (editingItem && editingItem.type === 'hypernym') {
           url += `/${editingItem.id}`;
           method = 'PUT';
         }
-        
+
+        const requestData = {
+          upper_words: upperWords,
+          lower_words: lowerWords,
+          ...(title ? {title} : {})
+        };
+
+        console.log('Sending request:', {url, method, data: requestData});
+
         const response = await fetch(url, {
           method: method,
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${currentToken}`
           },
-          body: JSON.stringify({
-            upper_words: upperWords,
-            lower_words: lowerWords
-          })
+          body: JSON.stringify(requestData)
         });
-        
+
+        console.log('Response status:', response.status);
+
         if (response.ok) {
+          const result = await response.json();
+          console.log('Submit successful:', result);
           closeModal();
           editingItem = null;
           loadData(currentCategory);
         } else {
+          const errorText = await response.text();
+          console.error('Submit failed:', response.status, errorText);
           alert('保存失败，请重试');
         }
       } catch (error) {
@@ -2159,7 +2359,10 @@
       const data = currentData[category]?.synonyms || [];
       const item = data.find(item => item.id === id);
       if (!item) return;
-      
+
+      // 填充标题
+      document.getElementById('synonymTitle').value = item.title || '';
+
       // 清空并填充同义词输入
       const container = document.getElementById('synonymInputs');
       container.innerHTML = '';
@@ -2185,7 +2388,10 @@
       const data = currentData[category]?.hypernyms || [];
       const item = data.find(item => item.id === id);
       if (!item) return;
-      
+
+      // 填充标题
+      document.getElementById('hypernymTitle').value = item.title || '';
+
       // 填充上义词
       const upperContainer = document.getElementById('hypernymUpperInputs');
       upperContainer.innerHTML = '';

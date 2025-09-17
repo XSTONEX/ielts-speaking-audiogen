@@ -4324,13 +4324,14 @@ def add_synonym(category):
     try:
         data = request.json
         synonyms = data.get('synonyms', [])
-        
+        title = data.get('title')
+
         if not synonyms:
             return jsonify({'error': 'At least one synonym is required'}), 400
-        
+
         # 加载现有数据
         existing_data = load_study_data(category, 'synonyms')
-        
+
         # 创建新条目
         new_entry = {
             'id': generate_id(),
@@ -4338,6 +4339,9 @@ def add_synonym(category):
             'created_at': datetime.now().isoformat(),
             'updated_at': datetime.now().isoformat()
         }
+
+        if title:
+            new_entry['title'] = title
         
         existing_data.append(new_entry)
         
@@ -4363,18 +4367,24 @@ def update_synonym(category, item_id):
     try:
         data = request.json
         synonyms = data.get('synonyms', [])
-        
+        title = data.get('title')
+
         if not synonyms:
             return jsonify({'error': 'At least one synonym is required'}), 400
-        
+
         # 加载现有数据
         existing_data = load_study_data(category, 'synonyms')
-        
+
         # 查找并更新条目
         updated = False
         for item in existing_data:
             if item.get('id') == item_id:
                 item['synonyms'] = synonyms
+                if title is not None:
+                    if title:
+                        item['title'] = title
+                    elif 'title' in item:
+                        del item['title']
                 item['updated_at'] = datetime.now().isoformat()
                 updated = True
                 break
@@ -4447,13 +4457,14 @@ def add_hypernym(category):
         data = request.json
         upper_words = data.get('upper_words', [])
         lower_words = data.get('lower_words', [])
-        
+        title = data.get('title')
+
         if not upper_words and not lower_words:
             return jsonify({'error': 'At least one upper or lower word is required'}), 400
-        
+
         # 加载现有数据
         existing_data = load_study_data(category, 'hypernyms')
-        
+
         # 创建新条目
         new_entry = {
             'id': generate_id(),
@@ -4462,6 +4473,9 @@ def add_hypernym(category):
             'created_at': datetime.now().isoformat(),
             'updated_at': datetime.now().isoformat()
         }
+
+        if title:
+            new_entry['title'] = title
         
         existing_data.append(new_entry)
         
@@ -4488,19 +4502,25 @@ def update_hypernym(category, item_id):
         data = request.json
         upper_words = data.get('upper_words', [])
         lower_words = data.get('lower_words', [])
-        
+        title = data.get('title')
+
         if not upper_words and not lower_words:
             return jsonify({'error': 'At least one upper or lower word is required'}), 400
-        
+
         # 加载现有数据
         existing_data = load_study_data(category, 'hypernyms')
-        
+
         # 查找并更新条目
         updated = False
         for item in existing_data:
             if item.get('id') == item_id:
                 item['upper_words'] = upper_words
                 item['lower_words'] = lower_words
+                if title is not None:
+                    if title:
+                        item['title'] = title
+                    elif 'title' in item:
+                        del item['title']
                 item['updated_at'] = datetime.now().isoformat()
                 updated = True
                 break
