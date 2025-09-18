@@ -1192,7 +1192,7 @@
       width: 100%;
       height: 100%;
       background: rgba(0,0,0,0.5);
-      z-index: 1000;
+      z-index: 2500;
       backdrop-filter: blur(4px);
     }
     
@@ -1973,7 +1973,7 @@
                   <button class="technique-toggle" onclick="toggleTechnique('${contentId}', this)">展开 ▼</button>
                 </div>
                 <div class="technique-content" id="${contentId}">
-                  ${marked.parse(item.content)}
+                  ${marked.parse(item.content, { mangle: false, headerIds: false })}
                 </div>
               </div>
               <div class="item-actions">
@@ -2168,9 +2168,24 @@
     }
     
     function closeModal() {
+      // 保存编辑项信息（如果存在），因为后面的操作会将其设为null
+      const wasFullscreenEdit = editingItem && editingItem.isFullscreen;
+      const editType = editingItem ? editingItem.type : null;
+      const editCategory = editingItem ? editingItem.category : null;
+
       document.querySelectorAll('.modal').forEach(modal => {
         modal.classList.remove('show');
       });
+
+      // 检查是否是从全屏状态编辑的
+      if (wasFullscreenEdit) {
+        // 从全屏状态编辑，重新打开全屏模态框
+        if (editType === 'synonym') {
+          openFullscreenSynonyms(editCategory);
+        } else if (editType === 'hypernym') {
+          openFullscreenHypernyms(editCategory);
+        }
+      }
 
       // 重置编辑状态和模态框标题
       editingItem = null;
@@ -2494,7 +2509,10 @@
         contentHtml += '<div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; background: white;">';
         contentHtml += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">';
         contentHtml += `<h3 style="margin: 0; color: #1f2937; font-size: 16px; font-weight: 600;">${item.title || '未命名'}</h3>`;
+        contentHtml += '<div style="display: flex; gap: 8px;">';
+        contentHtml += `<button class="action-btn" onclick="editFullscreenSynonym('${category}', '${item.id}')" style="font-size: 12px; padding: 4px 8px;">编辑</button>`;
         contentHtml += `<button class="action-btn delete" onclick="deleteFullscreenSynonym('${category}', '${item.id}')" style="font-size: 12px; padding: 4px 8px;">删除</button>`;
+        contentHtml += '</div>';
         contentHtml += '</div>';
         contentHtml += '<div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-start;">';
 
@@ -2549,7 +2567,10 @@
         contentHtml += '<div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; background: white;">';
         contentHtml += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">';
         contentHtml += `<h3 style="margin: 0; color: #1f2937; font-size: 16px; font-weight: 600;">${item.title || '未命名'}</h3>`;
+        contentHtml += '<div style="display: flex; gap: 8px;">';
+        contentHtml += `<button class="action-btn" onclick="editFullscreenHypernym('${category}', '${item.id}')" style="font-size: 12px; padding: 4px 8px;">编辑</button>`;
         contentHtml += `<button class="action-btn delete" onclick="deleteFullscreenHypernym('${category}', '${item.id}')" style="font-size: 12px; padding: 4px 8px;">删除</button>`;
+        contentHtml += '</div>';
         contentHtml += '</div>';
         contentHtml += '<div class="hypernym-chain">';
 
@@ -2707,7 +2728,10 @@
         contentHtml += '<div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; background: white;">';
         contentHtml += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">';
         contentHtml += `<h3 style="margin: 0; color: #1f2937; font-size: 16px; font-weight: 600;">${item.title || '未命名'}</h3>`;
+        contentHtml += '<div style="display: flex; gap: 8px;">';
+        contentHtml += `<button class="action-btn" onclick="editFullscreenHypernym('${fullscreenCategory}', '${item.id}')" style="font-size: 12px; padding: 4px 8px;">编辑</button>`;
         contentHtml += `<button class="action-btn delete" onclick="deleteFullscreenHypernym('${fullscreenCategory}', '${item.id}')" style="font-size: 12px; padding: 4px 8px;">删除</button>`;
+        contentHtml += '</div>';
         contentHtml += '</div>';
         contentHtml += '<div class="hypernym-chain">';
 
@@ -2883,9 +2907,27 @@
         if (response.ok) {
           const result = await response.json();
           console.log('Submit successful:', result);
-          closeModal();
-          editingItem = null;
-          loadData(currentCategory);
+
+          // 检查是否是从全屏状态编辑的
+          if (editingItem && editingItem.isFullscreen) {
+            // 保存编辑项信息，因为closeModal会将其设为null
+            const editType = editingItem.type;
+            const editCategory = editingItem.category;
+
+            // 从全屏状态编辑，只关闭编辑模态框，刷新全屏内容
+            closeModal();
+            // 重新加载数据并刷新全屏显示
+            await loadData(editCategory);
+            if (editType === 'synonym' && currentData[editCategory]?.synonyms) {
+              openFullscreenSynonyms(editCategory);
+            } else if (editType === 'hypernym' && currentData[editCategory]?.hypernyms) {
+              openFullscreenHypernyms(editCategory);
+            }
+          } else {
+            // 普通编辑模式
+            closeModal();
+            loadData(currentCategory);
+          }
         } else {
           const errorText = await response.text();
           console.error('Submit failed:', response.status, errorText);
@@ -2964,9 +3006,27 @@
         if (response.ok) {
           const result = await response.json();
           console.log('Submit successful:', result);
-          closeModal();
-          editingItem = null;
-          loadData(currentCategory);
+
+          // 检查是否是从全屏状态编辑的
+          if (editingItem && editingItem.isFullscreen) {
+            // 保存编辑项信息，因为closeModal会将其设为null
+            const editType = editingItem.type;
+            const editCategory = editingItem.category;
+
+            // 从全屏状态编辑，只关闭编辑模态框，刷新全屏内容
+            closeModal();
+            // 重新加载数据并刷新全屏显示
+            await loadData(editCategory);
+            if (editType === 'synonym' && currentData[editCategory]?.synonyms) {
+              openFullscreenSynonyms(editCategory);
+            } else if (editType === 'hypernym' && currentData[editCategory]?.hypernyms) {
+              openFullscreenHypernyms(editCategory);
+            }
+          } else {
+            // 普通编辑模式
+            closeModal();
+            loadData(currentCategory);
+          }
         } else {
           const errorText = await response.text();
           console.error('Submit failed:', response.status, errorText);
@@ -3017,109 +3077,263 @@
       }
     }
     
-    // 删除操作
+    // 删除操作（带动效）
     async function deleteSynonym(category, id) {
       if (!confirm('确定要删除这个词汇替换吗？')) return;
 
       console.log(`正在删除词汇替换: ${category}/${id}`);
 
-      try {
-        const response = await fetch(`/api/study_techniques/synonyms/${category}/${id}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${currentToken}` }
-        });
+      // 添加删除动效
+      const itemElement = event.target.closest('.item');
+      if (itemElement) {
+        itemElement.style.transition = 'all 0.3s ease';
+        itemElement.style.opacity = '0';
+        itemElement.style.transform = 'translateX(-100%)';
 
-        console.log(`删除响应状态:`, response.status);
+        // 等待动效完成后再执行删除
+        setTimeout(async () => {
+          try {
+            const response = await fetch(`/api/study_techniques/synonyms/${category}/${id}`, {
+              method: 'DELETE',
+              headers: { 'Authorization': `Bearer ${currentToken}` }
+            });
 
-        if (response.ok) {
-          console.log('删除成功，刷新数据');
-          loadData(category);
-        } else {
-          const errorText = await response.text();
-          console.error('删除失败:', response.status, errorText);
+            console.log(`删除响应状态:`, response.status);
+
+            if (response.ok) {
+              console.log('删除成功，刷新数据');
+              await loadData(category);
+            } else {
+              // 恢复元素状态
+              itemElement.style.opacity = '1';
+              itemElement.style.transform = 'translateX(0)';
+              const errorText = await response.text();
+              console.error('删除失败:', response.status, errorText);
+              alert('删除失败，请重试');
+            }
+          } catch (error) {
+            // 恢复元素状态
+            itemElement.style.opacity = '1';
+            itemElement.style.transform = 'translateX(0)';
+            console.error('删除失败:', error);
+            alert('删除失败，请重试');
+          }
+        }, 300);
+      } else {
+        // 如果找不到元素，直接执行删除
+        try {
+          const response = await fetch(`/api/study_techniques/synonyms/${category}/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${currentToken}` }
+          });
+
+          console.log(`删除响应状态:`, response.status);
+
+          if (response.ok) {
+            console.log('删除成功，刷新数据');
+            await loadData(category);
+          } else {
+            const errorText = await response.text();
+            console.error('删除失败:', response.status, errorText);
+            alert('删除失败，请重试');
+          }
+        } catch (error) {
+          console.error('删除失败:', error);
           alert('删除失败，请重试');
         }
-      } catch (error) {
-        console.error('删除失败:', error);
-        alert('删除失败，请重试');
       }
     }
-    
+
     async function deleteHypernym(category, id) {
       if (!confirm('确定要删除这个上下义词吗？')) return;
 
       console.log(`正在删除上下义词: ${category}/${id}`);
 
-      try {
-        const response = await fetch(`/api/study_techniques/hypernyms/${category}/${id}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${currentToken}` }
-        });
+      // 添加删除动效
+      const itemElement = event.target.closest('.item');
+      if (itemElement) {
+        itemElement.style.transition = 'all 0.3s ease';
+        itemElement.style.opacity = '0';
+        itemElement.style.transform = 'translateX(-100%)';
 
-        console.log(`删除响应状态:`, response.status);
+        // 等待动效完成后再执行删除
+        setTimeout(async () => {
+          try {
+            const response = await fetch(`/api/study_techniques/hypernyms/${category}/${id}`, {
+              method: 'DELETE',
+              headers: { 'Authorization': `Bearer ${currentToken}` }
+            });
 
-        if (response.ok) {
-          console.log('删除成功，刷新数据');
-          loadData(category);
-        } else {
-          const errorText = await response.text();
-          console.error('删除失败:', response.status, errorText);
+            console.log(`删除响应状态:`, response.status);
+
+            if (response.ok) {
+              console.log('删除成功，刷新数据');
+              await loadData(category);
+            } else {
+              // 恢复元素状态
+              itemElement.style.opacity = '1';
+              itemElement.style.transform = 'translateX(0)';
+              const errorText = await response.text();
+              console.error('删除失败:', response.status, errorText);
+              alert('删除失败，请重试');
+            }
+          } catch (error) {
+            // 恢复元素状态
+            itemElement.style.opacity = '1';
+            itemElement.style.transform = 'translateX(0)';
+            console.error('删除失败:', error);
+            alert('删除失败，请重试');
+          }
+        }, 300);
+      } else {
+        // 如果找不到元素，直接执行删除
+        try {
+          const response = await fetch(`/api/study_techniques/hypernyms/${category}/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${currentToken}` }
+          });
+
+          console.log(`删除响应状态:`, response.status);
+
+          if (response.ok) {
+            console.log('删除成功，刷新数据');
+            await loadData(category);
+          } else {
+            const errorText = await response.text();
+            console.error('删除失败:', response.status, errorText);
+            alert('删除失败，请重试');
+          }
+        } catch (error) {
+          console.error('删除失败:', error);
           alert('删除失败，请重试');
         }
-      } catch (error) {
-        console.error('删除失败:', error);
-        alert('删除失败，请重试');
       }
     }
-    
+
     async function deleteTechnique(category, id) {
       if (!confirm('确定要删除这个做题技巧吗？')) return;
 
-      try {
-        const response = await fetch(`/api/study_techniques/techniques/${category}/${id}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${currentToken}` }
-        });
+      // 添加删除动效
+      const itemElement = event.target.closest('.item');
+      if (itemElement) {
+        itemElement.style.transition = 'all 0.3s ease';
+        itemElement.style.opacity = '0';
+        itemElement.style.transform = 'translateX(-100%)';
 
-        if (response.ok) {
-          loadData(category);
-        } else {
+        // 等待动效完成后再执行删除
+        setTimeout(async () => {
+          try {
+            const response = await fetch(`/api/study_techniques/techniques/${category}/${id}`, {
+              method: 'DELETE',
+              headers: { 'Authorization': `Bearer ${currentToken}` }
+            });
+
+            if (response.ok) {
+              await loadData(category);
+            } else {
+              // 恢复元素状态
+              itemElement.style.opacity = '1';
+              itemElement.style.transform = 'translateX(0)';
+              alert('删除失败，请重试');
+            }
+          } catch (error) {
+            // 恢复元素状态
+            itemElement.style.opacity = '1';
+            itemElement.style.transform = 'translateX(0)';
+            console.error('Delete failed:', error);
+            alert('删除失败，请重试');
+          }
+        }, 300);
+      } else {
+        // 如果找不到元素，直接执行删除
+        try {
+          const response = await fetch(`/api/study_techniques/techniques/${category}/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${currentToken}` }
+          });
+
+          if (response.ok) {
+            await loadData(category);
+          } else {
+            alert('删除失败，请重试');
+          }
+        } catch (error) {
+          console.error('Delete failed:', error);
           alert('删除失败，请重试');
         }
-      } catch (error) {
-        console.error('Delete failed:', error);
-        alert('删除失败，请重试');
       }
     }
 
-    // 全屏删除功能
+    // 全屏删除功能（带动效）
     async function deleteFullscreenSynonym(category, id) {
       if (!confirm('确定要删除这个词汇替换组吗？')) return;
 
       console.log(`正在删除全屏词汇替换: ${category}/${id}`);
 
-      try {
-        const response = await fetch(`/api/study_techniques/synonyms/${category}/${id}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${currentToken}` }
-        });
+      // 添加删除动效
+      const itemElement = event.target.closest('.item');
+      if (itemElement) {
+        itemElement.style.transition = 'all 0.3s ease';
+        itemElement.style.opacity = '0';
+        itemElement.style.transform = 'translateX(-100%)';
 
-        console.log(`删除响应状态:`, response.status);
+        // 等待动效完成后再执行删除
+        setTimeout(async () => {
+          try {
+            const response = await fetch(`/api/study_techniques/synonyms/${category}/${id}`, {
+              method: 'DELETE',
+              headers: { 'Authorization': `Bearer ${currentToken}` }
+            });
 
-        if (response.ok) {
-          console.log('删除成功，刷新全屏数据');
-          // 刷新本地数据
-          loadData(category);
-          // 重新打开全屏
-          openFullscreenSynonyms(category);
-        } else {
-          const errorText = await response.text();
-          console.error('删除失败:', response.status, errorText);
+            console.log(`删除响应状态:`, response.status);
+
+            if (response.ok) {
+              console.log('删除成功，刷新全屏数据');
+              // 刷新本地数据
+              await loadData(category);
+              // 重新打开全屏
+              openFullscreenSynonyms(category);
+            } else {
+              // 恢复元素状态
+              itemElement.style.opacity = '1';
+              itemElement.style.transform = 'translateX(0)';
+              const errorText = await response.text();
+              console.error('删除失败:', response.status, errorText);
+              alert('删除失败，请重试');
+            }
+          } catch (error) {
+            // 恢复元素状态
+            itemElement.style.opacity = '1';
+            itemElement.style.transform = 'translateX(0)';
+            console.error('删除失败:', error);
+            alert('删除失败，请重试');
+          }
+        }, 300);
+      } else {
+        // 如果找不到元素，直接执行删除
+        try {
+          const response = await fetch(`/api/study_techniques/synonyms/${category}/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${currentToken}` }
+          });
+
+          console.log(`删除响应状态:`, response.status);
+
+          if (response.ok) {
+            console.log('删除成功，刷新全屏数据');
+            // 刷新本地数据
+            await loadData(category);
+            // 重新打开全屏
+            openFullscreenSynonyms(category);
+          } else {
+            const errorText = await response.text();
+            console.error('删除失败:', response.status, errorText);
+            alert('删除失败，请重试');
+          }
+        } catch (error) {
+          console.error('删除失败:', error);
           alert('删除失败，请重试');
         }
-      } catch (error) {
-        console.error('删除失败:', error);
-        alert('删除失败，请重试');
       }
     }
 
@@ -3128,29 +3342,146 @@
 
       console.log(`正在删除全屏上下义词: ${category}/${id}`);
 
-      try {
-        const response = await fetch(`/api/study_techniques/hypernyms/${category}/${id}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${currentToken}` }
-        });
+      // 添加删除动效
+      const itemElement = event.target.closest('.item');
+      if (itemElement) {
+        itemElement.style.transition = 'all 0.3s ease';
+        itemElement.style.opacity = '0';
+        itemElement.style.transform = 'translateX(-100%)';
 
-        console.log(`删除响应状态:`, response.status);
+        // 等待动效完成后再执行删除
+        setTimeout(async () => {
+          try {
+            const response = await fetch(`/api/study_techniques/hypernyms/${category}/${id}`, {
+              method: 'DELETE',
+              headers: { 'Authorization': `Bearer ${currentToken}` }
+            });
 
-        if (response.ok) {
-          console.log('删除成功，刷新全屏数据');
-          // 刷新本地数据
-          loadData(category);
-          // 重新打开全屏
-          openFullscreenHypernyms(category);
-        } else {
-          const errorText = await response.text();
-          console.error('删除失败:', response.status, errorText);
+            console.log(`删除响应状态:`, response.status);
+
+            if (response.ok) {
+              console.log('删除成功，刷新全屏数据');
+              // 刷新本地数据
+              await loadData(category);
+              // 重新打开全屏
+              openFullscreenHypernyms(category);
+            } else {
+              // 恢复元素状态
+              itemElement.style.opacity = '1';
+              itemElement.style.transform = 'translateX(0)';
+              const errorText = await response.text();
+              console.error('删除失败:', response.status, errorText);
+              alert('删除失败，请重试');
+            }
+          } catch (error) {
+            // 恢复元素状态
+            itemElement.style.opacity = '1';
+            itemElement.style.transform = 'translateX(0)';
+            console.error('删除失败:', error);
+            alert('删除失败，请重试');
+          }
+        }, 300);
+      } else {
+        // 如果找不到元素，直接执行删除
+        try {
+          const response = await fetch(`/api/study_techniques/hypernyms/${category}/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${currentToken}` }
+          });
+
+          console.log(`删除响应状态:`, response.status);
+
+          if (response.ok) {
+            console.log('删除成功，刷新全屏数据');
+            // 刷新本地数据
+            await loadData(category);
+            // 重新打开全屏
+            openFullscreenHypernyms(category);
+          } else {
+            const errorText = await response.text();
+            console.error('删除失败:', response.status, errorText);
+            alert('删除失败，请重试');
+          }
+        } catch (error) {
+          console.error('删除失败:', error);
           alert('删除失败，请重试');
         }
-      } catch (error) {
-        console.error('删除失败:', error);
-        alert('删除失败，请重试');
       }
+    }
+
+    // 全屏编辑功能（支持同义词和上下义词）
+    function editFullscreenSynonym(category, id) {
+      const data = currentData[category]?.synonyms || [];
+      const item = data.find(item => item.id === id);
+      if (!item) return;
+
+      // 填充标题
+      document.getElementById('synonymTitle').value = item.title || '';
+
+      // 清空并填充同义词输入
+      const container = document.getElementById('synonymInputs');
+      container.innerHTML = '';
+      item.synonyms.forEach(syn => {
+        const div = document.createElement('div');
+        div.className = 'synonym-input-row';
+        div.innerHTML = `
+          <input type="text" placeholder="同义词" class="form-input synonym-word" value="${syn.word}">
+          <input type="text" placeholder="释义" class="form-input synonym-def" value="${syn.definition || ''}">
+          <button type="button" class="remove-synonym" onclick="removeSynonymInput(this)">删除</button>
+        `;
+        container.appendChild(div);
+      });
+
+      // 设置编辑模式
+      editingItem = {type: 'synonym', category, id, isFullscreen: true};
+      document.querySelector('#synonymModal .modal-header').textContent = '编辑词汇替换';
+      document.getElementById('synonymModal').classList.add('show');
+
+      // 保持全屏模态框打开，编辑模态框会显示在全屏之上
+    }
+
+    function editFullscreenHypernym(category, id) {
+      const data = currentData[category]?.hypernyms || [];
+      const item = data.find(item => item.id === id);
+      if (!item) return;
+
+      // 填充标题
+      document.getElementById('hypernymTitle').value = item.title || '';
+
+      // 填充上义词
+      const upperContainer = document.getElementById('hypernymUpperInputs');
+      upperContainer.innerHTML = '';
+      (item.upper_words || []).forEach(upper => {
+        const div = document.createElement('div');
+        div.className = 'synonym-input-row';
+        div.innerHTML = `
+          <input type="text" placeholder="上义词" class="form-input hypernym-word" value="${upper.word}">
+          <input type="text" placeholder="释义" class="form-input hypernym-def" value="${upper.definition || ''}">
+          <button type="button" class="remove-synonym" onclick="removeHypernymInput(this, 'upper')">删除</button>
+        `;
+        upperContainer.appendChild(div);
+      });
+
+      // 填充下义词
+      const lowerContainer = document.getElementById('hypernymLowerInputs');
+      lowerContainer.innerHTML = '';
+      (item.lower_words || []).forEach(lower => {
+        const div = document.createElement('div');
+        div.className = 'synonym-input-row';
+        div.innerHTML = `
+          <input type="text" placeholder="下义词" class="form-input hypernym-word" value="${lower.word}">
+          <input type="text" placeholder="释义" class="form-input hypernym-def" value="${lower.definition || ''}">
+          <button type="button" class="remove-synonym" onclick="removeHypernymInput(this, 'lower')">删除</button>
+        `;
+        lowerContainer.appendChild(div);
+      });
+
+      // 设置编辑模式
+      editingItem = {type: 'hypernym', category, id, isFullscreen: true};
+      document.querySelector('#hypernymModal .modal-header').textContent = '编辑上下义词';
+      document.getElementById('hypernymModal').classList.add('show');
+
+      // 保持全屏模态框打开，编辑模态框会显示在全屏之上
     }
     
     // 编辑功能
