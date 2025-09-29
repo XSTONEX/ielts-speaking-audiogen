@@ -15,8 +15,11 @@
   
   <link href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Crimson+Text:wght@400;600&display=swap" rel="stylesheet">
   
-  <!-- Markdown解析库 -->
+  <!-- Markdown解析库和相关依赖 -->
   <script src="https://cdn.jsdelivr.net/npm/marked@5.1.1/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/common.min.js"></script>
   
   <style>
     body { 
@@ -164,7 +167,7 @@
     }
     
     .add-btn {
-      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      background: linear-gradient(135deg, #60a5fa, #3b82f6);
       color: white;
       border: none;
       padding: 8px 16px;
@@ -181,7 +184,7 @@
     }
     
     .add-btn:hover {
-      background: linear-gradient(135deg, #2563eb, #1e40af);
+      background: linear-gradient(135deg, #60a5fa, #3b82f6);
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
     }
@@ -230,11 +233,11 @@
     }
 
     .word-group-title:hover {
-      color: #3b82f6;
+      color: #60a5fa;
     }
 
     .word-group-title.editing {
-      border: 1px solid #3b82f6;
+      border: 1px solid #60a5fa;
       border-radius: 4px;
       padding: 4px 8px;
       background: white;
@@ -255,7 +258,7 @@
     }
     
     .word-primary:hover {
-      color: #3b82f6;
+      color: #60a5fa;
     }
     
     .word-clickable {
@@ -269,7 +272,7 @@
     
     .word-clickable:hover {
       background: #eff6ff;
-      color: #1d4ed8;
+      color: #3b82f6;
     }
     
     
@@ -332,7 +335,7 @@
     }
 
     .hypernym-arrow {
-      color: #3b82f6;
+      color: #60a5fa;
       font-size: 16px;
       font-weight: bold;
       margin: 0 8px;
@@ -361,7 +364,7 @@
     }
     
     .synonym:hover {
-      background: #3b82f6;
+      background: #60a5fa;
       color: white;
     }
     
@@ -394,13 +397,13 @@
     }
     
     .hypernym-word.target {
-      background: #1d4ed8;
+      background: #3b82f6;
       color: white;
       font-weight: 600;
     }
     
     .technique-item {
-      border-left: 4px solid #3b82f6;
+      border-left: 4px solid #60a5fa;
       padding-left: 16px;
       cursor: pointer;
       transition: all 0.3s ease;
@@ -440,18 +443,6 @@
       color: #374151;
     }
     
-    .technique-content {
-      line-height: 1.6;
-      color: #374151;
-      margin-top: 12px;
-      display: none;
-      overflow: hidden;
-      transition: all 0.3s ease;
-    }
-    
-    .technique-content.expanded {
-      display: block;
-    }
     
     /* 全屏模态框样式 */
     .fullscreen-modal {
@@ -571,7 +562,7 @@
     }
 
     .fullscreen-content .hypernym-arrow {
-      color: #3b82f6;
+      color: #60a5fa;
       font-size: 18px;
       font-weight: bold;
       margin: 0 12px;
@@ -616,7 +607,7 @@
     }
     
     .fullscreen-edit-btn, .fullscreen-save-btn {
-      background: #3b82f6;
+      background: #60a5fa;
       color: white;
       border: none;
       padding: 8px 16px;
@@ -627,9 +618,382 @@
     }
     
     .fullscreen-edit-btn:hover, .fullscreen-save-btn:hover {
-      background: #2563eb;
+      background: #60a5fa;
     }
     
+    /* Markdown内容样式 */
+    .technique-content {
+      line-height: 1.8;
+      color: #374151;
+      margin-top: 12px;
+      display: none;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .technique-content.expanded {
+      display: block;
+    }
+
+    /* Markdown元素样式 */
+    .technique-content h1,
+    .technique-content h2,
+    .technique-content h3,
+    .technique-content h4,
+    .technique-content h5,
+    .technique-content h6 {
+      color: #1f2937;
+      margin-top: 1.5em;
+      margin-bottom: 0.5em;
+      font-weight: 600;
+    }
+
+    .technique-content h1 { font-size: 1.8em; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.3em; }
+    .technique-content h2 { font-size: 1.5em; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.2em; }
+    .technique-content h3 { font-size: 1.3em; }
+    .technique-content h4 { font-size: 1.1em; }
+    .technique-content h5 { font-size: 1.05em; }
+    .technique-content h6 { font-size: 1em; }
+
+    .technique-content p {
+      margin: 1em 0;
+    }
+
+    .technique-content blockquote {
+      border-left: 4px solid #60a5fa;
+      padding-left: 1em;
+      margin: 1em 0;
+      color: #6b7280;
+      background: #f8fafc;
+      padding: 1em;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .technique-content ul,
+    .technique-content ol {
+      margin: 1em 0;
+      padding-left: 2em;
+    }
+
+    .technique-content li {
+      margin: 0.5em 0;
+    }
+
+    .technique-content code {
+      background: #f3f4f6;
+      padding: 0.2em 0.4em;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+      color: #dc2626;
+    }
+
+    .technique-content pre {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1em;
+      overflow-x: auto;
+      margin: 1em 0;
+    }
+
+    .technique-content pre code {
+      background: none;
+      padding: 0;
+      border-radius: 0;
+      color: inherit;
+    }
+
+    /* Markdown表格样式 */
+    .technique-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1em 0;
+      background: #a5d8ff;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .technique-content th,
+    .technique-content td {
+      border: 1px solid #d1d5db;
+      padding: 0.75em 1em;
+      text-align: center;
+      vertical-align: top;
+    }
+
+    .technique-content th {
+      background: rgba(255, 255, 255, 0.95);
+      font-weight: 600;
+      color: #1f2937;
+      border-bottom: 2px solid #9ca3af;
+    }
+
+    .technique-content tr:nth-child(even) {
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    .technique-content tr:hover {
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    /* 强调和突出显示 */
+    .technique-content strong,
+    .technique-content b {
+      font-weight: 700;
+      color: #1f2937;
+    }
+
+    .technique-content em,
+    .technique-content i {
+      font-style: italic;
+      color: #4b5563;
+    }
+
+    .technique-content del {
+      text-decoration: line-through;
+      color: #9ca3af;
+    }
+
+    .technique-content mark {
+      background: #fef3c7;
+      color: #92400e;
+      padding: 0.1em 0.3em;
+      border-radius: 3px;
+    }
+
+    /* 链接样式 */
+    .technique-content a {
+      color: #60a5fa;
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .technique-content a:hover {
+      color: #3b82f6;
+      border-bottom-color: #3b82f6;
+    }
+
+    /* 水平线 */
+    .technique-content hr {
+      border: none;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #e5e7eb, transparent);
+      margin: 2em 0;
+    }
+
+    /* 全屏Markdown样式 */
+    .fullscreen-content h1,
+    .fullscreen-content h2,
+    .fullscreen-content h3,
+    .fullscreen-content h4,
+    .fullscreen-content h5,
+    .fullscreen-content h6 {
+      color: #1f2937;
+      margin-top: 1.5em;
+      margin-bottom: 0.5em;
+      font-weight: 600;
+    }
+
+    .fullscreen-content h1 { font-size: 1.8em; border-bottom: 3px solid #e5e7eb; padding-bottom: 0.3em; }
+    .fullscreen-content h2 { font-size: 1.5em; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.2em; }
+    .fullscreen-content h3 { font-size: 1.3em; }
+    .fullscreen-content h4 { font-size: 1.1em; }
+    .fullscreen-content h5 { font-size: 1.0em; }
+    .fullscreen-content h6 { font-size: 0.95em; }
+
+    .fullscreen-content p {
+      margin: 1.2em 0;
+      font-size: 1.0em;
+      line-height: 1.8;
+    }
+
+    .fullscreen-content blockquote {
+      border-left: 5px solid #60a5fa;
+      padding-left: 1.5em;
+      margin: 1.5em 0;
+      color: #6b7280;
+      background: #f8fafc;
+      padding: 1.5em;
+      border-radius: 0 12px 12px 0;
+      font-style: italic;
+      font-size: 1.1em;
+    }
+
+    .fullscreen-content ul,
+    .fullscreen-content ol {
+      margin: 1.2em 0;
+      padding-left: 2.5em;
+    }
+
+    .fullscreen-content li {
+      margin: 0.6em 0;
+      font-size: 1.0em;
+    }
+
+    .fullscreen-content code {
+      background: #f3f4f6;
+      padding: 0.3em 0.6em;
+      border-radius: 6px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.95em;
+      color: #dc2626;
+      border: 1px solid #e2e8f0;
+    }
+
+    .fullscreen-content pre {
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 1.5em;
+      overflow-x: auto;
+      margin: 1.5em 0;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .fullscreen-content pre code {
+      background: none;
+      padding: 0;
+      border-radius: 0;
+      color: inherit;
+      border: none;
+    }
+
+    /* 全屏表格样式 */
+    .fullscreen-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5em 0;
+      background: #a5d8ff;
+      border: 3px solid #e5e7eb;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .fullscreen-content th,
+    .fullscreen-content td {
+      border: 2px solid #d1d5db;
+      padding: 1em 1.2em;
+      text-align: center;
+      vertical-align: top;
+    }
+
+    .fullscreen-content th {
+      background: rgba(255, 255, 255, 0.95);
+      font-weight: 700;
+      color: #1f2937;
+      border-bottom: 3px solid #9ca3af;
+      font-size: 1.0em;
+    }
+
+    .fullscreen-content tr:nth-child(even) {
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    .fullscreen-content tr:hover {
+      background: rgba(255, 255, 255, 0.9);
+      transform: scale(1.01);
+      transition: all 0.2s;
+    }
+
+    /* 全屏强调样式 */
+    .fullscreen-content strong,
+    .fullscreen-content b {
+      font-weight: 700;
+      color: #1f2937;
+    }
+
+    .fullscreen-content em,
+    .fullscreen-content i {
+      font-style: italic;
+      color: #4b5563;
+    }
+
+    .fullscreen-content del {
+      text-decoration: line-through;
+      color: #9ca3af;
+    }
+
+    .fullscreen-content mark {
+      background: #fef3c7;
+      color: #92400e;
+      padding: 0.2em 0.4em;
+      border-radius: 4px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .fullscreen-content a {
+      color: #60a5fa;
+      text-decoration: none;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+
+    .fullscreen-content a:hover {
+      color: #3b82f6;
+      border-bottom-color: #3b82f6;
+    }
+
+    .fullscreen-content hr {
+      border: none;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #e5e7eb, transparent);
+      margin: 3em 0;
+    }
+
+    /* 全屏布局控制 */
+    .fullscreen-narrow {
+      max-width: 600px;
+      margin: 0 auto;
+      font-size: 1.0em;
+    }
+
+    .fullscreen-wide {
+      max-width: 1200px;
+      margin: 0 auto;
+      font-size: 1.0em;
+    }
+
+    /* 布局切换按钮 */
+    .layout-toggle {
+      display: flex;
+      gap: 8px;
+      margin-left: 16px;
+    }
+
+    .layout-btn {
+      background: #f3f4f6;
+      border: 1px solid #d1d5db;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      color: #374151;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 60px;
+    }
+
+    .layout-btn:hover {
+      background: #e5e7eb;
+      transform: translateY(-1px);
+    }
+
+    .layout-btn.active {
+      background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+      color: white;
+      border-color: #60a5fa;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);
+    }
+
     /* 响应式设计 */
     @media (max-width: 768px) {
       .container {
@@ -1136,15 +1500,15 @@
     }
 
     .sort-btn.active {
-      background: #dbeafe;
-      color: #1d4ed8;
-      border-color: #3b82f6;
+      background: #eff6ff;
+      color: #3b82f6;
+      border-color: #60a5fa;
       font-weight: 500;
     }
 
     .sort-btn.active:hover {
-      background: #bfdbfe;
-      border-color: #2563eb;
+      background: #dbeafe;
+      border-color: #60a5fa;
     }
 
     /* 全屏排序按钮样式 */
@@ -1172,15 +1536,15 @@
     }
 
     .fullscreen-sort-btn.active {
-      background: #dbeafe;
-      color: #1d4ed8;
-      border-color: #3b82f6;
+      background: #eff6ff;
+      color: #3b82f6;
+      border-color: #60a5fa;
       font-weight: 500;
     }
 
     .fullscreen-sort-btn.active:hover {
-      background: #bfdbfe;
-      border-color: #2563eb;
+      background: #dbeafe;
+      border-color: #60a5fa;
     }
 
     /* 模态框样式 */
@@ -1243,7 +1607,7 @@
     
     .form-input:focus {
       outline: none;
-      border-color: #3b82f6;
+      border-color: #60a5fa;
       box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
     
@@ -1315,13 +1679,13 @@
     }
     
     .btn-primary {
-      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      background: linear-gradient(135deg, #60a5fa, #3b82f6);
       color: white;
       box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
     }
     
     .btn-primary:hover {
-      background: linear-gradient(135deg, #2563eb, #1e40af);
+      background: linear-gradient(135deg, #60a5fa, #3b82f6);
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
     }
@@ -1343,7 +1707,7 @@
       width: 16px;
       height: 16px;
       border: 2px solid #f3f4f6;
-      border-top: 2px solid #3b82f6;
+      border-top: 2px solid #60a5fa;
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
@@ -1959,7 +2323,7 @@
     function renderTechniques(category, data) {
       const container = document.getElementById(`techniques-${category}`);
       container.innerHTML = '';
-      
+
       if (data && data.length > 0) {
         data.forEach((item, index) => {
           const div = document.createElement('div');
@@ -1973,7 +2337,7 @@
                   <button class="technique-toggle" onclick="toggleTechnique('${contentId}', this)">展开 ▼</button>
                 </div>
                 <div class="technique-content" id="${contentId}">
-                  ${marked.parse(item.content, { mangle: false, headerIds: false })}
+                  ${renderMarkdown(item.content)}
                 </div>
               </div>
               <div class="item-actions">
@@ -2633,8 +2997,14 @@
 
       fullscreenTechnique = {category, id, item};
       document.getElementById('fullscreenTitle').textContent = item.title;
-      document.getElementById('fullscreenContent').innerHTML = marked.parse(item.content);
+      document.getElementById('fullscreenContent').innerHTML = renderMarkdown(item.content);
       document.getElementById('fullscreenTextarea').value = item.content;
+
+      // 应用用户偏好的布局
+      loadFullscreenLayoutPreference();
+
+      // 显示布局切换控件
+      document.getElementById('layoutToggle').style.display = 'flex';
 
       // 重置到查看模式
       document.getElementById('fullscreenContent').style.display = 'block';
@@ -2652,6 +3022,10 @@
       // 隐藏排序控件
       const sortControls = document.getElementById('fullscreenSortControls');
       sortControls.style.display = 'none';
+
+      // 隐藏布局切换控件
+      const layoutToggle = document.getElementById('layoutToggle');
+      layoutToggle.style.display = 'none';
 
       // 重置全屏状态
       fullscreenType = null;
@@ -2796,15 +3170,15 @@
         
         if (response.ok) {
           // 更新显示
-          document.getElementById('fullscreenContent').innerHTML = marked.parse(newContent);
+          document.getElementById('fullscreenContent').innerHTML = renderMarkdown(newContent);
           fullscreenTechnique.item.content = newContent;
-          
+
           // 退出编辑模式
           document.getElementById('fullscreenContent').style.display = 'block';
           document.getElementById('fullscreenEditArea').classList.remove('active');
           document.getElementById('fullscreenEditBtn').style.display = 'inline-block';
           document.getElementById('fullscreenSaveBtn').style.display = 'none';
-          
+
           // 刷新列表数据
           loadData(fullscreenTechnique.category);
         } else {
@@ -3605,8 +3979,122 @@
     let currentUploadCategory = null;
     let fullscreenType = null;
     let fullscreenCategory = null;
+    let fullscreenLayout = 'narrow'; // 'narrow' or 'wide'
 
-    
+
+    // Markdown配置和初始化
+    function initMarkdown() {
+      // 配置marked.js
+      marked.setOptions({
+        breaks: true, // 支持GitHub风格的换行
+        gfm: true, // 启用GitHub风格Markdown
+        headerIds: true, // 为标题添加ID
+        mangle: false, // 不修改邮箱地址
+        highlight: function(code, language) {
+          // 使用highlight.js进行代码高亮
+          if (language && hljs.getLanguage(language)) {
+            try {
+              return hljs.highlight(code, { language }).value;
+            } catch (err) {
+              console.warn('Highlighter error:', err);
+            }
+          }
+          // 如果没有指定语言或高亮失败，使用自动检测
+          try {
+            return hljs.highlightAuto(code).value;
+          } catch (err) {
+            console.warn('Auto highlighter error:', err);
+          }
+          return code; // 降级到原始代码
+        }
+      });
+
+      // 配置marked以支持更多HTML标签
+      marked.use({
+        extensions: [
+          // 支持下划线语法 ++text++
+          {
+            name: 'underline',
+            level: 'inline',
+            start: (src) => src.match(/\+\+/)? src.indexOf('++') : -1,
+            tokenizer: (src, tokens) => {
+              const rule = /^\+\+([^\+]+(?:\+?[^\+]+)*)\+\+/;
+              const match = rule.exec(src);
+              if (match) {
+                return {
+                  type: 'underline',
+                  raw: match[0],
+                  text: match[1]
+                };
+              }
+            },
+            renderer: (token) => `<u>${token.text}</u>`
+          },
+          // 支持高亮语法 ==text==
+          {
+            name: 'highlight',
+            level: 'inline',
+            start: (src) => src.match(/==/)? src.indexOf('==') : -1,
+            tokenizer: (src, tokens) => {
+              const rule = /^==([^=]+(?:=?[^=]+)*)==/;
+              const match = rule.exec(src);
+              if (match) {
+                return {
+                  type: 'highlight',
+                  raw: match[0],
+                  text: match[1]
+                };
+              }
+            },
+            renderer: (token) => `<mark>${token.text}</mark>`
+          }
+        ]
+      });
+    }
+
+    // 安全的Markdown渲染函数
+    function renderMarkdown(content) {
+      try {
+        const html = marked.parse(content || '');
+        return DOMPurify.sanitize(html);
+      } catch (error) {
+        console.error('Markdown rendering error:', error);
+        return '<p>内容渲染出错</p>';
+      }
+    }
+
+    // 全屏布局切换函数
+    function setFullscreenLayout(layout) {
+      const content = document.getElementById('fullscreenContent');
+      const buttons = document.querySelectorAll('.layout-btn');
+
+      // 移除所有活动状态
+      buttons.forEach(btn => btn.classList.remove('active'));
+
+      if (layout === 'narrow') {
+        content.className = 'fullscreen-content fullscreen-narrow';
+        document.querySelector('[onclick="setFullscreenLayout(\'narrow\')"]').classList.add('active');
+        fullscreenLayout = 'narrow';
+      } else if (layout === 'wide') {
+        content.className = 'fullscreen-content fullscreen-wide';
+        document.querySelector('[onclick="setFullscreenLayout(\'wide\')"]').classList.add('active');
+        fullscreenLayout = 'wide';
+      }
+
+      // 保存用户偏好到localStorage
+      localStorage.setItem('fullscreenLayout', layout);
+    }
+
+    // 加载用户布局偏好
+    function loadFullscreenLayoutPreference() {
+      const saved = localStorage.getItem('fullscreenLayout');
+      if (saved === 'wide') {
+        setFullscreenLayout('wide');
+      } else {
+        setFullscreenLayout('narrow');
+      }
+    }
+
     // 表单事件绑定
     document.getElementById('synonymForm').addEventListener('submit', (e) => {
       e.preventDefault();
@@ -3641,6 +4129,9 @@
     
     // 初始化
     window.onload = function(){
+      // 初始化Markdown
+      initMarkdown();
+
       checkStoredToken().then(valid=>{
         if(valid) {
           showUserInfo();
@@ -3666,6 +4157,10 @@
             ↑
           </button>
         </div>
+        <div class="layout-toggle" id="layoutToggle">
+          <button class="layout-btn active" onclick="setFullscreenLayout('narrow')" title="窄边布局">窄边</button>
+          <button class="layout-btn" onclick="setFullscreenLayout('wide')" title="宽边布局">宽边</button>
+        </div>
       </div>
       <div class="fullscreen-actions">
         <button class="fullscreen-edit-btn" id="fullscreenEditBtn" onclick="enterFullscreenEditMode()">编辑</button>
@@ -3673,7 +4168,7 @@
         <button class="fullscreen-close" onclick="closeFullscreenModal()">关闭</button>
       </div>
     </div>
-    <div class="fullscreen-content" id="fullscreenContent"></div>
+    <div class="fullscreen-content fullscreen-narrow" id="fullscreenContent"></div>
     <div class="fullscreen-edit-area" id="fullscreenEditArea">
       <textarea class="fullscreen-textarea" id="fullscreenTextarea" placeholder="请输入技巧内容，支持Markdown语法"></textarea>
     </div>

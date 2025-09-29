@@ -170,10 +170,43 @@
         }
 
         .sidebar-header {
+            margin-bottom: 20px;
+        }
+
+        .sidebar-header-top {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
+        }
+
+        .sidebar-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sort-subcategories-select {
+            padding: 6px 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            background: white;
+            color: #4a5568;
+            transition: all 0.2s ease;
+            font-family: 'PT Serif', 'Crimson Text', ui-serif, 'Times New Roman', 'Georgia', serif;
+        }
+
+        .sort-subcategories-select:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .sort-subcategories-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
         .sidebar-title {
@@ -1520,11 +1553,19 @@
                 <div class="tab-panel active" id="listening-panel">
                     <div class="sidebar">
                         <div class="sidebar-header">
-                            <span class="sidebar-title">子分类</span>
-                            <button class="add-subcategory-btn" onclick="showAddSubcategoryModal('listening')"
-                                title="添加子分类">
-                                ➕
-                            </button>
+                            <div class="sidebar-header-top">
+                                <span class="sidebar-title">子分类</span>
+                                <div class="sidebar-controls">
+                                    <select class="sort-subcategories-select" onchange="sortSubcategories('listening', this.value)">
+                                        <option value="asc">🔤 A-Z</option>
+                                        <option value="desc">🔠 Z-A</option>
+                                    </select>
+                                    <button class="add-subcategory-btn" onclick="showAddSubcategoryModal('listening')"
+                                        title="添加子分类">
+                                        ➕
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                         <ul class="subcategory-list" id="listening-subcategories">
                             <!-- 子分类列表将在这里动态生成 -->
@@ -1581,11 +1622,19 @@
                 <div class="tab-panel" id="speaking-panel">
                     <div class="sidebar">
                         <div class="sidebar-header">
-                            <span class="sidebar-title">子分类</span>
-                            <button class="add-subcategory-btn" onclick="showAddSubcategoryModal('speaking')"
-                                title="添加子分类">
-                                ➕
-                            </button>
+                            <div class="sidebar-header-top">
+                                <span class="sidebar-title">子分类</span>
+                                <div class="sidebar-controls">
+                                    <select class="sort-subcategories-select" onchange="sortSubcategories('speaking', this.value)">
+                                        <option value="asc">🔤 A-Z</option>
+                                        <option value="desc">🔠 Z-A</option>
+                                    </select>
+                                    <button class="add-subcategory-btn" onclick="showAddSubcategoryModal('speaking')"
+                                        title="添加子分类">
+                                        ➕
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                         <ul class="subcategory-list" id="speaking-subcategories">
                             <!-- 子分类列表将在这里动态生成 -->
@@ -1642,11 +1691,19 @@
                 <div class="tab-panel" id="reading-panel">
                     <div class="sidebar">
                         <div class="sidebar-header">
-                            <span class="sidebar-title">子分类</span>
-                            <button class="add-subcategory-btn" onclick="showAddSubcategoryModal('reading')"
-                                title="添加子分类">
-                                ➕
-                            </button>
+                            <div class="sidebar-header-top">
+                                <span class="sidebar-title">子分类</span>
+                                <div class="sidebar-controls">
+                                    <select class="sort-subcategories-select" onchange="sortSubcategories('reading', this.value)">
+                                        <option value="asc">🔤 A-Z</option>
+                                        <option value="desc">🔠 Z-A</option>
+                                    </select>
+                                    <button class="add-subcategory-btn" onclick="showAddSubcategoryModal('reading')"
+                                        title="添加子分类">
+                                        ➕
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                         <ul class="subcategory-list" id="reading-subcategories">
                             <!-- 子分类列表将在这里动态生成 -->
@@ -1703,11 +1760,19 @@
                 <div class="tab-panel" id="writing-panel">
                     <div class="sidebar">
                         <div class="sidebar-header">
-                            <span class="sidebar-title">子分类</span>
-                            <button class="add-subcategory-btn" onclick="showAddSubcategoryModal('writing')"
-                                title="添加子分类">
-                                ➕
-                            </button>
+                            <div class="sidebar-header-top">
+                                <span class="sidebar-title">子分类</span>
+                                <div class="sidebar-controls">
+                                    <select class="sort-subcategories-select" onchange="sortSubcategories('writing', this.value)">
+                                        <option value="asc">🔤 A-Z</option>
+                                        <option value="desc">🔠 Z-A</option>
+                                    </select>
+                                    <button class="add-subcategory-btn" onclick="showAddSubcategoryModal('writing')"
+                                        title="添加子分类">
+                                        ➕
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                         <ul class="subcategory-list" id="writing-subcategories">
                             <!-- 子分类列表将在这里动态生成 -->
@@ -2092,6 +2157,7 @@
         let currentSubcategory = 'default';
         let currentSortType = 'newest'; // 新增：当前排序方式
         let currentAudio = null;
+        let subcategorySortOrder = {}; // 子分类排序偏好: {category: 'asc'|'desc'}
         let mobileCategoryExpanded = false;
         let mobileSubcategoryExpanded = false;
 
@@ -2262,6 +2328,11 @@
                     currentSortType = preferences.sortType;
                 }
 
+                // 恢复子分类排序偏好
+                if (preferences.subcategorySortOrder) {
+                    subcategorySortOrder = preferences.subcategorySortOrder;
+                }
+
                 // 更新UI状态
                 updateUIFromPreferences();
             } catch (error) {
@@ -2275,7 +2346,8 @@
                 const preferences = {
                     category: currentCategory,
                     subcategory: currentSubcategory,
-                    sortType: currentSortType
+                    sortType: currentSortType,
+                    subcategorySortOrder: subcategorySortOrder
                 };
                 localStorage.setItem('vocabularyPreferences', JSON.stringify(preferences));
             } catch (error) {
@@ -2446,11 +2518,19 @@
                     renderWords(currentCategory, currentSubcategory);
                 }
 
-                // 更新排序选择器的值
-                const sortSelects = document.querySelectorAll('.sort-select');
-                sortSelects.forEach(select => {
-                    select.value = currentSortType;
-                });
+            // 更新排序选择器的值
+            const sortSelects = document.querySelectorAll('.sort-select');
+            sortSelects.forEach(select => {
+                select.value = currentSortType;
+            });
+
+            // 更新子分类排序选择器的值
+            Object.keys(subcategorySortOrder).forEach(category => {
+                const select = document.querySelector(`[data-category="${category}"] .sort-subcategories-select`);
+                if (select) {
+                    select.value = subcategorySortOrder[category];
+                }
+            });
 
             } catch (error) {
                 console.warn('Failed to apply user preferences after load:', error);
@@ -2532,10 +2612,20 @@
             }
 
             const subcategories = vocabularyData.categories[category].subcategories;
+            const sortOrder = subcategorySortOrder[category] || 'asc'; // 默认升序
 
             container.innerHTML = '';
 
-            Object.entries(subcategories).forEach(([subId, subData]) => {
+            // 排序子分类
+            const sortedSubcategories = Object.entries(subcategories).sort((a, b) => {
+                const nameA = a[1].name;
+                const nameB = b[1].name;
+
+                const comparison = naturalSort(nameA, nameB);
+                return sortOrder === 'asc' ? comparison : -comparison;
+            });
+
+            sortedSubcategories.forEach(([subId, subData]) => {
                 const li = document.createElement('li');
                 li.className = 'subcategory-item';
 
@@ -2577,15 +2667,84 @@
             renderWords(category, subcategoryId);
         }
 
-        // 获取默认子分类（按字母顺序排序后的第一个）
+        // 排序子分类
+        function sortSubcategories(category, sortOrder) {
+            subcategorySortOrder[category] = sortOrder;
+
+            // 保存用户偏好设置
+            saveUserPreferences();
+
+            // 重新渲染子分类列表
+            renderSubcategories(category);
+        }
+
+        // 自然排序函数，能够智能排序包含数字的字符串
+        // 专门处理Chapter格式： "Chapter12饮食健康" -> 按数字12排序
+        function naturalSort(a, b) {
+            // 提取Chapter后面的数字
+            const chapterRegex = /chapter(\d+)/i;
+            const matchA = a.match(chapterRegex);
+            const matchB = b.match(chapterRegex);
+
+            // 如果都是Chapter格式，按章节数字排序
+            if (matchA && matchB) {
+                const numA = parseInt(matchA[1], 10);
+                const numB = parseInt(matchB[1], 10);
+                return numA - numB;
+            }
+
+            // 如果一个是Chapter格式，一个不是，Chapter格式的排在前面
+            if (matchA && !matchB) return -1;
+            if (!matchA && matchB) return 1;
+
+            // 如果都不是Chapter格式，使用通用自然排序
+            const chunkRegex = /(\d+|\D+)/g;
+            const chunksA = a.toLowerCase().match(chunkRegex) || [];
+            const chunksB = b.toLowerCase().match(chunkRegex) || [];
+
+            for (let i = 0; i < Math.max(chunksA.length, chunksB.length); i++) {
+                const chunkA = chunksA[i] || '';
+                const chunkB = chunksB[i] || '';
+
+                const numA = parseInt(chunkA, 10);
+                const numB = parseInt(chunkB, 10);
+
+                // 如果两个块都是数字，按数字大小比较
+                if (!isNaN(numA) && !isNaN(numB)) {
+                    if (numA !== numB) {
+                        return numA - numB;
+                    }
+                } else {
+                    // 如果其中一个是数字，另一个不是，则按字符串比较
+                    const comparison = chunkA.localeCompare(chunkB);
+                    if (comparison !== 0) {
+                        return comparison;
+                    }
+                }
+            }
+
+            return 0;
+        }
+
+        // 获取默认子分类（按当前排序偏好排序后的第一个）
         function getDefaultSubcategory(categoryData) {
             const subcategories = Object.entries(categoryData.subcategories);
             if (subcategories.length === 0) {
                 return null;
             }
 
-            // 按名称字母顺序排序
-            subcategories.sort((a, b) => a[1].name.localeCompare(b[1].name));
+            // 获取分类的排序偏好
+            const categoryName = Object.keys(vocabularyData.categories).find(cat =>
+                vocabularyData.categories[cat] === categoryData
+            );
+            const sortOrder = subcategorySortOrder[categoryName] || 'asc';
+
+            // 按排序偏好排序
+            subcategories.sort((a, b) => {
+                const comparison = naturalSort(a[1].name, b[1].name);
+                return sortOrder === 'asc' ? comparison : -comparison;
+            });
+
             return subcategories[0][0]; // 返回第一个子分类的ID
         }
 
@@ -3397,6 +3556,8 @@
             if (currentSubcategoryData && titleElement) {
                 titleElement.textContent = currentSubcategoryData.name;
             }
+
+            // 更新排序选择器（这里不需要，因为移动端没有排序选择器）
         }
 
         function selectMobileSubcategory(subcategoryId) {
