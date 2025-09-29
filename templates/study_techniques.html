@@ -501,12 +501,20 @@
       gap: 12px;
     }
     
-    .fullscreen-content {
+    .fullscreen-main {
+      display: flex;
+      gap: 40px;
+      align-items: flex-start;
       padding: 40px;
       max-width: 1000px;
       margin: 0 auto;
+    }
+
+    .fullscreen-content {
+      flex: 1;
       line-height: 1.8;
       font-size: 16px;
+      min-width: 0;
     }
 
     /* 全屏词汇显示样式 */
@@ -959,6 +967,178 @@
       font-size: 1.0em;
     }
 
+    /* 全屏目录样式 */
+    .fullscreen-toc-float {
+      position: fixed;
+      top: 50%;
+      left: 20px;
+      transform: translateY(-50%);
+      z-index: 10;
+      transition: all 0.3s ease;
+    }
+
+    .fullscreen-toc-float.collapsed {
+      left: -20px;
+      opacity: 0.9;
+    }
+
+    .fullscreen-toc.collapsed {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      background: rgba(96, 165, 250, 0.2);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 4px 12px rgba(96, 165, 250, 0.2);
+      border: 2px solid rgba(96, 165, 250, 0.4);
+      transition: all 0.3s ease;
+    }
+
+    .fullscreen-toc.collapsed:hover {
+      background: rgba(96, 165, 250, 0.3);
+      box-shadow: 0 6px 20px rgba(96, 165, 250, 0.3);
+      border-color: rgba(96, 165, 250, 0.6);
+      transform: scale(1.05);
+    }
+
+    .fullscreen-toc.collapsed .fullscreen-toc-title,
+    .fullscreen-toc.collapsed .toc-list {
+      display: none;
+    }
+
+    .fullscreen-toc.collapsed::before {
+      content: "📖";
+      font-size: 22px;
+      color: #1f2937;
+      font-weight: bold;
+    }
+
+    .fullscreen-toc {
+      width: 280px;
+      background: rgba(248, 250, 252, 0.8);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(226, 232, 240, 0.3);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      max-height: calc(100vh - 140px);
+      overflow-y: auto;
+      transition: all 0.3s ease;
+    }
+
+    .fullscreen-toc:hover {
+      background: rgba(248, 250, 252, 0.9);
+      border-color: rgba(96, 165, 250, 0.2);
+      box-shadow: 0 4px 16px rgba(96, 165, 250, 0.08);
+    }
+
+    .fullscreen-toc-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .toc-toggle-btn {
+      background: none;
+      border: none;
+      color: #6b7280;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      font-size: 16px;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+    }
+
+    .toc-toggle-btn:hover {
+      background: #f3f4f6;
+      color: #374151;
+    }
+
+    .toc-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .toc-item {
+      margin-bottom: 8px;
+    }
+
+    .toc-link {
+      display: block;
+      color: #4b5563;
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 14px;
+      line-height: 1.4;
+      border-left: 3px solid transparent;
+    }
+
+    .toc-link:hover {
+      background: #eff6ff;
+      color: #3b82f6;
+      border-left-color: #3b82f6;
+      transform: translateX(2px);
+    }
+
+    .toc-link.active {
+      background: rgba(96, 165, 250, 0.1);
+      color: #3b82f6;
+      border-left-color: #60a5fa;
+      font-weight: 500;
+      box-shadow: 0 1px 3px rgba(96, 165, 250, 0.1);
+    }
+
+    .toc-h1 { padding-left: 0; font-weight: 600; }
+    .toc-h2 { padding-left: 12px; }
+    .toc-h3 { padding-left: 24px; font-size: 13px; }
+    .toc-h4 { padding-left: 36px; font-size: 13px; }
+    .toc-h5 { padding-left: 48px; font-size: 12px; }
+    .toc-h6 { padding-left: 60px; font-size: 12px; }
+
+    .fullscreen-content-with-toc {
+      flex: 1;
+      min-width: 0;
+    }
+
+    /* 滚动条样式优化 */
+    .fullscreen-toc::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .fullscreen-toc::-webkit-scrollbar-track {
+      background: rgba(241, 245, 249, 0.5);
+      border-radius: 2px;
+    }
+
+    .fullscreen-toc::-webkit-scrollbar-thumb {
+      background: rgba(203, 213, 225, 0.6);
+      border-radius: 2px;
+    }
+
+    .fullscreen-toc::-webkit-scrollbar-thumb:hover {
+      background: rgba(148, 163, 184, 0.8);
+    }
+
     /* 布局切换按钮 */
     .layout-toggle {
       display: flex;
@@ -1193,22 +1373,80 @@
         gap: 12px;
         text-align: center;
       }
-      
+
       .fullscreen-title {
         font-size: 20px;
       }
-      
+
       .fullscreen-actions {
         order: -1;
         justify-content: center;
       }
-      
-      .fullscreen-content {
+
+      .fullscreen-main {
         padding: 20px;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .fullscreen-toc-float {
+        position: static;
+        transform: none;
+        left: auto;
+        top: auto;
+        z-index: auto;
+        margin-bottom: 20px;
+      }
+
+      .fullscreen-toc-float.collapsed {
+        left: auto;
+        opacity: 1;
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 10;
+      }
+
+      .fullscreen-toc.collapsed {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: rgba(96, 165, 250, 0.25);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 4px 12px rgba(96, 165, 250, 0.25);
+        border: 2px solid rgba(96, 165, 250, 0.5);
+      }
+
+      .fullscreen-toc.collapsed:hover {
+        background: rgba(96, 165, 250, 0.35);
+        box-shadow: 0 6px 20px rgba(96, 165, 250, 0.35);
+        border-color: rgba(96, 165, 250, 0.7);
+        transform: scale(1.05);
+      }
+
+      .fullscreen-toc {
+        width: 100%;
+        max-height: 200px;
+        background: rgba(248, 250, 252, 0.9);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid rgba(226, 232, 240, 0.4);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      }
+
+      .fullscreen-toc:hover {
+        background: rgba(248, 250, 252, 0.95);
+        border-color: rgba(96, 165, 250, 0.3);
+        box-shadow: 0 4px 12px rgba(96, 165, 250, 0.1);
+      }
+
+      .fullscreen-content {
+        padding: 0;
         font-size: 15px;
         line-height: 1.7;
       }
-      
+
       .fullscreen-edit-area {
         padding: 20px;
       }
@@ -2997,8 +3235,14 @@
 
       fullscreenTechnique = {category, id, item};
       document.getElementById('fullscreenTitle').textContent = item.title;
-      document.getElementById('fullscreenContent').innerHTML = renderMarkdown(item.content);
+
+      // 渲染Markdown内容并生成目录
+      const renderedContent = renderMarkdown(item.content);
+      document.getElementById('fullscreenContent').innerHTML = renderedContent;
       document.getElementById('fullscreenTextarea').value = item.content;
+
+      // 生成并显示目录
+      generateTableOfContents(item.content);
 
       // 应用用户偏好的布局
       loadFullscreenLayoutPreference();
@@ -3026,6 +3270,24 @@
       // 隐藏布局切换控件
       const layoutToggle = document.getElementById('layoutToggle');
       layoutToggle.style.display = 'none';
+
+      // 隐藏目录
+      const tocFloat = document.getElementById('fullscreenTocFloat');
+      tocFloat.style.display = 'none';
+
+      // 清理目录相关事件监听器
+      const tocContainer = document.getElementById('tocList');
+      const tocWrapper = document.getElementById('fullscreenToc');
+      const contentContainer = document.querySelector('.fullscreen-modal');
+      tocContainer.removeEventListener('click', handleTocClick);
+      if (tocWrapper._handleTocInteraction) {
+        tocWrapper.removeEventListener('click', tocWrapper._handleTocInteraction);
+        delete tocWrapper._handleTocInteraction;
+      }
+      contentContainer.removeEventListener('scroll', updateActiveTocItem);
+
+      // 清空目录内容
+      tocContainer.innerHTML = '';
 
       // 重置全屏状态
       fullscreenType = null;
@@ -3145,6 +3407,7 @@
     
     function enterFullscreenEditMode() {
       document.getElementById('fullscreenContent').style.display = 'none';
+      document.getElementById('fullscreenTocFloat').style.display = 'none'; // 编辑时隐藏目录
       document.getElementById('fullscreenEditArea').classList.add('active');
       document.getElementById('fullscreenEditBtn').style.display = 'none';
       document.getElementById('fullscreenSaveBtn').style.display = 'inline-block';
@@ -3152,9 +3415,9 @@
     
     async function saveFullscreenEdit() {
       if (!fullscreenTechnique) return;
-      
+
       const newContent = document.getElementById('fullscreenTextarea').value;
-      
+
       try {
         const response = await fetch(`/api/study_techniques/techniques/${fullscreenTechnique.category}/${fullscreenTechnique.id}`, {
           method: 'PUT',
@@ -3167,11 +3430,15 @@
             content: newContent
           })
         });
-        
+
         if (response.ok) {
           // 更新显示
-          document.getElementById('fullscreenContent').innerHTML = renderMarkdown(newContent);
+          const renderedContent = renderMarkdown(newContent);
+          document.getElementById('fullscreenContent').innerHTML = renderedContent;
           fullscreenTechnique.item.content = newContent;
+
+          // 重新生成目录
+          generateTableOfContents(newContent);
 
           // 退出编辑模式
           document.getElementById('fullscreenContent').style.display = 'block';
@@ -4063,6 +4330,216 @@
       }
     }
 
+    // 生成目录函数
+    function generateTableOfContents(markdownContent) {
+      const tocContainer = document.getElementById('tocList');
+      const tocWrapper = document.getElementById('fullscreenToc');
+      const tocFloat = document.getElementById('fullscreenTocFloat');
+      const tocToggleBtn = document.getElementById('tocToggleBtn');
+
+      // 解析Markdown中的标题
+      const headings = [];
+      const lines = markdownContent.split('\n');
+
+      lines.forEach((line, index) => {
+        // 匹配ATX风格的标题 (# ## ### 等)
+        const atxMatch = line.match(/^(#{1,6})\s+(.+)$/);
+        if (atxMatch) {
+          const level = atxMatch[1].length;
+          const text = atxMatch[2].trim();
+          headings.push({
+            level: level,
+            text: text,
+            id: `heading-${index}`,
+            lineIndex: index
+          });
+          return;
+        }
+
+        // 匹配Setext风格的标题 (=== 或 ---)
+        if (index > 0 && (line.match(/^=+$/) || line.match(/^-+$/))) {
+          const prevLine = lines[index - 1].trim();
+          if (prevLine) {
+            const level = line.match(/^=+$/) ? 1 : 2;
+            headings.push({
+              level: level,
+              text: prevLine,
+              id: `heading-${index - 1}`,
+              lineIndex: index - 1
+            });
+          }
+        }
+      });
+
+      // 如果没有标题，隐藏目录
+      if (headings.length === 0) {
+        tocFloat.style.display = 'none';
+        return;
+      }
+
+      // 生成目录HTML
+      let tocHtml = '';
+      headings.forEach(heading => {
+        const indentClass = `toc-h${heading.level}`;
+        tocHtml += `<li class="toc-item">
+          <a href="#${heading.id}" class="toc-link ${indentClass}" data-target="${heading.id}">
+            ${heading.text}
+          </a>
+        </li>`;
+      });
+
+      tocContainer.innerHTML = tocHtml;
+
+      // 为内容中的标题添加ID
+      const contentElement = document.getElementById('fullscreenContent');
+      const contentHeadings = contentElement.querySelectorAll('h1, h2, h3, h4, h5, h6');
+
+      contentHeadings.forEach((heading, index) => {
+        if (index < headings.length) {
+          heading.id = headings[index].id;
+        }
+      });
+
+      // 显示目录
+      tocFloat.style.display = 'block';
+
+      // 检查并恢复用户的折叠状态
+      const isCollapsed = localStorage.getItem('tocCollapsed') === 'true';
+      if (isCollapsed) {
+        collapseToc();
+      } else {
+        expandToc();
+      }
+
+      // 添加目录交互事件处理函数（折叠/展开）
+      function handleTocInteraction(e) {
+        // 检查点击的元素是否是折叠按钮或其子元素
+        const isToggleButton = e.target.id === 'tocToggleBtn' ||
+                              e.target.closest('#tocToggleBtn') !== null;
+
+        // 如果目录处于收起状态，任何点击都应该展开
+        if (tocWrapper.classList.contains('collapsed')) {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleToc();
+          return;
+        }
+
+        // 如果目录处于展开状态，只有点击折叠按钮才收起
+        if (isToggleButton) {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleToc();
+          return;
+        }
+      }
+
+      // 添加目录交互事件（折叠/展开）
+      tocWrapper.addEventListener('click', handleTocInteraction);
+
+      // 保存事件处理函数引用以便后续清理
+      tocWrapper._handleTocInteraction = handleTocInteraction;
+
+      // 添加目录链接点击事件
+      tocContainer.addEventListener('click', handleTocClick);
+
+      // 添加滚动监听来高亮当前目录项
+      const contentContainer = document.querySelector('.fullscreen-modal');
+      contentContainer.addEventListener('scroll', updateActiveTocItem);
+    }
+
+    // 切换目录折叠状态
+    function toggleToc() {
+      const tocFloat = document.getElementById('fullscreenTocFloat');
+      const isCollapsed = tocFloat.classList.contains('collapsed');
+
+      if (isCollapsed) {
+        expandToc();
+      } else {
+        collapseToc();
+      }
+    }
+
+    // 展开目录
+    function expandToc() {
+      const tocFloat = document.getElementById('fullscreenTocFloat');
+      const tocWrapper = document.getElementById('fullscreenToc');
+      const tocToggleBtn = document.getElementById('tocToggleBtn');
+
+      tocFloat.classList.remove('collapsed');
+      tocWrapper.classList.remove('collapsed');
+      tocToggleBtn.innerHTML = '◀';
+      tocToggleBtn.title = '收起目录';
+
+      // 保存状态
+      localStorage.setItem('tocCollapsed', 'false');
+    }
+
+    // 收起目录
+    function collapseToc() {
+      const tocFloat = document.getElementById('fullscreenTocFloat');
+      const tocWrapper = document.getElementById('fullscreenToc');
+      const tocToggleBtn = document.getElementById('tocToggleBtn');
+
+      tocFloat.classList.add('collapsed');
+      tocWrapper.classList.add('collapsed');
+      tocToggleBtn.innerHTML = '▶';
+      tocToggleBtn.title = '展开目录';
+
+      // 保存状态
+      localStorage.setItem('tocCollapsed', 'true');
+    }
+
+    // 处理目录点击事件
+    function handleTocClick(event) {
+      if (event.target.classList.contains('toc-link')) {
+        event.preventDefault();
+        const targetId = event.target.getAttribute('data-target');
+        const targetElement = document.getElementById(targetId);
+
+        if (targetElement) {
+          // 平滑滚动到目标位置
+          targetElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+            inline: 'nearest'
+          });
+
+          // 更新活动状态
+          updateActiveTocItem();
+        }
+      }
+    }
+
+    // 更新活动目录项
+    function updateActiveTocItem() {
+      const tocLinks = document.querySelectorAll('.toc-link');
+      const contentHeadings = document.querySelectorAll('#fullscreenContent h1, #fullscreenContent h2, #fullscreenContent h3, #fullscreenContent h4, #fullscreenContent h5, #fullscreenContent h6');
+
+      let activeIndex = -1;
+      const scrollTop = document.querySelector('.fullscreen-modal').scrollTop + 150; // 偏移量
+
+      // 找到当前在视窗中的标题
+      for (let i = 0; i < contentHeadings.length; i++) {
+        const heading = contentHeadings[i];
+        const headingTop = heading.offsetTop;
+
+        if (headingTop <= scrollTop) {
+          activeIndex = i;
+        } else {
+          break;
+        }
+      }
+
+      // 更新目录链接的活动状态
+      tocLinks.forEach((link, index) => {
+        link.classList.remove('active');
+        if (index === activeIndex) {
+          link.classList.add('active');
+        }
+      });
+    }
+
     // 全屏布局切换函数
     function setFullscreenLayout(layout) {
       const content = document.getElementById('fullscreenContent');
@@ -4168,7 +4645,23 @@
         <button class="fullscreen-close" onclick="closeFullscreenModal()">关闭</button>
       </div>
     </div>
-    <div class="fullscreen-content fullscreen-narrow" id="fullscreenContent"></div>
+
+    <!-- 浮动目录 -->
+    <div class="fullscreen-toc-float" id="fullscreenTocFloat" style="display: none;">
+      <div class="fullscreen-toc" id="fullscreenToc">
+        <div class="fullscreen-toc-title">
+          <span>📖 目录</span>
+          <button class="toc-toggle-btn" id="tocToggleBtn" title="收起目录">
+            ◀
+          </button>
+        </div>
+        <ul class="toc-list" id="tocList"></ul>
+      </div>
+    </div>
+
+    <div class="fullscreen-main">
+      <div class="fullscreen-content fullscreen-narrow" id="fullscreenContent"></div>
+    </div>
     <div class="fullscreen-edit-area" id="fullscreenEditArea">
       <textarea class="fullscreen-textarea" id="fullscreenTextarea" placeholder="请输入技巧内容，支持Markdown语法"></textarea>
     </div>
