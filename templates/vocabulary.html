@@ -440,6 +440,15 @@
             background: #38a169;
         }
 
+        .btn-toggle {
+            background: #a855f7;
+            color: white;
+        }
+
+        .btn-toggle:hover {
+            background: #9333ea;
+        }
+
         .sort-controls {
             display: flex;
             gap: 10px;
@@ -582,6 +591,12 @@
             line-height: 1.5;
             margin-bottom: 15px;
             font-family: 'PT Serif', 'Crimson Text', ui-serif, 'Times New Roman', 'Georgia', serif;
+            transition: filter 0.3s ease;
+        }
+
+        .word-meaning.blurred {
+            filter: blur(8px);
+            user-select: none;
         }
 
         .word-meta {
@@ -1294,6 +1309,12 @@
                 margin-bottom: 10px;
                 line-height: 1.35;
                 color: #5a6570;
+                transition: filter 0.3s ease;
+            }
+
+            .word-meaning.blurred {
+                filter: blur(6px);
+                user-select: none;
             }
 
             .word-meta {
@@ -1518,6 +1539,10 @@
                     style="font-size: 0.9rem; padding: 10px 16px; border-radius: 12px;">
                     <span>🎯</span> 单词挑战
                 </button>
+                <button class="btn btn-toggle" id="mobileToggleMeaningsBtn" onclick="toggleMeaningsVisibility()"
+                    style="font-size: 0.9rem; padding: 10px 16px; border-radius: 12px;">
+                    <span id="mobileToggleMeaningsIcon">👁️</span> 隐藏释义
+                </button>
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <span style="font-size: 0.8rem; color: #4a5568;">排序:</span>
                     <select class="sort-select" onchange="sortWords(currentCategory, this.value)"
@@ -1592,6 +1617,9 @@
                             <button class="btn btn-secondary" onclick="openExportModal('listening')">
                                 <span>📤</span> 导出单词
                             </button>
+                            <button class="btn btn-toggle" id="toggleMeaningsBtn" onclick="toggleMeaningsVisibility()">
+                                <span id="toggleMeaningsIcon">👁️</span> 隐藏释义
+                            </button>
                             <button class="btn btn-success" onclick="openChallengeModal('listening')">
                                 <span>🎯</span> 单词挑战
                             </button>
@@ -1660,6 +1688,9 @@
                             </button>
                             <button class="btn btn-secondary" onclick="openExportModal('speaking')">
                                 <span>📤</span> 导出单词
+                            </button>
+                            <button class="btn btn-toggle" id="toggleMeaningsBtn-speaking" onclick="toggleMeaningsVisibility()">
+                                <span id="toggleMeaningsIcon-speaking">👁️</span> 隐藏释义
                             </button>
                             <button class="btn btn-success" onclick="openChallengeModal('speaking')">
                                 <span>🎯</span> 单词挑战
@@ -1730,6 +1761,9 @@
                             <button class="btn btn-secondary" onclick="openExportModal('reading')">
                                 <span>📤</span> 导出单词
                             </button>
+                            <button class="btn btn-toggle" id="toggleMeaningsBtn-reading" onclick="toggleMeaningsVisibility()">
+                                <span id="toggleMeaningsIcon-reading">👁️</span> 隐藏释义
+                            </button>
                             <button class="btn btn-success" onclick="openChallengeModal('reading')">
                                 <span>🎯</span> 单词挑战
                             </button>
@@ -1798,6 +1832,9 @@
                             </button>
                             <button class="btn btn-secondary" onclick="openExportModal('writing')">
                                 <span>📤</span> 导出单词
+                            </button>
+                            <button class="btn btn-toggle" id="toggleMeaningsBtn-writing" onclick="toggleMeaningsVisibility()">
+                                <span id="toggleMeaningsIcon-writing">👁️</span> 隐藏释义
                             </button>
                             <button class="btn btn-success" onclick="openChallengeModal('writing')">
                                 <span>🎯</span> 单词挑战
@@ -2160,6 +2197,7 @@
         let subcategorySortOrder = {}; // 子分类排序偏好: {category: 'asc'|'desc'}
         let mobileCategoryExpanded = false;
         let mobileSubcategoryExpanded = false;
+        let meaningsVisible = true; // 释义是否可见
 
         // 初始化
         document.addEventListener('DOMContentLoaded', function () {
@@ -2333,6 +2371,11 @@
                     subcategorySortOrder = preferences.subcategorySortOrder;
                 }
 
+                // 恢复释义可见性状态
+                if (typeof preferences.meaningsVisible === 'boolean') {
+                    meaningsVisible = preferences.meaningsVisible;
+                }
+
                 // 更新UI状态
                 updateUIFromPreferences();
             } catch (error) {
@@ -2347,7 +2390,8 @@
                     category: currentCategory,
                     subcategory: currentSubcategory,
                     sortType: currentSortType,
-                    subcategorySortOrder: subcategorySortOrder
+                    subcategorySortOrder: subcategorySortOrder,
+                    meaningsVisible: meaningsVisible
                 };
                 localStorage.setItem('vocabularyPreferences', JSON.stringify(preferences));
             } catch (error) {
@@ -2388,6 +2432,20 @@
             sortSelects.forEach(select => {
                 select.value = currentSortType;
             });
+
+            // 更新释义可见性按钮状态
+            updateToggleButtonText(meaningsVisible ? '👁️' : '🙈', meaningsVisible ? '隐藏释义' : '显示释义');
+
+            // 如果当前是隐藏状态，为所有释义添加hover事件
+            if (!meaningsVisible) {
+                setTimeout(() => {
+                    const blurredMeanings = document.querySelectorAll('.word-meaning.blurred');
+                    blurredMeanings.forEach(meaning => {
+                        meaning.addEventListener('mouseenter', showMeaningOnHover);
+                        meaning.addEventListener('mouseleave', hideMeaningOnLeave);
+                    });
+                }, 100);
+            }
         }
 
         // 设置重复检查功能
@@ -2851,7 +2909,7 @@
                             </button>
                         </div>
                     </div>
-                    <div class="word-meaning">${word.meaning || '暂无释义'}</div>
+                    <div class="word-meaning ${!meaningsVisible ? 'blurred' : ''}" data-word-id="${word.id}">${word.meaning || '暂无释义'}</div>
                     <div class="word-meta">
                         <span>${formatDate(word.created_at)}</span>
                         <span class="audio-status ${word.audio_generated ? 'audio-ready' : 'audio-generating'}">
@@ -2860,6 +2918,15 @@
                     </div>
                 </div>
             `).join('');
+
+            // 如果当前是隐藏状态，为新渲染的单词添加hover事件
+            if (!meaningsVisible) {
+                const newMeanings = container.querySelectorAll('.word-meaning.blurred');
+                newMeanings.forEach(meaning => {
+                    meaning.addEventListener('mouseenter', showMeaningOnHover);
+                    meaning.addEventListener('mouseleave', hideMeaningOnLeave);
+                });
+            }
         }
 
         // 显示添加子分类模态框
@@ -3428,6 +3495,67 @@
             });
         }
 
+        // 更新切换按钮文本的辅助函数
+        function updateToggleButtonText(icon, text) {
+            const buttons = [
+                'toggleMeaningsBtn',
+                'toggleMeaningsBtn-speaking',
+                'toggleMeaningsBtn-reading',
+                'toggleMeaningsBtn-writing',
+                'mobileToggleMeaningsBtn'
+            ];
+
+            buttons.forEach(btnId => {
+                const btn = document.getElementById(btnId);
+                const iconSpan = document.getElementById(btnId.replace('Btn', 'Icon'));
+                if (btn) {
+                    btn.innerHTML = `<span id="${btnId.replace('Btn', 'Icon')}">${icon}</span> ${text}`;
+                }
+            });
+        }
+
+        // 切换释义显示/隐藏
+        function toggleMeaningsVisibility() {
+            meaningsVisible = !meaningsVisible;
+            const allMeanings = document.querySelectorAll('.word-meaning');
+
+            if (meaningsVisible) {
+                // 显示释义
+                allMeanings.forEach(meaning => {
+                    meaning.classList.remove('blurred');
+                    // 移除hover事件监听器
+                    meaning.removeEventListener('mouseenter', showMeaningOnHover);
+                    meaning.removeEventListener('mouseleave', hideMeaningOnLeave);
+                });
+
+                // 更新按钮文本和图标
+                updateToggleButtonText('👁️', '隐藏释义');
+            } else {
+                // 隐藏释义
+                allMeanings.forEach(meaning => {
+                    meaning.classList.add('blurred');
+                    // 添加hover事件监听器
+                    meaning.addEventListener('mouseenter', showMeaningOnHover);
+                    meaning.addEventListener('mouseleave', hideMeaningOnLeave);
+                });
+
+                // 更新按钮文本和图标
+                updateToggleButtonText('🙈', '显示释义');
+            }
+
+            // 保存用户偏好设置
+            saveUserPreferences();
+        }
+
+        // Hover显示释义的事件处理函数
+        function showMeaningOnHover(event) {
+            event.target.classList.remove('blurred');
+        }
+
+        function hideMeaningOnLeave(event) {
+            event.target.classList.add('blurred');
+        }
+
         // 移动端分类选择器功能
         function toggleMobileCategory() {
             mobileCategoryExpanded = !mobileCategoryExpanded;
@@ -3687,7 +3815,7 @@
                             </button>
                         </div>
                     </div>
-                    <div class="word-meaning">${word.meaning || '暂无释义'}</div>
+                    <div class="word-meaning ${!meaningsVisible ? 'blurred' : ''}" data-word-id="${word.id}">${word.meaning || '暂无释义'}</div>
                     <div class="word-meta">
                         <span>${formatDate(word.created_at)}</span>
                         <span class="audio-status ${word.audio_generated ? 'audio-ready' : 'audio-generating'}">
@@ -3696,6 +3824,15 @@
                     </div>
                 </div>
             `).join('');
+
+            // 如果当前是隐藏状态，为新渲染的单词添加hover事件
+            if (!meaningsVisible) {
+                const newMeanings = container.querySelectorAll('.word-meaning.blurred');
+                newMeanings.forEach(meaning => {
+                    meaning.addEventListener('mouseenter', showMeaningOnHover);
+                    meaning.addEventListener('mouseleave', hideMeaningOnLeave);
+                });
+            }
         }
 
         // 导出功能相关函数

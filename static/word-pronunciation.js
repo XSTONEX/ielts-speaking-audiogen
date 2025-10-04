@@ -61,7 +61,15 @@ class WordPronunciationManager {
   async playAudioFromUrl(audioUrl) {
     return new Promise((resolve, reject) => {
       const audio = new Audio(audioUrl);
-      
+
+      // 设置音量放大（尝试超过1.0以获得更大音量）
+      try {
+        audio.volume = 2.0;
+      } catch (e) {
+        // 如果不支持高音量，回退到最大音量1.0
+        audio.volume = 1.0;
+      }
+
       this.currentAudio = audio;
 
       audio.onended = () => {
