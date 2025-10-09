@@ -86,6 +86,16 @@
             opacity: 0.9;
         }
 
+        .header kbd {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 0.9rem;
+            font-family: monospace;
+            color: white;
+        }
+
         .main-content {
             background: white;
             border-radius: 20px;
@@ -1490,7 +1500,7 @@
                 <span>←</span> 返回模块
             </a>
             <h1>📚 单词本</h1>
-            <p>管理你的IELTS词汇，按听说读写分类学习，支持子分类管理</p>
+            <p>管理你的IELTS词汇，按听说读写分类学习，支持子分类管理 · 按 <kbd>H</kbd> 键切换释义显示</p>
         </div>
 
         <!-- 移动端分类选择器 -->
@@ -2247,6 +2257,17 @@
         // 设置键盘快捷键
         function setupKeyboardShortcuts() {
             document.addEventListener('keydown', function (e) {
+                // 检查是否按下H键切换释义显示/隐藏
+                if (e.key === 'h' || e.key === 'H') {
+                    // 防止在输入框中触发
+                    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                        return;
+                    }
+                    e.preventDefault();
+                    toggleMeaningsVisibility();
+                    return;
+                }
+
                 // Ctrl+Enter (Windows/Linux) 或 Cmd+Enter (Mac) 快速添加单词
                 const isModifierPressed = e.ctrlKey || e.metaKey;
 

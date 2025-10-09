@@ -12,6 +12,7 @@ vocab_audio/
 vocabulary_book/
 user_data/
 study_techniques/
+audio_transcriptions/
 __pycache__/
 .vscode/
 users.json
