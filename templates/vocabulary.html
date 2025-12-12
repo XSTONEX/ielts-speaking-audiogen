@@ -2709,12 +2709,13 @@
                 li.className = 'subcategory-item';
 
                 const isActive = subId === currentSubcategory && category === currentCategory;
+                const favoritedCount = subData.words.filter(word => word.is_favorited).length;
 
                 li.innerHTML = `
                     <div class="subcategory-link ${isActive ? 'active' : ''}" onclick="selectSubcategory('${category}', '${subId}')">
                         <div class="subcategory-info">
                             <div class="subcategory-name">${subData.name}</div>
-                            <div class="subcategory-count">${subData.words.length} 个单词</div>
+                            <div class="subcategory-count">${subData.words.length} 个单词 (${favoritedCount} 个星标)</div>
                         </div>
                         <div class="subcategory-actions">
                             <button class="subcategory-action edit-subcategory-btn" onclick="event.stopPropagation(); showEditSubcategoryModal('${category}', '${subId}', '${subData.name}')" title="重命名">
