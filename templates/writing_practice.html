@@ -134,15 +134,16 @@ textarea, input { font-family: var(--serif); }
 .ex-btn:hover { border-color: var(--accent); color: var(--accent); }
 .ex-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 
-.sentence-grid { display: grid; grid-template-columns: 1fr; gap: 8px; transition: all .3s; }
+.sentence-grid { display: grid; grid-template-columns: 1fr; gap: 8px; transition: all .3s; align-content: start; }
 .sentence-grid.split { grid-template-columns: 1fr 1fr; }
-.sent-item { padding: 14px 16px; background: var(--card); border: 1.5px solid var(--border); border-radius: 10px; cursor: pointer; transition: all .18s; position: relative; }
+.sent-item { padding: 14px 16px; background: var(--card); border: 1.5px solid var(--border); border-radius: 10px; cursor: pointer; transition: all .18s; position: relative; height: 72px; overflow: hidden; display: flex; flex-direction: column; justify-content: center; }
 .sent-item:hover { border-color: #c7d2fe; background: var(--accent-light); }
 .sent-item.active { border-color: var(--accent); background: var(--accent-light); box-shadow: 0 0 0 3px rgba(79,70,229,.1); }
 .sent-item.done { border-color: #a7f3d0; background: var(--green-light); }
-.sent-item .sent-idx { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
-.sent-item .sent-cn { font-size: 14px; line-height: 1.6; }
-.sent-item .sent-score { position: absolute; top: 10px; right: 12px; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+.sent-item .sent-idx { font-size: 11px; color: var(--text3); margin-bottom: 4px; flex-shrink: 0; }
+.sent-item .sent-cn { font-size: 14px; line-height: 1.6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sent-item .sent-score { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 10px; white-space: nowrap; cursor: pointer; transition: transform .15s, box-shadow .15s; }
+.sent-item .sent-score:hover { transform: scale(1.1); box-shadow: 0 2px 8px rgba(0,0,0,.12); }
 .sent-item .sent-score.high { background: var(--green-light); color: var(--green); }
 .sent-item .sent-score.mid { background: var(--amber-light); color: var(--amber); }
 .sent-item .sent-score.low { background: var(--red-light); color: var(--red); }
@@ -179,8 +180,8 @@ textarea, input { font-family: var(--serif); }
 .fb-correction .orig { text-decoration: line-through; color: var(--red); }
 .fb-correction .fixed { color: var(--green); font-weight: 600; }
 .fb-correction .reason { color: var(--text2); font-size: 12px; }
-.fb-vocab { padding: 8px 12px; background: var(--accent-light); border-radius: 6px; font-size: 13px; color: var(--text); line-height: 1.6; }
-.fb-native { padding: 10px 14px; background: var(--green-light); border-radius: 8px; font-size: 14px; color: var(--text); line-height: 1.7; border-left: 3px solid var(--green); }
+.fb-vocab { padding: 8px 12px; background: var(--accent-light); border-radius: 6px; font-size: 13px; color: var(--text); line-height: 1.6; white-space: pre-wrap; }
+.fb-native { padding: 10px 14px; background: var(--green-light); border-radius: 8px; font-size: 14px; color: var(--text); line-height: 1.7; border-left: 3px solid var(--green); white-space: pre-wrap; }
 
 /* Review View */
 .review-list { display: flex; flex-direction: column; gap: 10px; }
@@ -366,7 +367,7 @@ textarea, input { font-family: var(--serif); }
       </div>
     </div>
 
-    <div style="display:grid; gap:12px;" id="practiceBody">
+    <div style="display:grid; gap:12px; align-items:start;" id="practiceBody">
       <div id="sentenceList" class="sentence-grid"></div>
       <div id="editorPanel" class="editor-panel"></div>
     </div>
@@ -406,7 +407,8 @@ let state = {
   reviewData: null,
   reviewDrilldown: null,
   progressData: {},
-  historySentences: {}
+  historySentences: {},
+  viewingHistory: null
 };
 
 /* ---- View Switching ---- */
@@ -578,7 +580,7 @@ async function enterPractice(catIdx, subIdx) {
   state.subData = data;
   if (!data.examples.length) { alert('该话题暂无例题'); return; }
 
-  // Load progress to know which sentences are already done (from server history)
+  // Load progress to know which sentences are already done + their full records
   try {
     const prog = await API.get('/api/writing/practice_progress');
     state.progressData = prog;
@@ -586,9 +588,9 @@ async function enterPractice(catIdx, subIdx) {
     state.historySentences = {};
     if (prog[pkey] && prog[pkey].examples) {
       prog[pkey].examples.forEach(exProg => {
-        exProg.sentences.forEach((isDone, si) => {
-          if (isDone) {
-            state.historySentences[`${exProg.example_idx}_${si}`] = true;
+        exProg.sentences.forEach((records, si) => {
+          if (records && records.length) {
+            state.historySentences[`${exProg.example_idx}_${si}`] = records;
           }
         });
       });
@@ -640,26 +642,36 @@ function renderExercise() {
     const res = state.sentResults[i];
     const isActive = i === state.activeSentIdx;
     const histKey = `${state.currentExIdx}_${i}`;
-    const wasCompletedBefore = state.historySentences[histKey];
+    const histRecords = state.historySentences[histKey];
     const justSaved = res && res._savedToReview === true;
-    const isCompleted = justSaved || (wasCompletedBefore && !res);
+    const isCompleted = justSaved || (histRecords && !res);
+
+    // Build score tags: history scores (clickable) + current session score
     let scoreHtml = '';
-    if (res) {
-      const sc = parseFloat(res.score) || 0;
-      const cls = sc >= 7 ? 'high' : sc >= 6 ? 'mid' : 'low';
-      scoreHtml = `<span class="sent-score ${cls}">${res.score}</span>`;
+    if (histRecords && histRecords.length) {
+      scoreHtml += histRecords.map((rec, ri) => {
+        const v = parseFloat(rec.score) || 0;
+        const cls = v >= 7 ? 'high' : v >= 6 ? 'mid' : 'low';
+        return `<span class="sent-score ${cls}" onclick="event.stopPropagation(); showHistoryFeedback(${i}, ${ri})">${rec.score}</span>`;
+      }).join('');
     }
+    if (res && res._savedToReview === true) {
+      const v = parseFloat(res.score) || 0;
+      const cls = v >= 7 ? 'high' : v >= 6 ? 'mid' : 'low';
+      scoreHtml += `<span class="sent-score ${cls}">${res.score}</span>`;
+    }
+
     let badgeHtml = '';
     if (justSaved) {
       badgeHtml = '<span class="done-badge">✓ 已录入笔记</span>';
-    } else if (wasCompletedBefore && !res) {
+    } else if (histRecords && !res) {
       badgeHtml = '<span class="done-badge">✓ 已做过</span>';
     }
     return `
       <div class="sent-item${isActive ? ' active' : ''}${isCompleted ? ' done' : ''}" onclick="activateSentence(${i})">
         <div class="sent-idx">句 ${i + 1}${badgeHtml}</div>
         <div class="sent-cn">${s.chinese}</div>
-        ${scoreHtml}
+        ${scoreHtml ? `<div style="display:flex; gap:4px; flex-wrap:wrap; position:absolute; top:10px; right:12px;">${scoreHtml}</div>` : ''}
       </div>`;
   }).join('');
 
@@ -672,12 +684,83 @@ function renderExercise() {
 }
 
 function activateSentence(idx) {
+  state.viewingHistory = null;
   state.activeSentIdx = idx;
   renderExercise();
   setTimeout(() => {
     const ta = document.getElementById('transInput');
     if (ta) ta.focus();
   }, 100);
+}
+
+function showHistoryFeedback(sentIdx, recordIdx) {
+  const histKey = `${state.currentExIdx}_${sentIdx}`;
+  const records = state.historySentences[histKey];
+  if (!records || !records[recordIdx]) return;
+  state.activeSentIdx = sentIdx;
+  state.viewingHistory = { sentIdx, recordIdx };
+  renderExercise();
+}
+
+function formatGrammarCorrections(gc) {
+  if (!gc) return '';
+  if (typeof gc === 'string') return `<div class="fb-correction">${gc}</div>`;
+  if (Array.isArray(gc)) {
+    return gc.map(g => {
+      if (typeof g === 'string') return `<div class="fb-correction">${g}</div>`;
+      return `<div class="fb-correction">
+        <span class="orig">${g.original || ''}</span> → <span class="fixed">${g.corrected || ''}</span>
+        <div class="reason">${g.reason || ''}</div>
+      </div>`;
+    }).join('');
+  }
+  return `<div class="fb-correction">${String(gc)}</div>`;
+}
+
+function formatVocabUpgrade(vu) {
+  if (!vu) return '';
+  if (typeof vu === 'string') return vu;
+  if (Array.isArray(vu)) {
+    return vu.map(item => {
+      if (typeof item === 'string') return item;
+      const parts = [];
+      if (item.original) parts.push(`<strong>${item.original}</strong>`);
+      if (item.upgrade || item.suggestion || item.replacement) parts.push(` → ${item.upgrade || item.suggestion || item.replacement}`);
+      if (item.explanation || item.reason || item.chinese) parts.push(` (${item.explanation || item.reason || item.chinese})`);
+      return parts.length ? parts.join('') : JSON.stringify(item);
+    }).join('<br>');
+  }
+  if (typeof vu === 'object') return JSON.stringify(vu);
+  return String(vu);
+}
+
+function renderFeedbackCard(fb, opts) {
+  const sc = parseFloat(fb.score) || 0;
+  const cls = sc >= 7 ? 'high' : sc >= 6 ? 'mid' : 'low';
+  const gcHtml = formatGrammarCorrections(fb.grammar_corrections);
+  const vuHtml = formatVocabUpgrade(fb.vocabulary_upgrade);
+  return `
+    <div class="feedback-card">
+      <div class="fb-score ${cls}">${fb.score}</div>
+      <div class="fb-summary">${fb.feedback_summary || ''}</div>
+      ${gcHtml ? `
+        <div class="fb-section">
+          <div class="fb-section-title">语法修正</div>
+          ${gcHtml}
+        </div>` : ''}
+      ${vuHtml ? `
+        <div class="fb-section">
+          <div class="fb-section-title">词汇提升</div>
+          <div class="fb-vocab">${vuHtml}</div>
+        </div>` : ''}
+      ${fb.native_version ? `
+        <div class="fb-section">
+          <div class="fb-section-title">高分示范</div>
+          <div class="fb-native">${fb.native_version}</div>
+        </div>` : ''}
+      ${opts.reviewPrompt || ''}
+      ${opts.nextBtn ? `<button class="skip-btn" style="margin-top:10px;" onclick="advanceNext()">下一句 →</button>` : ''}
+    </div>`;
 }
 
 function renderEditor(idx) {
@@ -688,46 +771,47 @@ function renderEditor(idx) {
   const chainHtml = chains.length ? `<div class="ctx-chain">${chains.map(c => c.chinese).join(' / ')}</div>` : '';
   const hintHtml = ex.hints.length ? `<div class="ctx-hint">${ex.hints.join(' · ')}</div>` : '';
 
+  // History viewing mode: show a specific historical feedback record
+  if (state.viewingHistory && state.viewingHistory.sentIdx === idx) {
+    const histKey = `${state.currentExIdx}_${idx}`;
+    const records = state.historySentences[histKey];
+    const rec = records && records[state.viewingHistory.recordIdx];
+    if (rec) {
+      const fb = rec.feedback || {};
+      const ts = rec.timestamp ? new Date(rec.timestamp).toLocaleString('zh-CN', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
+      document.getElementById('editorPanel').innerHTML = `
+        <div class="editor-context">
+          <div class="ctx-label">目标中文句</div>
+          <div class="ctx-cn">${s.chinese}</div>
+          ${chainHtml}${hintHtml}
+        </div>
+        <div style="padding:10px 14px; background:#f0fdf4; border-radius:8px; margin-bottom:8px; font-size:13px; color:var(--text2);">
+          <span style="color:var(--text3); font-size:11px;">${ts}</span><br>你的翻译：${rec.user_translation || ''}
+        </div>
+        ${renderFeedbackCard(fb, { reviewPrompt: '', nextBtn: false })}
+        <button class="skip-btn" style="margin-top:10px;" onclick="activateSentence(${idx})">返回编辑</button>
+      `;
+      return;
+    }
+  }
+
+  // Normal mode
   let feedbackHtml = '';
   if (res) {
-    const sc = parseFloat(res.score) || 0;
-    const cls = sc >= 7 ? 'high' : sc >= 6 ? 'mid' : 'low';
-    feedbackHtml = `
-      <div class="feedback-card">
-        <div class="fb-score ${cls}">${res.score}</div>
-        <div class="fb-summary">${res.feedback_summary || ''}</div>
-        ${(res.grammar_corrections && res.grammar_corrections.length) ? `
-          <div class="fb-section">
-            <div class="fb-section-title">语法修正</div>
-            ${res.grammar_corrections.map(g => `
-              <div class="fb-correction">
-                <span class="orig">${g.original}</span> → <span class="fixed">${g.corrected}</span>
-                <div class="reason">${g.reason}</div>
-              </div>`).join('')}
-          </div>` : ''}
-        ${res.vocabulary_upgrade ? `
-          <div class="fb-section">
-            <div class="fb-section-title">词汇提升</div>
-            <div class="fb-vocab">${res.vocabulary_upgrade}</div>
-          </div>` : ''}
-        ${res.native_version ? `
-          <div class="fb-section">
-            <div class="fb-section-title">高分示范</div>
-            <div class="fb-native">${res.native_version}</div>
-          </div>` : ''}
-        ${res._savedToReview === true ? `
-          <div class="saved-badge">✓ 已录入复习中心</div>
-        ` : res._savedToReview === 'skipped' ? `
-          <div style="font-size:12px; color:var(--text3); margin-top:8px;">已跳过，未录入复习中心</div>
-        ` : res._savedToReview === 'pending' ? `
-          <div class="save-review-prompt">
-            <div class="prompt-text">是否将此条录入复习中心的笔记？</div>
-            <button class="save-review-btn yes" onclick="saveToReview(${idx})">录入笔记</button>
-            <button class="save-review-btn no" onclick="skipSaveToReview(${idx})">不录入</button>
-          </div>
-        ` : ''}
-        <button class="skip-btn" style="margin-top:10px;" onclick="advanceNext()">下一句 →</button>
-      </div>`;
+    let reviewPrompt = '';
+    if (res._savedToReview === true) {
+      reviewPrompt = `<div class="saved-badge">✓ 已录入复习中心</div>`;
+    } else if (res._savedToReview === 'skipped') {
+      reviewPrompt = `<div style="font-size:12px; color:var(--text3); margin-top:8px;">已跳过，未录入复习中心</div>`;
+    } else if (res._savedToReview === 'pending') {
+      reviewPrompt = `
+        <div class="save-review-prompt">
+          <div class="prompt-text">是否将此条录入复习中心的笔记？</div>
+          <button class="save-review-btn yes" onclick="saveToReview(${idx})">录入笔记</button>
+          <button class="save-review-btn no" onclick="skipSaveToReview(${idx})">不录入</button>
+        </div>`;
+    }
+    feedbackHtml = renderFeedbackCard(res, { reviewPrompt, nextBtn: true });
   }
 
   document.getElementById('editorPanel').innerHTML = `
@@ -774,7 +858,8 @@ async function submitTranslation() {
     const result = await API.post('/api/writing/correct', {
       question_text: ex.question,
       target_chinese: s.chinese,
-      user_translation: text
+      user_translation: text,
+      standard_reference: s.english || ''
     });
 
     if (result.error) { alert(result.error); return; }
@@ -924,29 +1009,7 @@ function renderReviewRecords() {
         <div class="ri-cn">${r.target_chinese || ''}</div>
         <div class="ri-trans">${r.user_translation || ''}</div>
         <div class="review-detail">
-          <div class="feedback-card">
-            <div class="fb-score ${cls}">${fb.score || r.score || '-'}</div>
-            <div class="fb-summary">${fb.feedback_summary || ''}</div>
-            ${(fb.grammar_corrections && fb.grammar_corrections.length) ? `
-              <div class="fb-section">
-                <div class="fb-section-title">语法修正</div>
-                ${fb.grammar_corrections.map(g => `
-                  <div class="fb-correction">
-                    <span class="orig">${g.original}</span> → <span class="fixed">${g.corrected}</span>
-                    <div class="reason">${g.reason}</div>
-                  </div>`).join('')}
-              </div>` : ''}
-            ${fb.vocabulary_upgrade ? `
-              <div class="fb-section">
-                <div class="fb-section-title">词汇提升</div>
-                <div class="fb-vocab">${fb.vocabulary_upgrade}</div>
-              </div>` : ''}
-            ${fb.native_version ? `
-              <div class="fb-section">
-                <div class="fb-section-title">高分示范</div>
-                <div class="fb-native">${fb.native_version}</div>
-              </div>` : ''}
-          </div>
+          ${renderFeedbackCard(Object.assign({}, fb, { score: fb.score || r.score || '-' }), { reviewPrompt: '', nextBtn: false })}
           <button class="skip-btn" style="margin-top:8px; font-size:11px; color:var(--red);"
             onclick="event.stopPropagation(); deleteReview('${r.id}')">删除</button>
         </div>
@@ -957,6 +1020,8 @@ function renderReviewRecords() {
 }
 
 function toggleReviewDetail(el) {
+  const sel = window.getSelection();
+  if (sel && sel.toString().length > 0) return;
   el.querySelector('.review-detail').classList.toggle('open');
 }
 

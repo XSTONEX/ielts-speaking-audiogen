@@ -140,28 +140,32 @@ def writing_correct():
     question = data.get('question_text', '')
     target = data.get('target_chinese', '')
     translation = data.get('user_translation', '')
+    reference = data.get('standard_reference', '') # 【新增】从前端获取标准参考答案
+    
     if not translation.strip():
         return jsonify({'error': '翻译内容不能为空'}), 400
 
     system_prompt = (
         "你是一位专业的雅思写作考官。你的点评客观、直接、切中要害，不带任何主观情绪色彩。\n\n"
         "【评分与评估重点】\n"
-        "1. **评分标准宽容，最高分为 7.0 分**。只要逻辑传达清晰，没有导致严重理解困难的语法错误，请放宽标准给出较高分数（如 6.0-7.0）。\n"
-        "2. **客观纠错**：直接指出语法与拼写错误，无需任何客套或鼓励的话语，该怎么改就怎么改。\n"
-        "3. **深度拓展**：提供更多的改进建议和同义词替换，帮助用户丰富词汇库和句型结构。\n\n"
-        "【强制要求】\n必须且仅以纯 JSON 格式输出，不要包含 Markdown 符号或额外解释，结构如下：\n"
+        "1. **评分基准（满分7.0）**：以用户提供的【标准参考答案】作为 7.0 分的基准。如果用户的翻译在准确度与地道倾向上与参考答案差别不大，请直接给 7.0 分。如果有语法错误、逻辑不通或明显的中式英语，再酌情减分。\n"
+        "2. **客观纠错**：直接指出语法与拼写错误，无需任何客套话，该怎么改就怎么改。\n"
+        "3. **深度拓展**：提供至少3组高阶同义词替换建议及中文解释，帮助用户丰富词汇库。\n"
+        "4. **贴近原句修改**：这是最重要的要求。在最终示范中，必须先列出标准答案，然后提供一个【基于用户原句结构】的 7分优化版。尽量保留用户原本的语法框架，只修正错误和替换不地道的表达，以便用户对照理解。\n\n"
+        "【强制要求】\n必须且仅以纯 JSON 格式输出，而且以下结构必须全部包含，不要包含 Markdown 符号或额外解释，结构如下：\n"
         "{\n"
-        '  "score": "预估单句分数 (最高为 7.0，如 5.5, 6.0, 6.5, 7.0)",\n'
-        '  "feedback_summary": "客观直接的一句话核心评价（一针见血地指出最主要的问题或亮点，不带情绪）",\n'
+        '  "score": "预估单句分数 (以参考例句为7.0基准，如 5.5, 6.0, 6.5, 7.0)",\n'
+        '  "feedback_summary": "客观直接的一句话核心评价（一针见血地指出问题或亮点）",\n'
         '  "grammar_corrections": [{"original": "原词", "corrected": "修改后", "reason": "客观修改原因"}],\n'
-        '  "vocabulary_upgrade": "提供至少3组高阶同义词替换建议及中文解释，并给出具体的句型改进或表达优化建议",\n'
-        '  "native_version": "符合 7.0 分水平的精准、地道示范译文"\n'
+        '  "vocabulary_upgrade": "必须写出具体的英文替换词！格式示范：\'1. [原英文] -> [高阶英文] (中文解释与适用语境)\'。提供至少3组同义词替换及句型优化建议，切忌只写中文解释不写英文单词！",\n'
+        '  "native_version": "1. 标准答案：[填入标准参考答案]\\n\\n2. 你的结构优化版：[在保留用户原句语法框架的基础上，修改而成的 7.0 分地道表达]"\n'
         "}"
     )
     
     user_prompt = (
         f"【雅思例题】\n{question}\n\n"
         f"【目标中文句】\n{target}\n\n"
+        f"【标准参考答案】\n{reference}\n\n"  # 【新增】将标准答案喂给 AI 当基准
         f"【用户英文翻译】\n{translation}"
     )
     
@@ -171,12 +175,12 @@ def writing_correct():
             'https://api.deerapi.com/v1/chat/completions',
             headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
             json={
-                'model': 'gpt-4o-mini',  # 使用速度与效果兼备的 Gemini 3.0 Flash (或兼容 2.5 Flash)
+                'model': 'gpt-4o-mini',
                 'messages': [
                     {'role': 'system', 'content': system_prompt},
                     {'role': 'user', 'content': user_prompt}
                 ],
-                'temperature': 0.3  # 降温至 0.3，减少情绪化发散，保证客观、精准的批改和丰富的同义词输出
+                'temperature': 0.3
             },
             timeout=30
         )
@@ -293,12 +297,20 @@ def writing_practice_progress():
 
     # Only sentences with at least one in_review=true record count as completed.
     # Old records without in_review field default to True (backward compat).
+    # Collect full feedback records per sentence for detail display.
     completed = {}
     for r in records:
         if not r.get('in_review', True):
             continue
         key = f"{r.get('category','')}||{r.get('subcategory','')}||{r.get('question','')}||{r.get('target_chinese','')}"
-        completed[key] = True
+        if key not in completed:
+            completed[key] = []
+        completed[key].append({
+            'score': r.get('score', ''),
+            'user_translation': r.get('user_translation', ''),
+            'feedback': r.get('feedback', {}),
+            'timestamp': r.get('timestamp', '')
+        })
 
     # Walk through all categories/subcategories and compute progress
     cats = _parse_writing_md()
@@ -316,10 +328,11 @@ def writing_practice_progress():
                 sent_status = []
                 for sent in ex['sentences']:
                     key = f"{cat_name}||{sub_name}||{ex['question']}||{sent['chinese']}"
-                    is_done = key in completed
+                    scores = completed.get(key, [])
+                    is_done = len(scores) > 0
                     if is_done:
                         ex_done += 1
-                    sent_status.append(is_done)
+                    sent_status.append(scores if is_done else None)
                 total_sentences += ex_total
                 done_sentences += ex_done
                 example_details.append({
