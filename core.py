@@ -44,6 +44,16 @@ WRITING_DATA_DIR = 'writing_correction/data'
 WRITING_MD_FILE = 'writing_correction/resource/九分学长雅思写作论证块.md'
 LISTENING_REVIEW_DIR = 'listening_review'
 
+# 代理配置（用于访问需要翻墙的外部 API，如 Groq）
+PROXY_URL = os.getenv('PROXY_URL', '').strip()
+
+
+def get_proxies():
+    """返回 requests 库可用的代理字典，若未配置 PROXY_URL 则返回 None"""
+    if PROXY_URL:
+        return {'http': PROXY_URL, 'https': PROXY_URL}
+    return None
+
 
 # ==================== 目录初始化 ====================
 

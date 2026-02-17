@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, send_file
 import os, json, re, uuid, threading, shutil, requests, time
 from datetime import datetime
-from core import LISTENING_REVIEW_DIR, is_token_valid, load_tokens
+from core import LISTENING_REVIEW_DIR, is_token_valid, load_tokens, get_proxies
 
 listening_review_bp = Blueprint('listening_review', __name__)
 
@@ -77,6 +77,7 @@ def _call_groq_transcription(audio_file_path, max_retries=3):
         return None, 'GROQ_API_KEY not configured'
 
     url = "https://api.groq.com/openai/v1/audio/transcriptions"
+    proxies = get_proxies()
 
     for attempt in range(max_retries):
         try:
@@ -89,7 +90,7 @@ def _call_groq_transcription(audio_file_path, max_retries=3):
                     'temperature': '0'
                 }
                 headers = {'Authorization': f'Bearer {api_key}'}
-                response = requests.post(url, headers=headers, files=files, data=data, timeout=(10, 300))
+                response = requests.post(url, headers=headers, files=files, data=data, timeout=(10, 300), proxies=proxies)
 
                 if response.status_code == 200:
                     result = response.json()
@@ -121,6 +122,10 @@ def _call_groq_transcription(audio_file_path, max_retries=3):
         except requests.exceptions.Timeout:
             if attempt == max_retries - 1:
                 return None, '请求超时'
+            time.sleep(2 ** attempt)
+        except requests.exceptions.ConnectionError as e:
+            if attempt == max_retries - 1:
+                return None, f'连接错误: {e}'
             time.sleep(2 ** attempt)
         except Exception as e:
             if attempt == max_retries - 1:
