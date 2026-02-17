@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>Listening Review</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+  <link href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Crimson+Text:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --serif: 'PT Serif', 'Crimson Text', ui-serif, Georgia, serif;
+      --bg: #f4f6fa;
+      --card: #fff;
+      --border: #e5e7eb;
+      --text: #1f2937;
+      --text2: #6b7280;
+      --text3: #9ca3af;
+      --accent: #4f46e5;
+      --accent-light: #eef2ff;
+      --accent-hover: #4338ca;
+      --green: #059669;
+      --green-light: #ecfdf5;
+      --amber: #d97706;
+      --amber-light: #fffbeb;
+      --red: #dc2626;
+      --radius: 14px;
+      --shadow: 0 4px 24px rgba(31,38,135,.10);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: var(--serif); background: linear-gradient(135deg, #e0e7ff 0%, #f4f6fa 100%); min-height:100vh; display:flex; justify-content:center; padding:16px; }
+    .wrap { background: var(--card); border-radius:20px; box-shadow: 0 16px 48px rgba(31,38,135,.20); width: min(1200px, 100%); min-height: calc(100vh - 32px); display:flex; flex-direction:column; overflow:hidden; }
+
+    /* Top bar */
+    .top-bar { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--border); flex-shrink:0; }
+    .top-bar h1 { font-size:22px; color:var(--text); }
+    .nav-btn { display:inline-flex; align-items:center; gap:6px; background:var(--accent-light); color:var(--accent); border:none; padding:8px 16px; border-radius:8px; cursor:pointer; font-family:var(--serif); font-size:14px; text-decoration:none; font-weight:600; transition: background .15s; }
+    .nav-btn:hover { background:#ddd6fe; }
+
+    /* List view */
+    .list-view { flex:1; padding:20px 24px; overflow-y:auto; }
+    .action-bar { display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+    .btn-primary { background:var(--accent); color:#fff; border:none; padding:10px 20px; border-radius:10px; cursor:pointer; font-family:var(--serif); font-size:14px; font-weight:600; transition: background .15s; }
+    .btn-primary:hover { background:var(--accent-hover); }
+    .project-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap:14px; }
+    .project-card { background:var(--card); border:1.5px solid var(--border); border-radius:var(--radius); padding:18px; cursor:pointer; transition: transform .15s, box-shadow .15s, border-color .15s; position:relative; }
+    .project-card:hover { transform:translateY(-2px); box-shadow:var(--shadow); border-color:#c7d2fe; }
+    .project-card .pc-title { font-size:16px; font-weight:700; color:var(--text); margin-bottom:6px; word-break:break-word; }
+    .project-card .pc-meta { font-size:12px; color:var(--text2); display:flex; gap:12px; flex-wrap:wrap; }
+    .project-card .pc-status { display:inline-block; font-size:11px; font-weight:600; padding:2px 8px; border-radius:6px; margin-top:8px; }
+    .pc-status.completed { background:var(--green-light); color:var(--green); }
+    .pc-status.processing { background:var(--amber-light); color:var(--amber); }
+    .pc-status.error { background:#fef2f2; color:var(--red); }
+    .pc-delete { position:absolute; top:10px; right:10px; background:none; border:none; color:var(--text3); cursor:pointer; font-size:16px; padding:4px; border-radius:4px; transition: color .15s, background .15s; }
+    .pc-delete:hover { color:var(--red); background:#fef2f2; }
+    .empty-state { text-align:center; padding:60px 20px; color:var(--text2); }
+    .empty-state .empty-icon { font-size:48px; margin-bottom:12px; }
+
+    /* Detail view */
+    .detail-view { flex:1; display:flex; flex-direction:column; display:none; }
+    .detail-top { display:flex; align-items:center; gap:12px; padding:14px 24px; border-bottom:1px solid var(--border); flex-shrink:0; }
+    .detail-top .dt-title { font-size:18px; font-weight:700; color:var(--text); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .detail-middle { flex:1; overflow-y:auto; padding:20px 0; position:relative; }
+    .detail-bottom { flex-shrink:0; border-top:1px solid var(--border); background:var(--card); }
+
+    /* Lyrics */
+    .lyrics-line { display:flex; align-items:flex-start; gap:8px; padding:10px 24px; cursor:pointer; transition: background .2s, color .2s; line-height:1.7; position:relative; }
+    .lyrics-line:hover { background:#f9fafb; }
+    .lyrics-line.active { background:var(--accent-light); border-left:3px solid var(--accent); padding-left:21px; }
+    .lyrics-line.active .line-text { color:var(--accent); font-weight:600; }
+    .lyrics-line.starred { background:linear-gradient(90deg, #fef9c3 0%, transparent 60%); }
+    .lyrics-line.active.starred { background:linear-gradient(90deg, #fef9c3 0%, var(--accent-light) 40%); border-left:3px solid var(--accent); }
+    .line-text { flex:1; color:var(--text); font-size:15px; user-select:text; -webkit-user-select:text; }
+    .line-time { font-size:11px; color:var(--text3); white-space:nowrap; margin-top:3px; min-width:42px; }
+    .star-btn { background:none; border:none; cursor:pointer; font-size:16px; color:var(--text3); padding:0 2px; opacity:0; transition: opacity .15s, color .15s; flex-shrink:0; margin-top:1px; }
+    .lyrics-line:hover .star-btn, .star-btn.starred { opacity:1; }
+    .star-btn.starred { color:var(--amber); }
+    .annotated-word { text-decoration:underline dotted var(--accent); text-underline-offset:3px; cursor:help; position:relative; }
+    .annotated-word:hover { background:var(--accent-light); border-radius:2px; }
+
+    /* Audio player */
+    .audio-player { padding:12px 24px 16px; }
+    .progress-wrap { width:100%; height:20px; display:flex; align-items:center; cursor:pointer; margin-bottom:8px; }
+    .progress-track { width:100%; height:5px; background:#e5e7eb; border-radius:3px; position:relative; }
+    .progress-fill { height:100%; background:linear-gradient(90deg, var(--accent), #818cf8); border-radius:3px; width:0; transition: width .1s linear; }
+    .progress-thumb { width:12px; height:12px; background:var(--accent); border-radius:50%; position:absolute; top:50%; transform:translate(-50%,-50%); box-shadow:0 1px 4px rgba(0,0,0,.2); }
+    .player-controls { display:flex; align-items:center; gap:12px; }
+    .time-display { font-size:12px; color:var(--text2); min-width:90px; }
+    .center-controls { display:flex; align-items:center; gap:8px; }
+    .play-btn { width:38px; height:38px; border-radius:50%; background:var(--accent); color:#fff; border:none; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; transition: background .15s; }
+    .play-btn:hover { background:var(--accent-hover); }
+    .right-controls { display:flex; align-items:center; gap:6px; margin-left:auto; flex-wrap:wrap; }
+    .speed-btn { background:#f3f4f6; border:1px solid var(--border); color:var(--text2); padding:4px 10px; border-radius:6px; cursor:pointer; font-size:12px; font-family:var(--serif); transition: all .15s; }
+    .speed-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .speed-btn:hover:not(.active) { background:#e5e7eb; }
+    .feature-btn { background:#f9fafb; border:1px solid var(--border); color:var(--text3); padding:4px 10px; border-radius:6px; font-size:12px; font-family:var(--serif); cursor:not-allowed; opacity:.5; }
+
+    /* Modal */
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:100; display:flex; align-items:center; justify-content:center; display:none; }
+    .modal-content { background:var(--card); border-radius:16px; padding:28px; width:min(520px, 92vw); max-height:80vh; overflow-y:auto; box-shadow:0 24px 64px rgba(0,0,0,.2); }
+    .modal-title { font-size:20px; font-weight:700; color:var(--text); margin-bottom:20px; }
+    .modal-tabs { display:flex; gap:0; margin-bottom:20px; border-bottom:2px solid var(--border); }
+    .modal-tab { padding:10px 20px; cursor:pointer; font-size:14px; font-weight:600; color:var(--text2); border-bottom:2px solid transparent; margin-bottom:-2px; transition: color .15s, border-color .15s; font-family:var(--serif); background:none; border-top:none; border-left:none; border-right:none; }
+    .modal-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+    .modal-tab:hover:not(.active) { color:var(--text); }
+    .tab-panel { display:none; }
+    .tab-panel.active { display:block; }
+    .form-group { margin-bottom:16px; }
+    .form-label { display:block; font-size:13px; font-weight:600; color:var(--text); margin-bottom:6px; }
+    .form-input { width:100%; padding:10px 14px; border:1.5px solid var(--border); border-radius:8px; font-family:var(--serif); font-size:14px; color:var(--text); outline:none; transition: border-color .15s; }
+    .form-input:focus { border-color:var(--accent); }
+    .form-hint { font-size:11px; color:var(--text3); margin-top:4px; }
+    .form-file-label { display:block; border:2px dashed var(--border); border-radius:10px; padding:30px 20px; text-align:center; cursor:pointer; transition: border-color .15s, background .15s; color:var(--text2); font-size:14px; }
+    .form-file-label:hover { border-color:var(--accent); background:var(--accent-light); }
+    .form-file-label .file-icon { font-size:28px; display:block; margin-bottom:8px; }
+    .form-file-label input[type="file"] { display:none; }
+    .btn-row { display:flex; gap:10px; justify-content:flex-end; margin-top:20px; }
+    .btn-secondary { background:#f3f4f6; color:var(--text); border:1px solid var(--border); padding:10px 20px; border-radius:10px; cursor:pointer; font-family:var(--serif); font-size:14px; font-weight:600; transition: background .15s; }
+    .btn-secondary:hover { background:#e5e7eb; }
+    .btn-primary:disabled { opacity:.5; cursor:not-allowed; }
+
+    /* Vocab popover */
+    .vocab-popover { position:fixed; z-index:200; background:var(--card); border:1.5px solid var(--border); border-radius:10px; padding:12px; box-shadow:0 8px 24px rgba(0,0,0,.15); display:none; min-width:220px; }
+    .vocab-popover .vp-word { font-size:14px; font-weight:700; color:var(--accent); margin-bottom:8px; }
+    .vocab-popover .vp-input { width:100%; padding:8px 10px; border:1.5px solid var(--border); border-radius:6px; font-family:var(--serif); font-size:13px; outline:none; margin-bottom:8px; }
+    .vocab-popover .vp-input:focus { border-color:var(--accent); }
+    .vocab-popover .vp-btns { display:flex; gap:6px; justify-content:flex-end; }
+    .vocab-popover .vp-btn { padding:5px 12px; border-radius:6px; font-size:12px; font-family:var(--serif); cursor:pointer; border:none; font-weight:600; }
+    .vocab-popover .vp-save { background:var(--accent); color:#fff; }
+    .vocab-popover .vp-cancel { background:#f3f4f6; color:var(--text2); }
+
+    /* Toast */
+    .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); background:#1f2937; color:#fff; padding:10px 24px; border-radius:10px; font-size:13px; font-family:var(--serif); z-index:300; transition: transform .3s ease, opacity .3s ease; opacity:0; pointer-events:none; }
+    .toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+
+    /* Responsive */
+    @media (max-width:640px) {
+      body { padding:8px; }
+      .wrap { border-radius:14px; min-height:calc(100vh - 16px); }
+      .top-bar, .list-view, .detail-top, .audio-player { padding-left:14px; padding-right:14px; }
+      .lyrics-line { padding-left:14px; padding-right:14px; }
+      .top-bar h1 { font-size:18px; }
+      .project-grid { grid-template-columns:1fr; }
+      .player-controls { flex-wrap:wrap; }
+      .right-controls { width:100%; justify-content:center; margin-left:0; margin-top:6px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- Top bar -->
+    <div class="top-bar">
+      <h1 id="pageTitle">Listening Review</h1>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <a href="/" class="nav-btn">&#8592; Home</a>
+      </div>
+    </div>
+
+    <!-- List view -->
+    <div class="list-view" id="listView">
+      <div class="action-bar">
+        <button class="btn-primary" onclick="openUploadModal()">+ New Project</button>
+      </div>
+      <div id="projectGrid" class="project-grid"></div>
+    </div>
+
+    <!-- Detail view -->
+    <div class="detail-view" id="detailView">
+      <div class="detail-top">
+        <button class="nav-btn" onclick="backToList()">&#8592; Back</button>
+        <div class="dt-title" id="detailTitle"></div>
+      </div>
+      <div class="detail-middle" id="lyricsContainer"></div>
+      <div class="detail-bottom">
+        <div class="audio-player">
+          <audio id="audioEl" preload="auto"></audio>
+          <div class="progress-wrap" id="progressWrap">
+            <div class="progress-track">
+              <div class="progress-fill" id="progressFill"></div>
+              <div class="progress-thumb" id="progressThumb" style="left:0%"></div>
+            </div>
+          </div>
+          <div class="player-controls">
+            <span class="time-display"><span id="curTime">0:00</span> / <span id="totTime">0:00</span></span>
+            <div class="center-controls">
+              <button class="play-btn" id="playBtn" onclick="togglePlay()">&#9654;</button>
+            </div>
+            <div class="right-controls">
+              <button class="speed-btn" data-rate="0.8" onclick="setSpeed(0.8)">0.8x</button>
+              <button class="speed-btn active" data-rate="1" onclick="setSpeed(1)">1.0x</button>
+              <button class="speed-btn" data-rate="1.2" onclick="setSpeed(1.2)">1.2x</button>
+              <button class="speed-btn" data-rate="1.5" onclick="setSpeed(1.5)">1.5x</button>
+              <button class="feature-btn" title="AB Repeat (coming soon)">A-B</button>
+              <button class="feature-btn" title="Dictation Mode (coming soon)">Dictation</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload modal -->
+  <div class="modal-overlay" id="uploadModal">
+    <div class="modal-content">
+      <div class="modal-title">New Listening Project</div>
+      <div class="modal-tabs">
+        <button class="modal-tab active" onclick="switchTab('file')">Upload File</button>
+        <button class="modal-tab" onclick="switchTab('url')">From URL</button>
+      </div>
+      <!-- File tab -->
+      <div class="tab-panel active" id="tabFile">
+        <div class="form-group">
+          <label class="form-label">Title (optional)</label>
+          <input class="form-input" id="fileTitle" placeholder="Leave blank to use filename" />
+        </div>
+        <div class="form-group">
+          <label class="form-file-label" id="fileDropLabel">
+            <span class="file-icon">&#128190;</span>
+            <span id="fileDropText">Click to select or drag audio file here</span>
+            <input type="file" id="fileInput" accept=".mp3,.wav,.m4a,.flac,.ogg,.mp4,.webm" onchange="onFileSelected(this)" />
+          </label>
+          <div class="form-hint">Supported: MP3, WAV, M4A, FLAC, OGG, MP4, WebM. Max 25MB.</div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="closeUploadModal()">Cancel</button>
+          <button class="btn-primary" id="uploadFileBtn" onclick="doUploadFile()" disabled>Upload</button>
+        </div>
+      </div>
+      <!-- URL tab -->
+      <div class="tab-panel" id="tabUrl">
+        <div class="form-group">
+          <label class="form-label">Title (optional)</label>
+          <input class="form-input" id="urlTitle" placeholder="Leave blank to use URL filename" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Audio URL</label>
+          <input class="form-input" id="urlInput" placeholder="https://example.com/audio.mp3" />
+        </div>
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="closeUploadModal()">Cancel</button>
+          <button class="btn-primary" id="uploadUrlBtn" onclick="doUploadUrl()">Download & Transcribe</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vocab popover -->
+  <div class="vocab-popover" id="vocabPopover">
+    <div class="vp-word" id="vpWord"></div>
+    <input class="vp-input" id="vpInput" placeholder="Chinese meaning" />
+    <div class="vp-btns">
+      <button class="vp-btn vp-cancel" onclick="hideVocabPopover()">Cancel</button>
+      <button class="vp-btn vp-save" onclick="saveVocab()">Save</button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+<script>
+// ==================== State ====================
+const state = {
+  view: 'list',
+  projects: [],
+  currentProject: null,
+  currentData: null,
+  activeSegmentId: -1,
+  playbackRate: 1.0,
+  pollingTimer: null,
+  pendingVocab: null
+};
+
+const audioEl = document.getElementById('audioEl');
+
+// ==================== API helper ====================
+const API = {
+  _headers(json) {
+    const h = {};
+    const tk = localStorage.getItem('authToken');
+    if (tk) h['Authorization'] = 'Bearer ' + tk;
+    if (json) h['Content-Type'] = 'application/json';
+    return h;
+  },
+  async get(url) { const r = await fetch(url, {headers: this._headers()}); return r.json(); },
+  async post(url, body) { const r = await fetch(url, {method:'POST', headers:this._headers(true), body:JSON.stringify(body)}); return r.json(); },
+  async put(url, body) { const r = await fetch(url, {method:'PUT', headers:this._headers(true), body:JSON.stringify(body)}); return r.json(); },
+  async del(url) { const r = await fetch(url, {method:'DELETE', headers:this._headers()}); return r.json(); },
+  async upload(url, formData) {
+    const h = {};
+    const tk = localStorage.getItem('authToken');
+    if (tk) h['Authorization'] = 'Bearer ' + tk;
+    const r = await fetch(url, {method:'POST', headers:h, body:formData});
+    return r.json();
+  }
+};
+
+// ==================== Init ====================
+(async function init() {
+  const tk = localStorage.getItem('authToken');
+  if (!tk) { location.href = '/login'; return; }
+  try {
+    const r = await fetch('/verify_token', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({token:tk})});
+    const d = await r.json();
+    if (!d.valid) { localStorage.removeItem('authToken'); location.href = '/login'; return; }
+  } catch(e) { location.href = '/login'; return; }
+  await loadProjects();
+})();
+
+// ==================== List View ====================
+async function loadProjects() {
+  const r = await API.get('/api/listening_review/list');
+  if (r.error) { showToast(r.error); return; }
+  state.projects = r.projects || [];
+  renderListView();
+  // Start polling if any processing
+  const hasProcessing = state.projects.some(p => p.status === 'processing');
+  if (hasProcessing && !state.pollingTimer) {
+    state.pollingTimer = setInterval(async () => {
+      if (state.view !== 'list') return;
+      const r2 = await API.get('/api/listening_review/list');
+      if (r2.projects) {
+        state.projects = r2.projects;
+        renderListView();
+        if (!r2.projects.some(p => p.status === 'processing')) {
+          clearInterval(state.pollingTimer);
+          state.pollingTimer = null;
+        }
+      }
+    }, 3000);
+  } else if (!hasProcessing && state.pollingTimer) {
+    clearInterval(state.pollingTimer);
+    state.pollingTimer = null;
+  }
+}
+
+function renderListView() {
+  const grid = document.getElementById('projectGrid');
+  if (state.projects.length === 0) {
+    grid.innerHTML = '<div class="empty-state"><div class="empty-icon">&#127911;</div><div>No listening projects yet.<br>Click "+ New Project" to get started.</div></div>';
+    return;
+  }
+  grid.innerHTML = state.projects.map(p => {
+    const statusLabel = p.status === 'completed' ? 'Completed' : p.status === 'processing' ? 'Processing...' : 'Error';
+    const dur = p.duration ? formatTime(p.duration) : '--:--';
+    const date = p.created_at ? new Date(p.created_at).toLocaleDateString('zh-CN') : '';
+    return `<div class="project-card" onclick="openProject('${p.id}')">
+      <button class="pc-delete" onclick="event.stopPropagation();deleteProject('${p.id}')" title="Delete">&times;</button>
+      <div class="pc-title">${esc(p.title)}</div>
+      <div class="pc-meta"><span>${date}</span><span>${dur}</span><span>${p.source_type === 'url' ? 'URL' : 'Upload'}</span></div>
+      <span class="pc-status ${p.status}">${statusLabel}</span>
+    </div>`;
+  }).join('');
+}
+
+async function deleteProject(id) {
+  if (!confirm('Delete this project? This cannot be undone.')) return;
+  const r = await API.del('/api/listening_review/project/' + id);
+  if (r.success) { showToast('Project deleted'); await loadProjects(); }
+  else showToast(r.error || 'Delete failed');
+}
+
+// ==================== Upload Modal ====================
+function openUploadModal() {
+  document.getElementById('uploadModal').style.display = 'flex';
+  document.getElementById('fileTitle').value = '';
+  document.getElementById('urlTitle').value = '';
+  document.getElementById('urlInput').value = '';
+  document.getElementById('fileInput').value = '';
+  document.getElementById('fileDropText').textContent = 'Click to select or drag audio file here';
+  document.getElementById('uploadFileBtn').disabled = true;
+  switchTab('file');
+}
+function closeUploadModal() { document.getElementById('uploadModal').style.display = 'none'; }
+
+function switchTab(tab) {
+  document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(t => t.classList.remove('active'));
+  if (tab === 'file') {
+    document.querySelector('.modal-tab:first-child').classList.add('active');
+    document.getElementById('tabFile').classList.add('active');
+  } else {
+    document.querySelector('.modal-tab:last-child').classList.add('active');
+    document.getElementById('tabUrl').classList.add('active');
+  }
+}
+
+function onFileSelected(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 25 * 1024 * 1024) {
+    showToast('File exceeds 25MB limit');
+    input.value = '';
+    return;
+  }
+  document.getElementById('fileDropText').textContent = file.name;
+  document.getElementById('uploadFileBtn').disabled = false;
+}
+
+async function doUploadFile() {
+  const fileInput = document.getElementById('fileInput');
+  const file = fileInput.files[0];
+  if (!file) return;
+
+  const btn = document.getElementById('uploadFileBtn');
+  btn.disabled = true;
+  btn.textContent = 'Uploading...';
+
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('title', document.getElementById('fileTitle').value.trim());
+
+  try {
+    const r = await API.upload('/api/listening_review/upload', fd);
+    if (r.success) {
+      showToast('Upload successful, transcribing...');
+      closeUploadModal();
+      await loadProjects();
+    } else {
+      showToast(r.error || 'Upload failed');
+    }
+  } catch(e) { showToast('Upload failed: ' + e.message); }
+  btn.disabled = false;
+  btn.textContent = 'Upload';
+}
+
+async function doUploadUrl() {
+  const urlVal = document.getElementById('urlInput').value.trim();
+  if (!urlVal) { showToast('Please enter a URL'); return; }
+
+  const btn = document.getElementById('uploadUrlBtn');
+  btn.disabled = true;
+  btn.textContent = 'Downloading...';
+
+  try {
+    const r = await API.post('/api/listening_review/url', {
+      url: urlVal,
+      title: document.getElementById('urlTitle').value.trim()
+    });
+    if (r.success) {
+      showToast('Download successful, transcribing...');
+      closeUploadModal();
+      await loadProjects();
+    } else {
+      showToast(r.error || 'Download failed');
+    }
+  } catch(e) { showToast('Request failed: ' + e.message); }
+  btn.disabled = false;
+  btn.textContent = 'Download & Transcribe';
+}
+
+// ==================== Detail View ====================
+async function openProject(id) {
+  const proj = state.projects.find(p => p.id === id);
+  if (!proj) return;
+  if (proj.status === 'processing') { showToast('Still transcribing, please wait...'); return; }
+  if (proj.status === 'error') { showToast('Transcription failed: ' + (proj.error || 'Unknown error')); return; }
+
+  const r = await API.get('/api/listening_review/project/' + id);
+  if (r.error) { showToast(r.error); return; }
+
+  state.currentProject = r.project;
+  state.currentData = r.data;
+  state.activeSegmentId = -1;
+
+  switchView('detail');
+  document.getElementById('detailTitle').textContent = r.project.title;
+
+  // Set audio source
+  const tk = localStorage.getItem('authToken');
+  audioEl.src = `/api/listening_review/audio/${id}/${r.project.audio_filename}?token=${encodeURIComponent(tk)}`;
+  audioEl.playbackRate = state.playbackRate;
+  audioEl.load();
+
+  renderLyrics();
+}
+
+function backToList() {
+  audioEl.pause();
+  audioEl.src = '';
+  state.currentProject = null;
+  state.currentData = null;
+  state.activeSegmentId = -1;
+  switchView('list');
+  loadProjects();
+}
+
+function switchView(view) {
+  state.view = view;
+  document.getElementById('listView').style.display = view === 'list' ? 'block' : 'none';
+  document.getElementById('detailView').style.display = view === 'detail' ? 'flex' : 'none';
+  document.getElementById('pageTitle').textContent = view === 'list' ? 'Listening Review' : '';
+}
+
+// ==================== Lyrics Rendering ====================
+function renderLyrics() {
+  const container = document.getElementById('lyricsContainer');
+  if (!state.currentData || !state.currentData.segments) {
+    container.innerHTML = '<div class="empty-state">No transcript data available.</div>';
+    return;
+  }
+  const segs = state.currentData.segments;
+  const starred = state.currentData.starred_segments || [];
+  const annots = state.currentData.vocab_annotations || [];
+
+  container.innerHTML = segs.map(seg => {
+    const isActive = seg.id === state.activeSegmentId;
+    const isStarred = starred.includes(seg.id);
+    const segAnnots = annots.filter(a => a.segment_id === seg.id);
+    const textHtml = renderAnnotatedText(seg.text, segAnnots);
+
+    return `<div class="lyrics-line${isActive ? ' active' : ''}${isStarred ? ' starred' : ''}"
+                 data-seg-id="${seg.id}" data-start="${seg.start}" data-end="${seg.end}">
+      <span class="line-time">${formatTime(seg.start)}</span>
+      <span class="star-btn${isStarred ? ' starred' : ''}" onclick="event.stopPropagation();toggleStar(${seg.id})">${isStarred ? '\u2605' : '\u2606'}</span>
+      <span class="line-text" onmouseup="handleTextSelect(event, ${seg.id})">${textHtml}</span>
+    </div>`;
+  }).join('');
+
+  // Re-attach click handlers for seeking
+  container.querySelectorAll('.lyrics-line').forEach(el => {
+    el.addEventListener('click', () => {
+      const segId = parseInt(el.dataset.segId);
+      seekToSegment(segId);
+    });
+  });
+}
+
+function renderAnnotatedText(text, annotations) {
+  if (!annotations || annotations.length === 0) return esc(text);
+  const sorted = [...annotations].sort((a, b) => a.start_offset - b.start_offset);
+  let result = '';
+  let lastEnd = 0;
+  for (const ann of sorted) {
+    if (ann.start_offset > lastEnd) {
+      result += esc(text.substring(lastEnd, ann.start_offset));
+    }
+    const word = text.substring(ann.start_offset, ann.end_offset);
+    result += `<span class="annotated-word" data-vid="${ann.id}" title="${esc(ann.meaning)}" onclick="event.stopPropagation()">${esc(word)}</span>`;
+    lastEnd = ann.end_offset;
+  }
+  if (lastEnd < text.length) result += esc(text.substring(lastEnd));
+  return result;
+}
+
+// ==================== Audio Player ====================
+audioEl.addEventListener('timeupdate', () => {
+  if (!state.currentData) return;
+  const t = audioEl.currentTime;
+  updateProgressBar(t);
+
+  // Find active segment
+  const segs = state.currentData.segments;
+  let newActive = -1;
+  for (const seg of segs) {
+    if (t >= seg.start && t < seg.end) { newActive = seg.id; break; }
+  }
+  // If between segments, keep last active or find nearest upcoming
+  if (newActive === -1 && segs.length > 0) {
+    for (let i = segs.length - 1; i >= 0; i--) {
+      if (t >= segs[i].start) { newActive = segs[i].id; break; }
+    }
+  }
+
+  if (newActive !== state.activeSegmentId && newActive >= 0) {
+    state.activeSegmentId = newActive;
+    highlightSegment(newActive);
+  }
+});
+
+audioEl.addEventListener('play', () => { document.getElementById('playBtn').innerHTML = '&#10074;&#10074;'; });
+audioEl.addEventListener('pause', () => { document.getElementById('playBtn').innerHTML = '&#9654;'; });
+audioEl.addEventListener('loadedmetadata', () => {
+  document.getElementById('totTime').textContent = formatTime(audioEl.duration);
+});
+
+function togglePlay() {
+  if (audioEl.paused) audioEl.play(); else audioEl.pause();
+}
+
+function updateProgressBar(t) {
+  const dur = audioEl.duration || 1;
+  const pct = (t / dur) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressThumb').style.left = pct + '%';
+  document.getElementById('curTime').textContent = formatTime(t);
+}
+
+function highlightSegment(segId) {
+  const container = document.getElementById('lyricsContainer');
+  container.querySelectorAll('.lyrics-line.active').forEach(el => el.classList.remove('active'));
+  const lineEl = container.querySelector(`.lyrics-line[data-seg-id="${segId}"]`);
+  if (lineEl) {
+    lineEl.classList.add('active');
+    // Smooth scroll to center
+    const cRect = container.getBoundingClientRect();
+    const scrollTarget = lineEl.offsetTop - container.offsetTop - (cRect.height / 2) + (lineEl.offsetHeight / 2);
+    container.scrollTo({top: scrollTarget, behavior: 'smooth'});
+  }
+}
+
+function seekToSegment(segId) {
+  const seg = state.currentData.segments.find(s => s.id === segId);
+  if (seg) {
+    audioEl.currentTime = seg.start;
+    if (audioEl.paused) audioEl.play();
+    state.activeSegmentId = segId;
+    highlightSegment(segId);
+  }
+}
+
+// Progress bar click/drag
+(function initProgressBar() {
+  const wrap = document.getElementById('progressWrap');
+  let dragging = false;
+
+  function seekFromEvent(e) {
+    const rect = wrap.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    if (audioEl.duration) audioEl.currentTime = ratio * audioEl.duration;
+  }
+
+  wrap.addEventListener('mousedown', (e) => { dragging = true; seekFromEvent(e); });
+  document.addEventListener('mousemove', (e) => { if (dragging) seekFromEvent(e); });
+  document.addEventListener('mouseup', () => { dragging = false; });
+
+  // Touch support
+  wrap.addEventListener('touchstart', (e) => { dragging = true; seekFromEvent(e.touches[0]); }, {passive:true});
+  wrap.addEventListener('touchmove', (e) => { if (dragging) seekFromEvent(e.touches[0]); }, {passive:true});
+  wrap.addEventListener('touchend', () => { dragging = false; });
+})();
+
+// Speed control
+function setSpeed(rate) {
+  state.playbackRate = rate;
+  audioEl.playbackRate = rate;
+  document.querySelectorAll('.speed-btn').forEach(b => {
+    b.classList.toggle('active', parseFloat(b.dataset.rate) === rate);
+  });
+}
+
+// ==================== Keyboard Shortcuts ====================
+document.addEventListener('keydown', (e) => {
+  if (state.view !== 'detail') return;
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.code === 'Space') {
+    e.preventDefault();
+    togglePlay();
+  } else if (e.code === 'ArrowLeft') {
+    e.preventDefault();
+    audioEl.currentTime = Math.max(0, audioEl.currentTime - 3);
+  } else if (e.code === 'ArrowRight') {
+    e.preventDefault();
+    audioEl.currentTime = Math.min(audioEl.duration || 0, audioEl.currentTime + 3);
+  }
+});
+
+// ==================== Star Toggle ====================
+async function toggleStar(segId) {
+  if (!state.currentProject) return;
+  const r = await API.put(`/api/listening_review/project/${state.currentProject.id}/star`, {segment_id: segId});
+  if (r.success) {
+    state.currentData.starred_segments = r.starred_segments;
+    // Update just the affected line without re-rendering everything
+    const lineEl = document.querySelector(`.lyrics-line[data-seg-id="${segId}"]`);
+    if (lineEl) {
+      const isStarred = r.starred_segments.includes(segId);
+      lineEl.classList.toggle('starred', isStarred);
+      const starBtn = lineEl.querySelector('.star-btn');
+      if (starBtn) {
+        starBtn.classList.toggle('starred', isStarred);
+        starBtn.textContent = isStarred ? '\u2605' : '\u2606';
+      }
+    }
+  }
+}
+
+// ==================== Vocabulary Annotation ====================
+function handleTextSelect(event, segId) {
+  const sel = window.getSelection();
+  if (!sel || sel.isCollapsed || !sel.toString().trim()) return;
+
+  const selectedText = sel.toString().trim();
+  // Only allow single word or short phrase
+  if (selectedText.length > 60) return;
+
+  const seg = state.currentData.segments.find(s => s.id === segId);
+  if (!seg) return;
+
+  const plainText = seg.text;
+  const startOffset = plainText.indexOf(selectedText);
+  if (startOffset === -1) return;
+  const endOffset = startOffset + selectedText.length;
+
+  // Position popover near selection
+  const range = sel.getRangeAt(0);
+  const rect = range.getBoundingClientRect();
+
+  state.pendingVocab = { segmentId: segId, word: selectedText, startOffset, endOffset };
+
+  const popover = document.getElementById('vocabPopover');
+  document.getElementById('vpWord').textContent = selectedText;
+  document.getElementById('vpInput').value = '';
+  popover.style.display = 'block';
+
+  // Position: centered above selection
+  const px = rect.left + rect.width / 2 - 110;
+  const py = rect.bottom + 8;
+  popover.style.left = Math.max(8, Math.min(px, window.innerWidth - 240)) + 'px';
+  popover.style.top = py + 'px';
+
+  setTimeout(() => document.getElementById('vpInput').focus(), 50);
+}
+
+document.getElementById('vpInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); saveVocab(); }
+  if (e.key === 'Escape') hideVocabPopover();
+});
+
+async function saveVocab() {
+  const meaning = document.getElementById('vpInput').value.trim();
+  if (!meaning || !state.pendingVocab) return;
+
+  const pv = state.pendingVocab;
+  const r = await API.put(`/api/listening_review/project/${state.currentProject.id}/vocab`, {
+    segment_id: pv.segmentId,
+    word: pv.word,
+    meaning: meaning,
+    start_offset: pv.startOffset,
+    end_offset: pv.endOffset
+  });
+
+  if (r.success && r.data) {
+    state.currentData = r.data;
+    renderLyrics();
+    showToast('Annotation saved');
+  }
+  hideVocabPopover();
+}
+
+function hideVocabPopover() {
+  document.getElementById('vocabPopover').style.display = 'none';
+  state.pendingVocab = null;
+}
+
+// Dismiss popover on outside click
+document.addEventListener('mousedown', (e) => {
+  const popover = document.getElementById('vocabPopover');
+  if (popover.style.display !== 'none' && !popover.contains(e.target)) {
+    hideVocabPopover();
+  }
+});
+
+// ==================== Utilities ====================
+function esc(s) {
+  if (!s) return '';
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function formatTime(s) {
+  if (!s || isNaN(s)) return '0:00';
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return m + ':' + (sec < 10 ? '0' : '') + sec;
+}
+
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Close modal on overlay click
+document.getElementById('uploadModal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('uploadModal')) closeUploadModal();
+});
+
+// Drag & drop support on file label
+(function initDragDrop() {
+  const label = document.getElementById('fileDropLabel');
+  ['dragenter','dragover'].forEach(ev => {
+    label.addEventListener(ev, (e) => { e.preventDefault(); label.style.borderColor = 'var(--accent)'; label.style.background = 'var(--accent-light)'; });
+  });
+  ['dragleave','drop'].forEach(ev => {
+    label.addEventListener(ev, (e) => { e.preventDefault(); label.style.borderColor = ''; label.style.background = ''; });
+  });
+  label.addEventListener('drop', (e) => {
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      const input = document.getElementById('fileInput');
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      input.files = dt.files;
+      onFileSelected(input);
+    }
+  });
+})();
+</script>
+</body>
+</html>

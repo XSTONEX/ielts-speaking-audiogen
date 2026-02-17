@@ -18,6 +18,7 @@ from routers.vocabulary import vocabulary_bp
 from routers.study_tips import study_tips_bp
 from routers.asr_transcription import asr_bp
 from routers.writing_logic import writing_bp
+from routers.listening_review import listening_review_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(speaking_bp)
@@ -29,6 +30,7 @@ app.register_blueprint(vocabulary_bp)
 app.register_blueprint(study_tips_bp)
 app.register_blueprint(asr_bp)
 app.register_blueprint(writing_bp)
+app.register_blueprint(listening_review_bp)
 
 # 启动词汇音频后台任务处理器
 from routers.vocabulary import start_audio_task_processor

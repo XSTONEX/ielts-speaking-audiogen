@@ -42,6 +42,7 @@ USER_DATA_DIR = os.path.join(os.path.dirname(__file__), 'user_data')
 WRITING_CORRECTION_DIR = 'writing_correction'
 WRITING_DATA_DIR = 'writing_correction/data'
 WRITING_MD_FILE = 'writing_correction/resource/九分学长雅思写作论证块.md'
+LISTENING_REVIEW_DIR = 'listening_review'
 
 
 # ==================== 目录初始化 ====================
@@ -68,6 +69,7 @@ def init_directories():
     os.makedirs(STUDY_TECHNIQUES_AUDIO_DIR, exist_ok=True)
     os.makedirs(AUDIO_TRANSCRIPTION_DIR, exist_ok=True)
     os.makedirs(WRITING_DATA_DIR, exist_ok=True)
+    os.makedirs(LISTENING_REVIEW_DIR, exist_ok=True)
 
 
 # ==================== Token 管理 ====================
