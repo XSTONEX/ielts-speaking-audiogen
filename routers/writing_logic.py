@@ -221,6 +221,10 @@ def writing_save_practice():
     tokens = load_tokens()
     username = tokens.get(token, {}).get('username', 'anonymous')
     data = request.json or {}
+
+    # save_to_review controls whether this record goes into the review center
+    save_to_review = data.get('save_to_review', False)
+
     records = _load_practice(username)
     record = {
         'id': str(uuid.uuid4()),
@@ -232,7 +236,8 @@ def writing_save_practice():
         'user_translation': data.get('user_translation', ''),
         'score': data.get('score', ''),
         'feedback': data.get('feedback', {}),
-        'native_version': data.get('native_version', '')
+        'native_version': data.get('native_version', ''),
+        'in_review': save_to_review
     }
     records.insert(0, record)
     _save_practice(username, records)
@@ -248,8 +253,11 @@ def writing_practice_history():
     username = tokens.get(token, {}).get('username', 'anonymous')
     records = _load_practice(username)
 
+    # Only show records marked for review in the review center
+    review_records = [r for r in records if r.get('in_review', True)]
+
     grouped = {}
-    for r in records:
+    for r in review_records:
         cat = r.get('category', '未分类')
         sub = r.get('subcategory', '未分类')
         if cat not in grouped:
@@ -271,6 +279,62 @@ def writing_practice_history():
             grouped[cat][sub]['avg_score'] = round(sum(scores) / len(scores), 1) if scores else 0
 
     return jsonify(grouped)
+
+
+@writing_bp.route('/api/writing/practice_progress', methods=['GET'])
+def writing_practice_progress():
+    """Return per-subcategory sentence-level completion info for progress bars."""
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    if not is_token_valid(token):
+        return jsonify({'error': '未登录'}), 401
+    tokens = load_tokens()
+    username = tokens.get(token, {}).get('username', 'anonymous')
+    records = _load_practice(username)
+
+    # Only sentences with at least one in_review=true record count as completed.
+    # Old records without in_review field default to True (backward compat).
+    completed = {}
+    for r in records:
+        if not r.get('in_review', True):
+            continue
+        key = f"{r.get('category','')}||{r.get('subcategory','')}||{r.get('question','')}||{r.get('target_chinese','')}"
+        completed[key] = True
+
+    # Walk through all categories/subcategories and compute progress
+    cats = _parse_writing_md()
+    progress = {}
+    for ci, cat in enumerate(cats):
+        cat_name = cat['name']
+        for si, sub in enumerate(cat['subcategories']):
+            sub_name = sub['name']
+            total_sentences = 0
+            done_sentences = 0
+            example_details = []
+            for ei, ex in enumerate(sub['examples']):
+                ex_total = len(ex['sentences'])
+                ex_done = 0
+                sent_status = []
+                for sent in ex['sentences']:
+                    key = f"{cat_name}||{sub_name}||{ex['question']}||{sent['chinese']}"
+                    is_done = key in completed
+                    if is_done:
+                        ex_done += 1
+                    sent_status.append(is_done)
+                total_sentences += ex_total
+                done_sentences += ex_done
+                example_details.append({
+                    'example_idx': ei,
+                    'total': ex_total,
+                    'done': ex_done,
+                    'sentences': sent_status
+                })
+            pkey = f"{ci}_{si}"
+            progress[pkey] = {
+                'total': total_sentences,
+                'done': done_sentences,
+                'examples': example_details
+            }
+    return jsonify(progress)
 
 
 @writing_bp.route('/api/writing/delete_practice/<record_id>', methods=['POST'])
