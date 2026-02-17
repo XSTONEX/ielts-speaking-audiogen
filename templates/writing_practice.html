@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>写作逻辑链训练</title>
+<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+<link href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Crimson+Text:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --serif: 'PT Serif', 'Crimson Text', ui-serif, Georgia, serif;
+  --bg: #f4f6fa;
+  --card: #fff;
+  --border: #e5e7eb;
+  --text: #1f2937;
+  --text2: #6b7280;
+  --text3: #9ca3af;
+  --accent: #4f46e5;
+  --accent-light: #eef2ff;
+  --accent-hover: #4338ca;
+  --green: #059669;
+  --green-light: #ecfdf5;
+  --amber: #d97706;
+  --amber-light: #fffbeb;
+  --red: #dc2626;
+  --red-light: #fef2f2;
+  --radius: 14px;
+  --shadow: 0 4px 24px rgba(31,38,135,.10);
+  --shadow-lg: 0 12px 40px rgba(31,38,135,.16);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: var(--serif); background: linear-gradient(135deg, #e0e7ff 0%, var(--bg) 100%); color: var(--text); min-height: 100vh; }
+button { font-family: var(--serif); cursor: pointer; }
+textarea, input { font-family: var(--serif); }
+
+/* Layout */
+.app { max-width: 1100px; margin: 0 auto; padding: 20px 16px 60px; }
+.top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.top-bar h1 { font-size: 22px; font-weight: 700; color: var(--text); }
+.nav-btns { display: flex; gap: 8px; }
+.nav-btn { padding: 7px 16px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--card); font-size: 13px; color: var(--text2); transition: all .15s; }
+.nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+.nav-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.back-btn { display: inline-flex; align-items: center; gap: 4px; padding: 6px 14px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--card); font-size: 13px; color: var(--text2); transition: all .15s; margin-bottom: 16px; }
+.back-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Breadcrumb */
+.breadcrumb { font-size: 13px; color: var(--text3); margin-bottom: 16px; }
+.breadcrumb span { cursor: pointer; transition: color .15s; }
+.breadcrumb span:hover { color: var(--accent); }
+.breadcrumb .sep { margin: 0 6px; cursor: default; }
+.breadcrumb .sep:hover { color: var(--text3); }
+.breadcrumb .current { color: var(--text); font-weight: 600; cursor: default; }
+.breadcrumb .current:hover { color: var(--text); }
+
+/* Cards */
+.card { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+.card-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 12px; }
+
+/* Category Grid */
+.cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.cat-card { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 18px; cursor: pointer; transition: all .18s; position: relative; overflow: hidden; }
+.cat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent), #7c3aed); opacity: 0; transition: opacity .18s; }
+.cat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); border-color: #c7d2fe; }
+.cat-card:hover::before { opacity: 1; }
+.cat-name { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+.cat-count { font-size: 12px; color: var(--text3); }
+
+/* Subcategory List */
+.sub-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; margin-top: 16px; }
+.sub-card { display: flex; align-items: center; justify-content: space-between; background: var(--card); border: 1.5px solid var(--border); border-radius: 10px; padding: 14px 16px; cursor: pointer; transition: all .15s; }
+.sub-card:hover { border-color: var(--accent); background: var(--accent-light); }
+.sub-name { font-weight: 600; font-size: 15px; }
+.sub-meta { font-size: 11px; color: var(--text3); display: flex; gap: 8px; margin-top: 2px; }
+.sub-actions { display: flex; gap: 6px; }
+.mode-btn { padding: 5px 12px; border-radius: 6px; border: 1.5px solid var(--border); font-size: 12px; background: var(--card); color: var(--text2); transition: all .15s; }
+.mode-btn:hover { border-color: var(--accent); color: var(--accent); }
+.mode-btn.learn:hover { border-color: var(--green); color: var(--green); background: var(--green-light); }
+.mode-btn.practice:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+
+/* Learning View */
+.kw-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 20px; }
+.kw-tag { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: var(--accent-light); color: var(--accent); border-radius: 20px; font-size: 13px; font-weight: 600; }
+.kw-tag .copy-icon { cursor: pointer; opacity: .5; transition: opacity .15s; font-size: 12px; }
+.kw-tag .copy-icon:hover { opacity: 1; }
+
+.chain-flow { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+.chain-card { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; background: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 100%); border: 1.5px solid #e9d5ff; border-radius: 10px; }
+.chain-num { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: var(--accent); color: #fff; border-radius: 50%; font-size: 13px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+.chain-body { flex: 1; }
+.chain-cn { font-size: 14px; color: var(--text); margin-bottom: 3px; }
+.chain-en { font-size: 13px; color: var(--text2); font-style: italic; }
+
+.example-block { border: 1.5px solid var(--border); border-radius: var(--radius); margin-bottom: 16px; overflow: hidden; }
+.example-header { padding: 14px 16px; background: #f9fafb; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
+.example-header h4 { font-size: 14px; font-weight: 700; }
+.example-toggle { font-size: 18px; color: var(--text3); transition: transform .2s; }
+.example-header.open .example-toggle { transform: rotate(180deg); }
+.example-body { padding: 16px; display: none; }
+.example-body.open { display: block; }
+.example-question { font-size: 14px; color: var(--text); line-height: 1.7; margin-bottom: 12px; padding: 12px; background: var(--amber-light); border-radius: 8px; border-left: 3px solid var(--amber); }
+.example-hint { font-size: 12px; color: var(--text2); margin-bottom: 14px; padding: 8px 12px; background: #f1f5f9; border-radius: 6px; }
+.sentence-pair { margin-bottom: 12px; padding: 10px 14px; border-radius: 8px; background: #fafafa; border: 1px solid #f0f0f0; }
+.sentence-en { font-size: 14px; color: var(--text); line-height: 1.7; margin-bottom: 4px; }
+.sentence-cn { font-size: 13px; color: var(--text2); line-height: 1.7; }
+
+/* Practice View */
+.practice-header { position: sticky; top: 0; z-index: 20; background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 16px; box-shadow: var(--shadow); }
+.practice-question { font-size: 14px; line-height: 1.7; color: var(--text); }
+.practice-nav { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+.practice-progress { font-size: 12px; color: var(--text3); }
+.progress-bar { height: 4px; background: #e5e7eb; border-radius: 2px; flex: 1; margin: 0 12px; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), #7c3aed); border-radius: 2px; transition: width .3s; }
+.example-switch { display: flex; gap: 6px; }
+.ex-btn { padding: 4px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--card); font-size: 12px; color: var(--text2); transition: all .15s; }
+.ex-btn:hover { border-color: var(--accent); color: var(--accent); }
+.ex-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+.sentence-grid { display: grid; grid-template-columns: 1fr; gap: 8px; transition: all .3s; }
+.sentence-grid.split { grid-template-columns: 1fr 1fr; }
+.sent-item { padding: 14px 16px; background: var(--card); border: 1.5px solid var(--border); border-radius: 10px; cursor: pointer; transition: all .18s; position: relative; }
+.sent-item:hover { border-color: #c7d2fe; background: var(--accent-light); }
+.sent-item.active { border-color: var(--accent); background: var(--accent-light); box-shadow: 0 0 0 3px rgba(79,70,229,.1); }
+.sent-item.done { border-color: #a7f3d0; background: var(--green-light); }
+.sent-item .sent-idx { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+.sent-item .sent-cn { font-size: 14px; line-height: 1.6; }
+.sent-item .sent-score { position: absolute; top: 10px; right: 12px; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+.sent-item .sent-score.high { background: var(--green-light); color: var(--green); }
+.sent-item .sent-score.mid { background: var(--amber-light); color: var(--amber); }
+.sent-item .sent-score.low { background: var(--red-light); color: var(--red); }
+
+/* Right Panel (Practice Editor) */
+.editor-panel { display: none; }
+.editor-panel.show { display: block; }
+.editor-context { padding: 16px; background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); margin-bottom: 12px; }
+.editor-context .ctx-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+.editor-context .ctx-cn { font-size: 15px; line-height: 1.7; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+.editor-context .ctx-chain { font-size: 13px; color: var(--accent); padding: 8px 12px; background: var(--accent-light); border-radius: 6px; margin-bottom: 8px; }
+.editor-context .ctx-hint { font-size: 12px; color: var(--text2); padding: 6px 10px; background: #f9fafb; border-radius: 6px; }
+.editor-input { width: 100%; min-height: 120px; padding: 14px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 15px; line-height: 1.7; resize: vertical; transition: border-color .15s; outline: none; }
+.editor-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,70,229,.08); }
+.editor-hint { font-size: 12px; color: var(--text3); margin-top: 6px; text-align: right; }
+.editor-actions { display: flex; gap: 8px; margin-top: 10px; }
+.submit-btn { padding: 8px 20px; border: none; border-radius: 8px; background: var(--accent); color: #fff; font-size: 14px; font-weight: 600; transition: background .15s; }
+.submit-btn:hover { background: var(--accent-hover); }
+.submit-btn:disabled { opacity: .5; cursor: not-allowed; }
+.skip-btn { padding: 8px 16px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--card); font-size: 13px; color: var(--text2); transition: all .15s; }
+.skip-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Feedback */
+.feedback-card { margin-top: 12px; padding: 16px; background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); animation: fadeIn .3s; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.fb-score { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+.fb-score.high { color: var(--green); }
+.fb-score.mid { color: var(--amber); }
+.fb-score.low { color: var(--red); }
+.fb-summary { font-size: 14px; color: var(--text); margin-bottom: 12px; line-height: 1.6; }
+.fb-section { margin-bottom: 10px; }
+.fb-section-title { font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+.fb-correction { padding: 8px 12px; background: var(--red-light); border-radius: 6px; margin-bottom: 4px; font-size: 13px; }
+.fb-correction .orig { text-decoration: line-through; color: var(--red); }
+.fb-correction .fixed { color: var(--green); font-weight: 600; }
+.fb-correction .reason { color: var(--text2); font-size: 12px; }
+.fb-vocab { padding: 8px 12px; background: var(--accent-light); border-radius: 6px; font-size: 13px; color: var(--text); line-height: 1.6; }
+.fb-native { padding: 10px 14px; background: var(--green-light); border-radius: 8px; font-size: 14px; color: var(--text); line-height: 1.7; border-left: 3px solid var(--green); }
+
+/* Review View */
+.review-list { display: flex; flex-direction: column; gap: 10px; }
+.review-item { padding: 14px 16px; background: var(--card); border: 1.5px solid var(--border); border-radius: 10px; cursor: pointer; transition: all .15s; }
+.review-item:hover { border-color: #c7d2fe; box-shadow: var(--shadow); }
+.review-item .ri-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.review-item .ri-score { font-weight: 700; font-size: 16px; }
+.review-item .ri-date { font-size: 11px; color: var(--text3); }
+.review-item .ri-cn { font-size: 13px; color: var(--text2); margin-bottom: 4px; }
+.review-item .ri-trans { font-size: 13px; color: var(--text); }
+.review-detail { padding: 14px; background: #f9fafb; border-radius: 8px; margin-top: 10px; display: none; }
+.review-detail.open { display: block; }
+.empty-state { text-align: center; padding: 60px 20px; color: var(--text3); }
+.empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-state p { font-size: 15px; }
+
+/* Loading */
+.spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-overlay { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 20px; color: var(--text2); font-size: 14px; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .app { padding: 12px 10px 40px; }
+  .top-bar h1 { font-size: 18px; }
+  .cat-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .sub-list { grid-template-columns: 1fr; }
+  .sentence-grid.split { grid-template-columns: 1fr; }
+  .practice-header { position: relative; }
+}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <h1 id="pageTitle">逻辑链训练</h1>
+    <div class="nav-btns">
+      <button class="nav-btn active" data-view="directory" onclick="switchView('directory')">题库</button>
+      <button class="nav-btn" data-view="review" onclick="switchView('review')">复习中心</button>
+      <a href="/" class="nav-btn" style="text-decoration:none;">返回首页</a>
+    </div>
+  </div>
+
+  <!-- Directory View -->
+  <div id="directoryView">
+    <div id="catGrid" class="cat-grid"></div>
+    <div id="subSection" style="display:none;">
+      <button class="back-btn" onclick="showCategories()">&#8592; 返回分类</button>
+      <h2 id="catTitle" style="font-size:18px; margin-bottom:14px;"></h2>
+      <div id="subList" class="sub-list"></div>
+    </div>
+  </div>
+
+  <!-- Learning View -->
+  <div id="learningView" style="display:none;">
+    <div class="breadcrumb" id="learnBreadcrumb"></div>
+    <button class="back-btn" onclick="backToDirectory()">&#8592; 返回目录</button>
+
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title">关键词 Keywords</div>
+      <div class="kw-bar" id="kwBar"></div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title">逻辑链 Logic Chains</div>
+      <div class="chain-flow" id="chainFlow"></div>
+    </div>
+
+    <div>
+      <div class="card-title" style="margin-bottom:10px;">例题与范例</div>
+      <div id="exampleList"></div>
+    </div>
+  </div>
+
+  <!-- Practice View -->
+  <div id="practiceView" style="display:none;">
+    <div class="breadcrumb" id="pracBreadcrumb"></div>
+    <button class="back-btn" onclick="backToDirectory()">&#8592; 返回目录</button>
+
+    <div class="practice-header">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+        <span style="font-size:12px; color:var(--text3); text-transform:uppercase; letter-spacing:.5px;">当前例题</span>
+        <div class="example-switch" id="exSwitch"></div>
+      </div>
+      <div class="practice-question" id="pracQuestion"></div>
+      <div class="practice-nav" style="margin-top:10px;">
+        <span class="practice-progress" id="pracProgress"></span>
+        <div class="progress-bar"><div class="progress-fill" id="pracBar" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div style="display:grid; gap:12px;" id="practiceBody">
+      <div id="sentenceList" class="sentence-grid"></div>
+      <div id="editorPanel" class="editor-panel"></div>
+    </div>
+  </div>
+
+  <!-- Review View -->
+  <div id="reviewView" style="display:none;">
+    <div class="card-title" style="margin-bottom:14px;">复习中心</div>
+    <div id="reviewContent"></div>
+  </div>
+</div>
+
+<script>
+const API = {
+  headers() {
+    const h = { 'Content-Type': 'application/json' };
+    const tk = localStorage.getItem('authToken');
+    if (tk) h['Authorization'] = 'Bearer ' + tk;
+    return h;
+  },
+  async get(url) { const r = await fetch(url, { headers: this.headers() }); return r.json(); },
+  async post(url, body) { const r = await fetch(url, { method: 'POST', headers: this.headers(), body: JSON.stringify(body) }); return r.json(); }
+};
+
+let state = {
+  categories: [],
+  currentCat: null,
+  currentSub: null,
+  subData: null,
+  currentExIdx: 0,
+  activeSentIdx: -1,
+  sentResults: {},
+  submitting: false
+};
+
+/* ---- View Switching ---- */
+function switchView(view) {
+  ['directoryView','learningView','practiceView','reviewView'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+  document.querySelectorAll('.nav-btn[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+  if (view === 'directory') {
+    document.getElementById('directoryView').style.display = '';
+    document.getElementById('pageTitle').textContent = '逻辑链训练';
+  } else if (view === 'learning') {
+    document.getElementById('learningView').style.display = '';
+  } else if (view === 'practice') {
+    document.getElementById('practiceView').style.display = '';
+  } else if (view === 'review') {
+    document.getElementById('reviewView').style.display = '';
+    loadReview();
+  }
+}
+
+function backToDirectory() { switchView('directory'); }
+
+/* ---- Directory ---- */
+async function loadCategories() {
+  state.categories = await API.get('/api/writing/categories');
+  renderCategories();
+}
+
+function renderCategories() {
+  const grid = document.getElementById('catGrid');
+  grid.innerHTML = state.categories.map((c, i) => `
+    <div class="cat-card" onclick="selectCategory(${i})">
+      <div class="cat-name">${c.name}</div>
+      <div class="cat-count">${c.subcategories.length} 个子话题</div>
+    </div>
+  `).join('');
+  grid.style.display = 'grid';
+  document.getElementById('subSection').style.display = 'none';
+}
+
+function showCategories() {
+  document.getElementById('catGrid').style.display = 'grid';
+  document.getElementById('subSection').style.display = 'none';
+}
+
+function selectCategory(idx) {
+  state.currentCat = idx;
+  const cat = state.categories[idx];
+  document.getElementById('catGrid').style.display = 'none';
+  document.getElementById('subSection').style.display = 'block';
+  document.getElementById('catTitle').textContent = cat.name;
+  document.getElementById('subList').innerHTML = cat.subcategories.map((s, si) => `
+    <div class="sub-card">
+      <div>
+        <div class="sub-name">${s.name}</div>
+        <div class="sub-meta">
+          <span>${s.chain_count} 逻辑链</span>
+          <span>${s.example_count} 例题</span>
+        </div>
+      </div>
+      <div class="sub-actions">
+        <button class="mode-btn learn" onclick="enterLearning(${idx},${si})">学习</button>
+        <button class="mode-btn practice" onclick="enterPractice(${idx},${si})">实战</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ---- Learning View ---- */
+async function enterLearning(catIdx, subIdx) {
+  state.currentCat = catIdx;
+  state.currentSub = subIdx;
+  const data = await API.get(`/api/writing/subcategory/${catIdx}/${subIdx}`);
+  state.subData = data;
+  renderLearning(data);
+  switchView('learning');
+}
+
+function renderLearning(d) {
+  const catName = state.categories[state.currentCat].name;
+  document.getElementById('learnBreadcrumb').innerHTML =
+    `<span onclick="backToDirectory()">${catName}</span><span class="sep">/</span><span class="current">${d.name}</span>`;
+
+  document.getElementById('kwBar').innerHTML = d.keywords.map(k =>
+    `<span class="kw-tag">${k}<span class="copy-icon" onclick="copyText('${k}', event)" title="复制">&#x2398;</span></span>`
+  ).join('');
+
+  document.getElementById('chainFlow').innerHTML = d.chains.map(c => `
+    <div class="chain-card">
+      <div class="chain-num">${c.id}</div>
+      <div class="chain-body">
+        <div class="chain-cn">${c.chinese}</div>
+        <div class="chain-en">${c.english}</div>
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('exampleList').innerHTML = d.examples.map((ex, i) => `
+    <div class="example-block">
+      <div class="example-header${i === 0 ? ' open' : ''}" onclick="toggleExample(this)">
+        <h4>${ex.title}</h4>
+        <span class="example-toggle">&#9662;</span>
+      </div>
+      <div class="example-body${i === 0 ? ' open' : ''}">
+        <div class="example-question">${ex.question}</div>
+        ${ex.hints.length ? `<div class="example-hint">${ex.hints.join('<br>')}</div>` : ''}
+        ${ex.sentences.map(s => `
+          <div class="sentence-pair">
+            <div class="sentence-en">${s.english}</div>
+            <div class="sentence-cn">${s.chinese}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleExample(header) {
+  header.classList.toggle('open');
+  header.nextElementSibling.classList.toggle('open');
+}
+
+function copyText(text, e) {
+  e.stopPropagation();
+  navigator.clipboard.writeText(text);
+  const el = e.target;
+  el.textContent = '✓';
+  setTimeout(() => el.innerHTML = '&#x2398;', 1000);
+}
+
+/* ---- Practice View ---- */
+async function enterPractice(catIdx, subIdx) {
+  state.currentCat = catIdx;
+  state.currentSub = subIdx;
+  state.currentExIdx = 0;
+  state.activeSentIdx = -1;
+  state.sentResults = {};
+  const data = await API.get(`/api/writing/subcategory/${catIdx}/${subIdx}`);
+  state.subData = data;
+  if (!data.examples.length) { alert('该话题暂无例题'); return; }
+  renderPractice();
+  switchView('practice');
+}
+
+function renderPractice() {
+  const d = state.subData;
+  const catName = state.categories[state.currentCat].name;
+  document.getElementById('pracBreadcrumb').innerHTML =
+    `<span onclick="backToDirectory()">${catName}</span><span class="sep">/</span><span class="current">${d.name} · 实战</span>`;
+
+  // Example switcher
+  document.getElementById('exSwitch').innerHTML = d.examples.map((ex, i) =>
+    `<button class="ex-btn${i === state.currentExIdx ? ' active' : ''}" onclick="switchExample(${i})">${ex.title}</button>`
+  ).join('');
+
+  renderExercise();
+}
+
+function switchExample(idx) {
+  state.currentExIdx = idx;
+  state.activeSentIdx = -1;
+  state.sentResults = {};
+  renderPractice();
+}
+
+function renderExercise() {
+  const ex = state.subData.examples[state.currentExIdx];
+  if (!ex) return;
+  document.getElementById('pracQuestion').textContent = ex.question;
+  const total = ex.sentences.length;
+  const done = Object.keys(state.sentResults).length;
+  document.getElementById('pracProgress').textContent = `${done} / ${total}`;
+  document.getElementById('pracBar').style.width = total ? (done / total * 100) + '%' : '0%';
+
+  const body = document.getElementById('practiceBody');
+  if (state.activeSentIdx >= 0) {
+    body.style.gridTemplateColumns = '1fr 1fr';
+  } else {
+    body.style.gridTemplateColumns = '1fr';
+  }
+
+  document.getElementById('sentenceList').innerHTML = ex.sentences.map((s, i) => {
+    const res = state.sentResults[i];
+    const isDone = !!res;
+    const isActive = i === state.activeSentIdx;
+    let scoreHtml = '';
+    if (res) {
+      const sc = parseFloat(res.score) || 0;
+      const cls = sc >= 7 ? 'high' : sc >= 6 ? 'mid' : 'low';
+      scoreHtml = `<span class="sent-score ${cls}">${res.score}</span>`;
+    }
+    return `
+      <div class="sent-item${isActive ? ' active' : ''}${isDone ? ' done' : ''}" onclick="activateSentence(${i})">
+        <div class="sent-idx">句 ${i + 1}</div>
+        <div class="sent-cn">${s.chinese}</div>
+        ${scoreHtml}
+      </div>`;
+  }).join('');
+
+  if (state.activeSentIdx >= 0) {
+    renderEditor(state.activeSentIdx);
+    document.getElementById('editorPanel').classList.add('show');
+  } else {
+    document.getElementById('editorPanel').classList.remove('show');
+  }
+}
+
+function activateSentence(idx) {
+  state.activeSentIdx = idx;
+  renderExercise();
+  setTimeout(() => {
+    const ta = document.getElementById('transInput');
+    if (ta) ta.focus();
+  }, 100);
+}
+
+function renderEditor(idx) {
+  const ex = state.subData.examples[state.currentExIdx];
+  const s = ex.sentences[idx];
+  const res = state.sentResults[idx];
+  const chains = state.subData.chains;
+  const chainHtml = chains.length ? `<div class="ctx-chain">${chains.map(c => c.chinese).join(' / ')}</div>` : '';
+  const hintHtml = ex.hints.length ? `<div class="ctx-hint">${ex.hints.join(' · ')}</div>` : '';
+
+  let feedbackHtml = '';
+  if (res) {
+    const sc = parseFloat(res.score) || 0;
+    const cls = sc >= 7 ? 'high' : sc >= 6 ? 'mid' : 'low';
+    feedbackHtml = `
+      <div class="feedback-card">
+        <div class="fb-score ${cls}">${res.score}</div>
+        <div class="fb-summary">${res.feedback_summary || ''}</div>
+        ${(res.grammar_corrections && res.grammar_corrections.length) ? `
+          <div class="fb-section">
+            <div class="fb-section-title">语法修正</div>
+            ${res.grammar_corrections.map(g => `
+              <div class="fb-correction">
+                <span class="orig">${g.original}</span> → <span class="fixed">${g.corrected}</span>
+                <div class="reason">${g.reason}</div>
+              </div>`).join('')}
+          </div>` : ''}
+        ${res.vocabulary_upgrade ? `
+          <div class="fb-section">
+            <div class="fb-section-title">词汇提升</div>
+            <div class="fb-vocab">${res.vocabulary_upgrade}</div>
+          </div>` : ''}
+        ${res.native_version ? `
+          <div class="fb-section">
+            <div class="fb-section-title">高分示范</div>
+            <div class="fb-native">${res.native_version}</div>
+          </div>` : ''}
+        <button class="skip-btn" style="margin-top:10px;" onclick="advanceNext()">下一句 →</button>
+      </div>`;
+  }
+
+  document.getElementById('editorPanel').innerHTML = `
+    <div class="editor-context">
+      <div class="ctx-label">目标中文句</div>
+      <div class="ctx-cn">${s.chinese}</div>
+      ${chainHtml}${hintHtml}
+    </div>
+    ${res ? `<div style="padding:10px 14px; background:#f0fdf4; border-radius:8px; margin-bottom:8px; font-size:13px; color:var(--text2);">你的翻译：${res._userInput || ''}</div>` : ''}
+    ${!res ? `
+      <textarea id="transInput" class="editor-input" placeholder="在此输入你的英文翻译…" onkeydown="handleEditorKey(event)"></textarea>
+      <div class="editor-hint">按 Enter 提交 · Shift+Enter 换行</div>
+      <div class="editor-actions">
+        <button class="submit-btn" id="submitBtn" onclick="submitTranslation()">提交批改</button>
+        <button class="skip-btn" onclick="advanceNext()">跳过</button>
+      </div>
+    ` : ''}
+    ${feedbackHtml}
+  `;
+}
+
+function handleEditorKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    submitTranslation();
+  }
+}
+
+async function submitTranslation() {
+  if (state.submitting) return;
+  const ta = document.getElementById('transInput');
+  if (!ta) return;
+  const text = ta.value.trim();
+  if (!text) return;
+
+  state.submitting = true;
+  const btn = document.getElementById('submitBtn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> 批改中…'; }
+
+  const ex = state.subData.examples[state.currentExIdx];
+  const s = ex.sentences[state.activeSentIdx];
+
+  try {
+    const result = await API.post('/api/writing/correct', {
+      question_text: ex.question,
+      target_chinese: s.chinese,
+      user_translation: text
+    });
+
+    if (result.error) { alert(result.error); return; }
+
+    result._userInput = text;
+    state.sentResults[state.activeSentIdx] = result;
+
+    // Save to history
+    API.post('/api/writing/save_practice', {
+      category: state.categories[state.currentCat].name,
+      subcategory: state.subData.name,
+      question: ex.question,
+      target_chinese: s.chinese,
+      user_translation: text,
+      score: result.score,
+      feedback: result,
+      native_version: result.native_version || ''
+    });
+
+    renderExercise();
+  } catch (err) {
+    alert('请求失败，请重试');
+  } finally {
+    state.submitting = false;
+  }
+}
+
+function advanceNext() {
+  const ex = state.subData.examples[state.currentExIdx];
+  if (!ex) return;
+  let next = state.activeSentIdx + 1;
+  if (next >= ex.sentences.length) {
+    state.activeSentIdx = -1;
+    renderExercise();
+    return;
+  }
+  activateSentence(next);
+}
+
+/* ---- Review Center ---- */
+async function loadReview() {
+  const container = document.getElementById('reviewContent');
+  container.innerHTML = '<div class="loading-overlay"><span class="spinner"></span> 加载中…</div>';
+  try {
+    const records = await API.get('/api/writing/practice_history');
+    if (!records.length) {
+      container.innerHTML = '<div class="empty-state"><div class="empty-icon">&#128221;</div><p>暂无练习记录，去实战批改中积累吧</p></div>';
+      return;
+    }
+    container.innerHTML = '<div class="review-list">' + records.map(r => {
+      const sc = parseFloat(r.score) || 0;
+      const cls = sc >= 7 ? 'high' : sc >= 6 ? 'mid' : 'low';
+      const fb = r.feedback || {};
+      const date = new Date(r.timestamp).toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      return `
+        <div class="review-item" onclick="this.querySelector('.review-detail').classList.toggle('open')">
+          <div class="ri-top">
+            <span class="ri-score" style="color:var(--${cls === 'high' ? 'green' : cls === 'mid' ? 'amber' : 'red'})">${r.score || '-'}</span>
+            <span class="ri-date">${r.category} · ${r.subcategory} · ${date}</span>
+          </div>
+          <div class="ri-cn">${r.target_chinese || ''}</div>
+          <div class="ri-trans">${r.user_translation || ''}</div>
+          <div class="review-detail">
+            ${fb.feedback_summary ? `<div style="margin-bottom:8px; font-size:13px;">${fb.feedback_summary}</div>` : ''}
+            ${fb.native_version ? `<div class="fb-native" style="margin-bottom:8px;">${fb.native_version}</div>` : ''}
+            ${fb.vocabulary_upgrade ? `<div class="fb-vocab">${fb.vocabulary_upgrade}</div>` : ''}
+            <button class="skip-btn" style="margin-top:8px; font-size:11px; color:var(--red);" onclick="event.stopPropagation(); deleteReview('${r.id}', this)">删除</button>
+          </div>
+        </div>`;
+    }).join('') + '</div>';
+  } catch (e) {
+    container.innerHTML = '<div class="empty-state"><p>加载失败，请刷新重试</p></div>';
+  }
+}
+
+async function deleteReview(id, el) {
+  if (!confirm('确认删除这条记录？')) return;
+  await API.post(`/api/writing/delete_practice/${id}`);
+  loadReview();
+}
+
+/* ---- Init ---- */
+(async function init() {
+  const tk = localStorage.getItem('authToken');
+  if (!tk) { window.location.href = '/login'; return; }
+  try {
+    const res = await fetch('/verify_token', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: tk }) });
+    const d = await res.json();
+    if (!d.valid) { window.location.href = '/login'; return; }
+  } catch (e) { window.location.href = '/login'; return; }
+  await loadCategories();
+})();
+</script>
+</body>
+</html>
