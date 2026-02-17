@@ -144,41 +144,52 @@ def writing_correct():
         return jsonify({'error': '翻译内容不能为空'}), 400
 
     system_prompt = (
-        "你是一位精通中英双语的雅思前考官。任务是评估用户的英文翻译，并按雅思写作标准（TR, CC, LR, GRA）进行批改。\n\n"
-        "评估重点：\n1. 语法与拼写准确性。\n2. 词汇多样性与地道程度。\n3. 句间逻辑连贯性。\n\n"
+        "你是一位专业的雅思写作考官。你的点评客观、直接、切中要害，不带任何主观情绪色彩。\n\n"
+        "【评分与评估重点】\n"
+        "1. **评分标准宽容，最高分为 7.0 分**。只要逻辑传达清晰，没有导致严重理解困难的语法错误，请放宽标准给出较高分数（如 6.0-7.0）。\n"
+        "2. **客观纠错**：直接指出语法与拼写错误，无需任何客套或鼓励的话语，该怎么改就怎么改。\n"
+        "3. **深度拓展**：提供更多的改进建议和同义词替换，帮助用户丰富词汇库和句型结构。\n\n"
         "【强制要求】\n必须且仅以纯 JSON 格式输出，不要包含 Markdown 符号或额外解释，结构如下：\n"
-        '{"score":"预估单句分数 (如 5.5, 6.0, 6.5)",'
-        '"feedback_summary":"一句话核心评价",'
-        '"grammar_corrections":[{"original":"原词","corrected":"修改后","reason":"原因"}],'
-        '"vocabulary_upgrade":"1-2个高阶替换建议及中文解释",'
-        '"native_version":"符合高分水平的完美示范译文"}'
+        "{\n"
+        '  "score": "预估单句分数 (最高为 7.0，如 5.5, 6.0, 6.5, 7.0)",\n'
+        '  "feedback_summary": "客观直接的一句话核心评价（一针见血地指出最主要的问题或亮点，不带情绪）",\n'
+        '  "grammar_corrections": [{"original": "原词", "corrected": "修改后", "reason": "客观修改原因"}],\n'
+        '  "vocabulary_upgrade": "提供至少3组高阶同义词替换建议及中文解释，并给出具体的句型改进或表达优化建议",\n'
+        '  "native_version": "符合 7.0 分水平的精准、地道示范译文"\n'
+        "}"
     )
+    
     user_prompt = (
         f"【雅思例题】\n{question}\n\n"
         f"【目标中文句】\n{target}\n\n"
         f"【用户英文翻译】\n{translation}"
     )
+    
     try:
         api_key = os.getenv('DEER_API_KEY')
         resp = requests.post(
             'https://api.deerapi.com/v1/chat/completions',
             headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
             json={
-                'model': 'gpt-4o-mini',
+                'model': 'gpt-4o-mini',  # 使用速度与效果兼备的 Gemini 3.0 Flash (或兼容 2.5 Flash)
                 'messages': [
                     {'role': 'system', 'content': system_prompt},
                     {'role': 'user', 'content': user_prompt}
                 ],
-                'temperature': 0.3
+                'temperature': 0.3  # 降温至 0.3，减少情绪化发散，保证客观、精准的批改和丰富的同义词输出
             },
             timeout=30
         )
         resp.raise_for_status()
         content = resp.json()['choices'][0]['message']['content'].strip()
+        
+        # 兼容处理可能携带的 markdown JSON 代码块标记
         content = re.sub(r'^```(?:json)?\s*', '', content)
         content = re.sub(r'\s*```$', '', content)
+        
         result = json.loads(content)
         return jsonify(result)
+        
     except requests.exceptions.Timeout:
         return jsonify({'error': 'AI 服务超时，请重试'}), 504
     except json.JSONDecodeError:
@@ -236,7 +247,30 @@ def writing_practice_history():
     tokens = load_tokens()
     username = tokens.get(token, {}).get('username', 'anonymous')
     records = _load_practice(username)
-    return jsonify(records)
+
+    grouped = {}
+    for r in records:
+        cat = r.get('category', '未分类')
+        sub = r.get('subcategory', '未分类')
+        if cat not in grouped:
+            grouped[cat] = {}
+        if sub not in grouped[cat]:
+            grouped[cat][sub] = {'records': [], 'avg_score': 0, 'count': 0}
+        grouped[cat][sub]['records'].append(r)
+
+    for cat in grouped:
+        for sub in grouped[cat]:
+            recs = grouped[cat][sub]['records']
+            grouped[cat][sub]['count'] = len(recs)
+            scores = []
+            for rec in recs:
+                try:
+                    scores.append(float(rec.get('score', 0)))
+                except (ValueError, TypeError):
+                    pass
+            grouped[cat][sub]['avg_score'] = round(sum(scores) / len(scores), 1) if scores else 0
+
+    return jsonify(grouped)
 
 
 @writing_bp.route('/api/writing/delete_practice/<record_id>', methods=['POST'])

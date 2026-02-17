@@ -36,8 +36,20 @@ body { font-family: var(--serif); background: linear-gradient(135deg, #e0e7ff 0%
 button { font-family: var(--serif); cursor: pointer; }
 textarea, input { font-family: var(--serif); }
 
+/* Main Panel Wrapper */
+.main-panel-wrapper {
+  max-width: 1200px;
+  width: 90%;
+  margin: 40px auto;
+  min-height: calc(100vh - 80px);
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  padding: 30px 40px;
+}
+
 /* Layout */
-.app { max-width: 1100px; margin: 0 auto; padding: 20px 16px 60px; }
+.app { max-width: 100%; margin: 0; padding: 0; }
 .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
 .top-bar h1 { font-size: 22px; font-weight: 700; color: var(--text); }
 .nav-btns { display: flex; gap: 8px; }
@@ -182,6 +194,81 @@ textarea, input { font-family: var(--serif); }
 .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
 .empty-state p { font-size: 15px; }
 
+/* Review Dashboard Container */
+.review-dashboard {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 24px;
+  border: 1.5px solid var(--border);
+}
+
+/* Review Category Titles */
+.review-cat-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 20px 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1.5px solid var(--border);
+}
+.review-cat-title:first-child { margin-top: 0; }
+
+/* Review Subcategory Grid */
+.review-sub-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+/* Review Subcategory Cards */
+.review-sub-card {
+  padding: 18px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all .18s;
+  border: 1.5px solid transparent;
+}
+.review-sub-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+.review-sub-card .rsc-name { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.review-sub-card .rsc-stats { font-size: 12px; color: var(--text2); display: flex; gap: 10px; }
+.review-sub-card .rsc-avg { font-weight: 700; }
+
+/* Gradient Status: Red (avg < 6) */
+.review-sub-card.status-low {
+  background: linear-gradient(135deg, #fef2f2 0%, #fde8e8 50%, #fecaca 100%);
+  border-color: #fca5a5;
+}
+/* Gradient Status: Amber (avg 6-7) */
+.review-sub-card.status-mid {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 50%, #fde68a 100%);
+  border-color: #fcd34d;
+}
+/* Gradient Status: Green-Blue (avg >= 7) */
+.review-sub-card.status-high {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 40%, #e0e7ff 100%);
+  border-color: #86efac;
+}
+
+/* Review Records Header */
+.review-records-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+/* Feedback card inside review detail */
+.review-detail .feedback-card {
+  margin-top: 0;
+  border: none;
+  box-shadow: none;
+}
+
 /* Loading */
 .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .6s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -189,17 +276,20 @@ textarea, input { font-family: var(--serif); }
 
 /* Responsive */
 @media (max-width: 768px) {
-  .app { padding: 12px 10px 40px; }
+  .main-panel-wrapper { width: 95%; margin: 16px auto; padding: 20px 16px; border-radius: 16px; }
   .top-bar h1 { font-size: 18px; }
   .cat-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
   .sub-list { grid-template-columns: 1fr; }
   .sentence-grid.split { grid-template-columns: 1fr; }
   .practice-header { position: relative; }
+  .review-sub-grid { grid-template-columns: 1fr; }
+  .review-dashboard { padding: 16px; }
 }
 </style>
 </head>
 <body>
 
+<div class="main-panel-wrapper">
 <div class="app" id="app">
   <!-- Top Bar -->
   <div class="top-bar">
@@ -268,8 +358,11 @@ textarea, input { font-family: var(--serif); }
   <!-- Review View -->
   <div id="reviewView" style="display:none;">
     <div class="card-title" style="margin-bottom:14px;">复习中心</div>
-    <div id="reviewContent"></div>
+    <div class="review-dashboard" id="reviewDashboard">
+      <div id="reviewContent"></div>
+    </div>
   </div>
+</div>
 </div>
 
 <script>
@@ -292,7 +385,9 @@ let state = {
   currentExIdx: 0,
   activeSentIdx: -1,
   sentResults: {},
-  submitting: false
+  submitting: false,
+  reviewData: null,
+  reviewDrilldown: null
 };
 
 /* ---- View Switching ---- */
@@ -310,6 +405,7 @@ function switchView(view) {
     document.getElementById('practiceView').style.display = '';
   } else if (view === 'review') {
     document.getElementById('reviewView').style.display = '';
+    state.reviewDrilldown = null;
     loadReview();
   }
 }
@@ -638,41 +734,145 @@ async function loadReview() {
   const container = document.getElementById('reviewContent');
   container.innerHTML = '<div class="loading-overlay"><span class="spinner"></span> 加载中…</div>';
   try {
-    const records = await API.get('/api/writing/practice_history');
-    if (!records.length) {
+    const data = await API.get('/api/writing/practice_history');
+    state.reviewData = data;
+    if (!Object.keys(data).length) {
       container.innerHTML = '<div class="empty-state"><div class="empty-icon">&#128221;</div><p>暂无练习记录，去实战批改中积累吧</p></div>';
       return;
     }
-    container.innerHTML = '<div class="review-list">' + records.map(r => {
-      const sc = parseFloat(r.score) || 0;
-      const cls = sc >= 7 ? 'high' : sc >= 6 ? 'mid' : 'low';
-      const fb = r.feedback || {};
-      const date = new Date(r.timestamp).toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-      return `
-        <div class="review-item" onclick="this.querySelector('.review-detail').classList.toggle('open')">
-          <div class="ri-top">
-            <span class="ri-score" style="color:var(--${cls === 'high' ? 'green' : cls === 'mid' ? 'amber' : 'red'})">${r.score || '-'}</span>
-            <span class="ri-date">${r.category} · ${r.subcategory} · ${date}</span>
-          </div>
-          <div class="ri-cn">${r.target_chinese || ''}</div>
-          <div class="ri-trans">${r.user_translation || ''}</div>
-          <div class="review-detail">
-            ${fb.feedback_summary ? `<div style="margin-bottom:8px; font-size:13px;">${fb.feedback_summary}</div>` : ''}
-            ${fb.native_version ? `<div class="fb-native" style="margin-bottom:8px;">${fb.native_version}</div>` : ''}
-            ${fb.vocabulary_upgrade ? `<div class="fb-vocab">${fb.vocabulary_upgrade}</div>` : ''}
-            <button class="skip-btn" style="margin-top:8px; font-size:11px; color:var(--red);" onclick="event.stopPropagation(); deleteReview('${r.id}', this)">删除</button>
-          </div>
-        </div>`;
-    }).join('') + '</div>';
+    if (state.reviewDrilldown) {
+      renderReviewRecords();
+    } else {
+      renderReviewGrid();
+    }
   } catch (e) {
     container.innerHTML = '<div class="empty-state"><p>加载失败，请刷新重试</p></div>';
   }
 }
 
-async function deleteReview(id, el) {
+function renderReviewGrid() {
+  const data = state.reviewData;
+  const container = document.getElementById('reviewContent');
+  let html = '';
+  for (const cat of Object.keys(data)) {
+    html += `<div class="review-cat-title">${cat}</div>`;
+    html += '<div class="review-sub-grid">';
+    for (const sub of Object.keys(data[cat])) {
+      const info = data[cat][sub];
+      const avg = info.avg_score;
+      const statusCls = avg >= 7 ? 'status-high' : avg >= 6 ? 'status-mid' : 'status-low';
+      const avgColor = avg >= 7 ? 'var(--green)' : avg >= 6 ? 'var(--amber)' : 'var(--red)';
+      html += `
+        <div class="review-sub-card ${statusCls}" onclick="drillIntoSub('${cat.replace(/'/g, "\\'")}', '${sub.replace(/'/g, "\\'")}')">
+          <div class="rsc-name">${sub}</div>
+          <div class="rsc-stats">
+            <span>练习 ${info.count} 句</span>
+            <span class="rsc-avg" style="color:${avgColor}">均分 ${avg}</span>
+          </div>
+        </div>`;
+    }
+    html += '</div>';
+  }
+  container.innerHTML = html;
+}
+
+function drillIntoSub(cat, sub) {
+  state.reviewDrilldown = { category: cat, subcategory: sub };
+  renderReviewRecords();
+}
+
+function renderReviewRecords() {
+  const dd = state.reviewDrilldown;
+  const info = state.reviewData[dd.category][dd.subcategory];
+  const records = info.records;
+  const container = document.getElementById('reviewContent');
+  let html = `
+    <div class="review-records-header">
+      <button class="back-btn" onclick="backToReviewGrid()" style="margin-bottom:0;">&#8592; 返回总览</button>
+      <span style="font-size:13px; color:var(--text3);">${dd.category} / ${dd.subcategory} (${records.length} 条)</span>
+    </div>
+    <div class="review-list">`;
+  for (const r of records) {
+    const sc = parseFloat(r.score) || 0;
+    const cls = sc >= 7 ? 'high' : sc >= 6 ? 'mid' : 'low';
+    const fb = r.feedback || {};
+    const date = new Date(r.timestamp).toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    html += `
+      <div class="review-item" onclick="toggleReviewDetail(this)">
+        <div class="ri-top">
+          <span class="ri-score" style="color:var(--${cls === 'high' ? 'green' : cls === 'mid' ? 'amber' : 'red'})">${r.score || '-'}</span>
+          <span class="ri-date">${date}</span>
+        </div>
+        <div class="ri-cn">${r.target_chinese || ''}</div>
+        <div class="ri-trans">${r.user_translation || ''}</div>
+        <div class="review-detail">
+          <div class="feedback-card">
+            <div class="fb-score ${cls}">${fb.score || r.score || '-'}</div>
+            <div class="fb-summary">${fb.feedback_summary || ''}</div>
+            ${(fb.grammar_corrections && fb.grammar_corrections.length) ? `
+              <div class="fb-section">
+                <div class="fb-section-title">语法修正</div>
+                ${fb.grammar_corrections.map(g => `
+                  <div class="fb-correction">
+                    <span class="orig">${g.original}</span> → <span class="fixed">${g.corrected}</span>
+                    <div class="reason">${g.reason}</div>
+                  </div>`).join('')}
+              </div>` : ''}
+            ${fb.vocabulary_upgrade ? `
+              <div class="fb-section">
+                <div class="fb-section-title">词汇提升</div>
+                <div class="fb-vocab">${fb.vocabulary_upgrade}</div>
+              </div>` : ''}
+            ${fb.native_version ? `
+              <div class="fb-section">
+                <div class="fb-section-title">高分示范</div>
+                <div class="fb-native">${fb.native_version}</div>
+              </div>` : ''}
+          </div>
+          <button class="skip-btn" style="margin-top:8px; font-size:11px; color:var(--red);"
+            onclick="event.stopPropagation(); deleteReview('${r.id}')">删除</button>
+        </div>
+      </div>`;
+  }
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function toggleReviewDetail(el) {
+  el.querySelector('.review-detail').classList.toggle('open');
+}
+
+function backToReviewGrid() {
+  state.reviewDrilldown = null;
+  renderReviewGrid();
+}
+
+async function deleteReview(id) {
   if (!confirm('确认删除这条记录？')) return;
   await API.post(`/api/writing/delete_practice/${id}`);
-  loadReview();
+  const data = await API.get('/api/writing/practice_history');
+  state.reviewData = data;
+  if (state.reviewDrilldown) {
+    const dd = state.reviewDrilldown;
+    if (data[dd.category] && data[dd.category][dd.subcategory]) {
+      renderReviewRecords();
+    } else {
+      state.reviewDrilldown = null;
+      if (Object.keys(data).length) {
+        renderReviewGrid();
+      } else {
+        document.getElementById('reviewContent').innerHTML =
+          '<div class="empty-state"><div class="empty-icon">&#128221;</div><p>暂无练习记录，去实战批改中积累吧</p></div>';
+      }
+    }
+  } else {
+    if (Object.keys(data).length) {
+      renderReviewGrid();
+    } else {
+      document.getElementById('reviewContent').innerHTML =
+        '<div class="empty-state"><div class="empty-icon">&#128221;</div><p>暂无练习记录，去实战批改中积累吧</p></div>';
+    }
+  }
 }
 
 /* ---- Init ---- */
