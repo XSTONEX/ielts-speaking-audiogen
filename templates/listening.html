@@ -32,8 +32,11 @@
     .lyrics-line.active.starred { background: linear-gradient(90deg, #fef9c3 0%, rgba(239,246,255,.85) 40%); border-left: 3px solid #3b82f6; }
 
     /* Annotated word */
-    .annotated-word { background: rgba(191,219,254,.45); text-decoration: underline solid #60a5fa; text-decoration-thickness: 1.5px; text-underline-offset: 2px; cursor: help; border-radius: 3px; padding: 1px 2px; transition: background .15s; }
+    .annotated-word { position: relative; background: rgba(191,219,254,.45); text-decoration: underline solid #60a5fa; text-decoration-thickness: 1.5px; text-underline-offset: 2px; cursor: help; border-radius: 3px; padding: 1px 2px; transition: background .15s; }
     .annotated-word:hover { background: rgba(147,197,253,.6); }
+    .annotated-word::after { content: attr(data-meaning); position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: #1e293b; color: #fff; font-size: 12px; line-height: 1.4; padding: 5px 10px; border-radius: 6px; max-width: 200px; width: max-content; text-align: center; pointer-events: none; opacity: 0; transition: opacity .15s; z-index: 150; font-weight: normal; text-decoration: none; white-space: pre-wrap; }
+    .annotated-word::before { content: ''; position: absolute; bottom: calc(100% + 2px); left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: #1e293b; pointer-events: none; opacity: 0; transition: opacity .15s; z-index: 150; }
+    .annotated-word:hover::after, .annotated-word:hover::before { opacity: 1; }
 
     /* Progress bar hover */
     .progress-wrap:hover .progress-thumb { transform: translate(-50%,-50%) scale(1.5); }
@@ -310,6 +313,9 @@ function renderListView() {
     const statusText = { completed: 'Completed', processing: 'Processing...', error: 'Error' }[p.status] || p.status;
     const dur = p.duration ? formatTime(p.duration) : '--:--';
     const date = p.created_at ? new Date(p.created_at).toLocaleDateString('zh-CN') : '';
+    const retryBtn = p.status === 'error'
+      ? `<button class="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-md mt-2 ml-1.5 bg-blue-50 text-blue-600 border-none cursor-pointer hover:bg-blue-100 transition-colors" onclick="event.stopPropagation();retryProject('${p.id}')">&#8635; Retry</button>`
+      : '';
     return `
       <div class="group relative bg-white border border-slate-200 rounded-xl p-5 cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg hover:border-blue-200" onclick="openProject('${p.id}')">
         <button class="absolute top-2.5 right-2.5 w-7 h-7 flex items-center justify-center bg-transparent border-none text-slate-300 hover:text-red-500 hover:bg-red-50 cursor-pointer text-lg rounded transition-colors" onclick="event.stopPropagation();deleteProject('${p.id}')" title="Delete">&times;</button>
@@ -317,7 +323,10 @@ function renderListView() {
         <div class="text-xs text-slate-400 flex gap-3 flex-wrap">
           <span>${date}</span><span>${dur}</span>
         </div>
-        <span class="inline-block text-[11px] font-semibold px-2 py-0.5 rounded-md mt-2 ${statusCls}">${statusText}</span>
+        <div class="flex items-center flex-wrap">
+          <span class="inline-block text-[11px] font-semibold px-2 py-0.5 rounded-md mt-2 ${statusCls}">${statusText}</span>
+          ${retryBtn}
+        </div>
       </div>`;
   }).join('');
 }
@@ -327,6 +336,12 @@ async function deleteProject(id) {
   const r = await API.del('/api/listening_review/project/' + id);
   if (r.success) { showToast('Project deleted'); await loadProjects(); }
   else showToast(r.error || 'Delete failed');
+}
+
+async function retryProject(id) {
+  const r = await API.post('/api/listening_review/project/' + id + '/retry', {});
+  if (r.success) { showToast('重新转录已开始...'); await loadProjects(); }
+  else showToast(r.error || 'Retry failed');
 }
 
 // ===================================================================
@@ -475,7 +490,7 @@ function renderAnnotatedText(text, annotations) {
   for (const ann of sorted) {
     if (ann.start_offset > lastEnd) result += esc(text.substring(lastEnd, ann.start_offset));
     const word = text.substring(ann.start_offset, ann.end_offset);
-    result += `<span class="annotated-word" data-aid="${ann.id}" data-seg-id="${ann.segment_id}" title="${esc(ann.meaning)}">${esc(word)}</span>`;
+    result += `<span class="annotated-word" data-aid="${ann.id}" data-seg-id="${ann.segment_id}" data-meaning="${esc(ann.meaning)}">${esc(word)}</span>`;
     lastEnd = ann.end_offset;
   }
   if (lastEnd < text.length) result += esc(text.substring(lastEnd));

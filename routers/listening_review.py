@@ -380,6 +380,35 @@ def delete_project(project_id):
     return jsonify({'success': True, 'message': '项目已删除'})
 
 
+@listening_review_bp.route('/api/listening_review/project/<project_id>/retry', methods=['POST'])
+def retry_transcription(project_id):
+    username = _get_auth_username()
+    if not username:
+        return jsonify({'error': '未登录或token无效'}), 401
+
+    projects, idx = _find_user_project(username, project_id)
+    if idx == -1:
+        return jsonify({'error': '项目不存在'}), 404
+
+    project = projects[idx]
+    if project['status'] != 'error':
+        return jsonify({'error': '只能重试失败的项目'}), 400
+
+    audio_path = os.path.join(_project_dir(project_id), project['audio_filename'])
+    if not os.path.exists(audio_path):
+        return jsonify({'error': '原始音频文件不存在'}), 404
+
+    projects[idx]['status'] = 'processing'
+    projects[idx]['error'] = None
+    projects[idx]['updated_at'] = datetime.now().isoformat()
+    _save_user_projects(username, projects)
+
+    thread = threading.Thread(target=_transcribe_async, args=(project_id, audio_path, username), daemon=True)
+    thread.start()
+
+    return jsonify({'success': True, 'message': '重新转录已开始'})
+
+
 @listening_review_bp.route('/api/listening_review/project/<project_id>/star', methods=['PUT'])
 def toggle_star(project_id):
     username = _get_auth_username()
