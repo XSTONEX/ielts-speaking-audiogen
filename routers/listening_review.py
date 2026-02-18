@@ -413,6 +413,10 @@ def list_projects():
     projects = _load_user_projects(username)
     projects.sort(key=lambda x: x.get('created_at', ''), reverse=True)
 
+    for p in projects:
+        data = _load_project_data(p['id'])
+        p['vocab_count'] = len(data.get('vocab_annotations', [])) if data else 0
+
     return jsonify({'success': True, 'projects': projects})
 
 
@@ -484,6 +488,40 @@ def retry_transcription(project_id):
     thread.start()
 
     return jsonify({'success': True, 'message': '重新转录已开始'})
+
+
+@listening_review_bp.route('/api/listening_review/project/<project_id>/mastered', methods=['PUT'])
+def toggle_mastered(project_id):
+    username = _get_auth_username()
+    if not username:
+        return jsonify({'error': '未登录或token无效'}), 401
+
+    projects, idx = _find_user_project(username, project_id)
+    if idx == -1:
+        return jsonify({'error': '项目不存在'}), 404
+
+    projects[idx]['mastered'] = not projects[idx].get('mastered', False)
+    projects[idx]['updated_at'] = datetime.now().isoformat()
+    _save_user_projects(username, projects)
+
+    return jsonify({'success': True, 'mastered': projects[idx]['mastered']})
+
+
+@listening_review_bp.route('/api/listening_review/project/<project_id>/checkin', methods=['POST'])
+def checkin_project(project_id):
+    username = _get_auth_username()
+    if not username:
+        return jsonify({'error': '未登录或token无效'}), 401
+
+    projects, idx = _find_user_project(username, project_id)
+    if idx == -1:
+        return jsonify({'error': '项目不存在'}), 404
+
+    projects[idx]['checkin_count'] = projects[idx].get('checkin_count', 0) + 1
+    projects[idx]['updated_at'] = datetime.now().isoformat()
+    _save_user_projects(username, projects)
+
+    return jsonify({'success': True, 'checkin_count': projects[idx]['checkin_count']})
 
 
 @listening_review_bp.route('/api/listening_review/project/<project_id>/star', methods=['PUT'])

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
   <meta charset="UTF-8" />
   <title>Listening Review</title>
@@ -8,7 +9,9 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
-  <link href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Crimson+Text:wght@400;600&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Crimson+Text:wght@400;600&display=swap"
+    rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -22,33 +25,126 @@
     }
   </script>
   <style>
-    body { font-family: 'PT Serif', 'Crimson Text', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif; }
+    body {
+      font-family: 'PT Serif', 'Crimson Text', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
+    }
 
     /* Lyrics dynamic states */
-    .lyrics-line .line-text { color: #64748b; transition: color .3s, font-weight .3s; }
-    .lyrics-line.active { background: rgba(239,246,255,.85); border-left: 3px solid #3b82f6; }
-    .lyrics-line.active .line-text { color: #0f172a; font-weight: 600; }
-    .lyrics-line.starred:not(.active) { background: linear-gradient(90deg, #fef9c3, transparent 60%); }
-    .lyrics-line.active.starred { background: linear-gradient(90deg, #fef9c3 0%, rgba(239,246,255,.85) 40%); border-left: 3px solid #3b82f6; }
+    .lyrics-line .line-text {
+      color: #64748b;
+      transition: color .3s, font-weight .3s;
+    }
+
+    .lyrics-line.active {
+      background: rgba(239, 246, 255, .85);
+      border-left: 3px solid #3b82f6;
+    }
+
+    .lyrics-line.active .line-text {
+      color: #0f172a;
+      font-weight: 600;
+    }
+
+    .lyrics-line.starred:not(.active) {
+      background: linear-gradient(90deg, #fef9c3, transparent 60%);
+    }
+
+    .lyrics-line.active.starred {
+      background: linear-gradient(90deg, #fef9c3 0%, rgba(239, 246, 255, .85) 40%);
+      border-left: 3px solid #3b82f6;
+    }
 
     /* Annotated word */
-    .annotated-word { position: relative; background: rgba(191,219,254,.45); text-decoration: underline solid #60a5fa; text-decoration-thickness: 1.5px; text-underline-offset: 2px; cursor: help; border-radius: 3px; padding: 1px 2px; transition: background .15s; }
-    .annotated-word:hover { background: rgba(147,197,253,.6); }
-    .annotated-word::after { content: attr(data-meaning); position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: #1e293b; color: #fff; font-size: 12px; line-height: 1.4; padding: 5px 10px; border-radius: 6px; max-width: 200px; width: max-content; text-align: center; pointer-events: none; opacity: 0; transition: opacity .15s; z-index: 150; font-weight: normal; text-decoration: none; white-space: pre-wrap; }
-    .annotated-word::before { content: ''; position: absolute; bottom: calc(100% + 2px); left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: #1e293b; pointer-events: none; opacity: 0; transition: opacity .15s; z-index: 150; }
-    .annotated-word:hover::after, .annotated-word:hover::before { opacity: 1; }
+    .annotated-word {
+      position: relative;
+      background: rgba(191, 219, 254, .45);
+      text-decoration: underline solid #60a5fa;
+      text-decoration-thickness: 1.5px;
+      text-underline-offset: 2px;
+      cursor: help;
+      border-radius: 3px;
+      padding: 1px 2px;
+      transition: background .15s;
+    }
+
+    .annotated-word:hover {
+      background: rgba(147, 197, 253, .6);
+    }
+
+    .annotated-word::after {
+      content: attr(data-meaning);
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e293b;
+      color: #fff;
+      font-size: 12px;
+      line-height: 1.4;
+      padding: 5px 10px;
+      border-radius: 6px;
+      max-width: 200px;
+      width: max-content;
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .15s;
+      z-index: 150;
+      font-weight: normal;
+      text-decoration: none;
+      white-space: pre-wrap;
+    }
+
+    .annotated-word::before {
+      content: '';
+      position: absolute;
+      bottom: calc(100% + 2px);
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: #1e293b;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .15s;
+      z-index: 150;
+    }
+
+    .annotated-word:hover::after,
+    .annotated-word:hover::before {
+      opacity: 1;
+    }
 
     /* Progress bar hover */
-    .progress-wrap:hover .progress-thumb { transform: translate(-50%,-50%) scale(1.5); }
-    .progress-wrap:hover .progress-track-inner { height: 6px; }
+    .progress-wrap:hover .progress-thumb {
+      transform: translate(-50%, -50%) scale(1.5);
+    }
+
+    .progress-wrap:hover .progress-track-inner {
+      height: 6px;
+    }
 
     /* Toast animation */
-    .toast-show { transform: translateX(-50%) translateY(0) !important; opacity: 1 !important; }
+    .toast-show {
+      transform: translateX(-50%) translateY(0) !important;
+      opacity: 1 !important;
+    }
 
     /* Translation line */
-    .translation-line { font-size: 14px; color: #64748b; opacity: 0.7; line-height: 1.5; margin-top: 2px; }
-    .lyrics-line.active .translation-line { opacity: 0.85; }
-    .translations-hidden .translation-line { display: none; }
+    .translation-line {
+      font-size: 14px;
+      color: #64748b;
+      opacity: 0.7;
+      line-height: 1.5;
+      margin-top: 2px;
+    }
+
+    .lyrics-line.active .translation-line {
+      opacity: 0.85;
+    }
+
+    .translations-hidden .translation-line {
+      display: none;
+    }
 
     /* Project card: allow tooltip to overflow */
     .project-card {
@@ -62,9 +158,11 @@
       text-overflow: ellipsis;
       position: relative;
     }
+
     .project-title.is-truncated:hover {
       z-index: 50;
     }
+
     .project-title::after {
       content: attr(data-full-title);
       position: absolute;
@@ -86,34 +184,85 @@
       visibility: hidden;
       transition: opacity .15s;
       z-index: 50;
-      box-shadow: 0 4px 12px rgba(0,0,0,.15);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
     }
+
     .project-title.is-truncated:hover::after {
       opacity: 1;
       visibility: visible;
     }
 
+    /* Volume slider */
+    .vol-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #3b82f6;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,.15);
+    }
+    .vol-slider::-moz-range-thumb {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #3b82f6;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 1px 3px rgba(0,0,0,.15);
+    }
+    .vol-slider:hover::-webkit-slider-thumb { transform: scale(1.3); }
+    .vol-slider:hover::-moz-range-thumb { transform: scale(1.3); }
+
     /* Scrollbar */
-    ::-webkit-scrollbar { width: 5px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    ::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
   </style>
 </head>
+
 <body class="bg-slate-50 min-h-screen">
 
   <!-- ==================== Top Bar ==================== -->
-  <header id="topBar" class="fixed top-0 inset-x-0 h-14 bg-white/70 backdrop-blur-md border-b border-slate-200/50 z-50 flex items-center px-5 md:px-8">
+  <header id="topBar"
+    class="fixed top-0 inset-x-0 h-14 bg-white/70 backdrop-blur-md border-b border-slate-200/50 z-50 flex items-center px-5 md:px-8">
     <!-- List mode header -->
     <div id="topList" class="flex items-center justify-between w-full">
       <h1 class="text-xl font-bold text-slate-800 tracking-tight">Listening Review</h1>
-      <a href="/" class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-600 font-semibold text-sm px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors no-underline">&#8592; Home</a>
+      <a href="/"
+        class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-600 font-semibold text-sm px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors no-underline">&#8592;
+        Home</a>
     </div>
     <!-- Detail mode header -->
     <div id="topDetail" class="hidden items-center gap-3 w-full">
-      <button onclick="backToList()" class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-600 font-semibold text-sm px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors flex-shrink-0 border-none cursor-pointer">&#8592; Back</button>
+      <button onclick="backToList()"
+        class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-600 font-semibold text-sm px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors flex-shrink-0 border-none cursor-pointer">&#8592;
+        Back</button>
       <h1 id="detailTitle" class="text-lg font-bold text-slate-800 truncate"></h1>
-      <button id="toggleTransBtn" onclick="toggleTranslations()" class="ml-auto inline-flex items-center gap-1 bg-blue-100 text-blue-600 font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-blue-200 transition-colors border-none cursor-pointer flex-shrink-0" title="Toggle translations">&#35793; Translation</button>
+      <div class="ml-auto flex items-center gap-2 flex-shrink-0">
+        <button id="masteredBtn" onclick="toggleMastered()"
+          class="inline-flex items-center gap-1 bg-slate-100 text-slate-500 font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-emerald-100 hover:text-emerald-600 transition-colors border-none cursor-pointer"
+          title="标记为已熟练">&#10003; 标熟</button>
+        <button id="checkinBtn" onclick="doCheckin()"
+          class="inline-flex items-center gap-1 bg-amber-50 text-amber-600 font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-amber-100 transition-colors border-none cursor-pointer"
+          title="打卡一次">&#9745; 打卡</button>
+        <button id="toggleTransBtn" onclick="toggleTranslations()"
+          class="inline-flex items-center gap-1 bg-blue-100 text-blue-600 font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-blue-200 transition-colors border-none cursor-pointer"
+          title="Toggle translations">&#35793; Translation</button>
+      </div>
     </div>
   </header>
 
@@ -123,7 +272,9 @@
     <!-- List View -->
     <div id="listView" class="max-w-5xl mx-auto px-4 md:px-8 py-6">
       <div class="flex gap-3 mb-5 justify-end">
-        <button onclick="openUploadModal()" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-colors border-none cursor-pointer shadow-sm">+ New Project</button>
+        <button onclick="openUploadModal()"
+          class="bg-blue-500 hover:bg-blue-600 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-colors border-none cursor-pointer shadow-sm">+
+          New Project</button>
       </div>
       <div id="projectGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
     </div>
@@ -136,73 +287,104 @@
   </main>
 
   <!-- ==================== Bottom Player Bar ==================== -->
-  <div id="playerBar" class="fixed bottom-0 inset-x-0 bg-white/70 backdrop-blur-md border-t border-slate-200/50 z-50 hidden">
+  <div id="playerBar"
+    class="fixed bottom-0 inset-x-0 bg-white/70 backdrop-blur-md border-t border-slate-200/50 z-50 hidden">
     <audio id="audioEl" preload="auto"></audio>
     <div class="max-w-4xl mx-auto px-5 md:px-8 py-3">
       <!-- Progress -->
       <div id="progressWrap" class="progress-wrap w-full h-5 flex items-center cursor-pointer mb-2">
         <div class="progress-track-inner relative w-full h-1 bg-slate-200 rounded-full transition-all">
-          <div id="progressFill" class="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 to-blue-400 rounded-full" style="width:0"></div>
-          <div id="progressThumb" class="progress-thumb absolute top-1/2 w-3 h-3 bg-blue-500 rounded-full shadow-md transition-transform" style="left:0;transform:translate(-50%,-50%)"></div>
+          <div id="progressFill"
+            class="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 to-blue-400 rounded-full" style="width:0">
+          </div>
+          <div id="progressThumb"
+            class="progress-thumb absolute top-1/2 w-3 h-3 bg-blue-500 rounded-full shadow-md transition-transform"
+            style="left:0;transform:translate(-50%,-50%)"></div>
         </div>
       </div>
       <!-- Controls -->
       <div class="flex items-center gap-3 flex-wrap">
-        <span class="text-xs text-slate-500 font-mono min-w-[80px]"><span id="curTime">0:00</span> / <span id="totTime">0:00</span></span>
+        <span class="text-xs text-slate-500 font-mono min-w-[80px]"><span id="curTime">0:00</span> / <span
+            id="totTime">0:00</span></span>
         <div class="flex items-center gap-2">
-          <button id="playBtn" onclick="togglePlay()" class="w-9 h-9 rounded-full bg-blue-500 hover:bg-blue-600 text-white border-none cursor-pointer flex items-center justify-center text-sm transition-colors shadow-sm">&#9654;</button>
+          <button id="playBtn" onclick="togglePlay()"
+            class="w-9 h-9 rounded-full bg-blue-500 hover:bg-blue-600 text-white border-none cursor-pointer flex items-center justify-center text-sm transition-colors shadow-sm">&#9654;</button>
         </div>
-        <div class="ml-auto flex items-center gap-1.5 flex-wrap">
-          <button class="speed-btn text-xs px-2.5 py-1 rounded-md border border-slate-200 bg-slate-50 text-slate-500 cursor-pointer transition-all hover:bg-slate-100" data-rate="0.8" onclick="setSpeed(0.8)">0.8x</button>
-          <button class="speed-btn text-xs px-2.5 py-1 rounded-md border border-blue-500 bg-blue-500 text-white cursor-pointer transition-all" data-rate="1" onclick="setSpeed(1)">1.0x</button>
-          <button class="speed-btn text-xs px-2.5 py-1 rounded-md border border-slate-200 bg-slate-50 text-slate-500 cursor-pointer transition-all hover:bg-slate-100" data-rate="1.2" onclick="setSpeed(1.2)">1.2x</button>
-          <button class="speed-btn text-xs px-2.5 py-1 rounded-md border border-slate-200 bg-slate-50 text-slate-500 cursor-pointer transition-all hover:bg-slate-100" data-rate="1.5" onclick="setSpeed(1.5)">1.5x</button>
+        <div class="ml-auto flex items-center gap-3 flex-wrap">
+          <div class="flex items-center gap-1.5 bg-blue-50 rounded-lg px-2.5 py-1">
+            <button id="volIcon" onclick="toggleMute()" class="bg-transparent border-none cursor-pointer text-blue-500 hover:text-blue-700 transition-colors p-0 leading-none flex items-center w-4 h-4" title="Mute/Unmute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>
+            <input id="volSlider" type="range" min="0" max="100" value="100" oninput="setVolume(this.value)" class="vol-slider w-[72px] h-1 appearance-none bg-blue-200 rounded-full outline-none cursor-pointer" />
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button class="speed-btn text-xs px-2.5 py-1 rounded-md border border-slate-200 bg-slate-50 text-slate-500 cursor-pointer transition-all hover:bg-slate-100" data-rate="0.8" onclick="setSpeed(0.8)">0.8x</button>
+            <button class="speed-btn text-xs px-2.5 py-1 rounded-md border border-blue-500 bg-blue-500 text-white cursor-pointer transition-all" data-rate="1" onclick="setSpeed(1)">1.0x</button>
+            <button class="speed-btn text-xs px-2.5 py-1 rounded-md border border-slate-200 bg-slate-50 text-slate-500 cursor-pointer transition-all hover:bg-slate-100" data-rate="1.2" onclick="setSpeed(1.2)">1.2x</button>
+            <button class="speed-btn text-xs px-2.5 py-1 rounded-md border border-slate-200 bg-slate-50 text-slate-500 cursor-pointer transition-all hover:bg-slate-100" data-rate="1.5" onclick="setSpeed(1.5)">1.5x</button>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- ==================== Upload Modal ==================== -->
-  <div id="uploadModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center hidden">
+  <div id="uploadModal"
+    class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center hidden">
     <div class="bg-white rounded-2xl p-7 w-[min(520px,92vw)] max-h-[80vh] overflow-y-auto shadow-2xl">
       <div class="text-xl font-bold text-slate-800 mb-5">New Listening Project</div>
       <!-- Tabs -->
       <div class="flex border-b-2 border-slate-200 mb-5">
-        <button class="modal-tab pb-2.5 px-5 text-sm font-semibold border-b-2 -mb-[2px] transition-colors cursor-pointer bg-transparent border-t-0 border-l-0 border-r-0 text-blue-600 border-blue-500" onclick="switchTab('file')">Upload File</button>
-        <button class="modal-tab pb-2.5 px-5 text-sm font-semibold border-b-2 -mb-[2px] transition-colors cursor-pointer bg-transparent border-t-0 border-l-0 border-r-0 text-slate-400 border-transparent" onclick="switchTab('url')">From URL</button>
+        <button
+          class="modal-tab pb-2.5 px-5 text-sm font-semibold border-b-2 -mb-[2px] transition-colors cursor-pointer bg-transparent border-t-0 border-l-0 border-r-0 text-blue-600 border-blue-500"
+          onclick="switchTab('file')">Upload File</button>
+        <button
+          class="modal-tab pb-2.5 px-5 text-sm font-semibold border-b-2 -mb-[2px] transition-colors cursor-pointer bg-transparent border-t-0 border-l-0 border-r-0 text-slate-400 border-transparent"
+          onclick="switchTab('url')">From URL</button>
       </div>
       <!-- File tab -->
       <div id="tabFile" class="tab-panel">
         <div class="mb-4">
           <label class="block text-sm font-semibold text-slate-700 mb-1.5">Title (optional)</label>
-          <input id="fileTitle" class="w-full px-3.5 py-2.5 border-[1.5px] border-slate-200 rounded-lg text-sm text-slate-700 outline-none focus:border-blue-500 transition-colors" placeholder="Leave blank to use filename" />
+          <input id="fileTitle"
+            class="w-full px-3.5 py-2.5 border-[1.5px] border-slate-200 rounded-lg text-sm text-slate-700 outline-none focus:border-blue-500 transition-colors"
+            placeholder="Leave blank to use filename" />
         </div>
         <div class="mb-4">
-          <label id="fileDropLabel" class="block border-2 border-dashed border-slate-300 rounded-xl py-8 px-5 text-center cursor-pointer transition-all hover:border-blue-500 hover:bg-blue-50 text-slate-500 text-sm">
+          <label id="fileDropLabel"
+            class="block border-2 border-dashed border-slate-300 rounded-xl py-8 px-5 text-center cursor-pointer transition-all hover:border-blue-500 hover:bg-blue-50 text-slate-500 text-sm">
             <span class="block text-3xl mb-2">&#128190;</span>
             <span id="fileDropText">Click to select or drag audio file here</span>
-            <input type="file" id="fileInput" accept=".mp3,.wav,.m4a,.flac,.ogg,.mp4,.webm" onchange="onFileSelected(this)" class="hidden" />
+            <input type="file" id="fileInput" accept=".mp3,.wav,.m4a,.flac,.ogg,.mp4,.webm"
+              onchange="onFileSelected(this)" class="hidden" />
           </label>
           <div class="text-xs text-slate-400 mt-1.5">Supported: MP3, WAV, M4A, FLAC, OGG, MP4, WebM. Max 25MB.</div>
         </div>
         <div class="flex gap-3 justify-end mt-5">
-          <button onclick="closeUploadModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm px-5 py-2.5 rounded-xl transition-colors border border-slate-200 cursor-pointer">Cancel</button>
-          <button id="uploadFileBtn" onclick="doUploadFile()" disabled class="bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-colors border-none cursor-pointer shadow-sm">Upload</button>
+          <button onclick="closeUploadModal()"
+            class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm px-5 py-2.5 rounded-xl transition-colors border border-slate-200 cursor-pointer">Cancel</button>
+          <button id="uploadFileBtn" onclick="doUploadFile()" disabled
+            class="bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-colors border-none cursor-pointer shadow-sm">Upload</button>
         </div>
       </div>
       <!-- URL tab -->
       <div id="tabUrl" class="tab-panel hidden">
         <div class="mb-4">
           <label class="block text-sm font-semibold text-slate-700 mb-1.5">Title (optional)</label>
-          <input id="urlTitle" class="w-full px-3.5 py-2.5 border-[1.5px] border-slate-200 rounded-lg text-sm text-slate-700 outline-none focus:border-blue-500 transition-colors" placeholder="Leave blank to use URL filename" />
+          <input id="urlTitle"
+            class="w-full px-3.5 py-2.5 border-[1.5px] border-slate-200 rounded-lg text-sm text-slate-700 outline-none focus:border-blue-500 transition-colors"
+            placeholder="Leave blank to use URL filename" />
         </div>
         <div class="mb-4">
           <label class="block text-sm font-semibold text-slate-700 mb-1.5">Audio URL</label>
-          <input id="urlInput" class="w-full px-3.5 py-2.5 border-[1.5px] border-slate-200 rounded-lg text-sm text-slate-700 outline-none focus:border-blue-500 transition-colors" placeholder="https://example.com/audio.mp3" />
+          <input id="urlInput"
+            class="w-full px-3.5 py-2.5 border-[1.5px] border-slate-200 rounded-lg text-sm text-slate-700 outline-none focus:border-blue-500 transition-colors"
+            placeholder="https://example.com/audio.mp3" />
         </div>
         <div class="flex gap-3 justify-end mt-5">
-          <button onclick="closeUploadModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm px-5 py-2.5 rounded-xl transition-colors border border-slate-200 cursor-pointer">Cancel</button>
-          <button id="uploadUrlBtn" onclick="doUploadUrl()" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-colors border-none cursor-pointer shadow-sm">Download &amp; Transcribe</button>
+          <button onclick="closeUploadModal()"
+            class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm px-5 py-2.5 rounded-xl transition-colors border border-slate-200 cursor-pointer">Cancel</button>
+          <button id="uploadUrlBtn" onclick="doUploadUrl()"
+            class="bg-blue-500 hover:bg-blue-600 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-colors border-none cursor-pointer shadow-sm">Download
+            &amp; Transcribe</button>
         </div>
       </div>
     </div>
@@ -210,340 +392,395 @@
 
   <!-- ==================== Selection Badge (step 1: non-intrusive) ==================== -->
   <div id="selectionBadge" class="absolute z-[200] hidden">
-    <button class="w-7 h-7 rounded-full bg-blue-500 text-white text-sm font-bold shadow-md border-none cursor-pointer hover:bg-blue-600 hover:scale-110 transition-all flex items-center justify-center leading-none">+</button>
+    <button
+      class="w-7 h-7 rounded-full bg-blue-500 text-white text-sm font-bold shadow-md border-none cursor-pointer hover:bg-blue-600 hover:scale-110 transition-all flex items-center justify-center leading-none">+</button>
   </div>
 
   <!-- ==================== Vocab Popover (step 2: after badge click) ==================== -->
-  <div id="vocabPopover" class="absolute z-[200] bg-white rounded-lg shadow-lg border border-slate-200 p-2.5 min-w-[180px] hidden">
+  <div id="vocabPopover"
+    class="absolute z-[200] bg-white rounded-lg shadow-lg border border-slate-200 p-2.5 min-w-[180px] hidden">
     <div id="vpWord" class="text-xs font-bold text-blue-600 mb-1.5"></div>
     <!-- Add mode -->
     <div id="vpAddMode">
-      <input id="vpInput" class="w-full px-2 py-1.5 border border-slate-200 rounded-md text-xs outline-none focus:border-blue-500 transition-colors mb-1.5" placeholder="输入中文释义" />
+      <input id="vpInput"
+        class="w-full px-2 py-1.5 border border-slate-200 rounded-md text-xs outline-none focus:border-blue-500 transition-colors mb-1.5"
+        placeholder="输入中文释义" />
       <div class="flex gap-1.5 justify-end">
-        <button onclick="hideVocabPopover()" class="px-2.5 py-1 rounded text-[11px] font-semibold bg-slate-100 text-slate-500 border-none cursor-pointer hover:bg-slate-200 transition-colors">取消</button>
-        <button onclick="saveVocab()" class="px-2.5 py-1 rounded text-[11px] font-semibold bg-blue-500 text-white border-none cursor-pointer hover:bg-blue-600 transition-colors">保存</button>
+        <button onclick="hideVocabPopover()"
+          class="px-2.5 py-1 rounded text-[11px] font-semibold bg-slate-100 text-slate-500 border-none cursor-pointer hover:bg-slate-200 transition-colors">取消</button>
+        <button onclick="saveVocab()"
+          class="px-2.5 py-1 rounded text-[11px] font-semibold bg-blue-500 text-white border-none cursor-pointer hover:bg-blue-600 transition-colors">保存</button>
       </div>
     </div>
     <!-- View mode -->
     <div id="vpViewMode" class="hidden">
       <div id="vpMeaning" class="text-xs text-slate-600 mb-2 leading-relaxed"></div>
       <div class="flex gap-1.5 justify-end">
-        <button onclick="hideVocabPopover()" class="px-2.5 py-1 rounded text-[11px] font-semibold bg-slate-100 text-slate-500 border-none cursor-pointer hover:bg-slate-200 transition-colors">关闭</button>
-        <button onclick="deleteVocab()" class="px-2.5 py-1 rounded text-[11px] font-semibold bg-red-500 text-white border-none cursor-pointer hover:bg-red-600 transition-colors">删除</button>
+        <button onclick="hideVocabPopover()"
+          class="px-2.5 py-1 rounded text-[11px] font-semibold bg-slate-100 text-slate-500 border-none cursor-pointer hover:bg-slate-200 transition-colors">关闭</button>
+        <button onclick="deleteVocab()"
+          class="px-2.5 py-1 rounded text-[11px] font-semibold bg-red-500 text-white border-none cursor-pointer hover:bg-red-600 transition-colors">删除</button>
       </div>
     </div>
   </div>
 
   <!-- ==================== Toast ==================== -->
-  <div id="toast" class="fixed bottom-24 left-1/2 bg-slate-800 text-white px-6 py-2.5 rounded-xl text-sm z-[300] pointer-events-none opacity-0 transition-all duration-300" style="transform:translateX(-50%) translateY(80px)"></div>
+  <div id="toast"
+    class="fixed bottom-24 left-1/2 bg-slate-800 text-white px-6 py-2.5 rounded-xl text-sm z-[300] pointer-events-none opacity-0 transition-all duration-300"
+    style="transform:translateX(-50%) translateY(80px)"></div>
 
-<script>
-// ===================================================================
-//  State
-// ===================================================================
-const state = {
-  view: 'list',
-  projects: [],
-  currentProject: null,
-  currentData: null,
-  activeSegmentId: -1,
-  playbackRate: 1.0,
-  pollingTimer: null,
-  showTranslations: true,
-  pendingVocab: null,    // { segmentId, word, startOffset, endOffset }
-  viewingAnnot: null      // { id, segmentId } — for delete mode
-};
+  <script>
+    // ===================================================================
+    //  State
+    // ===================================================================
+    const state = {
+      view: 'list',
+      projects: [],
+      currentProject: null,
+      currentData: null,
+      activeSegmentId: -1,
+      playbackRate: 1.0,
+      pollingTimer: null,
+      showTranslations: true,
+      pendingVocab: null,    // { segmentId, word, startOffset, endOffset }
+      viewingAnnot: null      // { id, segmentId } — for delete mode
+    };
 
-const audioEl = document.getElementById('audioEl');
+    const audioEl = document.getElementById('audioEl');
 
-// ===================================================================
-//  API Helper
-// ===================================================================
-const API = {
-  _headers(json) {
-    const h = {};
-    const tk = localStorage.getItem('authToken');
-    if (tk) h['Authorization'] = 'Bearer ' + tk;
-    if (json) h['Content-Type'] = 'application/json';
-    return h;
-  },
-  async get(url)          { return (await fetch(url, { headers: this._headers() })).json(); },
-  async post(url, body)   { return (await fetch(url, { method: 'POST',   headers: this._headers(true), body: JSON.stringify(body) })).json(); },
-  async put(url, body)    { return (await fetch(url, { method: 'PUT',    headers: this._headers(true), body: JSON.stringify(body) })).json(); },
-  async del(url)          { return (await fetch(url, { method: 'DELETE', headers: this._headers() })).json(); },
-  async upload(url, fd)   {
-    const h = {};
-    const tk = localStorage.getItem('authToken');
-    if (tk) h['Authorization'] = 'Bearer ' + tk;
-    return (await fetch(url, { method: 'POST', headers: h, body: fd })).json();
-  }
-};
-
-// ===================================================================
-//  Init
-// ===================================================================
-(async function init() {
-  const tk = localStorage.getItem('authToken');
-  if (!tk) { location.href = '/login'; return; }
-  try {
-    const r = await fetch('/verify_token', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: tk }) });
-    const d = await r.json();
-    if (!d.valid) { localStorage.removeItem('authToken'); location.href = '/login'; return; }
-  } catch { location.href = '/login'; return; }
-  await loadProjects();
-})();
-
-// ===================================================================
-//  View Switching
-// ===================================================================
-function switchView(view) {
-  state.view = view;
-  const listView    = document.getElementById('listView');
-  const detailView  = document.getElementById('detailView');
-  const playerBar   = document.getElementById('playerBar');
-  const topList     = document.getElementById('topList');
-  const topDetail   = document.getElementById('topDetail');
-
-  if (view === 'list') {
-    listView.classList.remove('hidden');
-    detailView.classList.add('hidden');
-    playerBar.classList.add('hidden');
-    topList.classList.remove('hidden');    topList.style.display = 'flex';
-    topDetail.classList.add('hidden');     topDetail.style.display = 'none';
-  } else {
-    listView.classList.add('hidden');
-    detailView.classList.remove('hidden');
-    playerBar.classList.remove('hidden');
-    topList.classList.add('hidden');       topList.style.display = 'none';
-    topDetail.classList.remove('hidden');  topDetail.style.display = 'flex';
-  }
-}
-
-// ===================================================================
-//  List View
-// ===================================================================
-async function loadProjects() {
-  const r = await API.get('/api/listening_review/list');
-  if (r.error) { showToast(r.error); return; }
-  state.projects = r.projects || [];
-  renderListView();
-
-  const hasInProgress = state.projects.some(p => p.status === 'processing' || p.status === 'translating');
-  if (hasInProgress && !state.pollingTimer) {
-    state.pollingTimer = setInterval(async () => {
-      if (state.view !== 'list') return;
-      const r2 = await API.get('/api/listening_review/list');
-      if (r2.projects) {
-        state.projects = r2.projects;
-        renderListView();
-        if (!r2.projects.some(p => p.status === 'processing' || p.status === 'translating')) {
-          clearInterval(state.pollingTimer);
-          state.pollingTimer = null;
-        }
+    // ===================================================================
+    //  API Helper
+    // ===================================================================
+    const API = {
+      _headers(json) {
+        const h = {};
+        const tk = localStorage.getItem('authToken');
+        if (tk) h['Authorization'] = 'Bearer ' + tk;
+        if (json) h['Content-Type'] = 'application/json';
+        return h;
+      },
+      async get(url) { return (await fetch(url, { headers: this._headers() })).json(); },
+      async post(url, body) { return (await fetch(url, { method: 'POST', headers: this._headers(true), body: JSON.stringify(body) })).json(); },
+      async put(url, body) { return (await fetch(url, { method: 'PUT', headers: this._headers(true), body: JSON.stringify(body) })).json(); },
+      async del(url) { return (await fetch(url, { method: 'DELETE', headers: this._headers() })).json(); },
+      async upload(url, fd) {
+        const h = {};
+        const tk = localStorage.getItem('authToken');
+        if (tk) h['Authorization'] = 'Bearer ' + tk;
+        return (await fetch(url, { method: 'POST', headers: h, body: fd })).json();
       }
-    }, 3000);
-  } else if (!hasInProgress && state.pollingTimer) {
-    clearInterval(state.pollingTimer);
-    state.pollingTimer = null;
-  }
-}
+    };
 
-function renderListView() {
-  const grid = document.getElementById('projectGrid');
-  if (state.projects.length === 0) {
-    grid.innerHTML = `
+    // ===================================================================
+    //  Init
+    // ===================================================================
+    (async function init() {
+      const tk = localStorage.getItem('authToken');
+      if (!tk) { location.href = '/login'; return; }
+      try {
+        const r = await fetch('/verify_token', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: tk }) });
+        const d = await r.json();
+        if (!d.valid) { localStorage.removeItem('authToken'); location.href = '/login'; return; }
+      } catch { location.href = '/login'; return; }
+      await loadProjects();
+    })();
+
+    // ===================================================================
+    //  View Switching
+    // ===================================================================
+    function switchView(view) {
+      state.view = view;
+      const listView = document.getElementById('listView');
+      const detailView = document.getElementById('detailView');
+      const playerBar = document.getElementById('playerBar');
+      const topList = document.getElementById('topList');
+      const topDetail = document.getElementById('topDetail');
+
+      if (view === 'list') {
+        listView.classList.remove('hidden');
+        detailView.classList.add('hidden');
+        playerBar.classList.add('hidden');
+        topList.classList.remove('hidden'); topList.style.display = 'flex';
+        topDetail.classList.add('hidden'); topDetail.style.display = 'none';
+      } else {
+        listView.classList.add('hidden');
+        detailView.classList.remove('hidden');
+        playerBar.classList.remove('hidden');
+        topList.classList.add('hidden'); topList.style.display = 'none';
+        topDetail.classList.remove('hidden'); topDetail.style.display = 'flex';
+      }
+    }
+
+    // ===================================================================
+    //  List View
+    // ===================================================================
+    async function loadProjects() {
+      const r = await API.get('/api/listening_review/list');
+      if (r.error) { showToast(r.error); return; }
+      state.projects = r.projects || [];
+      renderListView();
+
+      const hasInProgress = state.projects.some(p => p.status === 'processing' || p.status === 'translating');
+      if (hasInProgress && !state.pollingTimer) {
+        state.pollingTimer = setInterval(async () => {
+          if (state.view !== 'list') return;
+          const r2 = await API.get('/api/listening_review/list');
+          if (r2.projects) {
+            state.projects = r2.projects;
+            renderListView();
+            if (!r2.projects.some(p => p.status === 'processing' || p.status === 'translating')) {
+              clearInterval(state.pollingTimer);
+              state.pollingTimer = null;
+            }
+          }
+        }, 3000);
+      } else if (!hasInProgress && state.pollingTimer) {
+        clearInterval(state.pollingTimer);
+        state.pollingTimer = null;
+      }
+    }
+
+    function renderListView() {
+      const grid = document.getElementById('projectGrid');
+      if (state.projects.length === 0) {
+        grid.innerHTML = `
       <div class="col-span-full text-center py-16 text-slate-400">
         <div class="text-5xl mb-3">&#127911;</div>
         <div>No listening projects yet.<br>Click "+ New Project" to get started.</div>
       </div>`;
-    return;
-  }
-  grid.innerHTML = state.projects.map(p => {
-    const statusCls = { completed: 'bg-emerald-50 text-emerald-600', processing: 'bg-amber-50 text-amber-600', translating: 'bg-purple-50 text-purple-600', error: 'bg-red-50 text-red-600' }[p.status] || '';
-    const statusText = { completed: 'Completed', processing: 'Processing...', translating: 'Translating...', error: 'Error' }[p.status] || p.status;
-    const dur = p.duration ? formatTime(p.duration) : '--:--';
-    const date = p.created_at ? new Date(p.created_at).toLocaleDateString('zh-CN') : '';
-    const retryBtn = p.status === 'error'
-      ? `<button class="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-md mt-2 ml-1.5 bg-blue-50 text-blue-600 border-none cursor-pointer hover:bg-blue-100 transition-colors" onclick="event.stopPropagation();retryProject('${p.id}')">&#8635; Retry</button>`
-      : '';
-    return `
-      <div class="project-card group relative bg-white border border-slate-200 rounded-xl p-5 cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg hover:border-blue-200 flex flex-col h-[120px]" onclick="openProject('${p.id}')">
+        return;
+      }
+      grid.innerHTML = state.projects.map(p => {
+        const statusCls = { completed: 'bg-emerald-50 text-emerald-600', processing: 'bg-amber-50 text-amber-600', translating: 'bg-purple-50 text-purple-600', error: 'bg-red-50 text-red-600' }[p.status] || '';
+        const statusText = { completed: 'Completed', processing: 'Processing...', translating: 'Translating...', error: 'Error' }[p.status] || p.status;
+        const dur = p.duration ? formatTime(p.duration) : '--:--';
+        const date = p.created_at ? formatDateCN(p.created_at) : '';
+        const vocabBadge = p.vocab_count > 0
+          ? `<span class="inline-flex items-center gap-0.5 text-blue-500">&#128278; ${p.vocab_count}</span>`
+          : '';
+        const checkinBadge = (p.checkin_count || 0) > 0
+          ? `<span class="inline-flex items-center gap-0.5 text-amber-500">&#9745; ${p.checkin_count}</span>`
+          : '';
+        const isMastered = p.mastered === true;
+        const cardCls = isMastered
+          ? 'project-card group relative bg-slate-50 border border-slate-200/60 rounded-xl p-5 cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg hover:border-blue-200 flex flex-col h-[120px] opacity-60'
+          : 'project-card group relative bg-white border border-slate-200 rounded-xl p-5 cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg hover:border-blue-200 flex flex-col h-[120px]';
+        const retryBtn = p.status === 'error'
+          ? `<button class="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-md mt-2 ml-1.5 bg-blue-50 text-blue-600 border-none cursor-pointer hover:bg-blue-100 transition-colors" onclick="event.stopPropagation();retryProject('${p.id}')">&#8635; Retry</button>`
+          : '';
+        const masteredTag = isMastered
+          ? `<span class="inline-block text-[11px] font-semibold px-2 py-0.5 rounded-md mt-1.5 bg-emerald-50 text-emerald-500 ml-1.5">&#10003; 已标熟</span>`
+          : '';
+        return `
+      <div class="${cardCls}" onclick="openProject('${p.id}')">
         <button class="absolute top-2.5 right-2.5 w-7 h-7 flex items-center justify-center bg-transparent border-none text-slate-300 hover:text-red-500 hover:bg-red-50 cursor-pointer text-lg rounded transition-colors z-10" onclick="event.stopPropagation();deleteProject('${p.id}')" title="Delete">&times;</button>
         <div class="project-title font-bold text-slate-800 text-[15px] pr-6 truncate flex-shrink-0" data-full-title="${esc(p.title)}">${esc(p.title)}</div>
-        <div class="text-xs text-slate-400 flex gap-3 flex-wrap mt-auto">
-          <span>${date}</span><span>${dur}</span>
+        <div class="text-xs text-slate-400 flex items-center gap-3 flex-wrap mt-auto">
+          <span>${date}</span><span>${dur}</span>${vocabBadge}${checkinBadge}
         </div>
         <div class="flex items-center flex-wrap flex-shrink-0">
           <span class="inline-block text-[11px] font-semibold px-2 py-0.5 rounded-md mt-1.5 ${statusCls}">${statusText}</span>
-          ${retryBtn}
+          ${masteredTag}${retryBtn}
         </div>
       </div>`;
-  }).join('');
+      }).join('');
 
-  requestAnimationFrame(() => {
-    grid.querySelectorAll('.project-title').forEach(el => {
-      if (el.scrollWidth > el.clientWidth) el.classList.add('is-truncated');
-      else el.classList.remove('is-truncated');
-    });
-  });
-}
+      requestAnimationFrame(() => {
+        grid.querySelectorAll('.project-title').forEach(el => {
+          if (el.scrollWidth > el.clientWidth) el.classList.add('is-truncated');
+          else el.classList.remove('is-truncated');
+        });
+      });
+    }
 
-async function deleteProject(id) {
-  if (!confirm('Delete this project? This cannot be undone.')) return;
-  const r = await API.del('/api/listening_review/project/' + id);
-  if (r.success) { showToast('Project deleted'); await loadProjects(); }
-  else showToast(r.error || 'Delete failed');
-}
+    async function deleteProject(id) {
+      if (!confirm('Delete this project? This cannot be undone.')) return;
+      const r = await API.del('/api/listening_review/project/' + id);
+      if (r.success) { showToast('Project deleted'); await loadProjects(); }
+      else showToast(r.error || 'Delete failed');
+    }
 
-async function retryProject(id) {
-  const r = await API.post('/api/listening_review/project/' + id + '/retry', {});
-  if (r.success) { showToast('重新转录已开始...'); await loadProjects(); }
-  else showToast(r.error || 'Retry failed');
-}
+    async function retryProject(id) {
+      const r = await API.post('/api/listening_review/project/' + id + '/retry', {});
+      if (r.success) { showToast('重新转录已开始...'); await loadProjects(); }
+      else showToast(r.error || 'Retry failed');
+    }
 
-// ===================================================================
-//  Upload Modal
-// ===================================================================
-function openUploadModal() {
-  document.getElementById('uploadModal').classList.remove('hidden');
-  document.getElementById('fileTitle').value = '';
-  document.getElementById('urlTitle').value = '';
-  document.getElementById('urlInput').value = '';
-  document.getElementById('fileInput').value = '';
-  document.getElementById('fileDropText').textContent = 'Click to select or drag audio file here';
-  document.getElementById('uploadFileBtn').disabled = true;
-  switchTab('file');
-}
+    // ===================================================================
+    //  Upload Modal
+    // ===================================================================
+    function openUploadModal() {
+      document.getElementById('uploadModal').classList.remove('hidden');
+      document.getElementById('fileTitle').value = '';
+      document.getElementById('urlTitle').value = '';
+      document.getElementById('urlInput').value = '';
+      document.getElementById('fileInput').value = '';
+      document.getElementById('fileDropText').textContent = 'Click to select or drag audio file here';
+      document.getElementById('uploadFileBtn').disabled = true;
+      switchTab('file');
+    }
 
-function closeUploadModal() { document.getElementById('uploadModal').classList.add('hidden'); }
+    function closeUploadModal() { document.getElementById('uploadModal').classList.add('hidden'); }
 
-function switchTab(tab) {
-  const tabs = document.querySelectorAll('.modal-tab');
-  const activeClasses  = ['text-blue-600', 'border-blue-500'];
-  const inactiveClasses = ['text-slate-400', 'border-transparent'];
-  const all = [...activeClasses, ...inactiveClasses];
+    function switchTab(tab) {
+      const tabs = document.querySelectorAll('.modal-tab');
+      const activeClasses = ['text-blue-600', 'border-blue-500'];
+      const inactiveClasses = ['text-slate-400', 'border-transparent'];
+      const all = [...activeClasses, ...inactiveClasses];
 
-  tabs.forEach((t, i) => {
-    t.classList.remove(...all);
-    const isActive = (i === 0 && tab === 'file') || (i === 1 && tab === 'url');
-    t.classList.add(...(isActive ? activeClasses : inactiveClasses));
-  });
+      tabs.forEach((t, i) => {
+        t.classList.remove(...all);
+        const isActive = (i === 0 && tab === 'file') || (i === 1 && tab === 'url');
+        t.classList.add(...(isActive ? activeClasses : inactiveClasses));
+      });
 
-  document.getElementById('tabFile').classList.toggle('hidden', tab !== 'file');
-  document.getElementById('tabUrl').classList.toggle('hidden', tab !== 'url');
-}
+      document.getElementById('tabFile').classList.toggle('hidden', tab !== 'file');
+      document.getElementById('tabUrl').classList.toggle('hidden', tab !== 'url');
+    }
 
-function onFileSelected(input) {
-  const file = input.files[0];
-  if (!file) return;
-  if (file.size > 25 * 1024 * 1024) { showToast('File exceeds 25MB limit'); input.value = ''; return; }
-  document.getElementById('fileDropText').textContent = file.name;
-  document.getElementById('uploadFileBtn').disabled = false;
-}
+    function onFileSelected(input) {
+      const file = input.files[0];
+      if (!file) return;
+      if (file.size > 25 * 1024 * 1024) { showToast('File exceeds 25MB limit'); input.value = ''; return; }
+      document.getElementById('fileDropText').textContent = file.name;
+      document.getElementById('uploadFileBtn').disabled = false;
+    }
 
-async function doUploadFile() {
-  const file = document.getElementById('fileInput').files[0];
-  if (!file) return;
-  const btn = document.getElementById('uploadFileBtn');
-  btn.disabled = true; btn.textContent = 'Uploading...';
-  const fd = new FormData();
-  fd.append('file', file);
-  fd.append('title', document.getElementById('fileTitle').value.trim());
-  try {
-    const r = await API.upload('/api/listening_review/upload', fd);
-    if (r.success) { showToast('Upload successful, transcribing...'); closeUploadModal(); await loadProjects(); }
-    else showToast(r.error || 'Upload failed');
-  } catch (e) { showToast('Upload failed: ' + e.message); }
-  btn.disabled = false; btn.textContent = 'Upload';
-}
+    async function doUploadFile() {
+      const file = document.getElementById('fileInput').files[0];
+      if (!file) return;
+      const btn = document.getElementById('uploadFileBtn');
+      btn.disabled = true; btn.textContent = 'Uploading...';
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('title', document.getElementById('fileTitle').value.trim());
+      try {
+        const r = await API.upload('/api/listening_review/upload', fd);
+        if (r.success) { showToast('Upload successful, transcribing...'); closeUploadModal(); await loadProjects(); }
+        else showToast(r.error || 'Upload failed');
+      } catch (e) { showToast('Upload failed: ' + e.message); }
+      btn.disabled = false; btn.textContent = 'Upload';
+    }
 
-async function doUploadUrl() {
-  const urlVal = document.getElementById('urlInput').value.trim();
-  if (!urlVal) { showToast('Please enter a URL'); return; }
-  const btn = document.getElementById('uploadUrlBtn');
-  btn.disabled = true; btn.textContent = 'Downloading...';
-  try {
-    const r = await API.post('/api/listening_review/url', { url: urlVal, title: document.getElementById('urlTitle').value.trim() });
-    if (r.success) { showToast('Download successful, transcribing...'); closeUploadModal(); await loadProjects(); }
-    else showToast(r.error || 'Download failed');
-  } catch (e) { showToast('Request failed: ' + e.message); }
-  btn.disabled = false; btn.textContent = 'Download & Transcribe';
-}
+    async function doUploadUrl() {
+      const urlVal = document.getElementById('urlInput').value.trim();
+      if (!urlVal) { showToast('Please enter a URL'); return; }
+      const btn = document.getElementById('uploadUrlBtn');
+      btn.disabled = true; btn.textContent = 'Downloading...';
+      try {
+        const r = await API.post('/api/listening_review/url', { url: urlVal, title: document.getElementById('urlTitle').value.trim() });
+        if (r.success) { showToast('Download successful, transcribing...'); closeUploadModal(); await loadProjects(); }
+        else showToast(r.error || 'Download failed');
+      } catch (e) { showToast('Request failed: ' + e.message); }
+      btn.disabled = false; btn.textContent = 'Download & Transcribe';
+    }
 
-// ===================================================================
-//  Detail View
-// ===================================================================
-async function openProject(id) {
-  const proj = state.projects.find(p => p.id === id);
-  if (!proj) return;
-  if (proj.status === 'processing') { showToast('Still transcribing, please wait...'); return; }
-  if (proj.status === 'translating') { showToast('Translating, please wait...'); return; }
-  if (proj.status === 'error') { showToast('Transcription failed: ' + (proj.error || 'Unknown error')); return; }
+    // ===================================================================
+    //  Detail View
+    // ===================================================================
+    async function openProject(id) {
+      const proj = state.projects.find(p => p.id === id);
+      if (!proj) return;
+      if (proj.status === 'processing') { showToast('Still transcribing, please wait...'); return; }
+      if (proj.status === 'translating') { showToast('Translating, please wait...'); return; }
+      if (proj.status === 'error') { showToast('Transcription failed: ' + (proj.error || 'Unknown error')); return; }
 
-  const r = await API.get('/api/listening_review/project/' + id);
-  if (r.error) { showToast(r.error); return; }
+      const r = await API.get('/api/listening_review/project/' + id);
+      if (r.error) { showToast(r.error); return; }
 
-  state.currentProject = r.project;
-  state.currentData = r.data;
-  state.activeSegmentId = -1;
+      state.currentProject = r.project;
+      state.currentData = r.data;
+      state.activeSegmentId = -1;
 
-  switchView('detail');
-  document.getElementById('detailTitle').textContent = r.project.title;
+      switchView('detail');
+      document.getElementById('detailTitle').textContent = r.project.title;
 
-  const tk = localStorage.getItem('authToken');
-  audioEl.src = `/api/listening_review/audio/${id}/${r.project.audio_filename}?token=${encodeURIComponent(tk)}`;
-  audioEl.playbackRate = state.playbackRate;
-  audioEl.load();
-  renderLyrics();
-}
+      const tk = localStorage.getItem('authToken');
+      audioEl.src = `/api/listening_review/audio/${id}/${r.project.audio_filename}?token=${encodeURIComponent(tk)}`;
+      audioEl.playbackRate = state.playbackRate;
+      audioEl.load();
+      renderLyrics();
+      updateMasteredBtn();
+    }
 
-function backToList() {
-  audioEl.pause();
-  audioEl.src = '';
-  state.currentProject = null;
-  state.currentData = null;
-  state.activeSegmentId = -1;
-  switchView('list');
-  loadProjects();
-}
+    function backToList() {
+      audioEl.pause();
+      audioEl.src = '';
+      state.currentProject = null;
+      state.currentData = null;
+      state.activeSegmentId = -1;
+      switchView('list');
+      loadProjects();
+    }
 
-function toggleTranslations() {
-  state.showTranslations = !state.showTranslations;
-  document.getElementById('lyricsContainer').classList.toggle('translations-hidden', !state.showTranslations);
-  const btn = document.getElementById('toggleTransBtn');
-  btn.classList.toggle('bg-blue-100', state.showTranslations);
-  btn.classList.toggle('text-blue-600', state.showTranslations);
-  btn.classList.toggle('bg-slate-100', !state.showTranslations);
-  btn.classList.toggle('text-slate-500', !state.showTranslations);
-}
+    function toggleTranslations() {
+      state.showTranslations = !state.showTranslations;
+      document.getElementById('lyricsContainer').classList.toggle('translations-hidden', !state.showTranslations);
+      const btn = document.getElementById('toggleTransBtn');
+      btn.classList.toggle('bg-blue-100', state.showTranslations);
+      btn.classList.toggle('text-blue-600', state.showTranslations);
+      btn.classList.toggle('bg-slate-100', !state.showTranslations);
+      btn.classList.toggle('text-slate-500', !state.showTranslations);
+    }
 
-// ===================================================================
-//  Lyrics Rendering
-// ===================================================================
-function renderLyrics() {
-  const container = document.getElementById('lyricsContainer');
-  if (!state.currentData || !state.currentData.segments) {
-    container.innerHTML = '<div class="text-center py-16 text-slate-400">No transcript data available.</div>';
-    return;
-  }
+    function updateMasteredBtn() {
+      const btn = document.getElementById('masteredBtn');
+      const mastered = state.currentProject?.mastered;
+      if (mastered) {
+        btn.innerHTML = '&#10003; 已标熟';
+        btn.className = 'inline-flex items-center gap-1 bg-emerald-100 text-emerald-600 font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-emerald-200 transition-colors border-none cursor-pointer';
+      } else {
+        btn.innerHTML = '&#10003; 标熟';
+        btn.className = 'inline-flex items-center gap-1 bg-slate-100 text-slate-500 font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-emerald-100 hover:text-emerald-600 transition-colors border-none cursor-pointer';
+      }
+    }
 
-  const segs = state.currentData.segments;
-  const starred = state.currentData.starred_segments || [];
-  const annots = state.currentData.vocab_annotations || [];
+    async function toggleMastered() {
+      if (!state.currentProject) return;
+      const r = await API.put(`/api/listening_review/project/${state.currentProject.id}/mastered`, {});
+      if (r.success) {
+        state.currentProject.mastered = r.mastered;
+        updateMasteredBtn();
+        showToast(r.mastered ? '已标记为熟练' : '已取消标熟');
+      }
+    }
 
-  container.innerHTML = segs.map(seg => {
-    const isActive = seg.id === state.activeSegmentId;
-    const isStarred = starred.includes(seg.id);
-    const segAnnots = annots.filter(a => a.segment_id === seg.id);
-    const textHtml = renderAnnotatedText(seg.text, segAnnots);
+    async function doCheckin() {
+      if (!state.currentProject) return;
+      const r = await API.post(`/api/listening_review/project/${state.currentProject.id}/checkin`, {});
+      if (r.success) {
+        state.currentProject.checkin_count = r.checkin_count;
+        showToast(`打卡成功！已打卡 ${r.checkin_count} 次`);
+      }
+    }
 
-    let cls = 'lyrics-line group flex items-start gap-2 px-5 md:px-8 py-3 cursor-pointer rounded-r-lg transition-all duration-300';
-    if (isActive)  cls += ' active';
-    if (isStarred) cls += ' starred';
+    // ===================================================================
+    //  Lyrics Rendering
+    // ===================================================================
+    function renderLyrics() {
+      const container = document.getElementById('lyricsContainer');
+      if (!state.currentData || !state.currentData.segments) {
+        container.innerHTML = '<div class="text-center py-16 text-slate-400">No transcript data available.</div>';
+        return;
+      }
 
-    const translationHtml = seg.translation ? `<div class="translation-line">${esc(seg.translation)}</div>` : '';
+      const segs = state.currentData.segments;
+      const starred = state.currentData.starred_segments || [];
+      const annots = state.currentData.vocab_annotations || [];
 
-    return `
+      container.innerHTML = segs.map(seg => {
+        const isActive = seg.id === state.activeSegmentId;
+        const isStarred = starred.includes(seg.id);
+        const segAnnots = annots.filter(a => a.segment_id === seg.id);
+        const textHtml = renderAnnotatedText(seg.text, segAnnots);
+
+        let cls = 'lyrics-line group flex items-start gap-2 px-5 md:px-8 py-3 cursor-pointer rounded-r-lg transition-all duration-300';
+        if (isActive) cls += ' active';
+        if (isStarred) cls += ' starred';
+
+        const translationHtml = seg.translation ? `<div class="translation-line">${esc(seg.translation)}</div>` : '';
+
+        return `
       <div class="${cls}" data-seg-id="${seg.id}" data-start="${seg.start}" data-end="${seg.end}">
         <span class="w-14 flex-shrink-0 text-slate-400 font-mono text-xs pt-0.5 text-right select-none">${formatTime(seg.start)}</span>
         <button class="star-btn flex-shrink-0 bg-transparent border-none cursor-pointer text-base p-0 leading-none mt-0.5 transition-all ${isStarred ? 'text-amber-400 opacity-100' : 'text-slate-300 opacity-0 group-hover:opacity-100 hover:text-amber-400'}" data-seg-id="${seg.id}">${isStarred ? '\u2605' : '\u2606'}</button>
@@ -552,425 +789,466 @@ function renderLyrics() {
           ${translationHtml}
         </div>
       </div>`;
-  }).join('');
-}
-
-function renderAnnotatedText(text, annotations) {
-  if (!annotations || annotations.length === 0) return esc(text);
-  const sorted = [...annotations].sort((a, b) => a.start_offset - b.start_offset);
-  let result = '';
-  let lastEnd = 0;
-  for (const ann of sorted) {
-    if (ann.start_offset > lastEnd) result += esc(text.substring(lastEnd, ann.start_offset));
-    const word = text.substring(ann.start_offset, ann.end_offset);
-    result += `<span class="annotated-word" data-aid="${ann.id}" data-seg-id="${ann.segment_id}" data-meaning="${esc(ann.meaning)}">${esc(word)}</span>`;
-    lastEnd = ann.end_offset;
-  }
-  if (lastEnd < text.length) result += esc(text.substring(lastEnd));
-  return result;
-}
-
-// ===================================================================
-//  Lyrics Event Delegation (click, mouseup)
-// ===================================================================
-const lyricsContainer = document.getElementById('lyricsContainer');
-
-// Click: seek / star / view annotation
-lyricsContainer.addEventListener('click', (e) => {
-  // Star button
-  const starBtn = e.target.closest('.star-btn');
-  if (starBtn) {
-    e.stopPropagation();
-    toggleStar(parseInt(starBtn.dataset.segId));
-    return;
-  }
-
-  // Annotated word → view mode (only if not selecting text)
-  const annotEl = e.target.closest('.annotated-word');
-  if (annotEl) {
-    e.stopPropagation();
-    const sel = window.getSelection();
-    if (sel && !sel.isCollapsed && sel.toString().trim()) return; // user was selecting
-    showViewPopover(annotEl);
-    return;
-  }
-
-  // Don't seek if user was selecting text
-  const sel = window.getSelection();
-  if (sel && !sel.isCollapsed && sel.toString().trim()) return;
-
-  // Seek to segment
-  const line = e.target.closest('.lyrics-line');
-  if (line) seekToSegment(parseInt(line.dataset.segId));
-});
-
-// Mouseup on line-text → show selection badge (non-intrusive, doesn't steal focus)
-lyricsContainer.addEventListener('mouseup', (e) => {
-  const lineText = e.target.closest('.line-text');
-  if (!lineText) return;
-
-  const sel = window.getSelection();
-  if (!sel || sel.isCollapsed || !sel.toString().trim()) return;
-
-  const segId = parseInt(lineText.dataset.segId);
-  const seg = state.currentData?.segments.find(s => s.id === segId);
-  if (!seg) return;
-
-  const range = sel.getRangeAt(0);
-  if (!lineText.contains(range.startContainer) || !lineText.contains(range.endContainer)) return;
-
-  const rawText = sel.toString();
-  const trimmed = rawText.trim();
-  if (!trimmed || trimmed.length > 60) return;
-
-  // Calculate plain-text offset by walking text nodes
-  const rawStart = getTextOffset(lineText, range.startContainer, range.startOffset);
-  if (rawStart === -1) return;
-
-  const leadingSpaces = rawText.indexOf(trimmed);
-  const startOffset = rawStart + leadingSpaces;
-  const endOffset = startOffset + trimmed.length;
-
-  if (seg.text.substring(startOffset, endOffset) !== trimmed) {
-    const fb = seg.text.indexOf(trimmed);
-    if (fb === -1) return;
-    state.pendingVocab = { segmentId: segId, word: trimmed, startOffset: fb, endOffset: fb + trimmed.length };
-  } else {
-    state.pendingVocab = { segmentId: segId, word: trimmed, startOffset, endOffset };
-  }
-
-  // Show the small "+" badge above the selection — doesn't steal focus or clear selection
-  showSelectionBadge(range.getBoundingClientRect());
-});
-
-/** Walk text nodes inside `root` and return the plain-text offset of `(node, offset)`. */
-function getTextOffset(root, node, offset) {
-  let pos = 0;
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-  let cur;
-  while ((cur = walker.nextNode())) {
-    if (cur === node) return pos + offset;
-    pos += cur.textContent.length;
-  }
-  return -1;
-}
-
-// ===================================================================
-//  Selection Badge & Vocab Popover
-// ===================================================================
-
-// --- Badge: lightweight "+" button shown on text selection ---
-function showSelectionBadge(rect) {
-  hideSelectionBadge(); // clear any previous badge
-  const badge = document.getElementById('selectionBadge');
-  const x = rect.left + window.scrollX + rect.width / 2 - 14;
-  const y = rect.top + window.scrollY - 34;
-  badge.style.left = Math.max(4, x) + 'px';
-  badge.style.top  = Math.max(4, y) + 'px';
-  badge.classList.remove('hidden');
-}
-
-function hideSelectionBadge() {
-  document.getElementById('selectionBadge').classList.add('hidden');
-}
-
-// Badge click → open the full add-annotation Popover
-document.getElementById('selectionBadge').addEventListener('click', (e) => {
-  e.stopPropagation();
-  if (!state.pendingVocab) return;
-  const badge = document.getElementById('selectionBadge');
-  const rect = badge.getBoundingClientRect();
-  hideSelectionBadge();
-  showAddPopover(state.pendingVocab.word, rect);
-});
-
-// --- Popover: full annotation form ---
-function showAddPopover(word, rect) {
-  const pop = document.getElementById('vocabPopover');
-  document.getElementById('vpWord').textContent = word;
-  document.getElementById('vpInput').value = '';
-  document.getElementById('vpAddMode').classList.remove('hidden');
-  document.getElementById('vpViewMode').classList.add('hidden');
-  state.viewingAnnot = null;
-
-  pop.classList.remove('hidden');
-  positionPopover(pop, rect);
-  setTimeout(() => document.getElementById('vpInput').focus(), 30);
-}
-
-function showViewPopover(annotEl) {
-  const aid = annotEl.dataset.aid;
-  const segId = parseInt(annotEl.dataset.segId);
-  const annot = state.currentData?.vocab_annotations.find(a => a.id === aid);
-  if (!annot) return;
-
-  hideSelectionBadge();
-  const pop = document.getElementById('vocabPopover');
-  document.getElementById('vpWord').textContent = annot.word;
-  document.getElementById('vpMeaning').textContent = annot.meaning;
-  document.getElementById('vpAddMode').classList.add('hidden');
-  document.getElementById('vpViewMode').classList.remove('hidden');
-  state.viewingAnnot = { id: aid, segmentId: segId };
-  state.pendingVocab = null;
-
-  pop.classList.remove('hidden');
-  positionPopover(pop, annotEl.getBoundingClientRect());
-}
-
-function positionPopover(pop, rect) {
-  pop.style.left = '-9999px';
-  pop.style.top  = '-9999px';
-  requestAnimationFrame(() => {
-    const pw = pop.offsetWidth, ph = pop.offsetHeight;
-    const cx = rect.left + window.scrollX + rect.width / 2;
-    const cy = rect.top  + window.scrollY;
-    let left = cx - pw / 2;
-    let top  = cy - ph - 8;
-    left = Math.max(8, Math.min(left, document.documentElement.scrollWidth - pw - 8));
-    if (top < window.scrollY + 8) top = rect.bottom + window.scrollY + 8;
-    pop.style.left = left + 'px';
-    pop.style.top  = top  + 'px';
-  });
-}
-
-function hideVocabPopover() {
-  document.getElementById('vocabPopover').classList.add('hidden');
-  state.pendingVocab = null;
-  state.viewingAnnot = null;
-}
-
-async function saveVocab() {
-  const meaning = document.getElementById('vpInput').value.trim();
-  if (!meaning || !state.pendingVocab) return;
-  const pv = state.pendingVocab;
-  const r = await API.put(`/api/listening_review/project/${state.currentProject.id}/vocab`, {
-    segment_id: pv.segmentId, word: pv.word, meaning,
-    start_offset: pv.startOffset, end_offset: pv.endOffset
-  });
-  if (r.success && r.data) {
-    state.currentData = r.data;
-    renderLyrics();
-    showToast('标注已保存');
-  }
-  hideVocabPopover();
-}
-
-async function deleteVocab() {
-  if (!state.viewingAnnot) return;
-  const r = await API.del(`/api/listening_review/project/${state.currentProject.id}/vocab/${state.viewingAnnot.id}`);
-  if (r.success && r.data) {
-    state.currentData = r.data;
-    renderLyrics();
-    showToast('标注已删除');
-  }
-  hideVocabPopover();
-}
-
-document.getElementById('vpInput').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') { e.preventDefault(); saveVocab(); }
-  if (e.key === 'Escape') hideVocabPopover();
-});
-
-// Dismiss badge / popover on outside click
-document.addEventListener('mousedown', (e) => {
-  const pop   = document.getElementById('vocabPopover');
-  const badge = document.getElementById('selectionBadge');
-
-  if (!pop.classList.contains('hidden') && !pop.contains(e.target)) {
-    hideVocabPopover();
-    return;
-  }
-  if (!badge.classList.contains('hidden') && !badge.contains(e.target)) {
-    hideSelectionBadge();
-    state.pendingVocab = null;
-  }
-});
-
-// ===================================================================
-//  Audio Player
-// ===================================================================
-audioEl.addEventListener('timeupdate', () => {
-  if (!state.currentData) return;
-  const t = audioEl.currentTime;
-  updateProgressBar(t);
-
-  const segs = state.currentData.segments;
-  let newActive = -1;
-  for (const seg of segs) {
-    if (t >= seg.start && t < seg.end) { newActive = seg.id; break; }
-  }
-  if (newActive === -1 && segs.length > 0) {
-    for (let i = segs.length - 1; i >= 0; i--) {
-      if (t >= segs[i].start) { newActive = segs[i].id; break; }
+      }).join('');
     }
-  }
 
-  if (newActive !== state.activeSegmentId && newActive >= 0) {
-    state.activeSegmentId = newActive;
-    highlightSegment(newActive);
-  }
-});
-
-audioEl.addEventListener('play',  () => { document.getElementById('playBtn').innerHTML = '&#10074;&#10074;'; });
-audioEl.addEventListener('pause', () => { document.getElementById('playBtn').innerHTML = '&#9654;'; });
-audioEl.addEventListener('loadedmetadata', () => { document.getElementById('totTime').textContent = formatTime(audioEl.duration); });
-
-function togglePlay() { audioEl.paused ? audioEl.play() : audioEl.pause(); }
-
-function updateProgressBar(t) {
-  const dur = audioEl.duration || 1;
-  const pct = (t / dur) * 100;
-  document.getElementById('progressFill').style.width = pct + '%';
-  document.getElementById('progressThumb').style.left = pct + '%';
-  document.getElementById('curTime').textContent = formatTime(t);
-}
-
-function highlightSegment(segId) {
-  const container = document.getElementById('lyricsContainer');
-  container.querySelectorAll('.lyrics-line.active').forEach(el => el.classList.remove('active'));
-  const lineEl = container.querySelector(`.lyrics-line[data-seg-id="${segId}"]`);
-  if (!lineEl) return;
-
-  lineEl.classList.add('active');
-
-  // Scroll to center between top bar and player bar
-  const topH = document.getElementById('topBar').offsetHeight;
-  const bottomH = document.getElementById('playerBar').offsetHeight;
-  const visibleH = window.innerHeight - topH - bottomH;
-  const targetY = lineEl.getBoundingClientRect().top + window.scrollY - topH - visibleH / 2 + lineEl.offsetHeight / 2;
-  window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
-}
-
-function seekToSegment(segId) {
-  const seg = state.currentData.segments.find(s => s.id === segId);
-  if (!seg) return;
-  audioEl.currentTime = seg.start;
-  if (audioEl.paused) audioEl.play();
-  state.activeSegmentId = segId;
-  highlightSegment(segId);
-}
-
-// Progress bar interaction
-(function initProgressBar() {
-  const wrap = document.getElementById('progressWrap');
-  let dragging = false;
-
-  function seekFromEvent(e) {
-    const rect = wrap.getBoundingClientRect();
-    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    if (audioEl.duration) audioEl.currentTime = ratio * audioEl.duration;
-  }
-
-  wrap.addEventListener('mousedown', (e) => { dragging = true; seekFromEvent(e); });
-  document.addEventListener('mousemove', (e) => { if (dragging) seekFromEvent(e); });
-  document.addEventListener('mouseup', () => { dragging = false; });
-
-  wrap.addEventListener('touchstart',  (e) => { dragging = true; seekFromEvent(e.touches[0]); }, { passive: true });
-  wrap.addEventListener('touchmove',   (e) => { if (dragging) seekFromEvent(e.touches[0]); }, { passive: true });
-  wrap.addEventListener('touchend',    ()  => { dragging = false; });
-})();
-
-// Speed control
-function setSpeed(rate) {
-  state.playbackRate = rate;
-  audioEl.playbackRate = rate;
-  document.querySelectorAll('.speed-btn').forEach(b => {
-    const isActive = parseFloat(b.dataset.rate) === rate;
-    b.classList.toggle('bg-blue-500', isActive);
-    b.classList.toggle('text-white', isActive);
-    b.classList.toggle('border-blue-500', isActive);
-    b.classList.toggle('bg-slate-50', !isActive);
-    b.classList.toggle('text-slate-500', !isActive);
-    b.classList.toggle('border-slate-200', !isActive);
-    b.classList.toggle('hover:bg-slate-100', !isActive);
-  });
-}
-
-// ===================================================================
-//  Star Toggle
-// ===================================================================
-async function toggleStar(segId) {
-  if (!state.currentProject) return;
-  const r = await API.put(`/api/listening_review/project/${state.currentProject.id}/star`, { segment_id: segId });
-  if (!r.success) return;
-
-  state.currentData.starred_segments = r.starred_segments;
-  const lineEl = document.querySelector(`.lyrics-line[data-seg-id="${segId}"]`);
-  if (!lineEl) return;
-
-  const isStarred = r.starred_segments.includes(segId);
-  lineEl.classList.toggle('starred', isStarred);
-  const btn = lineEl.querySelector('.star-btn');
-  if (btn) {
-    btn.textContent = isStarred ? '\u2605' : '\u2606';
-    btn.classList.toggle('text-amber-400', isStarred);
-    btn.classList.toggle('opacity-100', isStarred);
-    btn.classList.toggle('text-slate-300', !isStarred);
-  }
-}
-
-// ===================================================================
-//  Keyboard Shortcuts
-// ===================================================================
-document.addEventListener('keydown', (e) => {
-  if (state.view !== 'detail') return;
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-  if (e.code === 'Space')      { e.preventDefault(); togglePlay(); }
-  else if (e.code === 'ArrowLeft')  { e.preventDefault(); audioEl.currentTime = Math.max(0, audioEl.currentTime - 3); }
-  else if (e.code === 'ArrowRight') { e.preventDefault(); audioEl.currentTime = Math.min(audioEl.duration || 0, audioEl.currentTime + 3); }
-});
-
-// ===================================================================
-//  Utilities
-// ===================================================================
-function esc(s) {
-  if (!s) return '';
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
-}
-
-function formatTime(s) {
-  if (!s || isNaN(s)) return '0:00';
-  const m = Math.floor(s / 60);
-  const sec = Math.floor(s % 60);
-  return m + ':' + (sec < 10 ? '0' : '') + sec;
-}
-
-let toastTimer = null;
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('toast-show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('toast-show'), 3000);
-}
-
-// Close modal on overlay click
-document.getElementById('uploadModal').addEventListener('click', (e) => {
-  if (e.target === document.getElementById('uploadModal')) closeUploadModal();
-});
-
-// Drag & drop on file label
-(function initDragDrop() {
-  const label = document.getElementById('fileDropLabel');
-  ['dragenter', 'dragover'].forEach(ev => {
-    label.addEventListener(ev, (e) => { e.preventDefault(); label.classList.add('border-blue-500', 'bg-blue-50'); });
-  });
-  ['dragleave', 'drop'].forEach(ev => {
-    label.addEventListener(ev, (e) => { e.preventDefault(); label.classList.remove('border-blue-500', 'bg-blue-50'); });
-  });
-  label.addEventListener('drop', (e) => {
-    const file = e.dataTransfer.files[0];
-    if (file) {
-      const input = document.getElementById('fileInput');
-      const dt = new DataTransfer();
-      dt.items.add(file);
-      input.files = dt.files;
-      onFileSelected(input);
+    function renderAnnotatedText(text, annotations) {
+      if (!annotations || annotations.length === 0) return esc(text);
+      const sorted = [...annotations].sort((a, b) => a.start_offset - b.start_offset);
+      let result = '';
+      let lastEnd = 0;
+      for (const ann of sorted) {
+        if (ann.start_offset > lastEnd) result += esc(text.substring(lastEnd, ann.start_offset));
+        const word = text.substring(ann.start_offset, ann.end_offset);
+        result += `<span class="annotated-word" data-aid="${ann.id}" data-seg-id="${ann.segment_id}" data-meaning="${esc(ann.meaning)}">${esc(word)}</span>`;
+        lastEnd = ann.end_offset;
+      }
+      if (lastEnd < text.length) result += esc(text.substring(lastEnd));
+      return result;
     }
-  });
-})();
-</script>
+
+    // ===================================================================
+    //  Lyrics Event Delegation (click, mouseup)
+    // ===================================================================
+    const lyricsContainer = document.getElementById('lyricsContainer');
+
+    // Click: seek / star / view annotation
+    lyricsContainer.addEventListener('click', (e) => {
+      // Star button
+      const starBtn = e.target.closest('.star-btn');
+      if (starBtn) {
+        e.stopPropagation();
+        toggleStar(parseInt(starBtn.dataset.segId));
+        return;
+      }
+
+      // Annotated word → view mode (only if not selecting text)
+      const annotEl = e.target.closest('.annotated-word');
+      if (annotEl) {
+        e.stopPropagation();
+        const sel = window.getSelection();
+        if (sel && !sel.isCollapsed && sel.toString().trim()) return; // user was selecting
+        showViewPopover(annotEl);
+        return;
+      }
+
+      // Don't seek if user was selecting text
+      const sel = window.getSelection();
+      if (sel && !sel.isCollapsed && sel.toString().trim()) return;
+
+      // Seek to segment
+      const line = e.target.closest('.lyrics-line');
+      if (line) seekToSegment(parseInt(line.dataset.segId));
+    });
+
+    // Mouseup on line-text → show selection badge (non-intrusive, doesn't steal focus)
+    lyricsContainer.addEventListener('mouseup', (e) => {
+      const lineText = e.target.closest('.line-text');
+      if (!lineText) return;
+
+      const sel = window.getSelection();
+      if (!sel || sel.isCollapsed || !sel.toString().trim()) return;
+
+      const segId = parseInt(lineText.dataset.segId);
+      const seg = state.currentData?.segments.find(s => s.id === segId);
+      if (!seg) return;
+
+      const range = sel.getRangeAt(0);
+      if (!lineText.contains(range.startContainer) || !lineText.contains(range.endContainer)) return;
+
+      const rawText = sel.toString();
+      const trimmed = rawText.trim();
+      if (!trimmed || trimmed.length > 60) return;
+
+      // Calculate plain-text offset by walking text nodes
+      const rawStart = getTextOffset(lineText, range.startContainer, range.startOffset);
+      if (rawStart === -1) return;
+
+      const leadingSpaces = rawText.indexOf(trimmed);
+      const startOffset = rawStart + leadingSpaces;
+      const endOffset = startOffset + trimmed.length;
+
+      if (seg.text.substring(startOffset, endOffset) !== trimmed) {
+        const fb = seg.text.indexOf(trimmed);
+        if (fb === -1) return;
+        state.pendingVocab = { segmentId: segId, word: trimmed, startOffset: fb, endOffset: fb + trimmed.length };
+      } else {
+        state.pendingVocab = { segmentId: segId, word: trimmed, startOffset, endOffset };
+      }
+
+      // Show the small "+" badge above the selection — doesn't steal focus or clear selection
+      showSelectionBadge(range.getBoundingClientRect());
+    });
+
+    /** Walk text nodes inside `root` and return the plain-text offset of `(node, offset)`. */
+    function getTextOffset(root, node, offset) {
+      let pos = 0;
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      let cur;
+      while ((cur = walker.nextNode())) {
+        if (cur === node) return pos + offset;
+        pos += cur.textContent.length;
+      }
+      return -1;
+    }
+
+    // ===================================================================
+    //  Selection Badge & Vocab Popover
+    // ===================================================================
+
+    // --- Badge: lightweight "+" button shown on text selection ---
+    function showSelectionBadge(rect) {
+      hideSelectionBadge(); // clear any previous badge
+      const badge = document.getElementById('selectionBadge');
+      const x = rect.left + window.scrollX + rect.width / 2 - 14;
+      const y = rect.top + window.scrollY - 34;
+      badge.style.left = Math.max(4, x) + 'px';
+      badge.style.top = Math.max(4, y) + 'px';
+      badge.classList.remove('hidden');
+    }
+
+    function hideSelectionBadge() {
+      document.getElementById('selectionBadge').classList.add('hidden');
+    }
+
+    // Badge click → open the full add-annotation Popover
+    document.getElementById('selectionBadge').addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!state.pendingVocab) return;
+      const badge = document.getElementById('selectionBadge');
+      const rect = badge.getBoundingClientRect();
+      hideSelectionBadge();
+      showAddPopover(state.pendingVocab.word, rect);
+    });
+
+    // --- Popover: full annotation form ---
+    function showAddPopover(word, rect) {
+      const pop = document.getElementById('vocabPopover');
+      document.getElementById('vpWord').textContent = word;
+      document.getElementById('vpInput').value = '';
+      document.getElementById('vpAddMode').classList.remove('hidden');
+      document.getElementById('vpViewMode').classList.add('hidden');
+      state.viewingAnnot = null;
+
+      pop.classList.remove('hidden');
+      positionPopover(pop, rect);
+      setTimeout(() => document.getElementById('vpInput').focus(), 30);
+    }
+
+    function showViewPopover(annotEl) {
+      const aid = annotEl.dataset.aid;
+      const segId = parseInt(annotEl.dataset.segId);
+      const annot = state.currentData?.vocab_annotations.find(a => a.id === aid);
+      if (!annot) return;
+
+      hideSelectionBadge();
+      const pop = document.getElementById('vocabPopover');
+      document.getElementById('vpWord').textContent = annot.word;
+      document.getElementById('vpMeaning').textContent = annot.meaning;
+      document.getElementById('vpAddMode').classList.add('hidden');
+      document.getElementById('vpViewMode').classList.remove('hidden');
+      state.viewingAnnot = { id: aid, segmentId: segId };
+      state.pendingVocab = null;
+
+      pop.classList.remove('hidden');
+      positionPopover(pop, annotEl.getBoundingClientRect());
+    }
+
+    function positionPopover(pop, rect) {
+      pop.style.left = '-9999px';
+      pop.style.top = '-9999px';
+      requestAnimationFrame(() => {
+        const pw = pop.offsetWidth, ph = pop.offsetHeight;
+        const cx = rect.left + window.scrollX + rect.width / 2;
+        const cy = rect.top + window.scrollY;
+        let left = cx - pw / 2;
+        let top = cy - ph - 8;
+        left = Math.max(8, Math.min(left, document.documentElement.scrollWidth - pw - 8));
+        if (top < window.scrollY + 8) top = rect.bottom + window.scrollY + 8;
+        pop.style.left = left + 'px';
+        pop.style.top = top + 'px';
+      });
+    }
+
+    function hideVocabPopover() {
+      document.getElementById('vocabPopover').classList.add('hidden');
+      state.pendingVocab = null;
+      state.viewingAnnot = null;
+    }
+
+    async function saveVocab() {
+      const meaning = document.getElementById('vpInput').value.trim();
+      if (!meaning || !state.pendingVocab) return;
+      const pv = state.pendingVocab;
+      const r = await API.put(`/api/listening_review/project/${state.currentProject.id}/vocab`, {
+        segment_id: pv.segmentId, word: pv.word, meaning,
+        start_offset: pv.startOffset, end_offset: pv.endOffset
+      });
+      if (r.success && r.data) {
+        state.currentData = r.data;
+        renderLyrics();
+        showToast('标注已保存');
+      }
+      hideVocabPopover();
+    }
+
+    async function deleteVocab() {
+      if (!state.viewingAnnot) return;
+      const r = await API.del(`/api/listening_review/project/${state.currentProject.id}/vocab/${state.viewingAnnot.id}`);
+      if (r.success && r.data) {
+        state.currentData = r.data;
+        renderLyrics();
+        showToast('标注已删除');
+      }
+      hideVocabPopover();
+    }
+
+    document.getElementById('vpInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); saveVocab(); }
+      if (e.key === 'Escape') hideVocabPopover();
+    });
+
+    // Dismiss badge / popover on outside click
+    document.addEventListener('mousedown', (e) => {
+      const pop = document.getElementById('vocabPopover');
+      const badge = document.getElementById('selectionBadge');
+
+      if (!pop.classList.contains('hidden') && !pop.contains(e.target)) {
+        hideVocabPopover();
+        return;
+      }
+      if (!badge.classList.contains('hidden') && !badge.contains(e.target)) {
+        hideSelectionBadge();
+        state.pendingVocab = null;
+      }
+    });
+
+    // ===================================================================
+    //  Audio Player
+    // ===================================================================
+    audioEl.addEventListener('timeupdate', () => {
+      if (!state.currentData) return;
+      const t = audioEl.currentTime;
+      updateProgressBar(t);
+
+      const segs = state.currentData.segments;
+      let newActive = -1;
+      for (const seg of segs) {
+        if (t >= seg.start && t < seg.end) { newActive = seg.id; break; }
+      }
+      if (newActive === -1 && segs.length > 0) {
+        for (let i = segs.length - 1; i >= 0; i--) {
+          if (t >= segs[i].start) { newActive = segs[i].id; break; }
+        }
+      }
+
+      if (newActive !== state.activeSegmentId && newActive >= 0) {
+        state.activeSegmentId = newActive;
+        highlightSegment(newActive);
+      }
+    });
+
+    audioEl.addEventListener('play', () => { document.getElementById('playBtn').innerHTML = '&#10074;&#10074;'; });
+    audioEl.addEventListener('pause', () => { document.getElementById('playBtn').innerHTML = '&#9654;'; });
+    audioEl.addEventListener('loadedmetadata', () => { document.getElementById('totTime').textContent = formatTime(audioEl.duration); });
+
+    function togglePlay() { audioEl.paused ? audioEl.play() : audioEl.pause(); }
+
+    function updateProgressBar(t) {
+      const dur = audioEl.duration || 1;
+      const pct = (t / dur) * 100;
+      document.getElementById('progressFill').style.width = pct + '%';
+      document.getElementById('progressThumb').style.left = pct + '%';
+      document.getElementById('curTime').textContent = formatTime(t);
+    }
+
+    function highlightSegment(segId) {
+      const container = document.getElementById('lyricsContainer');
+      container.querySelectorAll('.lyrics-line.active').forEach(el => el.classList.remove('active'));
+      const lineEl = container.querySelector(`.lyrics-line[data-seg-id="${segId}"]`);
+      if (!lineEl) return;
+
+      lineEl.classList.add('active');
+
+      // Scroll to center between top bar and player bar
+      const topH = document.getElementById('topBar').offsetHeight;
+      const bottomH = document.getElementById('playerBar').offsetHeight;
+      const visibleH = window.innerHeight - topH - bottomH;
+      const targetY = lineEl.getBoundingClientRect().top + window.scrollY - topH - visibleH / 2 + lineEl.offsetHeight / 2;
+      window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+    }
+
+    function seekToSegment(segId) {
+      const seg = state.currentData.segments.find(s => s.id === segId);
+      if (!seg) return;
+      audioEl.currentTime = seg.start;
+      if (audioEl.paused) audioEl.play();
+      state.activeSegmentId = segId;
+      highlightSegment(segId);
+    }
+
+    // Progress bar interaction
+    (function initProgressBar() {
+      const wrap = document.getElementById('progressWrap');
+      let dragging = false;
+
+      function seekFromEvent(e) {
+        const rect = wrap.getBoundingClientRect();
+        const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        if (audioEl.duration) audioEl.currentTime = ratio * audioEl.duration;
+      }
+
+      wrap.addEventListener('mousedown', (e) => { dragging = true; seekFromEvent(e); });
+      document.addEventListener('mousemove', (e) => { if (dragging) seekFromEvent(e); });
+      document.addEventListener('mouseup', () => { dragging = false; });
+
+      wrap.addEventListener('touchstart', (e) => { dragging = true; seekFromEvent(e.touches[0]); }, { passive: true });
+      wrap.addEventListener('touchmove', (e) => { if (dragging) seekFromEvent(e.touches[0]); }, { passive: true });
+      wrap.addEventListener('touchend', () => { dragging = false; });
+    })();
+
+    // Speed control
+    function setSpeed(rate) {
+      state.playbackRate = rate;
+      audioEl.playbackRate = rate;
+      document.querySelectorAll('.speed-btn').forEach(b => {
+        const isActive = parseFloat(b.dataset.rate) === rate;
+        b.classList.toggle('bg-blue-500', isActive);
+        b.classList.toggle('text-white', isActive);
+        b.classList.toggle('border-blue-500', isActive);
+        b.classList.toggle('bg-slate-50', !isActive);
+        b.classList.toggle('text-slate-500', !isActive);
+        b.classList.toggle('border-slate-200', !isActive);
+        b.classList.toggle('hover:bg-slate-100', !isActive);
+      });
+    }
+
+    // Volume control
+    let prevVolume = 1;
+    function setVolume(val) {
+      const v = val / 100;
+      audioEl.volume = v;
+      updateVolIcon(v);
+    }
+    function toggleMute() {
+      if (audioEl.volume > 0) {
+        prevVolume = audioEl.volume;
+        audioEl.volume = 0;
+        document.getElementById('volSlider').value = 0;
+      } else {
+        audioEl.volume = prevVolume;
+        document.getElementById('volSlider').value = Math.round(prevVolume * 100);
+      }
+      updateVolIcon(audioEl.volume);
+    }
+    function updateVolIcon(v) {
+      const icon = document.getElementById('volIcon');
+      const base = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>';
+      const wave1 = '<path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>';
+      const wave2 = '<path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>';
+      const mute = '<line x1="23" y1="1" x2="1" y2="23"/>';
+      let paths;
+      if (v === 0) paths = base + mute;
+      else if (v < 0.5) paths = base + wave1;
+      else paths = base + wave1 + wave2;
+      icon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">${paths}</svg>`;
+    }
+
+    // ===================================================================
+    //  Star Toggle
+    // ===================================================================
+    async function toggleStar(segId) {
+      if (!state.currentProject) return;
+      const r = await API.put(`/api/listening_review/project/${state.currentProject.id}/star`, { segment_id: segId });
+      if (!r.success) return;
+
+      state.currentData.starred_segments = r.starred_segments;
+      const lineEl = document.querySelector(`.lyrics-line[data-seg-id="${segId}"]`);
+      if (!lineEl) return;
+
+      const isStarred = r.starred_segments.includes(segId);
+      lineEl.classList.toggle('starred', isStarred);
+      const btn = lineEl.querySelector('.star-btn');
+      if (btn) {
+        btn.textContent = isStarred ? '\u2605' : '\u2606';
+        btn.classList.toggle('text-amber-400', isStarred);
+        btn.classList.toggle('opacity-100', isStarred);
+        btn.classList.toggle('text-slate-300', !isStarred);
+      }
+    }
+
+    // ===================================================================
+    //  Keyboard Shortcuts
+    // ===================================================================
+    document.addEventListener('keydown', (e) => {
+      if (state.view !== 'detail') return;
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+      else if (e.code === 'ArrowLeft') { e.preventDefault(); audioEl.currentTime = Math.max(0, audioEl.currentTime - 3); }
+      else if (e.code === 'ArrowRight') { e.preventDefault(); audioEl.currentTime = Math.min(audioEl.duration || 0, audioEl.currentTime + 3); }
+    });
+
+    // ===================================================================
+    //  Utilities
+    // ===================================================================
+    function esc(s) {
+      if (!s) return '';
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    function formatTime(s) {
+      if (!s || isNaN(s)) return '0:00';
+      const m = Math.floor(s / 60);
+      const sec = Math.floor(s % 60);
+      return m + ':' + (sec < 10 ? '0' : '') + sec;
+    }
+
+    function formatDateCN(isoStr) {
+      const dt = new Date(isoStr + '+08:00');
+      return dt.toLocaleString('zh-CN', {
+        timeZone: 'Asia/Shanghai',
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', hour12: false
+      });
+    }
+
+    let toastTimer = null;
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('toast-show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('toast-show'), 3000);
+    }
+
+    // Close modal on overlay click
+    document.getElementById('uploadModal').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('uploadModal')) closeUploadModal();
+    });
+
+    // Drag & drop on file label
+    (function initDragDrop() {
+      const label = document.getElementById('fileDropLabel');
+      ['dragenter', 'dragover'].forEach(ev => {
+        label.addEventListener(ev, (e) => { e.preventDefault(); label.classList.add('border-blue-500', 'bg-blue-50'); });
+      });
+      ['dragleave', 'drop'].forEach(ev => {
+        label.addEventListener(ev, (e) => { e.preventDefault(); label.classList.remove('border-blue-500', 'bg-blue-50'); });
+      });
+      label.addEventListener('drop', (e) => {
+        const file = e.dataTransfer.files[0];
+        if (file) {
+          const input = document.getElementById('fileInput');
+          const dt = new DataTransfer();
+          dt.items.add(file);
+          input.files = dt.files;
+          onFileSelected(input);
+        }
+      });
+    })();
+  </script>
 </body>
+
 </html>
