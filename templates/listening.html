@@ -50,6 +50,49 @@
     .lyrics-line.active .translation-line { opacity: 0.85; }
     .translations-hidden .translation-line { display: none; }
 
+    /* Project card: allow tooltip to overflow */
+    .project-card {
+      overflow: visible;
+    }
+
+    /* Project card title: truncate, tooltip on hover */
+    .project-title {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      position: relative;
+    }
+    .project-title.is-truncated:hover {
+      z-index: 50;
+    }
+    .project-title::after {
+      content: attr(data-full-title);
+      position: absolute;
+      left: 0;
+      top: calc(100% + 4px);
+      background: #1e293b;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.4;
+      padding: 6px 12px;
+      border-radius: 8px;
+      max-width: 280px;
+      width: max-content;
+      white-space: normal;
+      word-break: break-word;
+      pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity .15s;
+      z-index: 50;
+      box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    }
+    .project-title.is-truncated:hover::after {
+      opacity: 1;
+      visibility: visible;
+    }
+
     /* Scrollbar */
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -79,7 +122,7 @@
 
     <!-- List View -->
     <div id="listView" class="max-w-5xl mx-auto px-4 md:px-8 py-6">
-      <div class="flex gap-3 mb-5">
+      <div class="flex gap-3 mb-5 justify-end">
         <button onclick="openUploadModal()" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-colors border-none cursor-pointer shadow-sm">+ New Project</button>
       </div>
       <div id="projectGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
@@ -324,18 +367,25 @@ function renderListView() {
       ? `<button class="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-md mt-2 ml-1.5 bg-blue-50 text-blue-600 border-none cursor-pointer hover:bg-blue-100 transition-colors" onclick="event.stopPropagation();retryProject('${p.id}')">&#8635; Retry</button>`
       : '';
     return `
-      <div class="group relative bg-white border border-slate-200 rounded-xl p-5 cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg hover:border-blue-200" onclick="openProject('${p.id}')">
-        <button class="absolute top-2.5 right-2.5 w-7 h-7 flex items-center justify-center bg-transparent border-none text-slate-300 hover:text-red-500 hover:bg-red-50 cursor-pointer text-lg rounded transition-colors" onclick="event.stopPropagation();deleteProject('${p.id}')" title="Delete">&times;</button>
-        <div class="font-bold text-slate-800 text-[15px] mb-1.5 pr-6 break-words">${esc(p.title)}</div>
-        <div class="text-xs text-slate-400 flex gap-3 flex-wrap">
+      <div class="project-card group relative bg-white border border-slate-200 rounded-xl p-5 cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg hover:border-blue-200 flex flex-col h-[120px]" onclick="openProject('${p.id}')">
+        <button class="absolute top-2.5 right-2.5 w-7 h-7 flex items-center justify-center bg-transparent border-none text-slate-300 hover:text-red-500 hover:bg-red-50 cursor-pointer text-lg rounded transition-colors z-10" onclick="event.stopPropagation();deleteProject('${p.id}')" title="Delete">&times;</button>
+        <div class="project-title font-bold text-slate-800 text-[15px] pr-6 truncate flex-shrink-0" data-full-title="${esc(p.title)}">${esc(p.title)}</div>
+        <div class="text-xs text-slate-400 flex gap-3 flex-wrap mt-auto">
           <span>${date}</span><span>${dur}</span>
         </div>
-        <div class="flex items-center flex-wrap">
-          <span class="inline-block text-[11px] font-semibold px-2 py-0.5 rounded-md mt-2 ${statusCls}">${statusText}</span>
+        <div class="flex items-center flex-wrap flex-shrink-0">
+          <span class="inline-block text-[11px] font-semibold px-2 py-0.5 rounded-md mt-1.5 ${statusCls}">${statusText}</span>
           ${retryBtn}
         </div>
       </div>`;
   }).join('');
+
+  requestAnimationFrame(() => {
+    grid.querySelectorAll('.project-title').forEach(el => {
+      if (el.scrollWidth > el.clientWidth) el.classList.add('is-truncated');
+      else el.classList.remove('is-truncated');
+    });
+  });
 }
 
 async function deleteProject(id) {
