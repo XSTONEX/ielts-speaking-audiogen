@@ -45,6 +45,11 @@
     /* Toast animation */
     .toast-show { transform: translateX(-50%) translateY(0) !important; opacity: 1 !important; }
 
+    /* Translation line */
+    .translation-line { font-size: 14px; color: #64748b; opacity: 0.7; line-height: 1.5; margin-top: 2px; }
+    .lyrics-line.active .translation-line { opacity: 0.85; }
+    .translations-hidden .translation-line { display: none; }
+
     /* Scrollbar */
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -65,6 +70,7 @@
     <div id="topDetail" class="hidden items-center gap-3 w-full">
       <button onclick="backToList()" class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-600 font-semibold text-sm px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors flex-shrink-0 border-none cursor-pointer">&#8592; Back</button>
       <h1 id="detailTitle" class="text-lg font-bold text-slate-800 truncate"></h1>
+      <button id="toggleTransBtn" onclick="toggleTranslations()" class="ml-auto inline-flex items-center gap-1 bg-blue-100 text-blue-600 font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-blue-200 transition-colors border-none cursor-pointer flex-shrink-0" title="Toggle translations">&#35793; Translation</button>
     </div>
   </header>
 
@@ -200,6 +206,7 @@ const state = {
   activeSegmentId: -1,
   playbackRate: 1.0,
   pollingTimer: null,
+  showTranslations: true,
   pendingVocab: null,    // { segmentId, word, startOffset, endOffset }
   viewingAnnot: null      // { id, segmentId } — for delete mode
 };
@@ -278,21 +285,21 @@ async function loadProjects() {
   state.projects = r.projects || [];
   renderListView();
 
-  const hasProcessing = state.projects.some(p => p.status === 'processing');
-  if (hasProcessing && !state.pollingTimer) {
+  const hasInProgress = state.projects.some(p => p.status === 'processing' || p.status === 'translating');
+  if (hasInProgress && !state.pollingTimer) {
     state.pollingTimer = setInterval(async () => {
       if (state.view !== 'list') return;
       const r2 = await API.get('/api/listening_review/list');
       if (r2.projects) {
         state.projects = r2.projects;
         renderListView();
-        if (!r2.projects.some(p => p.status === 'processing')) {
+        if (!r2.projects.some(p => p.status === 'processing' || p.status === 'translating')) {
           clearInterval(state.pollingTimer);
           state.pollingTimer = null;
         }
       }
     }, 3000);
-  } else if (!hasProcessing && state.pollingTimer) {
+  } else if (!hasInProgress && state.pollingTimer) {
     clearInterval(state.pollingTimer);
     state.pollingTimer = null;
   }
@@ -309,8 +316,8 @@ function renderListView() {
     return;
   }
   grid.innerHTML = state.projects.map(p => {
-    const statusCls = { completed: 'bg-emerald-50 text-emerald-600', processing: 'bg-amber-50 text-amber-600', error: 'bg-red-50 text-red-600' }[p.status] || '';
-    const statusText = { completed: 'Completed', processing: 'Processing...', error: 'Error' }[p.status] || p.status;
+    const statusCls = { completed: 'bg-emerald-50 text-emerald-600', processing: 'bg-amber-50 text-amber-600', translating: 'bg-purple-50 text-purple-600', error: 'bg-red-50 text-red-600' }[p.status] || '';
+    const statusText = { completed: 'Completed', processing: 'Processing...', translating: 'Translating...', error: 'Error' }[p.status] || p.status;
     const dur = p.duration ? formatTime(p.duration) : '--:--';
     const date = p.created_at ? new Date(p.created_at).toLocaleDateString('zh-CN') : '';
     const retryBtn = p.status === 'error'
@@ -420,6 +427,7 @@ async function openProject(id) {
   const proj = state.projects.find(p => p.id === id);
   if (!proj) return;
   if (proj.status === 'processing') { showToast('Still transcribing, please wait...'); return; }
+  if (proj.status === 'translating') { showToast('Translating, please wait...'); return; }
   if (proj.status === 'error') { showToast('Transcription failed: ' + (proj.error || 'Unknown error')); return; }
 
   const r = await API.get('/api/listening_review/project/' + id);
@@ -449,6 +457,16 @@ function backToList() {
   loadProjects();
 }
 
+function toggleTranslations() {
+  state.showTranslations = !state.showTranslations;
+  document.getElementById('lyricsContainer').classList.toggle('translations-hidden', !state.showTranslations);
+  const btn = document.getElementById('toggleTransBtn');
+  btn.classList.toggle('bg-blue-100', state.showTranslations);
+  btn.classList.toggle('text-blue-600', state.showTranslations);
+  btn.classList.toggle('bg-slate-100', !state.showTranslations);
+  btn.classList.toggle('text-slate-500', !state.showTranslations);
+}
+
 // ===================================================================
 //  Lyrics Rendering
 // ===================================================================
@@ -473,11 +491,16 @@ function renderLyrics() {
     if (isActive)  cls += ' active';
     if (isStarred) cls += ' starred';
 
+    const translationHtml = seg.translation ? `<div class="translation-line">${esc(seg.translation)}</div>` : '';
+
     return `
       <div class="${cls}" data-seg-id="${seg.id}" data-start="${seg.start}" data-end="${seg.end}">
         <span class="w-14 flex-shrink-0 text-slate-400 font-mono text-xs pt-0.5 text-right select-none">${formatTime(seg.start)}</span>
         <button class="star-btn flex-shrink-0 bg-transparent border-none cursor-pointer text-base p-0 leading-none mt-0.5 transition-all ${isStarred ? 'text-amber-400 opacity-100' : 'text-slate-300 opacity-0 group-hover:opacity-100 hover:text-amber-400'}" data-seg-id="${seg.id}">${isStarred ? '\u2605' : '\u2606'}</button>
-        <span class="line-text flex-1 text-[15px] leading-relaxed select-text cursor-text" data-seg-id="${seg.id}">${textHtml}</span>
+        <div class="flex-1">
+          <span class="line-text text-[15px] leading-relaxed select-text cursor-text" data-seg-id="${seg.id}">${textHtml}</span>
+          ${translationHtml}
+        </div>
       </div>`;
   }).join('');
 }

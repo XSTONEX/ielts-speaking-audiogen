@@ -1,12 +1,14 @@
 from flask import Blueprint, request, jsonify, send_file
 import os, json, re, uuid, threading, shutil, requests, time
 from datetime import datetime
+from openai import OpenAI
 from core import LISTENING_REVIEW_DIR, is_token_valid, load_tokens, get_proxies
 
 listening_review_bp = Blueprint('listening_review', __name__)
 
 ALLOWED_EXTENSIONS = {'.mp3', '.wav', '.m4a', '.flac', '.ogg', '.mp4', '.webm'}
 MAX_FILE_SIZE = 25 * 1024 * 1024  # 25MB
+LLM_MODEL = 'gemini-2.5-flash'
 
 
 # ==================== Helper Functions ====================
@@ -135,6 +137,71 @@ def _call_groq_transcription(audio_file_path, max_retries=3):
     return None, f'转录失败，已重试 {max_retries} 次'
 
 
+def _polish_and_translate(segments):
+    """Call LLM (configured by LLM_MODEL) via DeerAPI to polish ASR text and add Chinese translation."""
+    api_key = os.getenv('DEER_API_KEY')
+    if not api_key:
+        return None, 'DEER_API_KEY not configured'
+
+    client = OpenAI(base_url='https://api.deerapi.com/v1', api_key=api_key)
+
+    system_prompt = (
+        '你是一个专业的英语母语校对专家和资深的中英翻译，特别精通雅思（IELTS）等英语语言考试的听力材料解析。\n'
+        '你的任务是对 ASR（语音识别）生成的英语听力字幕（JSON 格式）进行极度严格的格式规范化，并为每一句话提供准确、流畅的中文翻译。\n\n'
+        '【最高准则：绝对音字同步】\n'
+        '为了确保用户听到的发音与字幕 100% 对应，你**绝对不可**替换、增加或删减任何一个英文单词。即使原文存在口语瑕疵、语法错误或重复的 filler words（如 well, you know, oh 等），也必须原封不动地保留。严禁任何形式的改写或同义词替换！\n\n'
+        '【允许的文本规范化权限】（你只能进行以下 3 种修改，严禁越界）：\n'
+        '1. 修正大小写：仅将句首字母大写，以及专有名词（如人名 Sandra、地名 Florida、星期 Tuesday、月份等）首字母大写。\n'
+        '2. 添加标点符号：根据语境、语法和说话人的停顿，合理添加逗号、句号、问号或感叹号以切分长句，但不允许更改单词。\n'
+        '3. 英文数字转阿拉伯数字：听力材料中经常出现特定的格式，请将其转换为标准的数字和书面表达：\n'
+        '   - 听到类似 part one, section two 时，转换为 Part 1, Section 2。\n'
+        '   - 听到 questions one to five 时，转换为 Questions 1 to 5。\n'
+        '   - 时间表达如 10 a m 转换为 10 a.m. 或 10:00 a.m.。\n'
+        '   - 价格或数字如 thirty six 转换为 36。\n\n'
+        '【翻译规则】\n'
+        '1. 翻译需准确自然，符合中文表达习惯。\n'
+        '2. 结合上下文理解：虽然是逐句翻译，但请结合前后句的语境，确保代词指代正确，语气（如客服的专业热情、游客的期待）翻译到位。\n\n'
+        '【输出格式要求】\n'
+        '你必须返回一个合法的 JSON 格式。\n'
+        '- 保留原始输入中每个 segment 的 id, start, end 字段，数值保持不变。\n'
+        '- 将规范化后的英文文本覆盖原来的 text 字段。\n'
+        '- 新增一个 translation 字段，填入对应的中文翻译。\n'
+        '- 不要输出任何多余的解释性文字、不可包含 markdown 标记，确保结果可以直接被 json.loads() 解析。\n\n'
+        '输出结构示例：\n'
+        '{"segments": [{"id": 0, "start": 0.0, "end": 8.46, '
+        '"text": "Part 1. You will hear a telephone conversation.", '
+        '"translation": "第一部分。你将听到一段电话对话。"}]}'
+    )
+
+    segments_json = json.dumps(segments, ensure_ascii=False)
+    user_prompt = f'请处理以下 ASR 提取出的字幕数据。严格按照上述定义的 JSON 格式输出结果。\n\n输入数据：\n{segments_json}'
+
+    try:
+        response = client.chat.completions.create(
+            model=LLM_MODEL,
+            messages=[
+                {'role': 'system', 'content': system_prompt},
+                {'role': 'user', 'content': user_prompt}
+            ],
+            response_format={'type': 'json_object'},
+            temperature=0.3
+        )
+        content = response.choices[0].message.content.strip()
+        result = json.loads(content)
+
+        if isinstance(result, dict) and 'segments' in result:
+            return result['segments'], None
+        elif isinstance(result, list):
+            return result, None
+        else:
+            return None, f'Unexpected {LLM_MODEL} response structure'
+
+    except json.JSONDecodeError as e:
+        return None, f'{LLM_MODEL} returned invalid JSON: {e}'
+    except Exception as e:
+        return None, f'{LLM_MODEL} API error: {e}'
+
+
 def _download_audio_from_url(url_str, save_path):
     """Download audio from a direct URL. Returns (path, None) or (None, error)."""
     try:
@@ -164,43 +231,53 @@ def _download_audio_from_url(url_str, save_path):
     return save_path, None
 
 
+def _update_project_status(username, project_id, **fields):
+    """Update a project's fields in the user projects list and save."""
+    projects = _load_user_projects(username)
+    for i, p in enumerate(projects):
+        if p['id'] == project_id:
+            projects[i].update(fields, updated_at=datetime.now().isoformat())
+            break
+    _save_user_projects(username, projects)
+
+
 def _transcribe_async(project_id, audio_path, username):
-    """Run transcription in background thread and update project record."""
+    """Run transcription + LLM polish/translate in background thread."""
     try:
+        # Phase 1: ASR transcription
         result, error = _call_groq_transcription(audio_path)
+        if not result:
+            _update_project_status(username, project_id, status='error', error=error)
+            return
 
-        projects = _load_user_projects(username)
-        for i, p in enumerate(projects):
-            if p['id'] == project_id:
-                if result:
-                    projects[i]['status'] = 'completed'
-                    projects[i]['duration'] = result['duration']
-                    projects[i]['updated_at'] = datetime.now().isoformat()
+        # Mark translating and save duration
+        _update_project_status(username, project_id, status='translating', duration=result['duration'])
 
-                    project_data = {
-                        'segments': result['segments'],
-                        'starred_segments': [],
-                        'vocab_annotations': []
-                    }
-                    _save_project_data(project_id, project_data)
-                else:
-                    projects[i]['status'] = 'error'
-                    projects[i]['error'] = error
-                    projects[i]['updated_at'] = datetime.now().isoformat()
-                break
-        _save_user_projects(username, projects)
-        print(f"Listening review transcription done: {project_id}")
+        # Phase 2: LLM polish + translate
+        polished_segments, translate_error = _polish_and_translate(result['segments'])
+        if not polished_segments:
+            _update_project_status(username, project_id, status='error', error=translate_error or 'Translation failed')
+            return
+
+        # Merge polished text/translation into original segments (preserve start/end from Whisper)
+        polished_map = {s['id']: s for s in polished_segments}
+        for seg in result['segments']:
+            polished = polished_map.get(seg['id'])
+            if polished:
+                seg['text'] = polished.get('text', seg['text'])
+                seg['translation'] = polished.get('translation', '')
+
+        _save_project_data(project_id, {
+            'segments': result['segments'],
+            'starred_segments': [],
+            'vocab_annotations': []
+        })
+        _update_project_status(username, project_id, status='completed')
+        print(f"Listening review done: {project_id}")
 
     except Exception as e:
-        print(f"Listening review transcription failed: {e}")
-        projects = _load_user_projects(username)
-        for i, p in enumerate(projects):
-            if p['id'] == project_id:
-                projects[i]['status'] = 'error'
-                projects[i]['error'] = str(e)
-                projects[i]['updated_at'] = datetime.now().isoformat()
-                break
-        _save_user_projects(username, projects)
+        print(f"Listening review failed: {e}")
+        _update_project_status(username, project_id, status='error', error=str(e))
 
 
 # ==================== Routes ====================
