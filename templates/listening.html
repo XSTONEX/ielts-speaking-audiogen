@@ -70,7 +70,11 @@
     <div id="topDetail" class="hidden items-center gap-3 w-full">
       <button onclick="backToList()" class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-600 font-semibold text-sm px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors flex-shrink-0 border-none cursor-pointer">&#8592; Back</button>
       <h1 id="detailTitle" class="text-lg font-bold text-slate-800 truncate"></h1>
-      <button id="toggleTransBtn" onclick="toggleTranslations()" class="ml-auto inline-flex items-center gap-1 bg-blue-100 text-blue-600 font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-blue-200 transition-colors border-none cursor-pointer flex-shrink-0" title="Toggle translations">&#35793; Translation</button>
+      <div class="ml-auto flex items-center gap-2 flex-shrink-0">
+        <button id="masteredBtn" onclick="toggleMastered()" class="inline-flex items-center gap-1 bg-slate-100 text-slate-500 font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-emerald-50 hover:text-emerald-600 transition-colors border-none cursor-pointer" title="标记为已掌握">&#10003; 标熟</button>
+        <button id="checkinBtn" onclick="doCheckin()" class="inline-flex items-center gap-1 bg-slate-100 text-slate-500 font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-amber-50 hover:text-amber-600 transition-colors border-none cursor-pointer" title="打卡">&#9998; 打卡 <span id="checkinCount" class="ml-0.5 text-[10px] opacity-70"></span></button>
+        <button id="toggleTransBtn" onclick="toggleTranslations()" class="inline-flex items-center gap-1 bg-blue-100 text-blue-600 font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-blue-200 transition-colors border-none cursor-pointer" title="Toggle translations">&#35793; Translation</button>
+      </div>
     </div>
   </header>
 
@@ -320,19 +324,24 @@ function renderListView() {
     const statusText = { completed: 'Completed', processing: 'Processing...', translating: 'Translating...', error: 'Error' }[p.status] || p.status;
     const dur = p.duration ? formatTime(p.duration) : '--:--';
     const date = p.created_at ? new Date(p.created_at).toLocaleDateString('zh-CN') : '';
+    const isMastered = !!p.mastered;
+    const checkinCount = p.checkin_count || 0;
+    const vocabCount = p.vocab_count || 0;
+    const cardBorder = isMastered ? 'border-slate-100 opacity-60' : 'border-slate-200';
     const retryBtn = p.status === 'error'
       ? `<button class="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-md mt-2 ml-1.5 bg-blue-50 text-blue-600 border-none cursor-pointer hover:bg-blue-100 transition-colors" onclick="event.stopPropagation();retryProject('${p.id}')">&#8635; Retry</button>`
       : '';
+    const masteredBadge = isMastered ? '<span class="inline-block text-[11px] font-semibold px-2 py-0.5 rounded-md mt-2 ml-1.5 bg-emerald-50 text-emerald-500">&#10003; 已掌握</span>' : '';
     return `
-      <div class="group relative bg-white border border-slate-200 rounded-xl p-5 cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg hover:border-blue-200" onclick="openProject('${p.id}')">
+      <div class="group relative bg-white border ${cardBorder} rounded-xl p-5 cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg hover:border-blue-200" onclick="openProject('${p.id}')">
         <button class="absolute top-2.5 right-2.5 w-7 h-7 flex items-center justify-center bg-transparent border-none text-slate-300 hover:text-red-500 hover:bg-red-50 cursor-pointer text-lg rounded transition-colors" onclick="event.stopPropagation();deleteProject('${p.id}')" title="Delete">&times;</button>
         <div class="font-bold text-slate-800 text-[15px] mb-1.5 pr-6 break-words">${esc(p.title)}</div>
-        <div class="text-xs text-slate-400 flex gap-3 flex-wrap">
-          <span>${date}</span><span>${dur}</span>
+        <div class="text-xs text-slate-400 flex items-center gap-3 flex-wrap">
+          <span>${date}</span><span>${dur}</span>${checkinCount > 0 ? `<span class="text-amber-500" title="打卡次数">&#9998; ${checkinCount}</span>` : ''}${vocabCount > 0 ? `<span class="text-blue-400" title="标注单词数">&#9679; ${vocabCount} 词</span>` : ''}
         </div>
         <div class="flex items-center flex-wrap">
           <span class="inline-block text-[11px] font-semibold px-2 py-0.5 rounded-md mt-2 ${statusCls}">${statusText}</span>
-          ${retryBtn}
+          ${retryBtn}${masteredBadge}
         </div>
       </div>`;
   }).join('');
@@ -439,6 +448,8 @@ async function openProject(id) {
 
   switchView('detail');
   document.getElementById('detailTitle').textContent = r.project.title;
+  updateMasteredBtn(!!r.project.mastered);
+  updateCheckinBtn(r.project.checkin_count || 0);
 
   const tk = localStorage.getItem('authToken');
   audioEl.src = `/api/listening_review/audio/${id}/${r.project.audio_filename}?token=${encodeURIComponent(tk)}`;
@@ -859,6 +870,51 @@ async function toggleStar(segId) {
     btn.classList.toggle('opacity-100', isStarred);
     btn.classList.toggle('text-slate-300', !isStarred);
   }
+}
+
+// ===================================================================
+//  Mastered & Check-in
+// ===================================================================
+async function toggleMastered() {
+  if (!state.currentProject) return;
+  const r = await API.put(`/api/listening_review/project/${state.currentProject.id}/mastered`, {});
+  if (!r.success) { showToast(r.error || '操作失败'); return; }
+  state.currentProject.mastered = r.mastered;
+  const proj = state.projects.find(p => p.id === state.currentProject.id);
+  if (proj) proj.mastered = r.mastered;
+  updateMasteredBtn(r.mastered);
+  showToast(r.mastered ? '已标记为掌握' : '已取消标熟');
+}
+
+function updateMasteredBtn(mastered) {
+  const btn = document.getElementById('masteredBtn');
+  if (!btn) return;
+  if (mastered) {
+    btn.innerHTML = '&#10003; 已掌握';
+    btn.className = btn.className.replace(/bg-slate-100 text-slate-500/g, '').replace(/bg-emerald-50 text-emerald-600/g, '');
+    btn.classList.add('bg-emerald-50', 'text-emerald-600');
+    btn.classList.remove('bg-slate-100', 'text-slate-500');
+  } else {
+    btn.innerHTML = '&#10003; 标熟';
+    btn.classList.remove('bg-emerald-50', 'text-emerald-600');
+    btn.classList.add('bg-slate-100', 'text-slate-500');
+  }
+}
+
+async function doCheckin() {
+  if (!state.currentProject) return;
+  const r = await API.post(`/api/listening_review/project/${state.currentProject.id}/checkin`, {});
+  if (!r.success) { showToast(r.error || '操作失败'); return; }
+  state.currentProject.checkin_count = r.checkin_count;
+  const proj = state.projects.find(p => p.id === state.currentProject.id);
+  if (proj) proj.checkin_count = r.checkin_count;
+  updateCheckinBtn(r.checkin_count);
+  showToast(`打卡成功！已打卡 ${r.checkin_count} 次`);
+}
+
+function updateCheckinBtn(count) {
+  const span = document.getElementById('checkinCount');
+  if (span) span.textContent = count > 0 ? `(${count})` : '';
 }
 
 // ===================================================================
