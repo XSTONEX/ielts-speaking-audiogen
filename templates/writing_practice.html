@@ -670,7 +670,13 @@ function renderExercise() {
   if (!ex) return;
   document.getElementById('pracQuestion').textContent = ex.question;
   const total = ex.sentences.length;
-  const done = Object.values(state.sentResults).filter(r => r._savedToReview === true).length;
+  let done = 0;
+  for (let i = 0; i < total; i++) {
+    const histKey = `${state.currentExIdx}_${i}`;
+    const hasHistory = !!state.historySentences[histKey];
+    const hasCurrent = state.sentResults[i] && state.sentResults[i]._savedToReview === true;
+    if (hasHistory || hasCurrent) done++;
+  }
   document.getElementById('pracProgress').textContent = `${done} / ${total}`;
   document.getElementById('pracBar').style.width = total ? (done / total * 100) + '%' : '0%';
 
@@ -687,7 +693,7 @@ function renderExercise() {
     const histKey = `${state.currentExIdx}_${i}`;
     const histRecords = state.historySentences[histKey];
     const justSaved = res && res._savedToReview === true;
-    const isCompleted = justSaved || (histRecords && !res);
+    const isCompleted = justSaved || !!histRecords;
 
     // Build score tags: history scores (clickable) + current session score
     let scoreHtml = '';
@@ -707,7 +713,7 @@ function renderExercise() {
     let badgeHtml = '';
     if (justSaved) {
       badgeHtml = '<span class="done-badge">✓ 已录入笔记</span>';
-    } else if (histRecords && !res) {
+    } else if (histRecords) {
       badgeHtml = '<span class="done-badge">✓ 已做过</span>';
     }
     return `
@@ -999,8 +1005,16 @@ function advanceNext() {
   if (!ex) return;
   let next = state.activeSentIdx + 1;
   if (next >= ex.sentences.length) {
-    state.activeSentIdx = -1;
-    renderExercise();
+    const nextExIdx = state.currentExIdx + 1;
+    if (nextExIdx < state.subData.examples.length) {
+      state.currentExIdx = nextExIdx;
+      state.activeSentIdx = 0;
+      state.sentResults = {};
+      renderPractice();
+    } else {
+      state.activeSentIdx = -1;
+      renderExercise();
+    }
     return;
   }
   activateSentence(next);
