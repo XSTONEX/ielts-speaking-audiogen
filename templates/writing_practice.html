@@ -118,9 +118,17 @@ textarea, input { font-family: var(--serif); }
 .example-body.open { display: block; }
 .example-question { font-size: 14px; color: var(--text); line-height: 1.7; margin-bottom: 12px; padding: 12px; background: var(--amber-light); border-radius: 8px; border-left: 3px solid var(--amber); }
 .example-hint { font-size: 12px; color: var(--text2); margin-bottom: 14px; padding: 8px 12px; background: #f1f5f9; border-radius: 6px; }
-.sentence-pair { margin-bottom: 12px; padding: 10px 14px; border-radius: 8px; background: #fafafa; border: 1px solid #f0f0f0; }
+.sentence-pair { margin-bottom: 12px; padding: 10px 14px; border-radius: 8px; background: #fafafa; border: 1px solid #f0f0f0; position: relative; padding-right: 60px; }
 .sentence-en { font-size: 14px; color: var(--text); line-height: 1.7; margin-bottom: 4px; }
-.sentence-cn { font-size: 13px; color: var(--text2); line-height: 1.7; }
+.sentence-cn { font-size: 16px; font-weight: 700; color: var(--text); line-height: 1.7; }
+.quick-practice-btn {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  padding: 3px 10px; border: 1.5px solid var(--accent); border-radius: 6px;
+  background: var(--accent-light); color: var(--accent); font-size: 12px;
+  cursor: pointer; opacity: 0; transition: opacity .15s, background .15s;
+}
+.sentence-pair:hover .quick-practice-btn { opacity: 1; }
+.quick-practice-btn:hover { background: var(--accent); color: #fff; }
 
 /* Practice View */
 .practice-header { position: sticky; top: 0; z-index: 20; background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 16px; box-shadow: var(--shadow); }
@@ -538,17 +546,18 @@ function renderLearning(d) {
 
   document.getElementById('exampleList').innerHTML = d.examples.map((ex, i) => `
     <div class="example-block">
-      <div class="example-header${i === 0 ? ' open' : ''}" onclick="toggleExample(this)">
+      <div class="example-header open" onclick="toggleExample(this)">
         <h4>${ex.title}</h4>
         <span class="example-toggle">&#9662;</span>
       </div>
-      <div class="example-body${i === 0 ? ' open' : ''}">
+      <div class="example-body open">
         <div class="example-question">${ex.question}</div>
         ${ex.hints.length ? `<div class="example-hint">${ex.hints.join('<br>')}</div>` : ''}
-        ${ex.sentences.map(s => `
+        ${ex.sentences.map((s, si) => `
           <div class="sentence-pair">
-            <div class="sentence-en">${s.english}</div>
             <div class="sentence-cn">${s.chinese}</div>
+            <div class="sentence-en">${s.english}</div>
+            <button class="quick-practice-btn" onclick="event.stopPropagation(); quickPractice(${i}, ${si})" title="练习此句">&#9998; 练</button>
           </div>
         `).join('')}
       </div>
@@ -597,6 +606,31 @@ async function enterPractice(catIdx, subIdx) {
     }
   } catch(e) { state.historySentences = {}; }
 
+  renderPractice();
+  switchView('practice');
+}
+
+async function quickPractice(exampleIdx, sentenceIdx) {
+  state.currentExIdx = exampleIdx;
+  state.activeSentIdx = sentenceIdx;
+  state.sentResults = {};
+  const data = state.subData;
+  if (!data || !data.examples.length) { alert('该话题暂无例题'); return; }
+  try {
+    const prog = await API.get('/api/writing/practice_progress');
+    state.progressData = prog;
+    const pkey = `${state.currentCat}_${state.currentSub}`;
+    state.historySentences = {};
+    if (prog[pkey] && prog[pkey].examples) {
+      prog[pkey].examples.forEach(exProg => {
+        exProg.sentences.forEach((records, si) => {
+          if (records && records.length) {
+            state.historySentences[`${exProg.example_idx}_${si}`] = records;
+          }
+        });
+      });
+    }
+  } catch(e) { state.historySentences = {}; }
   renderPractice();
   switchView('practice');
 }
