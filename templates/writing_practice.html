@@ -97,6 +97,7 @@ textarea, input { font-family: var(--serif); }
 .mode-btn.practice:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
 
 /* Learning View */
+.learn-title { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 20px; text-align: center; }
 .kw-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 20px; }
 .kw-tag { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: var(--accent-light); color: var(--accent); border-radius: 20px; font-size: 13px; font-weight: 600; }
 .kw-tag .copy-icon { cursor: pointer; opacity: .5; transition: opacity .15s; font-size: 12px; }
@@ -106,8 +107,8 @@ textarea, input { font-family: var(--serif); }
 .chain-card { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; background: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 100%); border: 1.5px solid #e9d5ff; border-radius: 10px; }
 .chain-num { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: var(--accent); color: #fff; border-radius: 50%; font-size: 13px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
 .chain-body { flex: 1; }
-.chain-cn { font-size: 14px; color: var(--text); margin-bottom: 3px; }
-.chain-en { font-size: 13px; color: var(--text2); font-style: italic; }
+.chain-cn { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+.chain-en { font-size: 14px; color: var(--text); }
 
 .example-block { border: 1.5px solid var(--border); border-radius: var(--radius); margin-bottom: 16px; overflow: hidden; }
 .example-header { padding: 14px 16px; background: #f9fafb; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
@@ -341,6 +342,7 @@ textarea, input { font-family: var(--serif); }
   <div id="learningView" style="display:none;">
     <div class="breadcrumb" id="learnBreadcrumb"></div>
     <button class="back-btn" onclick="backToDirectory()">&#8592; 返回目录</button>
+    <h2 class="learn-title" id="learnTitle"></h2>
 
     <div class="card" style="margin-bottom:16px;">
       <div class="card-title">关键词 Keywords</div>
@@ -529,6 +531,7 @@ function renderLearning(d) {
   const catName = state.categories[state.currentCat].name;
   document.getElementById('learnBreadcrumb').innerHTML =
     `<span onclick="backToDirectory()">${catName}</span><span class="sep">/</span><span class="current">${d.name}</span>`;
+  document.getElementById('learnTitle').textContent = d.name;
 
   document.getElementById('kwBar').innerHTML = d.keywords.map(k =>
     `<span class="kw-tag">${k}<span class="copy-icon" onclick="copyText('${k}', event)" title="复制">&#x2398;</span></span>`
