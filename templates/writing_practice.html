@@ -163,7 +163,7 @@ textarea, input { font-family: var(--serif); }
 .editor-context { padding: 16px; background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); margin-bottom: 12px; }
 .editor-context .ctx-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
 .editor-context .ctx-cn { font-size: 15px; line-height: 1.7; font-weight: 600; color: var(--text); margin-bottom: 10px; }
-.editor-context .ctx-chain { font-size: 13px; color: var(--accent); padding: 8px 12px; background: var(--accent-light); border-radius: 6px; margin-bottom: 8px; }
+.editor-context .ctx-chain { font-size: 13px; color: var(--accent); padding: 8px 12px; background: var(--accent-light); border-radius: 6px; margin-bottom: 8px; line-height: 1.8; }
 .editor-context .ctx-hint { font-size: 12px; color: var(--text2); padding: 6px 10px; background: #f9fafb; border-radius: 6px; }
 .editor-input { width: 100%; min-height: 120px; padding: 14px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 15px; line-height: 1.7; resize: vertical; transition: border-color .15s; outline: none; }
 .editor-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,70,229,.08); }
@@ -189,20 +189,26 @@ textarea, input { font-family: var(--serif); }
 .fb-correction .orig { text-decoration: line-through; color: var(--red); }
 .fb-correction .fixed { color: var(--green); font-weight: 600; }
 .fb-correction .reason { color: var(--text2); font-size: 12px; }
-.fb-vocab { padding: 8px 12px; background: var(--accent-light); border-radius: 6px; font-size: 13px; color: var(--text); line-height: 1.6; white-space: pre-wrap; }
+.fb-vocab-item { padding: 8px 12px; background: var(--accent-light); border-radius: 6px; margin-bottom: 4px; font-size: 13px; }
+.fb-vocab-item .orig { color: var(--amber); font-weight: 600; }
+.fb-vocab-item .fixed { color: var(--accent); font-weight: 600; }
+.fb-vocab-item .reason { color: var(--text2); font-size: 12px; }
 .fb-native { padding: 10px 14px; background: var(--green-light); border-radius: 8px; font-size: 14px; color: var(--text); line-height: 1.7; border-left: 3px solid var(--green); white-space: pre-wrap; }
 
 /* Review View */
 .review-list { display: flex; flex-direction: column; gap: 10px; }
-.review-item { padding: 14px 16px; background: var(--card); border: 1.5px solid var(--border); border-radius: 10px; cursor: pointer; transition: all .15s; }
+.review-item { padding: 14px 16px; background: var(--card); border: 1.5px solid var(--border); border-radius: 10px; cursor: pointer; transition: all .15s; position: relative; }
+.review-item.open { cursor: default; }
 .review-item:hover { border-color: #c7d2fe; box-shadow: var(--shadow); }
 .review-item .ri-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
 .review-item .ri-score { font-weight: 700; font-size: 16px; }
 .review-item .ri-date { font-size: 11px; color: var(--text3); }
 .review-item .ri-cn { font-size: 13px; color: var(--text2); margin-bottom: 4px; }
 .review-item .ri-trans { font-size: 13px; color: var(--text); }
-.review-detail { padding: 14px; background: #f9fafb; border-radius: 8px; margin-top: 10px; display: none; }
+.review-detail { padding: 14px; background: #f9fafb; border-radius: 8px; margin-top: 10px; display: none; position: relative; }
 .review-detail.open { display: block; }
+.review-detail .fold-btn { position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border: 1.5px solid var(--border); border-radius: 6px; background: var(--card); color: var(--text3); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; line-height: 1; }
+.review-detail .fold-btn:hover { border-color: var(--accent); color: var(--accent); }
 .empty-state { text-align: center; padding: 60px 20px; color: var(--text3); }
 .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
 .empty-state p { font-size: 15px; }
@@ -754,21 +760,52 @@ function formatGrammarCorrections(gc) {
   return `<div class="fb-correction">${String(gc)}</div>`;
 }
 
+function formatVocabItem(orig, fixed, reason) {
+  return `<div class="fb-vocab-item">
+    <span class="orig">${orig}</span> → <span class="fixed">${fixed}</span>
+    ${reason ? `<div class="reason">${reason}</div>` : ''}
+  </div>`;
+}
+
+function parseVocabString(str) {
+  // Match lines like: 1. [crime show] -> [crime drama] (reason text)
+  // or: [crime show] -> [crime drama] (reason text)
+  const lines = str.split('\n').map(l => l.trim()).filter(Boolean);
+  const parsed = [];
+  const re = /^\d+\.\s*\[([^\]]*)\]\s*(?:->|→|–>)\s*\[([^\]]*)\]\s*(?:\(([^)]*)\))?/;
+  for (const line of lines) {
+    const m = line.match(re);
+    if (m) {
+      parsed.push(formatVocabItem(m[1], m[2], m[3] || ''));
+    } else {
+      // Fallback: try without numbering
+      const re2 = /\[([^\]]*)\]\s*(?:->|→|–>)\s*\[([^\]]*)\]\s*(?:\(([^)]*)\))?/;
+      const m2 = line.match(re2);
+      if (m2) {
+        parsed.push(formatVocabItem(m2[1], m2[2], m2[3] || ''));
+      } else {
+        parsed.push(`<div class="fb-vocab-item">${line}</div>`);
+      }
+    }
+  }
+  return parsed.join('');
+}
+
 function formatVocabUpgrade(vu) {
   if (!vu) return '';
-  if (typeof vu === 'string') return vu;
+  if (typeof vu === 'string') return parseVocabString(vu);
   if (Array.isArray(vu)) {
     return vu.map(item => {
-      if (typeof item === 'string') return item;
-      const parts = [];
-      if (item.original) parts.push(`<strong>${item.original}</strong>`);
-      if (item.upgrade || item.suggestion || item.replacement) parts.push(` → ${item.upgrade || item.suggestion || item.replacement}`);
-      if (item.explanation || item.reason || item.chinese) parts.push(` (${item.explanation || item.reason || item.chinese})`);
-      return parts.length ? parts.join('') : JSON.stringify(item);
-    }).join('<br>');
+      if (typeof item === 'string') return parseVocabString(item);
+      const orig = item.original || '';
+      const fixed = item.upgrade || item.suggestion || item.replacement || '';
+      const reason = item.explanation || item.reason || item.chinese || '';
+      if (orig || fixed) return formatVocabItem(orig, fixed, reason);
+      return `<div class="fb-vocab-item">${JSON.stringify(item)}</div>`;
+    }).join('');
   }
-  if (typeof vu === 'object') return JSON.stringify(vu);
-  return String(vu);
+  if (typeof vu === 'object') return `<div class="fb-vocab-item">${JSON.stringify(vu)}</div>`;
+  return parseVocabString(String(vu));
 }
 
 function renderFeedbackCard(fb, opts) {
@@ -788,7 +825,7 @@ function renderFeedbackCard(fb, opts) {
       ${vuHtml ? `
         <div class="fb-section">
           <div class="fb-section-title">词汇提升</div>
-          <div class="fb-vocab">${vuHtml}</div>
+          ${vuHtml}
         </div>` : ''}
       ${fb.native_version ? `
         <div class="fb-section">
@@ -805,7 +842,7 @@ function renderEditor(idx) {
   const s = ex.sentences[idx];
   const res = state.sentResults[idx];
   const chains = state.subData.chains;
-  const chainHtml = chains.length ? `<div class="ctx-chain">${chains.map(c => c.chinese).join(' / ')}</div>` : '';
+  const chainHtml = chains.length ? `<div class="ctx-chain">${chains.map(c => c.chinese).join('<br>')}</div>` : '';
   const hintHtml = ex.hints.length ? `<div class="ctx-hint">${ex.hints.join(' · ')}</div>` : '';
 
   // History viewing mode: show a specific historical feedback record
@@ -1046,6 +1083,7 @@ function renderReviewRecords() {
         <div class="ri-cn">${r.target_chinese || ''}</div>
         <div class="ri-trans">${r.user_translation || ''}</div>
         <div class="review-detail">
+          <button class="fold-btn" onclick="event.stopPropagation(); closeReviewDetail(this)" title="收起">&#9650;</button>
           ${renderFeedbackCard(Object.assign({}, fb, { score: fb.score || r.score || '-' }), { reviewPrompt: '', nextBtn: false })}
           <button class="skip-btn" style="margin-top:8px; font-size:11px; color:var(--red);"
             onclick="event.stopPropagation(); deleteReview('${r.id}')">删除</button>
@@ -1057,9 +1095,15 @@ function renderReviewRecords() {
 }
 
 function toggleReviewDetail(el) {
-  const sel = window.getSelection();
-  if (sel && sel.toString().length > 0) return;
-  el.querySelector('.review-detail').classList.toggle('open');
+  if (el.classList.contains('open')) return;
+  el.classList.add('open');
+  el.querySelector('.review-detail').classList.add('open');
+}
+
+function closeReviewDetail(btn) {
+  const item = btn.closest('.review-item');
+  item.classList.remove('open');
+  item.querySelector('.review-detail').classList.remove('open');
 }
 
 function backToReviewGrid() {
