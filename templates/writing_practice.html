@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>写作逻辑链训练</title>
+<title>雅思写作训练</title>
 <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
@@ -12,15 +12,15 @@
 <style>
 :root {
   --serif: 'PT Serif', 'Crimson Text', ui-serif, Georgia, serif;
-  --bg: #f4f6fa;
+  --bg: #f8fafc;
   --card: #fff;
-  --border: #e5e7eb;
-  --text: #1f2937;
-  --text2: #6b7280;
-  --text3: #9ca3af;
-  --accent: #4f46e5;
-  --accent-light: #eef2ff;
-  --accent-hover: #4338ca;
+  --border: #e2e8f0;
+  --text: #1e293b;
+  --text2: #64748b;
+  --text3: #94a3b8;
+  --accent: #0284c7;
+  --accent-light: #e0f2fe;
+  --accent-hover: #0369a1;
   --green: #059669;
   --green-light: #ecfdf5;
   --amber: #d97706;
@@ -28,27 +28,19 @@
   --red: #dc2626;
   --red-light: #fef2f2;
   --radius: 14px;
-  --shadow: 0 4px 24px rgba(31,38,135,.10);
-  --shadow-lg: 0 12px 40px rgba(31,38,135,.16);
+  --shadow: 0 4px 24px rgba(15,23,42,.08);
+  --shadow-lg: 0 12px 40px rgba(15,23,42,.12);
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: var(--serif); background: linear-gradient(135deg, #e0e7ff 0%, var(--bg) 100%); color: var(--text); min-height: 100vh; }
+body { font-family: var(--serif); background: linear-gradient(135deg, #e0f2fe 0%, var(--bg) 100%); color: var(--text); min-height: 100vh; }
 button { font-family: var(--serif); cursor: pointer; }
 textarea, input { font-family: var(--serif); }
 
-/* Main Panel Wrapper */
 .main-panel-wrapper {
-  max-width: 1200px;
-  width: 90%;
-  margin: 40px auto;
-  min-height: calc(100vh - 80px);
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-  padding: 30px 40px;
+  max-width: 1200px; width: 90%; margin: 40px auto; min-height: calc(100vh - 80px);
+  background: rgba(255,255,255,0.95); border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.05); padding: 30px 40px;
 }
-
-/* Layout */
 .app { max-width: 100%; margin: 0; padding: 0; }
 .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
 .top-bar h1 { font-size: 22px; font-weight: 700; color: var(--text); }
@@ -72,12 +64,130 @@ textarea, input { font-family: var(--serif); }
 .card { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
 .card-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 12px; }
 
-/* Category Grid */
+/* ==================== Entry View ==================== */
+.entry-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; padding: 20px 0; }
+.entry-column { display: flex; flex-direction: column; gap: 14px; }
+.entry-column-title { font-size: 20px; font-weight: 700; color: var(--text); padding-bottom: 12px; border-bottom: 2px solid var(--border); }
+.entry-card { padding: 24px; border: 1.5px solid var(--border); border-radius: var(--radius); cursor: pointer; transition: all .18s; display: flex; justify-content: space-between; align-items: center; background: var(--card); }
+.entry-card.active:hover { border-color: var(--accent); box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+.entry-card.disabled { opacity: 0.5; cursor: not-allowed; background: #f8fafc; }
+.entry-card-label { font-size: 16px; font-weight: 600; }
+.entry-card-arrow { font-size: 18px; color: var(--accent); }
+.coming-soon { font-size: 12px; color: var(--text3); background: var(--bg); padding: 4px 10px; border-radius: 6px; }
+
+/* ==================== Chart Type Grid ==================== */
+.chart-type-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; margin-top: 16px; }
+.chart-type-card { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 20px; cursor: pointer; transition: all .18s; text-align: center; position: relative; overflow: hidden; z-index: 0; }
+.chart-type-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent), #0ea5e9); opacity: 0; transition: opacity .18s; z-index: 2; }
+.chart-type-card::after { content: ''; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(90deg, #e0f2fe 0%, #bae6fd 100%); z-index: -1; transition: clip-path .4s ease; clip-path: var(--prog-clip, inset(0 100% 0 0)); }
+.chart-type-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); border-color: var(--accent); }
+.chart-type-card:hover::before { opacity: 1; }
+.ct-icon { font-size: 32px; margin-bottom: 8px; }
+.ct-name { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.ct-count { font-size: 12px; color: var(--text3); }
+
+/* ==================== Small Essay Example List ==================== */
+.example-list-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin-top: 16px; }
+.small-ex-card { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 16px 18px; cursor: pointer; transition: all .18s; }
+.small-ex-card:hover { border-color: var(--accent); box-shadow: var(--shadow); transform: translateY(-1px); }
+.small-ex-name { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.small-ex-meta { font-size: 12px; color: var(--text3); display: flex; gap: 10px; }
+.small-ex-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; background: var(--accent-light); color: var(--accent); }
+
+/* ==================== Small Detail View ==================== */
+.question-area { margin-bottom: 20px; }
+.chart-subtype-badge { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; background: #f0f9ff; color: var(--accent); margin-top: 8px; }
+.question-text { font-size: 14px; line-height: 1.7; color: var(--text); padding: 14px; background: var(--amber-light); border-radius: 8px; border-left: 3px solid var(--amber); margin-top: 12px; }
+
+/* Tab Bar */
+.tab-bar { display: flex; gap: 0; margin-bottom: 20px; border-bottom: 2px solid var(--border); }
+.tab-btn { padding: 10px 24px; border: none; background: transparent; font-size: 14px; font-weight: 600; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all .15s; }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab-btn:hover { color: var(--accent); }
+
+/* Image Upload Zone */
+.image-upload-zone { border: 2px dashed var(--border); border-radius: var(--radius); padding: 20px; text-align: center; cursor: pointer; transition: all .15s; min-height: 100px; display: flex; align-items: center; justify-content: center; background: #f8fafc; position: relative; }
+.image-upload-zone:hover, .image-upload-zone.dragover { border-color: var(--accent); background: var(--accent-light); }
+.image-upload-zone.has-image { border-style: solid; padding: 8px; }
+.image-upload-zone img { max-width: 100%; max-height: 300px; border-radius: 8px; }
+.image-upload-hint { font-size: 13px; color: var(--text3); }
+.image-replace-btn { position: absolute; top: 8px; right: 8px; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border); background: rgba(255,255,255,.9); font-size: 11px; color: var(--text2); cursor: pointer; }
+.image-replace-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Section Blocks (Learning) */
+.section-block { margin-bottom: 24px; }
+.section-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.section-annotation { font-size: 12px; color: var(--text3); font-weight: 400; }
+.sentence-card { padding: 16px 20px; border: 1.5px solid var(--border); border-radius: 10px; margin-bottom: 8px; transition: all .2s; cursor: default; }
+.sentence-card:hover { background: #f0f9ff; border-color: #bae6fd; }
+.sentence-card .tag-row { margin-bottom: 8px; display: flex; flex-wrap: wrap; gap: 4px; }
+.sentence-card .original { font-size: 14px; color: var(--text); line-height: 1.7; margin-bottom: 6px; }
+.sentence-card .translation { font-size: 13px; color: var(--text2); line-height: 1.6; }
+
+/* Tag Colors */
+.sentence-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+.tag-blue { background: #dbeafe; color: #1d4ed8; }
+.tag-orange { background: #fed7aa; color: #c2410c; }
+.tag-green { background: #d1fae5; color: #047857; }
+.tag-pink { background: #fce7f3; color: #be185d; }
+.tag-indigo { background: #e0e7ff; color: #4338ca; }
+.tag-yellow { background: #fef3c7; color: #92400e; }
+.tag-purple { background: #ede9fe; color: #6d28d9; }
+.tag-teal { background: #ccfbf1; color: #0d9488; }
+.tag-sky { background: #e0f2fe; color: #0369a1; }
+.tag-rose { background: #ffe4e6; color: #e11d48; }
+.tag-lime { background: #dcfce7; color: #16a34a; }
+.tag-fuchsia { background: #f3e8ff; color: #7e22ce; }
+
+/* Vocab Table */
+.vocab-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
+.vocab-table th { text-align: left; padding: 8px 12px; border-bottom: 2px solid var(--border); color: var(--text2); font-size: 12px; }
+.vocab-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+
+/* Small Practice Editor */
+.small-editor-area { margin-top: 16px; }
+.small-editor-input { width: 100%; min-height: 140px; padding: 14px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 15px; line-height: 1.7; resize: vertical; outline: none; transition: border-color .15s; }
+.small-editor-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(2,132,199,.08); }
+
+/* ==================== Review Drawer ==================== */
+.review-drawer { position: fixed; top: 0; right: -420px; width: 400px; height: 100vh; background: var(--card); box-shadow: -4px 0 30px rgba(0,0,0,.1); z-index: 1000; transition: right .3s cubic-bezier(.4,0,.2,1); display: flex; flex-direction: column; overflow: hidden; }
+.review-drawer.open { right: 0; }
+.drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.3); z-index: 999; opacity: 0; pointer-events: none; transition: opacity .3s; }
+.drawer-overlay.open { opacity: 1; pointer-events: auto; }
+.drawer-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+.drawer-header h3 { font-size: 17px; font-weight: 700; }
+.drawer-close { background: none; border: none; font-size: 20px; color: var(--text3); cursor: pointer; padding: 4px; }
+.drawer-close:hover { color: var(--text); }
+.drawer-tabs { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.drawer-tab { flex: 1; padding: 12px; text-align: center; border: none; background: transparent; font-size: 14px; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s; }
+.drawer-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.drawer-body { flex: 1; overflow-y: auto; padding: 16px 20px; }
+.drawer-filter { margin-bottom: 12px; }
+.drawer-filter select { width: 100%; padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; font-family: var(--serif); background: var(--card); color: var(--text); }
+.review-fab { position: fixed; right: 24px; bottom: 24px; padding: 12px 20px; border-radius: 50px; background: var(--accent); color: #fff; border: none; font-size: 14px; font-weight: 600; box-shadow: var(--shadow-lg); cursor: pointer; z-index: 998; transition: transform .15s; }
+.review-fab:hover { transform: scale(1.05); }
+
+/* Drawer Record Cards */
+.drawer-type-card { padding: 14px; background: var(--card); border: 1.5px solid var(--border); border-radius: 10px; margin-bottom: 8px; cursor: pointer; transition: all .15s; }
+.drawer-type-card:hover { border-color: var(--accent); }
+.drawer-type-name { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+.drawer-type-stats { font-size: 12px; color: var(--text2); display: flex; gap: 10px; }
+.drawer-records { padding-left: 0; margin-top: 8px; }
+.drawer-record { padding: 10px 12px; background: #f9fafb; border-radius: 8px; margin-bottom: 6px; cursor: pointer; transition: all .15s; }
+.drawer-record:hover { background: var(--accent-light); }
+.drawer-record .dr-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.drawer-record .dr-score { font-weight: 700; font-size: 14px; }
+.drawer-record .dr-date { font-size: 11px; color: var(--text3); }
+.drawer-record .dr-cn { font-size: 12px; color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.drawer-record-detail { display: none; margin-top: 8px; }
+.drawer-record-detail.open { display: block; }
+
+/* ==================== Category Grid (Big Essay - kept) ==================== */
 .cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
 .cat-card { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 18px; cursor: pointer; transition: all .18s; position: relative; overflow: hidden; z-index: 0; }
-.cat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent), #7c3aed); opacity: 0; transition: opacity .18s; z-index: 2; }
-.cat-card::after { content: ''; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(90deg, #dbeafe 0%, #bfdbfe 100%); z-index: -1; transition: clip-path .4s ease; clip-path: var(--prog-clip, inset(0 100% 0 0)); }
-.cat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); border-color: #c7d2fe; }
+.cat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent), #0ea5e9); opacity: 0; transition: opacity .18s; z-index: 2; }
+.cat-card::after { content: ''; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(90deg, #e0f2fe 0%, #bae6fd 100%); z-index: -1; transition: clip-path .4s ease; clip-path: var(--prog-clip, inset(0 100% 0 0)); }
+.cat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); border-color: #bae6fd; }
 .cat-card:hover::before { opacity: 1; }
 .cat-name { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
 .cat-count { font-size: 12px; color: var(--text3); }
@@ -85,9 +195,8 @@ textarea, input { font-family: var(--serif); }
 /* Subcategory List */
 .sub-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; margin-top: 16px; }
 .sub-card { display: flex; align-items: center; justify-content: space-between; background: var(--card); border: 1.5px solid var(--border); border-radius: 10px; padding: 14px 16px; cursor: pointer; transition: all .15s; position: relative; z-index: 0; }
-.sub-card::before { content: ''; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(90deg, #dbeafe 0%, #bfdbfe 100%); z-index: -1; transition: clip-path .4s ease; clip-path: var(--prog-clip, inset(0 100% 0 0)); }
+.sub-card::before { content: ''; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(90deg, #e0f2fe 0%, #bae6fd 100%); z-index: -1; transition: clip-path .4s ease; clip-path: var(--prog-clip, inset(0 100% 0 0)); }
 .sub-card:hover { border-color: var(--accent); }
-.sub-card:hover::before { opacity: .7; }
 .sub-name { font-weight: 600; font-size: 15px; }
 .sub-meta { font-size: 11px; color: var(--text3); display: flex; gap: 8px; margin-top: 2px; }
 .sub-actions { display: flex; gap: 6px; }
@@ -96,15 +205,14 @@ textarea, input { font-family: var(--serif); }
 .mode-btn.learn:hover { border-color: var(--green); color: var(--green); background: var(--green-light); }
 .mode-btn.practice:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
 
-/* Learning View */
+/* Learning View (Big Essay) */
 .learn-title { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 20px; text-align: center; }
 .kw-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 20px; }
 .kw-tag { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: var(--accent-light); color: var(--accent); border-radius: 20px; font-size: 13px; font-weight: 600; }
 .kw-tag .copy-icon { cursor: pointer; opacity: .5; transition: opacity .15s; font-size: 12px; }
 .kw-tag .copy-icon:hover { opacity: 1; }
-
 .chain-flow { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
-.chain-card { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; background: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 100%); border: 1.5px solid #e9d5ff; border-radius: 10px; }
+.chain-card { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 1.5px solid #bae6fd; border-radius: 10px; }
 .chain-num { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: var(--accent); color: #fff; border-radius: 50%; font-size: 13px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
 .chain-body { flex: 1; }
 .chain-cn { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
@@ -131,13 +239,13 @@ textarea, input { font-family: var(--serif); }
 .sentence-pair:hover .quick-practice-btn { opacity: 1; }
 .quick-practice-btn:hover { background: var(--accent); color: #fff; }
 
-/* Practice View */
+/* Practice View (Big Essay) */
 .practice-header { position: sticky; top: 0; z-index: 20; background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 16px; box-shadow: var(--shadow); }
 .practice-question { font-size: 14px; line-height: 1.7; color: var(--text); }
 .practice-nav { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
 .practice-progress { font-size: 12px; color: var(--text3); }
 .progress-bar { height: 4px; background: #e5e7eb; border-radius: 2px; flex: 1; margin: 0 12px; }
-.progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), #7c3aed); border-radius: 2px; transition: width .3s; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), #0ea5e9); border-radius: 2px; transition: width .3s; }
 .example-switch { display: flex; gap: 6px; }
 .ex-btn { padding: 4px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--card); font-size: 12px; color: var(--text2); transition: all .15s; }
 .ex-btn:hover { border-color: var(--accent); color: var(--accent); }
@@ -146,8 +254,8 @@ textarea, input { font-family: var(--serif); }
 .sentence-grid { display: grid; grid-template-columns: 1fr; gap: 8px; transition: all .3s; align-content: start; }
 .sentence-grid.split { grid-template-columns: 1fr 1fr; }
 .sent-item { padding: 14px 16px; background: var(--card); border: 1.5px solid var(--border); border-radius: 10px; cursor: pointer; transition: all .18s; position: relative; height: 72px; overflow: hidden; display: flex; flex-direction: column; justify-content: center; }
-.sent-item:hover { border-color: #c7d2fe; background: var(--accent-light); }
-.sent-item.active { border-color: var(--accent); background: var(--accent-light); box-shadow: 0 0 0 3px rgba(79,70,229,.1); }
+.sent-item:hover { border-color: #bae6fd; background: var(--accent-light); }
+.sent-item.active { border-color: var(--accent); background: var(--accent-light); box-shadow: 0 0 0 3px rgba(2,132,199,.1); }
 .sent-item.done { border-color: #a7f3d0; background: var(--green-light); }
 .sent-item .sent-idx { font-size: 11px; color: var(--text3); margin-bottom: 4px; flex-shrink: 0; }
 .sent-item .sent-cn { font-size: 14px; line-height: 1.6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -157,7 +265,7 @@ textarea, input { font-family: var(--serif); }
 .sent-item .sent-score.mid { background: var(--amber-light); color: var(--amber); }
 .sent-item .sent-score.low { background: var(--red-light); color: var(--red); }
 
-/* Right Panel (Practice Editor) */
+/* Editor Panel */
 .editor-panel { display: none; }
 .editor-panel.show { display: block; }
 .editor-context { padding: 16px; background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); margin-bottom: 12px; }
@@ -166,7 +274,7 @@ textarea, input { font-family: var(--serif); }
 .editor-context .ctx-chain { font-size: 13px; color: var(--accent); padding: 8px 12px; background: var(--accent-light); border-radius: 6px; margin-bottom: 8px; line-height: 1.8; }
 .editor-context .ctx-hint { font-size: 12px; color: var(--text2); padding: 6px 10px; background: #f9fafb; border-radius: 6px; }
 .editor-input { width: 100%; min-height: 120px; padding: 14px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 15px; line-height: 1.7; resize: vertical; transition: border-color .15s; outline: none; }
-.editor-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,70,229,.08); }
+.editor-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(2,132,199,.08); }
 .editor-hint { font-size: 12px; color: var(--text3); margin-top: 6px; text-align: right; }
 .editor-actions { display: flex; gap: 8px; margin-top: 10px; }
 .submit-btn { padding: 8px 20px; border: none; border-radius: 8px; background: var(--accent); color: #fff; font-size: 14px; font-weight: 600; transition: background .15s; }
@@ -293,12 +401,9 @@ textarea, input { font-family: var(--serif); }
 @keyframes spin { to { transform: rotate(360deg); } }
 .loading-overlay { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 20px; color: var(--text2); font-size: 14px; }
 
-
-/* "已做过" badge */
+/* Badges & Prompts */
 .done-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: var(--green); background: var(--green-light); padding: 2px 8px; border-radius: 10px; margin-left: 8px; font-weight: 600; }
-
-/* Save-to-review prompt */
-.save-review-prompt { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding: 12px 16px; background: linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%); border: 1.5px solid #c7d2fe; border-radius: 10px; animation: fadeIn .3s; }
+.save-review-prompt { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding: 12px 16px; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 1.5px solid #bae6fd; border-radius: 10px; animation: fadeIn .3s; }
 .save-review-prompt .prompt-text { font-size: 13px; color: var(--text); flex: 1; }
 .save-review-btn { padding: 6px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; }
 .save-review-btn.yes { background: var(--accent); color: #fff; }
@@ -311,12 +416,14 @@ textarea, input { font-family: var(--serif); }
 @media (max-width: 768px) {
   .main-panel-wrapper { width: 95%; margin: 16px auto; padding: 20px 16px; border-radius: 16px; }
   .top-bar h1 { font-size: 18px; }
+  .entry-grid { grid-template-columns: 1fr; gap: 24px; }
   .cat-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
   .sub-list { grid-template-columns: 1fr; }
   .sentence-grid.split { grid-template-columns: 1fr; }
   .practice-header { position: relative; }
-  .review-sub-grid { grid-template-columns: 1fr; }
-  .review-dashboard { padding: 16px; }
+  .chart-type-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+  .example-list-grid { grid-template-columns: 1fr; }
+  .review-drawer { width: 100vw; right: -100vw; }
 }
 </style>
 </head>
@@ -326,16 +433,76 @@ textarea, input { font-family: var(--serif); }
 <div class="app" id="app">
   <!-- Top Bar -->
   <div class="top-bar">
-    <h1 id="pageTitle">逻辑链训练</h1>
+    <h1 id="pageTitle">雅思写作训练</h1>
     <div class="nav-btns">
-      <button class="nav-btn active" data-view="directory" onclick="switchView('directory')">题库</button>
-      <button class="nav-btn" data-view="review" onclick="switchView('review')">复习中心</button>
-      <a href="/" class="nav-btn" style="text-decoration:none;">返回首页</a>
+      <button class="nav-btn active" data-view="entry" onclick="backToEntry()">首页</button>
+      <a href="/" class="nav-btn" style="text-decoration:none;">返回主站</a>
     </div>
   </div>
 
-  <!-- Directory View -->
-  <div id="directoryView">
+  <!-- ==================== Entry View ==================== -->
+  <div id="entryView">
+    <div class="entry-grid">
+      <div class="entry-column">
+        <div class="entry-column-title">小作文</div>
+        <div class="entry-card active" onclick="enterSmallFangxie()">
+          <span class="entry-card-label">小作文仿写</span>
+          <span class="entry-card-arrow">&rarr;</span>
+        </div>
+      </div>
+      <div class="entry-column">
+        <div class="entry-column-title">大作文</div>
+        <div class="entry-card active" onclick="enterBigChain()">
+          <span class="entry-card-label">写作思维链</span>
+          <span class="entry-card-arrow">&rarr;</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== Small Essay Views ==================== -->
+  <div id="smallChartTypesView" style="display:none;">
+    <button class="back-btn" onclick="backToEntry()">&larr; 返回写作首页</button>
+    <h2 style="font-size:18px; margin-bottom:4px;">小作文仿写</h2>
+    <p style="font-size:13px; color:var(--text3); margin-bottom:16px;">选择图表类型开始练习</p>
+    <div id="chartTypeGrid" class="chart-type-grid"></div>
+  </div>
+
+  <div id="smallExampleListView" style="display:none;">
+    <div class="breadcrumb" id="smallExListBreadcrumb"></div>
+    <button class="back-btn" onclick="backToChartTypes()">&larr; 返回图表类型</button>
+    <h2 id="smallExListTitle" style="font-size:18px; margin-bottom:4px;"></h2>
+    <div id="smallExampleList" class="sub-list"></div>
+  </div>
+
+  <div id="smallDetailView" style="display:none;">
+    <div class="breadcrumb" id="smallDetailBreadcrumb"></div>
+    <button class="back-btn" onclick="backToExampleList()">&larr; 返回题目列表</button>
+
+    <div class="question-area">
+      <div class="image-upload-zone" id="imageUploadZone">
+        <span class="image-upload-hint">点击或拖拽上传题目图片</span>
+      </div>
+      <div id="smallQuestionText" class="question-text"></div>
+      <div id="chartSubtypeBadge" class="chart-subtype-badge"></div>
+    </div>
+
+    <div class="practice-nav" style="margin-bottom:16px;">
+      <span class="practice-progress" id="smallExProgress">0 / 0</span>
+      <div class="progress-bar"><div class="progress-fill" id="smallExBar" style="width:0%"></div></div>
+    </div>
+
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="learn" onclick="switchSmallTab('learn')">学习</button>
+      <button class="tab-btn" data-tab="practice" onclick="switchSmallTab('practice')">实战</button>
+    </div>
+
+    <div id="smallLearnContent"></div>
+    <div id="smallPracticeContent" style="display:none;"></div>
+  </div>
+
+  <!-- ==================== Big Essay Views (kept) ==================== -->
+  <div id="directoryView" style="display:none;">
     <div id="catGrid" class="cat-grid"></div>
     <div id="subSection" style="display:none;">
       <button class="back-btn" onclick="showCategories()">&#8592; 返回分类</button>
@@ -344,7 +511,6 @@ textarea, input { font-family: var(--serif); }
     </div>
   </div>
 
-  <!-- Learning View -->
   <div id="learningView" style="display:none;">
     <div class="breadcrumb" id="learnBreadcrumb"></div>
     <button class="back-btn" onclick="backToDirectory()">&#8592; 返回目录</button>
@@ -354,23 +520,19 @@ textarea, input { font-family: var(--serif); }
       <div class="card-title">关键词 Keywords</div>
       <div class="kw-bar" id="kwBar"></div>
     </div>
-
     <div class="card" style="margin-bottom:16px;">
       <div class="card-title">逻辑链 Logic Chains</div>
       <div class="chain-flow" id="chainFlow"></div>
     </div>
-
     <div>
       <div class="card-title" style="margin-bottom:10px;">例题与范例</div>
       <div id="exampleList"></div>
     </div>
   </div>
 
-  <!-- Practice View -->
   <div id="practiceView" style="display:none;">
     <div class="breadcrumb" id="pracBreadcrumb"></div>
     <button class="back-btn" onclick="backToDirectory()">&#8592; 返回目录</button>
-
     <div class="practice-header">
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
         <span style="font-size:12px; color:var(--text3); text-transform:uppercase; letter-spacing:.5px;">当前例题</span>
@@ -382,22 +544,31 @@ textarea, input { font-family: var(--serif); }
         <div class="progress-bar"><div class="progress-fill" id="pracBar" style="width:0%"></div></div>
       </div>
     </div>
-
     <div style="display:grid; gap:12px; align-items:start;" id="practiceBody">
       <div id="sentenceList" class="sentence-grid"></div>
       <div id="editorPanel" class="editor-panel"></div>
     </div>
   </div>
+</div>
+</div>
 
-  <!-- Review View -->
-  <div id="reviewView" style="display:none;">
-    <div class="card-title" style="margin-bottom:14px;">复习中心</div>
-    <div class="review-dashboard" id="reviewDashboard">
-      <div id="reviewContent"></div>
-    </div>
+<!-- Review Drawer -->
+<div id="reviewDrawer" class="review-drawer">
+  <div class="drawer-header">
+    <h3>复习中心</h3>
+    <button class="drawer-close" onclick="toggleDrawer()">&times;</button>
+  </div>
+  <div class="drawer-tabs">
+    <button class="drawer-tab active" data-tab="small" onclick="switchDrawerTab('small')">小作文</button>
+    <button class="drawer-tab" data-tab="big" onclick="switchDrawerTab('big')">大作文</button>
+  </div>
+  <div class="drawer-body" id="drawerBody">
+    <div id="drawerSmallContent"></div>
+    <div id="drawerBigContent" style="display:none;"></div>
   </div>
 </div>
-</div>
+<div id="drawerOverlay" class="drawer-overlay" onclick="toggleDrawer()"></div>
+<button class="review-fab" onclick="toggleDrawer()">&#128221; 复习</button>
 
 <script>
 const API = {
@@ -411,7 +582,10 @@ const API = {
   async post(url, body) { const r = await fetch(url, { method: 'POST', headers: this.headers(), body: JSON.stringify(body) }); return r.json(); }
 };
 
+/* ==================== State ==================== */
 let state = {
+  activeModule: null,
+  // Big essay
   categories: [],
   currentCat: null,
   currentSub: null,
@@ -424,43 +598,529 @@ let state = {
   reviewDrilldown: null,
   progressData: {},
   historySentences: {},
-  viewingHistory: null
+  viewingHistory: null,
+  // Small essay
+  small: {
+    chartTypes: [],
+    currentTypeIdx: null,
+    currentTypeData: null,
+    currentExampleIdx: null,
+    exampleData: null,
+    activeTab: 'learn',
+    correctionResult: null,
+    userEssay: '',
+    activeSentIdx: -1,
+    sentResults: {},
+    submitting: false,
+    progressData: {}
+  },
+  // Drawer
+  drawerOpen: false,
+  drawerTab: 'small',
+  drawerFilter: '',
+  drawerExpandedType: null
 };
 
-/* ---- View Switching ---- */
+function resetSmallState() {
+  state.small.exampleData = null;
+  state.small.correctionResult = null;
+  state.small.activeTab = 'learn';
+  state.small.userEssay = '';
+  state.small.activeSentIdx = -1;
+  state.small.sentResults = {};
+  state.small.submitting = false;
+}
+
+/* ==================== View Switching ==================== */
+const ALL_VIEWS = ['entryView','directoryView','learningView','practiceView',
+                   'smallChartTypesView','smallExampleListView','smallDetailView'];
+
 function switchView(view) {
-  ['directoryView','learningView','practiceView','reviewView'].forEach(id => {
-    document.getElementById(id).style.display = 'none';
-  });
-  document.querySelectorAll('.nav-btn[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === view));
-  if (view === 'directory') {
-    document.getElementById('directoryView').style.display = '';
-    document.getElementById('pageTitle').textContent = '逻辑链训练';
-  } else if (view === 'learning') {
-    document.getElementById('learningView').style.display = '';
-  } else if (view === 'practice') {
-    document.getElementById('practiceView').style.display = '';
-  } else if (view === 'review') {
-    document.getElementById('reviewView').style.display = '';
-    state.reviewDrilldown = null;
-    loadReview();
+  ALL_VIEWS.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+  const el = document.getElementById(view);
+  if (el) el.style.display = '';
+  // Update nav buttons
+  document.querySelectorAll('.nav-btn[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === 'entry' && view === 'entryView'));
+}
+
+function backToEntry() {
+  state.activeModule = null;
+  resetSmallState();
+  switchView('entryView');
+  document.getElementById('pageTitle').textContent = '雅思写作训练';
+}
+
+/* ==================== Entry Functions ==================== */
+function enterBigChain() {
+  state.activeModule = 'big_chain';
+  document.getElementById('pageTitle').textContent = '写作思维链';
+  loadCategories();
+  switchView('directoryView');
+}
+
+function enterSmallFangxie() {
+  state.activeModule = 'small_fangxie';
+  document.getElementById('pageTitle').textContent = '小作文仿写';
+  loadChartTypes();
+  switchView('smallChartTypesView');
+}
+
+/* ==================== Small Essay: Chart Types ==================== */
+async function loadChartTypes() {
+  state.small.chartTypes = await API.get('/api/writing/small/chart_types');
+  try { state.small.progressData = await API.get('/api/writing/small/practice_progress'); } catch(e) { state.small.progressData = {}; }
+  renderChartTypes();
+}
+
+function renderChartTypes() {
+  const icons = { '折线图':'📈', '柱状图':'📊', '饼图':'🥧', '表格':'📋', '混合':'🔀', '地图题':'🗺️', '流程图':'🔄' };
+  document.getElementById('chartTypeGrid').innerHTML = state.small.chartTypes.map((ct, i) => {
+    const prog = state.small.progressData[String(i)];
+    const pct = prog && prog.total > 0 ? Math.round(prog.done / prog.total * 100) : 0;
+    return `<div class="chart-type-card" onclick="enterChartType(${i})" style="--prog-clip: inset(0 ${100-pct}% 0 0);">
+      <div class="ct-icon">${icons[ct.name] || '📝'}</div>
+      <div class="ct-name">${ct.name}</div>
+      <div class="ct-count">${ct.example_count} 道题${pct > 0 ? ' · ' + pct + '%' : ''}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ==================== Small Essay: Example List ==================== */
+async function enterChartType(typeIdx) {
+  state.small.currentTypeIdx = typeIdx;
+  resetSmallState();
+  const data = await API.get(`/api/writing/small/chart_type/${typeIdx}`);
+  state.small.currentTypeData = data;
+
+  const ctName = data.name;
+  document.getElementById('smallExListBreadcrumb').innerHTML =
+    `<span onclick="switchView('smallChartTypesView')">小作文仿写</span><span class="sep">/</span><span class="current">${ctName}</span>`;
+  document.getElementById('smallExListTitle').textContent = ctName;
+
+  const typeProg = state.small.progressData[String(typeIdx)];
+  document.getElementById('smallExampleList').innerHTML = data.examples.map((ex, i) => {
+    const exProg = typeProg && typeProg.examples ? typeProg.examples[String(i)] : null;
+    const pct = exProg && exProg.total > 0 ? Math.round(exProg.done / exProg.total * 100) : 0;
+    return `<div class="sub-card" style="--prog-clip: inset(0 ${100-pct}% 0 0);">
+      <div style="flex:1; min-width:0;">
+        <div class="sub-name">${ex.name}</div>
+        <div class="sub-meta">
+          <span class="small-ex-badge">${ex.chart_subtype}</span>
+          <span>${ex.sentence_count} 句${pct > 0 ? ' · ' + pct + '%' : ''}</span>
+        </div>
+      </div>
+      <div class="sub-actions">
+        <button class="mode-btn learn" onclick="enterSmallExample(${typeIdx}, ${i}, 'learn')">学习</button>
+        <button class="mode-btn practice" onclick="enterSmallExample(${typeIdx}, ${i}, 'practice')">实战</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  switchView('smallExampleListView');
+}
+
+function backToChartTypes() {
+  resetSmallState();
+  renderChartTypes();
+  switchView('smallChartTypesView');
+}
+
+/* ==================== Small Essay: Detail View ==================== */
+async function enterSmallExample(typeIdx, exIdx, mode) {
+  resetSmallState();
+  state.small.currentTypeIdx = typeIdx;
+  state.small.currentExampleIdx = exIdx;
+
+  const data = await API.get(`/api/writing/small/example/${typeIdx}/${exIdx}`);
+  state.small.exampleData = data;
+
+  const ctName = data.chart_type;
+  document.getElementById('smallDetailBreadcrumb').innerHTML =
+    `<span onclick="switchView('smallChartTypesView')">小作文仿写</span><span class="sep">/</span><span onclick="enterChartType(${typeIdx})">${ctName}</span><span class="sep">/</span><span class="current">${data.name}</span>`;
+
+  document.getElementById('smallQuestionText').textContent = data.question;
+  document.getElementById('chartSubtypeBadge').textContent = data.chart_subtype;
+
+  renderImageZone();
+  renderSmallLearnContent();
+  renderSmallPracticeContent();
+  updateSmallProgress();
+  switchSmallTab(mode || 'learn');
+  setupImageUpload();
+  switchView('smallDetailView');
+}
+
+function backToExampleList() {
+  resetSmallState();
+  enterChartType(state.small.currentTypeIdx);
+}
+
+function switchSmallTab(tab) {
+  state.small.activeTab = tab;
+  document.querySelectorAll('#smallDetailView .tab-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.tab === tab));
+  document.getElementById('smallLearnContent').style.display = tab === 'learn' ? '' : 'none';
+  document.getElementById('smallPracticeContent').style.display = tab === 'practice' ? '' : 'none';
+}
+
+/* ==================== Small Essay: Progress ==================== */
+function updateSmallProgress() {
+  const ti = state.small.currentTypeIdx;
+  const ei = state.small.currentExampleIdx;
+  if (ti === null || ei === null) return;
+  const prog = state.small.progressData[String(ti)];
+  const exProg = prog && prog.examples ? prog.examples[String(ei)] : null;
+  const total = exProg ? exProg.total : 0;
+  const done = exProg ? exProg.done : 0;
+  const el = document.getElementById('smallExProgress');
+  const bar = document.getElementById('smallExBar');
+  if (el) el.textContent = `${done} / ${total}`;
+  if (bar) bar.style.width = total ? (done / total * 100) + '%' : '0%';
+}
+
+async function refreshSmallProgress() {
+  try { state.small.progressData = await API.get('/api/writing/small/practice_progress'); } catch(e) {}
+  updateSmallProgress();
+}
+
+function getSmallCompletedSentences() {
+  const ti = state.small.currentTypeIdx;
+  const ei = state.small.currentExampleIdx;
+  if (ti === null || ei === null) return new Set();
+  const prog = state.small.progressData[String(ti)];
+  const exProg = prog && prog.examples ? prog.examples[String(ei)] : null;
+  return new Set(exProg ? exProg.completed || [] : []);
+}
+
+/* ==================== Small Essay: Image Upload ==================== */
+function renderImageZone() {
+  const zone = document.getElementById('imageUploadZone');
+  const data = state.small.exampleData;
+  if (data && data.image_path) {
+    zone.classList.add('has-image');
+    zone.innerHTML = `<img src="${data.image_path}" alt="题目图片"><button class="image-replace-btn" onclick="event.stopPropagation(); triggerImageUpload()">替换图片</button>`;
+  } else {
+    zone.classList.remove('has-image');
+    zone.innerHTML = '<span class="image-upload-hint">点击或拖拽上传题目图片</span>';
   }
 }
 
-async function backToDirectory() {
-  try {
-    state.progressData = await API.get('/api/writing/practice_progress');
-  } catch(e) {}
-  renderCategories();
-  switchView('directory');
+let _imageInput = null;
+function setupImageUpload() {
+  const zone = document.getElementById('imageUploadZone');
+  if (!_imageInput) {
+    _imageInput = document.createElement('input');
+    _imageInput.type = 'file';
+    _imageInput.accept = 'image/*';
+    _imageInput.style.display = 'none';
+    document.body.appendChild(_imageInput);
+    _imageInput.onchange = () => { if (_imageInput.files.length) uploadImage(_imageInput.files[0]); _imageInput.value = ''; };
+  }
+
+  zone.onclick = (e) => {
+    if (e.target.classList.contains('image-replace-btn')) return;
+    _imageInput.click();
+  };
+  zone.ondragover = (e) => { e.preventDefault(); zone.classList.add('dragover'); };
+  zone.ondragleave = () => zone.classList.remove('dragover');
+  zone.ondrop = (e) => {
+    e.preventDefault();
+    zone.classList.remove('dragover');
+    if (e.dataTransfer.files.length) uploadImage(e.dataTransfer.files[0]);
+  };
 }
 
-/* ---- Directory ---- */
+function triggerImageUpload() {
+  if (_imageInput) _imageInput.click();
+}
+
+async function uploadImage(file) {
+  const formData = new FormData();
+  formData.append('image', file);
+  formData.append('type_idx', state.small.currentTypeIdx);
+  formData.append('example_idx', state.small.currentExampleIdx);
+  const tk = localStorage.getItem('authToken');
+  try {
+    const resp = await fetch('/api/writing/small/upload_image', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + tk },
+      body: formData
+    });
+    const data = await resp.json();
+    if (data.success) {
+      state.small.exampleData.image_path = data.image_url;
+      renderImageZone();
+    } else {
+      alert(data.error || '上传失败');
+    }
+  } catch (e) {
+    alert('上传失败，请重试');
+  }
+}
+
+/* ==================== Small Essay: Learning Content ==================== */
+const TAG_COLORS = {
+  '极端数值':'tag-blue', '极端趋势':'tag-orange',
+  '趋势非常相似':'tag-green', '趋势非常相反':'tag-pink',
+  '统一':'tag-indigo', '乱乱的':'tag-yellow', '另类':'tag-purple',
+  '数值非常相似':'tag-green', '数值非常相反':'tag-pink',
+  '整体变化程度':'tag-blue', '主要变化方向':'tag-orange',
+  '方位与特点':'tag-sky', '一般过去时':'tag-fuchsia', '过去完成时':'tag-rose', '现在完成时':'tag-lime',
+  '变化-新增':'tag-teal', '变化-扩建/缩减':'tag-yellow', '变化-改造/替换':'tag-rose',
+  '流程起止':'tag-blue', '核心要素':'tag-orange'
+};
+
+function getTagClass(tag) {
+  if (TAG_COLORS[tag]) return TAG_COLORS[tag];
+  if (tag.includes('步骤')) return 'tag-sky';
+  if (tag.includes('动作')) return 'tag-green';
+  if (tag.includes('状态')) return 'tag-fuchsia';
+  if (tag.includes('分支')) return 'tag-yellow';
+  return 'tag-sky';
+}
+
+function renderSmallLearnContent() {
+  const data = state.small.exampleData;
+  if (!data) return;
+  let html = '';
+  for (const section of data.sections) {
+    html += `<div class="section-block">
+      <div class="section-title">${section.name}${section.annotation ? `<span class="section-annotation">[${section.annotation}]</span>` : ''}</div>`;
+    for (const sent of section.sentences) {
+      const tagHtml = sent.tags.map(t => `<span class="sentence-tag ${getTagClass(t)}">${t}</span>`).join('');
+      html += `<div class="sentence-card">
+        ${tagHtml ? `<div class="tag-row">${tagHtml}</div>` : ''}
+        <div class="original">${sent.original}</div>
+        <div class="translation">${sent.translation}</div>
+      </div>`;
+    }
+    html += '</div>';
+  }
+
+  if (data.vocabulary_table && data.vocabulary_table.length) {
+    html += `<div class="section-block"><div class="section-title">表达积累</div>
+      <table class="vocab-table"><thead><tr><th>类别</th><th>英文表达</th><th>中文含义</th></tr></thead><tbody>
+      ${data.vocabulary_table.map(v => `<tr><td>${v.category}</td><td>${v.english}</td><td>${v.chinese}</td></tr>`).join('')}
+      </tbody></table></div>`;
+  }
+  document.getElementById('smallLearnContent').innerHTML = html;
+}
+
+/* ==================== Small Essay: Practice Content ==================== */
+function renderSmallPracticeContent() {
+  const data = state.small.exampleData;
+  if (!data) return;
+
+  // Flatten all sentences from all sections
+  const allSentences = [];
+  for (const section of data.sections) {
+    for (const sent of section.sentences) {
+      allSentences.push({ ...sent, sectionName: section.name });
+    }
+  }
+
+  const completedFromServer = getSmallCompletedSentences();
+
+  let html = '<div style="display:grid; gap:12px; align-items:start;" id="smallPracticeBody">';
+  html += '<div id="smallSentenceList" class="sentence-grid">';
+  html += allSentences.map((s, i) => {
+    const res = state.small.sentResults[i];
+    const isActive = i === state.small.activeSentIdx;
+    const isDoneSession = res && res._savedToReview !== 'pending';
+    const isDoneServer = completedFromServer.has(i);
+    const isDone = isDoneSession || isDoneServer;
+    let scoreHtml = '';
+    if (res) {
+      const v = parseFloat(res.score) || 0;
+      const cls = v >= 7 ? 'high' : v >= 6 ? 'mid' : 'low';
+      scoreHtml = `<span class="sent-score ${cls}">${res.score}</span>`;
+    }
+    const badgeText = isDoneSession ? '✓' : (isDoneServer ? '✓ 已做过' : '');
+    return `<div class="sent-item${isActive ? ' active' : ''}${isDone ? ' done' : ''}" onclick="activateSmallSentence(${i})">
+      <div class="sent-idx">句 ${i + 1}${badgeText ? '<span class="done-badge">' + badgeText + '</span>' : ''}</div>
+      <div class="sent-cn">${s.translation}</div>
+      ${scoreHtml ? `<div style="position:absolute; top:10px; right:12px;">${scoreHtml}</div>` : ''}
+    </div>`;
+  }).join('');
+  html += '</div>';
+  html += '<div id="smallEditorPanel" class="editor-panel"></div>';
+  html += '</div>';
+  document.getElementById('smallPracticeContent').innerHTML = html;
+}
+
+function activateSmallSentence(idx) {
+  state.small.activeSentIdx = idx;
+  renderSmallPracticeContent();
+  // Show editor
+  const body = document.getElementById('smallPracticeBody');
+  const editorPanel = document.getElementById('smallEditorPanel');
+  if (body) body.style.gridTemplateColumns = '1fr 1fr';
+  if (editorPanel) {
+    editorPanel.classList.add('show');
+    renderSmallEditor(idx);
+  }
+  setTimeout(() => { const ta = document.getElementById('smallTransInput'); if (ta) ta.focus(); }, 100);
+}
+
+function renderSmallEditor(idx) {
+  const data = state.small.exampleData;
+  if (!data) return;
+  const allSentences = [];
+  for (const section of data.sections) {
+    for (const sent of section.sentences) {
+      allSentences.push({ ...sent, sectionName: section.name });
+    }
+  }
+  const s = allSentences[idx];
+  if (!s) return;
+  const res = state.small.sentResults[idx];
+  const tagHtml = s.tags.map(t => `<span class="sentence-tag ${getTagClass(t)}">${t}</span>`).join('');
+
+  let feedbackHtml = '';
+  if (res) {
+    let reviewPrompt = '';
+    if (res._savedToReview === true) {
+      reviewPrompt = '<div class="saved-badge">✓ 已录入复习中心</div>';
+    } else if (res._savedToReview === 'skipped') {
+      reviewPrompt = '<div style="font-size:12px; color:var(--text3); margin-top:8px;">已跳过，未录入复习中心</div>';
+    } else if (res._savedToReview === 'pending') {
+      reviewPrompt = `<div class="save-review-prompt">
+        <div class="prompt-text">是否将此条录入复习中心的笔记？</div>
+        <button class="save-review-btn yes" onclick="smallSaveToReview(${idx})">录入笔记</button>
+        <button class="save-review-btn no" onclick="smallSkipSaveToReview(${idx})">不录入</button>
+      </div>`;
+    }
+    feedbackHtml = renderFeedbackCard(res, { reviewPrompt, nextBtn: true, nextFn: `advanceSmallNext()` });
+  }
+
+  const panel = document.getElementById('smallEditorPanel');
+  panel.innerHTML = `
+    <div class="editor-context">
+      <div class="ctx-label">${s.sectionName} ${tagHtml ? '· ' + tagHtml : ''}</div>
+      <div class="ctx-cn">${s.translation}</div>
+    </div>
+    ${res ? `<div style="padding:10px 14px; background:#f0fdf4; border-radius:8px; margin-bottom:8px; font-size:13px; color:var(--text2);">你的翻译：${res._userInput || ''}</div>` : ''}
+    ${!res ? `
+      <textarea id="smallTransInput" class="editor-input" placeholder="在此输入你的英文翻译…" onkeydown="handleSmallEditorKey(event)"></textarea>
+      <div class="editor-hint">按 Enter 提交 · Shift+Enter 换行</div>
+      <div class="editor-actions">
+        <button class="submit-btn" id="smallSubmitBtn" onclick="submitSmallTranslation()">提交批改</button>
+        <button class="skip-btn" onclick="advanceSmallNext()">跳过</button>
+      </div>
+    ` : ''}
+    ${feedbackHtml}
+  `;
+}
+
+function handleSmallEditorKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitSmallTranslation(); }
+}
+
+async function submitSmallTranslation() {
+  if (state.small.submitting) return;
+  const ta = document.getElementById('smallTransInput');
+  if (!ta) return;
+  const text = ta.value.trim();
+  if (!text) return;
+
+  state.small.submitting = true;
+  const btn = document.getElementById('smallSubmitBtn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> 批改中…'; }
+
+  const data = state.small.exampleData;
+  const allSentences = [];
+  for (const section of data.sections) {
+    for (const sent of section.sentences) allSentences.push(sent);
+  }
+  const s = allSentences[state.small.activeSentIdx];
+
+  try {
+    const result = await API.post('/api/writing/small/correct', {
+      question_text: data.question,
+      target_chinese: s.translation,
+      user_translation: text,
+      standard_reference: s.original || ''
+    });
+    if (result.error) { alert(result.error); return; }
+    result._userInput = text;
+    result._savedToReview = 'pending';
+    state.small.sentResults[state.small.activeSentIdx] = result;
+    renderSmallPracticeContent();
+    activateSmallSentence(state.small.activeSentIdx);
+  } catch (err) {
+    alert('请求失败，请重试');
+  } finally {
+    state.small.submitting = false;
+  }
+}
+
+async function smallSaveToReview(sentIdx) {
+  const res = state.small.sentResults[sentIdx];
+  if (!res || res._savedToReview === true) return;
+  const data = state.small.exampleData;
+  const allSentences = [];
+  for (const section of data.sections) {
+    for (const sent of section.sentences) allSentences.push({ ...sent, sectionName: section.name });
+  }
+  const s = allSentences[sentIdx];
+  res._savedToReview = true;
+  await API.post('/api/writing/small/save_practice', {
+    chart_type: data.chart_type, chart_subtype: data.chart_subtype,
+    example_name: data.name, question: data.question,
+    section_name: s.sectionName, sentence_tags: s.tags,
+    target_chinese: s.translation, user_translation: res._userInput,
+    score: res.score, feedback: res, native_version: res.native_version || '',
+    save_to_review: true
+  });
+  refreshSmallProgress();
+  activateSmallSentence(sentIdx);
+}
+
+async function smallSkipSaveToReview(sentIdx) {
+  const res = state.small.sentResults[sentIdx];
+  if (!res) return;
+  const data = state.small.exampleData;
+  const allSentences = [];
+  for (const section of data.sections) {
+    for (const sent of section.sentences) allSentences.push({ ...sent, sectionName: section.name });
+  }
+  const s = allSentences[sentIdx];
+  res._savedToReview = 'skipped';
+  await API.post('/api/writing/small/save_practice', {
+    chart_type: data.chart_type, chart_subtype: data.chart_subtype,
+    example_name: data.name, question: data.question,
+    section_name: s.sectionName, sentence_tags: s.tags,
+    target_chinese: s.translation, user_translation: res._userInput,
+    score: res.score, feedback: res, native_version: res.native_version || '',
+    save_to_review: false
+  });
+  refreshSmallProgress();
+  activateSmallSentence(sentIdx);
+}
+
+function advanceSmallNext() {
+  const data = state.small.exampleData;
+  let totalSentences = 0;
+  for (const section of data.sections) totalSentences += section.sentences.length;
+  let next = state.small.activeSentIdx + 1;
+  if (next >= totalSentences) {
+    state.small.activeSentIdx = -1;
+    renderSmallPracticeContent();
+    return;
+  }
+  activateSmallSentence(next);
+}
+
+/* ==================== Big Essay (all existing code) ==================== */
+async function backToDirectory() {
+  try { state.progressData = await API.get('/api/writing/practice_progress'); } catch(e) {}
+  renderCategories();
+  switchView('directoryView');
+}
+
 async function loadCategories() {
   state.categories = await API.get('/api/writing/categories');
-  try {
-    state.progressData = await API.get('/api/writing/practice_progress');
-  } catch(e) { state.progressData = {}; }
+  try { state.progressData = await API.get('/api/writing/practice_progress'); } catch(e) { state.progressData = {}; }
   renderCategories();
 }
 
@@ -474,9 +1134,7 @@ function renderCategories() {
       if (prog) { catTotal += prog.total; catDone += prog.done; }
     });
     const pct = catTotal > 0 ? Math.round(catDone / catTotal * 100) : 0;
-    const clipRight = 100 - pct;
-    return `
-    <div class="cat-card" onclick="selectCategory(${i})" style="--prog-clip: inset(0 ${clipRight}% 0 0);">
+    return `<div class="cat-card" onclick="selectCategory(${i})" style="--prog-clip: inset(0 ${100-pct}% 0 0);">
       <div class="cat-name">${c.name}</div>
       <div class="cat-count">${c.subcategories.length} 个子话题</div>
     </div>`;
@@ -485,9 +1143,7 @@ function renderCategories() {
   document.getElementById('subSection').style.display = 'none';
 }
 
-function showCategories() {
-  renderCategories();
-}
+function showCategories() { renderCategories(); }
 
 async function selectCategory(idx) {
   state.currentCat = idx;
@@ -495,25 +1151,15 @@ async function selectCategory(idx) {
   document.getElementById('catGrid').style.display = 'none';
   document.getElementById('subSection').style.display = 'block';
   document.getElementById('catTitle').textContent = cat.name;
-
-  // Load progress data
-  try {
-    state.progressData = await API.get('/api/writing/practice_progress');
-  } catch(e) { state.progressData = {}; }
-
+  try { state.progressData = await API.get('/api/writing/practice_progress'); } catch(e) { state.progressData = {}; }
   document.getElementById('subList').innerHTML = cat.subcategories.map((s, si) => {
     const pkey = `${idx}_${si}`;
     const prog = state.progressData[pkey] || { total: 0, done: 0 };
     const pct = prog.total > 0 ? Math.round(prog.done / prog.total * 100) : 0;
-    const clipRight = 100 - pct;
-    return `
-    <div class="sub-card" style="--prog-clip: inset(0 ${clipRight}% 0 0);">
+    return `<div class="sub-card" style="--prog-clip: inset(0 ${100-pct}% 0 0);">
       <div style="flex:1; min-width:0;">
         <div class="sub-name">${s.name}</div>
-        <div class="sub-meta">
-          <span>${s.chain_count} 逻辑链</span>
-          <span>${s.example_count} 例题</span>
-        </div>
+        <div class="sub-meta"><span>${s.chain_count} 逻辑链</span><span>${s.example_count} 例题</span></div>
       </div>
       <div class="sub-actions">
         <button class="mode-btn learn" onclick="enterLearning(${idx},${si})">学习</button>
@@ -523,14 +1169,12 @@ async function selectCategory(idx) {
   }).join('');
 }
 
-/* ---- Learning View ---- */
 async function enterLearning(catIdx, subIdx) {
-  state.currentCat = catIdx;
-  state.currentSub = subIdx;
+  state.currentCat = catIdx; state.currentSub = subIdx;
   const data = await API.get(`/api/writing/subcategory/${catIdx}/${subIdx}`);
   state.subData = data;
   renderLearning(data);
-  switchView('learning');
+  switchView('learningView');
 }
 
 function renderLearning(d) {
@@ -542,17 +1186,10 @@ function renderLearning(d) {
   document.getElementById('kwBar').innerHTML = d.keywords.map(k =>
     `<span class="kw-tag">${k}<span class="copy-icon" onclick="copyText('${k}', event)" title="复制">&#x2398;</span></span>`
   ).join('');
-
   document.getElementById('chainFlow').innerHTML = d.chains.map(c => `
-    <div class="chain-card">
-      <div class="chain-num">${c.id}</div>
-      <div class="chain-body">
-        <div class="chain-cn">${c.chinese}</div>
-        <div class="chain-en">${c.english}</div>
-      </div>
-    </div>
+    <div class="chain-card"><div class="chain-num">${c.id}</div><div class="chain-body">
+      <div class="chain-cn">${c.chinese}</div><div class="chain-en">${c.english}</div></div></div>
   `).join('');
-
   document.getElementById('exampleList').innerHTML = d.examples.map((ex, i) => `
     <div class="example-block">
       <div class="example-header open" onclick="toggleExample(this)">
@@ -574,31 +1211,15 @@ function renderLearning(d) {
   `).join('');
 }
 
-function toggleExample(header) {
-  header.classList.toggle('open');
-  header.nextElementSibling.classList.toggle('open');
-}
+function toggleExample(header) { header.classList.toggle('open'); header.nextElementSibling.classList.toggle('open'); }
+function copyText(text, e) { e.stopPropagation(); navigator.clipboard.writeText(text); const el = e.target; el.textContent = '✓'; setTimeout(() => el.innerHTML = '&#x2398;', 1000); }
 
-function copyText(text, e) {
-  e.stopPropagation();
-  navigator.clipboard.writeText(text);
-  const el = e.target;
-  el.textContent = '✓';
-  setTimeout(() => el.innerHTML = '&#x2398;', 1000);
-}
-
-/* ---- Practice View ---- */
 async function enterPractice(catIdx, subIdx) {
-  state.currentCat = catIdx;
-  state.currentSub = subIdx;
-  state.currentExIdx = 0;
-  state.activeSentIdx = -1;
-  state.sentResults = {};
+  state.currentCat = catIdx; state.currentSub = subIdx;
+  state.currentExIdx = 0; state.activeSentIdx = -1; state.sentResults = {};
   const data = await API.get(`/api/writing/subcategory/${catIdx}/${subIdx}`);
   state.subData = data;
   if (!data.examples.length) { alert('该话题暂无例题'); return; }
-
-  // Load progress to know which sentences are already done + their full records
   try {
     const prog = await API.get('/api/writing/practice_progress');
     state.progressData = prog;
@@ -607,16 +1228,13 @@ async function enterPractice(catIdx, subIdx) {
     if (prog[pkey] && prog[pkey].examples) {
       prog[pkey].examples.forEach(exProg => {
         exProg.sentences.forEach((records, si) => {
-          if (records && records.length) {
-            state.historySentences[`${exProg.example_idx}_${si}`] = records;
-          }
+          if (records && records.length) state.historySentences[`${exProg.example_idx}_${si}`] = records;
         });
       });
     }
   } catch(e) { state.historySentences = {}; }
-
   renderPractice();
-  switchView('practice');
+  switchView('practiceView');
 }
 
 async function quickPractice(exampleIdx, sentenceIdx) {
@@ -649,21 +1267,13 @@ function renderPractice() {
   const catName = state.categories[state.currentCat].name;
   document.getElementById('pracBreadcrumb').innerHTML =
     `<span onclick="backToDirectory()">${catName}</span><span class="sep">/</span><span class="current">${d.name} · 实战</span>`;
-
-  // Example switcher
   document.getElementById('exSwitch').innerHTML = d.examples.map((ex, i) =>
     `<button class="ex-btn${i === state.currentExIdx ? ' active' : ''}" onclick="switchExample(${i})">${ex.title}</button>`
   ).join('');
-
   renderExercise();
 }
 
-function switchExample(idx) {
-  state.currentExIdx = idx;
-  state.activeSentIdx = -1;
-  state.sentResults = {};
-  renderPractice();
-}
+function switchExample(idx) { state.currentExIdx = idx; state.activeSentIdx = -1; state.sentResults = {}; renderPractice(); }
 
 function renderExercise() {
   const ex = state.subData.examples[state.currentExIdx];
@@ -679,13 +1289,8 @@ function renderExercise() {
   }
   document.getElementById('pracProgress').textContent = `${done} / ${total}`;
   document.getElementById('pracBar').style.width = total ? (done / total * 100) + '%' : '0%';
-
   const body = document.getElementById('practiceBody');
-  if (state.activeSentIdx >= 0) {
-    body.style.gridTemplateColumns = '1fr 1fr';
-  } else {
-    body.style.gridTemplateColumns = '1fr';
-  }
+  body.style.gridTemplateColumns = state.activeSentIdx >= 0 ? '1fr 1fr' : '1fr';
 
   document.getElementById('sentenceList').innerHTML = ex.sentences.map((s, i) => {
     const res = state.sentResults[i];
@@ -704,7 +1309,7 @@ function renderExercise() {
         return `<span class="sent-score ${cls}" onclick="event.stopPropagation(); showHistoryFeedback(${i}, ${ri})">${rec.score}</span>`;
       }).join('');
     }
-    if (res && res._savedToReview === true) {
+    if (justSaved) {
       const v = parseFloat(res.score) || 0;
       const cls = v >= 7 ? 'high' : v >= 6 ? 'mid' : 'low';
       scoreHtml += `<span class="sent-score ${cls}">${res.score}</span>`;
@@ -724,23 +1329,11 @@ function renderExercise() {
       </div>`;
   }).join('');
 
-  if (state.activeSentIdx >= 0) {
-    renderEditor(state.activeSentIdx);
-    document.getElementById('editorPanel').classList.add('show');
-  } else {
-    document.getElementById('editorPanel').classList.remove('show');
-  }
+  if (state.activeSentIdx >= 0) { renderEditor(state.activeSentIdx); document.getElementById('editorPanel').classList.add('show'); }
+  else { document.getElementById('editorPanel').classList.remove('show'); }
 }
 
-function activateSentence(idx) {
-  state.viewingHistory = null;
-  state.activeSentIdx = idx;
-  renderExercise();
-  setTimeout(() => {
-    const ta = document.getElementById('transInput');
-    if (ta) ta.focus();
-  }, 100);
-}
+function activateSentence(idx) { state.viewingHistory = null; state.activeSentIdx = idx; renderExercise(); setTimeout(() => { const ta = document.getElementById('transInput'); if (ta) ta.focus(); }, 100); }
 
 function showHistoryFeedback(sentIdx, recordIdx) {
   const histKey = `${state.currentExIdx}_${sentIdx}`;
@@ -757,10 +1350,7 @@ function formatGrammarCorrections(gc) {
   if (Array.isArray(gc)) {
     return gc.map(g => {
       if (typeof g === 'string') return `<div class="fb-correction">${g}</div>`;
-      return `<div class="fb-correction">
-        <span class="orig">${g.original || ''}</span> → <span class="fixed">${g.corrected || ''}</span>
-        <div class="reason">${g.reason || ''}</div>
-      </div>`;
+      return `<div class="fb-correction"><span class="orig">${g.original || ''}</span> → <span class="fixed">${g.corrected || ''}</span><div class="reason">${g.reason || ''}</div></div>`;
     }).join('');
   }
   return `<div class="fb-correction">${String(gc)}</div>`;
@@ -819,6 +1409,7 @@ function renderFeedbackCard(fb, opts) {
   const cls = sc >= 7 ? 'high' : sc >= 6 ? 'mid' : 'low';
   const gcHtml = formatGrammarCorrections(fb.grammar_corrections);
   const vuHtml = formatVocabUpgrade(fb.vocabulary_upgrade);
+  const nextFn = opts.nextFn || 'advanceNext()';
   return `
     <div class="feedback-card">
       <div class="fb-score ${cls}">${fb.score}</div>
@@ -839,7 +1430,7 @@ function renderFeedbackCard(fb, opts) {
           <div class="fb-native">${fb.native_version}</div>
         </div>` : ''}
       ${opts.reviewPrompt || ''}
-      ${opts.nextBtn ? `<button class="skip-btn" style="margin-top:10px;" onclick="advanceNext()">下一句 →</button>` : ''}
+      ${opts.nextBtn ? `<button class="skip-btn" style="margin-top:10px;" onclick="${nextFn}">下一句 →</button>` : ''}
     </div>`;
 }
 
@@ -851,7 +1442,6 @@ function renderEditor(idx) {
   const chainHtml = chains.length ? `<div class="ctx-chain">${chains.map(c => c.chinese).join('<br>')}</div>` : '';
   const hintHtml = ex.hints.length ? `<div class="ctx-hint">${ex.hints.join(' · ')}</div>` : '';
 
-  // History viewing mode: show a specific historical feedback record
   if (state.viewingHistory && state.viewingHistory.sentIdx === idx) {
     const histKey = `${state.currentExIdx}_${idx}`;
     const records = state.historySentences[histKey];
@@ -860,65 +1450,34 @@ function renderEditor(idx) {
       const fb = rec.feedback || {};
       const ts = rec.timestamp ? new Date(rec.timestamp).toLocaleString('zh-CN', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
       document.getElementById('editorPanel').innerHTML = `
-        <div class="editor-context">
-          <div class="ctx-label">目标中文句</div>
-          <div class="ctx-cn">${s.chinese}</div>
-          ${chainHtml}${hintHtml}
-        </div>
+        <div class="editor-context"><div class="ctx-label">目标中文句</div><div class="ctx-cn">${s.chinese}</div>${chainHtml}${hintHtml}</div>
         <div style="padding:10px 14px; background:#f0fdf4; border-radius:8px; margin-bottom:8px; font-size:13px; color:var(--text2);">
           <span style="color:var(--text3); font-size:11px;">${ts}</span><br>你的翻译：${rec.user_translation || ''}
         </div>
         ${renderFeedbackCard(fb, { reviewPrompt: '', nextBtn: false })}
-        <button class="skip-btn" style="margin-top:10px;" onclick="activateSentence(${idx})">返回编辑</button>
-      `;
+        <button class="skip-btn" style="margin-top:10px;" onclick="activateSentence(${idx})">返回编辑</button>`;
       return;
     }
   }
 
-  // Normal mode
   let feedbackHtml = '';
   if (res) {
     let reviewPrompt = '';
-    if (res._savedToReview === true) {
-      reviewPrompt = `<div class="saved-badge">✓ 已录入复习中心</div>`;
-    } else if (res._savedToReview === 'skipped') {
-      reviewPrompt = `<div style="font-size:12px; color:var(--text3); margin-top:8px;">已跳过，未录入复习中心</div>`;
-    } else if (res._savedToReview === 'pending') {
-      reviewPrompt = `
-        <div class="save-review-prompt">
-          <div class="prompt-text">是否将此条录入复习中心的笔记？</div>
-          <button class="save-review-btn yes" onclick="saveToReview(${idx})">录入笔记</button>
-          <button class="save-review-btn no" onclick="skipSaveToReview(${idx})">不录入</button>
-        </div>`;
-    }
+    if (res._savedToReview === true) reviewPrompt = '<div class="saved-badge">✓ 已录入复习中心</div>';
+    else if (res._savedToReview === 'skipped') reviewPrompt = '<div style="font-size:12px; color:var(--text3); margin-top:8px;">已跳过，未录入复习中心</div>';
+    else if (res._savedToReview === 'pending') reviewPrompt = `<div class="save-review-prompt"><div class="prompt-text">是否将此条录入复习中心的笔记？</div><button class="save-review-btn yes" onclick="saveToReview(${idx})">录入笔记</button><button class="save-review-btn no" onclick="skipSaveToReview(${idx})">不录入</button></div>`;
     feedbackHtml = renderFeedbackCard(res, { reviewPrompt, nextBtn: true });
   }
-
   document.getElementById('editorPanel').innerHTML = `
-    <div class="editor-context">
-      <div class="ctx-label">目标中文句</div>
-      <div class="ctx-cn">${s.chinese}</div>
-      ${chainHtml}${hintHtml}
-    </div>
+    <div class="editor-context"><div class="ctx-label">目标中文句</div><div class="ctx-cn">${s.chinese}</div>${chainHtml}${hintHtml}</div>
     ${res ? `<div style="padding:10px 14px; background:#f0fdf4; border-radius:8px; margin-bottom:8px; font-size:13px; color:var(--text2);">你的翻译：${res._userInput || ''}</div>` : ''}
-    ${!res ? `
-      <textarea id="transInput" class="editor-input" placeholder="在此输入你的英文翻译…" onkeydown="handleEditorKey(event)"></textarea>
+    ${!res ? `<textarea id="transInput" class="editor-input" placeholder="在此输入你的英文翻译…" onkeydown="handleEditorKey(event)"></textarea>
       <div class="editor-hint">按 Enter 提交 · Shift+Enter 换行</div>
-      <div class="editor-actions">
-        <button class="submit-btn" id="submitBtn" onclick="submitTranslation()">提交批改</button>
-        <button class="skip-btn" onclick="advanceNext()">跳过</button>
-      </div>
-    ` : ''}
-    ${feedbackHtml}
-  `;
+      <div class="editor-actions"><button class="submit-btn" id="submitBtn" onclick="submitTranslation()">提交批改</button><button class="skip-btn" onclick="advanceNext()">跳过</button></div>` : ''}
+    ${feedbackHtml}`;
 }
 
-function handleEditorKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    submitTranslation();
-  }
-}
+function handleEditorKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitTranslation(); } }
 
 async function submitTranslation() {
   if (state.submitting) return;
@@ -926,34 +1485,20 @@ async function submitTranslation() {
   if (!ta) return;
   const text = ta.value.trim();
   if (!text) return;
-
   state.submitting = true;
   const btn = document.getElementById('submitBtn');
   if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> 批改中…'; }
-
   const ex = state.subData.examples[state.currentExIdx];
   const s = ex.sentences[state.activeSentIdx];
-
   try {
     const result = await API.post('/api/writing/correct', {
-      question_text: ex.question,
-      target_chinese: s.chinese,
-      user_translation: text,
-      standard_reference: s.english || ''
+      question_text: ex.question, target_chinese: s.chinese, user_translation: text, standard_reference: s.english || ''
     });
-
     if (result.error) { alert(result.error); return; }
-
-    result._userInput = text;
-    result._savedToReview = 'pending';
+    result._userInput = text; result._savedToReview = 'pending';
     state.sentResults[state.activeSentIdx] = result;
-
     renderExercise();
-  } catch (err) {
-    alert('请求失败，请重试');
-  } finally {
-    state.submitting = false;
-  }
+  } catch (err) { alert('请求失败，请重试'); } finally { state.submitting = false; }
 }
 
 async function saveToReview(sentIdx) {
@@ -962,19 +1507,11 @@ async function saveToReview(sentIdx) {
   const ex = state.subData.examples[state.currentExIdx];
   const s = ex.sentences[sentIdx];
   res._savedToReview = true;
-
   await API.post('/api/writing/save_practice', {
-    category: state.categories[state.currentCat].name,
-    subcategory: state.subData.name,
-    question: ex.question,
-    target_chinese: s.chinese,
-    user_translation: res._userInput,
-    score: res.score,
-    feedback: res,
-    native_version: res.native_version || '',
-    save_to_review: true
+    category: state.categories[state.currentCat].name, subcategory: state.subData.name,
+    question: ex.question, target_chinese: s.chinese, user_translation: res._userInput,
+    score: res.score, feedback: res, native_version: res.native_version || '', save_to_review: true
   });
-
   renderExercise();
 }
 
@@ -984,19 +1521,11 @@ async function skipSaveToReview(sentIdx) {
   const ex = state.subData.examples[state.currentExIdx];
   const s = ex.sentences[sentIdx];
   res._savedToReview = 'skipped';
-
   await API.post('/api/writing/save_practice', {
-    category: state.categories[state.currentCat].name,
-    subcategory: state.subData.name,
-    question: ex.question,
-    target_chinese: s.chinese,
-    user_translation: res._userInput,
-    score: res.score,
-    feedback: res,
-    native_version: res.native_version || '',
-    save_to_review: false
+    category: state.categories[state.currentCat].name, subcategory: state.subData.name,
+    question: ex.question, target_chinese: s.chinese, user_translation: res._userInput,
+    score: res.score, feedback: res, native_version: res.native_version || '', save_to_review: false
   });
-
   renderExercise();
 }
 
@@ -1020,56 +1549,168 @@ function advanceNext() {
   activateSentence(next);
 }
 
-/* ---- Review Center ---- */
-async function loadReview() {
-  const container = document.getElementById('reviewContent');
-  container.innerHTML = '<div class="loading-overlay"><span class="spinner"></span> 加载中…</div>';
-  try {
-    const data = await API.get('/api/writing/practice_history');
-    state.reviewData = data;
-    if (!Object.keys(data).length) {
-      container.innerHTML = '<div class="empty-state"><div class="empty-icon">&#128221;</div><p>暂无练习记录，去实战批改中积累吧</p></div>';
-      return;
+/* ==================== Review Drawer ==================== */
+function toggleDrawer() {
+  state.drawerOpen = !state.drawerOpen;
+  document.getElementById('reviewDrawer').classList.toggle('open', state.drawerOpen);
+  document.getElementById('drawerOverlay').classList.toggle('open', state.drawerOpen);
+  if (state.drawerOpen) loadDrawerContent();
+}
+
+function switchDrawerTab(tab) {
+  state.drawerTab = tab;
+  state.drawerExpandedType = null;
+  document.querySelectorAll('.drawer-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.getElementById('drawerSmallContent').style.display = tab === 'small' ? '' : 'none';
+  document.getElementById('drawerBigContent').style.display = tab === 'big' ? '' : 'none';
+  loadDrawerContent();
+}
+
+async function loadDrawerContent() {
+  if (state.drawerTab === 'small') {
+    const container = document.getElementById('drawerSmallContent');
+    container.innerHTML = '<div class="loading-overlay"><span class="spinner"></span> 加载中…</div>';
+    try {
+      const data = await API.get('/api/writing/small/practice_history');
+      renderSmallDrawerContent(data);
+    } catch (e) {
+      container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
     }
-    if (state.reviewDrilldown) {
-      renderReviewRecords();
-    } else {
-      renderReviewGrid();
+  } else {
+    const container = document.getElementById('drawerBigContent');
+    container.innerHTML = '<div class="loading-overlay"><span class="spinner"></span> 加载中…</div>';
+    try {
+      const data = await API.get('/api/writing/practice_history');
+      state.reviewData = data;
+      renderBigDrawerContent(data);
+    } catch (e) {
+      container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
     }
-  } catch (e) {
-    container.innerHTML = '<div class="empty-state"><p>加载失败，请刷新重试</p></div>';
   }
 }
 
-function renderReviewGrid() {
-  const data = state.reviewData;
-  const container = document.getElementById('reviewContent');
-  let html = '';
-  for (const cat of Object.keys(data)) {
-    html += `<div class="review-cat-title">${cat}</div>`;
-    html += '<div class="review-sub-grid">';
-    for (const sub of Object.keys(data[cat])) {
-      const info = data[cat][sub];
-      const avg = info.avg_score;
-      const statusCls = avg >= 7 ? 'status-high' : avg >= 6 ? 'status-mid' : 'status-low';
-      const avgColor = avg >= 7 ? 'var(--green)' : avg >= 6 ? 'var(--amber)' : 'var(--red)';
-      html += `
-        <div class="review-sub-card ${statusCls}" onclick="drillIntoSub('${cat.replace(/'/g, "\\'")}', '${sub.replace(/'/g, "\\'")}')">
-          <div class="rsc-name">${sub}</div>
-          <div class="rsc-stats">
-            <span>练习 ${info.count} 句</span>
-            <span class="rsc-avg" style="color:${avgColor}">均分 ${avg}</span>
+function renderSmallDrawerContent(data) {
+  const container = document.getElementById('drawerSmallContent');
+  const types = Object.keys(data);
+  if (!types.length) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">&#128221;</div><p>暂无小作文练习记录</p></div>';
+    return;
+  }
+
+  // Filter
+  let filterHtml = '<div class="drawer-filter"><select onchange="filterSmallDrawer(this.value)"><option value="">全部图表类型</option>';
+  types.forEach(t => { filterHtml += `<option value="${t}" ${state.drawerFilter === t ? 'selected' : ''}>${t}</option>`; });
+  filterHtml += '</select></div>';
+
+  const displayTypes = state.drawerFilter ? types.filter(t => t === state.drawerFilter) : types;
+
+  let html = filterHtml;
+  for (const ct of displayTypes) {
+    const info = data[ct];
+    const avg = info.avg_score;
+    const avgColor = avg >= 7 ? 'var(--green)' : avg >= 6 ? 'var(--amber)' : 'var(--red)';
+    const isExpanded = state.drawerExpandedType === ct;
+
+    html += `<div class="drawer-type-card" onclick="toggleDrawerType('${ct.replace(/'/g, "\\'")}')">
+      <div class="drawer-type-name">${ct}</div>
+      <div class="drawer-type-stats">
+        <span>练习 ${info.count} 句</span>
+        <span style="font-weight:700; color:${avgColor}">均分 ${avg}</span>
+      </div>
+    </div>`;
+
+    if (isExpanded && info.records) {
+      html += '<div class="drawer-records">';
+      for (const r of info.records) {
+        const sc = parseFloat(r.score) || 0;
+        const scoreColor = sc >= 7 ? 'var(--green)' : sc >= 6 ? 'var(--amber)' : 'var(--red)';
+        const date = new Date(r.timestamp).toLocaleString('zh-CN', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+        html += `<div class="drawer-record" onclick="event.stopPropagation(); toggleDrawerRecordDetail(this)">
+          <div class="dr-top">
+            <span class="dr-score" style="color:${scoreColor}">${r.score || '-'}</span>
+            <span class="dr-date">${date}</span>
+          </div>
+          <div class="dr-cn">${r.target_chinese || ''}</div>
+          <div class="drawer-record-detail">
+            <div style="font-size:12px; color:var(--text2); margin-bottom:6px;">你的翻译：${r.user_translation || ''}</div>
+            ${r.feedback ? renderFeedbackCard(Object.assign({}, r.feedback, { score: r.feedback.score || r.score }), { reviewPrompt: '', nextBtn: false }) : ''}
+            <button class="skip-btn" style="margin-top:6px; font-size:11px; color:var(--red);" onclick="event.stopPropagation(); deleteSmallReview('${r.id}')">删除</button>
           </div>
         </div>`;
+      }
+      html += '</div>';
     }
-    html += '</div>';
   }
   container.innerHTML = html;
 }
 
-function drillIntoSub(cat, sub) {
-  state.reviewDrilldown = { category: cat, subcategory: sub };
-  renderReviewRecords();
+function filterSmallDrawer(val) {
+  state.drawerFilter = val;
+  state.drawerExpandedType = null;
+  loadDrawerContent();
+}
+
+function toggleDrawerType(ct) {
+  state.drawerExpandedType = state.drawerExpandedType === ct ? null : ct;
+  loadDrawerContent();
+}
+
+function toggleDrawerRecordDetail(el) {
+  el.querySelector('.drawer-record-detail').classList.toggle('open');
+}
+
+async function deleteSmallReview(id) {
+  if (!confirm('确认删除这条记录？')) return;
+  await API.post(`/api/writing/small/delete_practice/${id}`);
+  loadDrawerContent();
+}
+
+function renderBigDrawerContent(data) {
+  const container = document.getElementById('drawerBigContent');
+  if (!Object.keys(data).length) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">&#128221;</div><p>暂无大作文练习记录</p></div>';
+    return;
+  }
+  let html = '';
+  for (const cat of Object.keys(data)) {
+    for (const sub of Object.keys(data[cat])) {
+      const info = data[cat][sub];
+      const avg = info.avg_score;
+      const avgColor = avg >= 7 ? 'var(--green)' : avg >= 6 ? 'var(--amber)' : 'var(--red)';
+      html += `<div class="drawer-type-card" onclick="toggleBigDrawerSub(this)">
+        <div class="drawer-type-name">${cat} / ${sub}</div>
+        <div class="drawer-type-stats">
+          <span>练习 ${info.count} 句</span>
+          <span style="font-weight:700; color:${avgColor}">均分 ${avg}</span>
+        </div>
+      </div>
+      <div class="drawer-records" style="display:none;">`;
+      for (const r of info.records) {
+        const sc = parseFloat(r.score) || 0;
+        const scoreColor = sc >= 7 ? 'var(--green)' : sc >= 6 ? 'var(--amber)' : 'var(--red)';
+        const date = new Date(r.timestamp).toLocaleString('zh-CN', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+        html += `<div class="drawer-record" onclick="event.stopPropagation(); toggleDrawerRecordDetail(this)">
+          <div class="dr-top">
+            <span class="dr-score" style="color:${scoreColor}">${r.score || '-'}</span>
+            <span class="dr-date">${date}</span>
+          </div>
+          <div class="dr-cn">${r.target_chinese || ''}</div>
+          <div class="drawer-record-detail">
+            <div style="font-size:12px; color:var(--text2); margin-bottom:6px;">你的翻译：${r.user_translation || ''}</div>
+            ${r.feedback ? renderFeedbackCard(Object.assign({}, r.feedback, { score: r.feedback.score || r.score }), { reviewPrompt: '', nextBtn: false }) : ''}
+            <button class="skip-btn" style="margin-top:6px; font-size:11px; color:var(--red);" onclick="event.stopPropagation(); deleteBigReview('${r.id}')">删除</button>
+          </div>
+        </div>`;
+      }
+      html += '</div>';
+    }
+  }
+  container.innerHTML = html;
+}
+
+function toggleBigDrawerSub(el) {
+  const records = el.nextElementSibling;
+  if (records) records.style.display = records.style.display === 'none' ? '' : 'none';
 }
 
 function renderReviewRecords() {
@@ -1100,7 +1741,7 @@ function renderReviewRecords() {
           <button class="fold-btn" onclick="event.stopPropagation(); closeReviewDetail(this)" title="收起">&#9650;</button>
           ${renderFeedbackCard(Object.assign({}, fb, { score: fb.score || r.score || '-' }), { reviewPrompt: '', nextBtn: false })}
           <button class="skip-btn" style="margin-top:8px; font-size:11px; color:var(--red);"
-            onclick="event.stopPropagation(); deleteReview('${r.id}')">删除</button>
+            onclick="event.stopPropagation(); deleteBigReview('${r.id}')">删除</button>
         </div>
       </div>`;
   }
@@ -1125,35 +1766,13 @@ function backToReviewGrid() {
   renderReviewGrid();
 }
 
-async function deleteReview(id) {
+async function deleteBigReview(id) {
   if (!confirm('确认删除这条记录？')) return;
   await API.post(`/api/writing/delete_practice/${id}`);
-  const data = await API.get('/api/writing/practice_history');
-  state.reviewData = data;
-  if (state.reviewDrilldown) {
-    const dd = state.reviewDrilldown;
-    if (data[dd.category] && data[dd.category][dd.subcategory]) {
-      renderReviewRecords();
-    } else {
-      state.reviewDrilldown = null;
-      if (Object.keys(data).length) {
-        renderReviewGrid();
-      } else {
-        document.getElementById('reviewContent').innerHTML =
-          '<div class="empty-state"><div class="empty-icon">&#128221;</div><p>暂无练习记录，去实战批改中积累吧</p></div>';
-      }
-    }
-  } else {
-    if (Object.keys(data).length) {
-      renderReviewGrid();
-    } else {
-      document.getElementById('reviewContent').innerHTML =
-        '<div class="empty-state"><div class="empty-icon">&#128221;</div><p>暂无练习记录，去实战批改中积累吧</p></div>';
-    }
-  }
+  loadDrawerContent();
 }
 
-/* ---- Init ---- */
+/* ==================== Init ==================== */
 (async function init() {
   const tk = localStorage.getItem('authToken');
   if (!tk) { window.location.href = '/login'; return; }
@@ -1162,7 +1781,7 @@ async function deleteReview(id) {
     const d = await res.json();
     if (!d.valid) { window.location.href = '/login'; return; }
   } catch (e) { window.location.href = '/login'; return; }
-  await loadCategories();
+  // Start at entry view (default visible)
 })();
 </script>
 </body>
