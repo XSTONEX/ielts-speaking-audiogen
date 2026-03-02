@@ -97,7 +97,7 @@ textarea, input { font-family: var(--serif); }
 /* ==================== Small Detail View ==================== */
 .question-area { margin-bottom: 20px; }
 .chart-subtype-badge { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; background: #f0f9ff; color: var(--accent); margin-top: 8px; }
-.question-text { font-size: 14px; line-height: 1.7; color: var(--text); padding: 14px; background: var(--amber-light); border-radius: 8px; border-left: 3px solid var(--amber); margin-top: 12px; }
+.question-text { font-size: 16px; font-weight: 700; line-height: 1.7; color: var(--text); padding: 14px; background: var(--amber-light); border-radius: 8px; border-left: 3px solid var(--amber); }
 
 /* Tab Bar */
 .tab-bar { display: flex; gap: 0; margin-bottom: 20px; border-bottom: 2px solid var(--border); }
@@ -106,11 +106,25 @@ textarea, input { font-family: var(--serif); }
 .tab-btn:hover { color: var(--accent); }
 
 /* Image Upload Zone */
-.image-upload-zone { border: 2px dashed var(--border); border-radius: var(--radius); padding: 20px; text-align: center; cursor: pointer; transition: all .15s; min-height: 100px; display: flex; align-items: center; justify-content: center; background: #f8fafc; position: relative; }
+.image-upload-zone { border: 2px dashed var(--border); border-radius: var(--radius); padding: 20px; text-align: center; cursor: pointer; transition: all .15s; min-height: 100px; display: flex; align-items: center; justify-content: center; background: #f8fafc; position: relative; margin-top: 12px; }
 .image-upload-zone:hover, .image-upload-zone.dragover { border-color: var(--accent); background: var(--accent-light); }
 .image-upload-zone.has-image { border-style: solid; padding: 8px; }
-.image-upload-zone img { max-width: 100%; max-height: 300px; border-radius: 8px; }
+.image-upload-zone img { max-width: 100%; border-radius: 8px; cursor: pointer; }
+
+/* Resizable image container */
+.image-resizable-container { resize: both; overflow: hidden; display: inline-block; border: 1px solid transparent; border-radius: 8px; max-width: 100%; min-width: 120px; min-height: 80px; }
+.image-resizable-container:hover { border-color: var(--border); }
+.image-resizable-container img { width: 100%; height: 100%; object-fit: contain; border-radius: 8px; cursor: pointer; }
+
+/* Lightbox overlay */
+.image-lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 2000; cursor: pointer; }
+.image-lightbox img { max-width: 92vw; max-height: 92vh; border-radius: 8px; box-shadow: 0 8px 40px rgba(0,0,0,0.4); cursor: default; }
+.image-lightbox-close { position: absolute; top: 20px; right: 24px; background: none; border: none; color: #fff; font-size: 32px; cursor: pointer; opacity: 0.7; transition: opacity .15s; }
+.image-lightbox-close:hover { opacity: 1; }
 .image-upload-hint { font-size: 13px; color: var(--text3); }
+.image-uploading { font-size: 13px; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+.image-uploading::before { content: ''; width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 .image-replace-btn { position: absolute; top: 8px; right: 8px; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border); background: rgba(255,255,255,.9); font-size: 11px; color: var(--text2); cursor: pointer; }
 .image-replace-btn:hover { border-color: var(--accent); color: var(--accent); }
 
@@ -120,7 +134,7 @@ textarea, input { font-family: var(--serif); }
 .section-annotation { font-size: 12px; color: var(--text3); font-weight: 400; }
 .sentence-card { padding: 16px 20px; border: 1.5px solid var(--border); border-radius: 10px; margin-bottom: 8px; transition: all .2s; cursor: default; }
 .sentence-card:hover { background: #f0f9ff; border-color: #bae6fd; }
-.sentence-card .tag-row { margin-bottom: 8px; display: flex; flex-wrap: wrap; gap: 4px; }
+.sentence-card .tag-row, .sentence-pair .tag-row { margin-bottom: 8px; display: flex; flex-wrap: wrap; gap: 4px; }
 .sentence-card .original { font-size: 14px; color: var(--text); line-height: 1.7; margin-bottom: 6px; }
 .sentence-card .translation { font-size: 13px; color: var(--text2); line-height: 1.6; }
 
@@ -475,30 +489,38 @@ textarea, input { font-family: var(--serif); }
     <div id="smallExampleList" class="sub-list"></div>
   </div>
 
-  <div id="smallDetailView" style="display:none;">
-    <div class="breadcrumb" id="smallDetailBreadcrumb"></div>
+  <div id="smallLearnView" style="display:none;">
+    <div class="breadcrumb" id="smallLearnBreadcrumb"></div>
     <button class="back-btn" onclick="backToExampleList()">&larr; 返回题目列表</button>
-
     <div class="question-area">
-      <div class="image-upload-zone" id="imageUploadZone">
+      <div id="smallLearnQuestionText" class="question-text"></div>
+      <div id="smallLearnChartSubtypeBadge" class="chart-subtype-badge"></div>
+      <div class="image-upload-zone" id="smallLearnImageZone">
         <span class="image-upload-hint">点击或拖拽上传题目图片</span>
       </div>
-      <div id="smallQuestionText" class="question-text"></div>
-      <div id="chartSubtypeBadge" class="chart-subtype-badge"></div>
     </div>
-
     <div class="practice-nav" style="margin-bottom:16px;">
-      <span class="practice-progress" id="smallExProgress">0 / 0</span>
-      <div class="progress-bar"><div class="progress-fill" id="smallExBar" style="width:0%"></div></div>
+      <span class="practice-progress" id="smallLearnExProgress">0 / 0</span>
+      <div class="progress-bar"><div class="progress-fill" id="smallLearnExBar" style="width:0%"></div></div>
     </div>
-
-    <div class="tab-bar">
-      <button class="tab-btn active" data-tab="learn" onclick="switchSmallTab('learn')">学习</button>
-      <button class="tab-btn" data-tab="practice" onclick="switchSmallTab('practice')">实战</button>
-    </div>
-
     <div id="smallLearnContent"></div>
-    <div id="smallPracticeContent" style="display:none;"></div>
+  </div>
+
+  <div id="smallPracticeView" style="display:none;">
+    <div class="breadcrumb" id="smallPracticeBreadcrumb"></div>
+    <button class="back-btn" onclick="backToExampleList()">&larr; 返回题目列表</button>
+    <div class="question-area">
+      <div id="smallPracticeQuestionText" class="question-text"></div>
+      <div id="smallPracticeChartSubtypeBadge" class="chart-subtype-badge"></div>
+      <div class="image-upload-zone" id="smallPracticeImageZone">
+        <span class="image-upload-hint">点击或拖拽上传题目图片</span>
+      </div>
+    </div>
+    <div class="practice-nav" style="margin-bottom:16px;">
+      <span class="practice-progress" id="smallPracticeExProgress">0 / 0</span>
+      <div class="progress-bar"><div class="progress-fill" id="smallPracticeExBar" style="width:0%"></div></div>
+    </div>
+    <div id="smallPracticeContent"></div>
   </div>
 
   <!-- ==================== Big Essay Views (kept) ==================== -->
@@ -570,6 +592,12 @@ textarea, input { font-family: var(--serif); }
 <div id="drawerOverlay" class="drawer-overlay" onclick="toggleDrawer()"></div>
 <button class="review-fab" onclick="toggleDrawer()">&#128221; 复习</button>
 
+<!-- Image Lightbox -->
+<div id="imageLightbox" class="image-lightbox" style="display:none;" onclick="closeLightbox(event)">
+  <button class="image-lightbox-close" onclick="closeLightbox(event)">&times;</button>
+  <img id="lightboxImg" src="" alt="大图查看">
+</div>
+
 <script>
 const API = {
   headers() {
@@ -606,7 +634,6 @@ let state = {
     currentTypeData: null,
     currentExampleIdx: null,
     exampleData: null,
-    activeTab: 'learn',
     correctionResult: null,
     userEssay: '',
     activeSentIdx: -1,
@@ -624,7 +651,6 @@ let state = {
 function resetSmallState() {
   state.small.exampleData = null;
   state.small.correctionResult = null;
-  state.small.activeTab = 'learn';
   state.small.userEssay = '';
   state.small.activeSentIdx = -1;
   state.small.sentResults = {};
@@ -633,7 +659,7 @@ function resetSmallState() {
 
 /* ==================== View Switching ==================== */
 const ALL_VIEWS = ['entryView','directoryView','learningView','practiceView',
-                   'smallChartTypesView','smallExampleListView','smallDetailView'];
+                   'smallChartTypesView','smallExampleListView','smallLearnView','smallPracticeView'];
 
 function switchView(view) {
   ALL_VIEWS.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
@@ -710,8 +736,8 @@ async function enterChartType(typeIdx) {
         </div>
       </div>
       <div class="sub-actions">
-        <button class="mode-btn learn" onclick="enterSmallExample(${typeIdx}, ${i}, 'learn')">学习</button>
-        <button class="mode-btn practice" onclick="enterSmallExample(${typeIdx}, ${i}, 'practice')">实战</button>
+        <button class="mode-btn learn" onclick="enterSmallLearning(${typeIdx}, ${i})">学习</button>
+        <button class="mode-btn practice" onclick="enterSmallPractice(${typeIdx}, ${i})">实战</button>
       </div>
     </div>`;
   }).join('');
@@ -725,42 +751,53 @@ function backToChartTypes() {
   switchView('smallChartTypesView');
 }
 
-/* ==================== Small Essay: Detail View ==================== */
-async function enterSmallExample(typeIdx, exIdx, mode) {
+/* ==================== Small Essay: View Entry ==================== */
+function renderSmallQuestionArea(prefix) {
+  const data = state.small.exampleData;
+  if (!data) return;
+  document.getElementById(prefix + 'QuestionText').textContent = data.question;
+  document.getElementById(prefix + 'ChartSubtypeBadge').textContent = data.chart_subtype;
+  renderImageZone(prefix + 'ImageZone');
+}
+
+function renderSmallBreadcrumb(prefix, suffix) {
+  const data = state.small.exampleData;
+  const ti = state.small.currentTypeIdx;
+  document.getElementById(prefix + 'Breadcrumb').innerHTML =
+    `<span onclick="switchView('smallChartTypesView')">小作文仿写</span><span class="sep">/</span><span onclick="enterChartType(${ti})">${data.chart_type}</span><span class="sep">/</span><span class="current">${data.name}${suffix ? ' · ' + suffix : ''}</span>`;
+}
+
+async function enterSmallLearning(typeIdx, exIdx) {
   resetSmallState();
   state.small.currentTypeIdx = typeIdx;
   state.small.currentExampleIdx = exIdx;
-
   const data = await API.get(`/api/writing/small/example/${typeIdx}/${exIdx}`);
   state.small.exampleData = data;
-
-  const ctName = data.chart_type;
-  document.getElementById('smallDetailBreadcrumb').innerHTML =
-    `<span onclick="switchView('smallChartTypesView')">小作文仿写</span><span class="sep">/</span><span onclick="enterChartType(${typeIdx})">${ctName}</span><span class="sep">/</span><span class="current">${data.name}</span>`;
-
-  document.getElementById('smallQuestionText').textContent = data.question;
-  document.getElementById('chartSubtypeBadge').textContent = data.chart_subtype;
-
-  renderImageZone();
+  renderSmallBreadcrumb('smallLearn', '');
+  renderSmallQuestionArea('smallLearn');
   renderSmallLearnContent();
+  updateSmallProgress();
+  setupImageUpload('smallLearnImageZone');
+  switchView('smallLearnView');
+}
+
+async function enterSmallPractice(typeIdx, exIdx) {
+  resetSmallState();
+  state.small.currentTypeIdx = typeIdx;
+  state.small.currentExampleIdx = exIdx;
+  const data = await API.get(`/api/writing/small/example/${typeIdx}/${exIdx}`);
+  state.small.exampleData = data;
+  renderSmallBreadcrumb('smallPractice', '实战');
+  renderSmallQuestionArea('smallPractice');
   renderSmallPracticeContent();
   updateSmallProgress();
-  switchSmallTab(mode || 'learn');
-  setupImageUpload();
-  switchView('smallDetailView');
+  setupImageUpload('smallPracticeImageZone');
+  switchView('smallPracticeView');
 }
 
 function backToExampleList() {
   resetSmallState();
   enterChartType(state.small.currentTypeIdx);
-}
-
-function switchSmallTab(tab) {
-  state.small.activeTab = tab;
-  document.querySelectorAll('#smallDetailView .tab-btn').forEach(b =>
-    b.classList.toggle('active', b.dataset.tab === tab));
-  document.getElementById('smallLearnContent').style.display = tab === 'learn' ? '' : 'none';
-  document.getElementById('smallPracticeContent').style.display = tab === 'practice' ? '' : 'none';
 }
 
 /* ==================== Small Essay: Progress ==================== */
@@ -772,10 +809,14 @@ function updateSmallProgress() {
   const exProg = prog && prog.examples ? prog.examples[String(ei)] : null;
   const total = exProg ? exProg.total : 0;
   const done = exProg ? exProg.done : 0;
-  const el = document.getElementById('smallExProgress');
-  const bar = document.getElementById('smallExBar');
-  if (el) el.textContent = `${done} / ${total}`;
-  if (bar) bar.style.width = total ? (done / total * 100) + '%' : '0%';
+  const text = `${done} / ${total}`;
+  const pct = total ? (done / total * 100) + '%' : '0%';
+  ['smallLearn', 'smallPractice'].forEach(prefix => {
+    const el = document.getElementById(prefix + 'ExProgress');
+    const bar = document.getElementById(prefix + 'ExBar');
+    if (el) el.textContent = text;
+    if (bar) bar.style.width = pct;
+  });
 }
 
 async function refreshSmallProgress() {
@@ -793,21 +834,72 @@ function getSmallCompletedSentences() {
 }
 
 /* ==================== Small Essay: Image Upload ==================== */
-function renderImageZone() {
-  const zone = document.getElementById('imageUploadZone');
+let _resizeTimeout = null;
+function setupResizeObserver(container, sizeKey) {
+  const observer = new ResizeObserver(entries => {
+    for (const entry of entries) {
+      const { width, height } = entry.contentRect;
+      clearTimeout(_resizeTimeout);
+      _resizeTimeout = setTimeout(() => {
+        localStorage.setItem(sizeKey, JSON.stringify({ width: Math.round(width), height: Math.round(height) }));
+      }, 300);
+    }
+  });
+  observer.observe(container);
+}
+
+function renderImageZone(zoneId) {
+  const zone = document.getElementById(zoneId);
+  if (!zone) return;
   const data = state.small.exampleData;
   if (data && data.image_path) {
+    const ti = state.small.currentTypeIdx;
+    const ei = state.small.currentExampleIdx;
+    const sizeKey = `small_img_size_${ti}_${ei}`;
+    const savedSize = localStorage.getItem(sizeKey);
+    let styleAttr = 'width:100%;';
+    if (savedSize) {
+      try { const s = JSON.parse(savedSize); styleAttr = `width:${s.width}px; height:${s.height}px;`; } catch(e) {}
+    }
     zone.classList.add('has-image');
-    zone.innerHTML = `<img src="${data.image_path}" alt="题目图片"><button class="image-replace-btn" onclick="event.stopPropagation(); triggerImageUpload()">替换图片</button>`;
+    zone.innerHTML = `<div class="image-resizable-container" id="${zoneId}Resizable" style="${styleAttr}">
+        <img src="${data.image_path}" alt="题目图片" onclick="event.stopPropagation(); openLightbox('${data.image_path}')">
+      </div>
+      <button class="image-replace-btn" onclick="event.stopPropagation(); triggerImageUpload()">替换图片</button>`;
+    const container = document.getElementById(zoneId + 'Resizable');
+    if (container) setupResizeObserver(container, sizeKey);
   } else {
     zone.classList.remove('has-image');
     zone.innerHTML = '<span class="image-upload-hint">点击或拖拽上传题目图片</span>';
   }
 }
 
+function openLightbox(src) {
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('imageLightbox').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox(event) {
+  if (event && event.target && event.target.id === 'lightboxImg') return;
+  document.getElementById('imageLightbox').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const overlay = document.getElementById('imageLightbox');
+    if (overlay && overlay.style.display !== 'none') {
+      overlay.style.display = 'none';
+      document.body.style.overflow = '';
+    }
+  }
+});
+
 let _imageInput = null;
-function setupImageUpload() {
-  const zone = document.getElementById('imageUploadZone');
+function setupImageUpload(zoneId) {
+  const zone = document.getElementById(zoneId);
+  if (!zone) return;
   if (!_imageInput) {
     _imageInput = document.createElement('input');
     _imageInput.type = 'file';
@@ -818,7 +910,7 @@ function setupImageUpload() {
   }
 
   zone.onclick = (e) => {
-    if (e.target.classList.contains('image-replace-btn')) return;
+    if (e.target.classList.contains('image-replace-btn') || e.target.closest('.image-resizable-container')) return;
     _imageInput.click();
   };
   zone.ondragover = (e) => { e.preventDefault(); zone.classList.add('dragover'); };
@@ -835,6 +927,15 @@ function triggerImageUpload() {
 }
 
 async function uploadImage(file) {
+  // 显示上传中状态
+  ['smallLearnImageZone', 'smallPracticeImageZone'].forEach(id => {
+    const zone = document.getElementById(id);
+    if (zone) {
+      zone.classList.remove('has-image');
+      zone.innerHTML = '<span class="image-uploading">上传中...</span>';
+    }
+  });
+
   const formData = new FormData();
   formData.append('image', file);
   formData.append('type_idx', state.small.currentTypeIdx);
@@ -849,12 +950,19 @@ async function uploadImage(file) {
     const data = await resp.json();
     if (data.success) {
       state.small.exampleData.image_path = data.image_url;
-      renderImageZone();
+      const sizeKey = `small_img_size_${state.small.currentTypeIdx}_${state.small.currentExampleIdx}`;
+      localStorage.removeItem(sizeKey);
+      renderImageZone('smallLearnImageZone');
+      renderImageZone('smallPracticeImageZone');
     } else {
       alert(data.error || '上传失败');
+      renderImageZone('smallLearnImageZone');
+      renderImageZone('smallPracticeImageZone');
     }
   } catch (e) {
     alert('上传失败，请重试');
+    renderImageZone('smallLearnImageZone');
+    renderImageZone('smallPracticeImageZone');
   }
 }
 
@@ -883,16 +991,19 @@ function renderSmallLearnContent() {
   const data = state.small.exampleData;
   if (!data) return;
   let html = '';
+  let flatIdx = 0;
   for (const section of data.sections) {
     html += `<div class="section-block">
       <div class="section-title">${section.name}${section.annotation ? `<span class="section-annotation">[${section.annotation}]</span>` : ''}</div>`;
     for (const sent of section.sentences) {
       const tagHtml = sent.tags.map(t => `<span class="sentence-tag ${getTagClass(t)}">${t}</span>`).join('');
-      html += `<div class="sentence-card">
+      html += `<div class="sentence-pair">
         ${tagHtml ? `<div class="tag-row">${tagHtml}</div>` : ''}
-        <div class="original">${sent.original}</div>
-        <div class="translation">${sent.translation}</div>
+        <div class="sentence-cn">${sent.translation}</div>
+        <div class="sentence-en">${sent.original}</div>
+        <button class="quick-practice-btn" onclick="event.stopPropagation(); quickPracticeSmall(${flatIdx})" title="练习此句">&#9998; 练</button>
       </div>`;
+      flatIdx++;
     }
     html += '</div>';
   }
@@ -904,6 +1015,16 @@ function renderSmallLearnContent() {
       </tbody></table></div>`;
   }
   document.getElementById('smallLearnContent').innerHTML = html;
+}
+
+function quickPracticeSmall(flatIdx) {
+  renderSmallBreadcrumb('smallPractice', '实战');
+  renderSmallQuestionArea('smallPractice');
+  renderSmallPracticeContent();
+  updateSmallProgress();
+  setupImageUpload('smallPracticeImageZone');
+  switchView('smallPracticeView');
+  activateSmallSentence(flatIdx);
 }
 
 /* ==================== Small Essay: Practice Content ==================== */
@@ -1259,7 +1380,7 @@ async function quickPractice(exampleIdx, sentenceIdx) {
     }
   } catch(e) { state.historySentences = {}; }
   renderPractice();
-  switchView('practice');
+  switchView('practiceView');
 }
 
 function renderPractice() {
