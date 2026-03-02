@@ -456,6 +456,13 @@ def small_upload_image():
 
     question_id = ex['id']
     img_dir = os.path.join(WRITING_IMAGES_DIR, question_id)
+    # 删除旧图片
+    if os.path.isdir(img_dir):
+        for old_file in os.listdir(img_dir):
+            try:
+                os.remove(os.path.join(img_dir, old_file))
+            except OSError:
+                pass
     os.makedirs(img_dir, exist_ok=True)
 
     filename = file.filename or 'image.png'
