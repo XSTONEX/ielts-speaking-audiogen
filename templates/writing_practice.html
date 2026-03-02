@@ -109,12 +109,7 @@ textarea, input { font-family: var(--serif); }
 .image-upload-zone { border: 2px dashed var(--border); border-radius: var(--radius); padding: 20px; text-align: center; cursor: pointer; transition: all .15s; min-height: 100px; display: flex; align-items: center; justify-content: center; background: #f8fafc; position: relative; margin-top: 12px; }
 .image-upload-zone:hover, .image-upload-zone.dragover { border-color: var(--accent); background: var(--accent-light); }
 .image-upload-zone.has-image { border-style: solid; padding: 8px; }
-.image-upload-zone img { max-width: 100%; border-radius: 8px; cursor: pointer; }
-
-/* Resizable image container */
-.image-resizable-container { resize: both; overflow: hidden; display: inline-block; border: 1px solid transparent; border-radius: 8px; max-width: 100%; min-width: 120px; min-height: 80px; }
-.image-resizable-container:hover { border-color: var(--border); }
-.image-resizable-container img { width: 100%; height: 100%; object-fit: contain; border-radius: 8px; cursor: pointer; }
+.image-upload-zone img { max-width: 100%; max-height: 400px; border-radius: 8px; cursor: pointer; }
 
 /* Lightbox overlay */
 .image-lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 2000; cursor: pointer; }
@@ -834,40 +829,14 @@ function getSmallCompletedSentences() {
 }
 
 /* ==================== Small Essay: Image Upload ==================== */
-let _resizeTimeout = null;
-function setupResizeObserver(container, sizeKey) {
-  const observer = new ResizeObserver(entries => {
-    for (const entry of entries) {
-      const { width, height } = entry.contentRect;
-      clearTimeout(_resizeTimeout);
-      _resizeTimeout = setTimeout(() => {
-        localStorage.setItem(sizeKey, JSON.stringify({ width: Math.round(width), height: Math.round(height) }));
-      }, 300);
-    }
-  });
-  observer.observe(container);
-}
-
 function renderImageZone(zoneId) {
   const zone = document.getElementById(zoneId);
   if (!zone) return;
   const data = state.small.exampleData;
   if (data && data.image_path) {
-    const ti = state.small.currentTypeIdx;
-    const ei = state.small.currentExampleIdx;
-    const sizeKey = `small_img_size_${ti}_${ei}`;
-    const savedSize = localStorage.getItem(sizeKey);
-    let styleAttr = 'width:100%;';
-    if (savedSize) {
-      try { const s = JSON.parse(savedSize); styleAttr = `width:${s.width}px; height:${s.height}px;`; } catch(e) {}
-    }
     zone.classList.add('has-image');
-    zone.innerHTML = `<div class="image-resizable-container" id="${zoneId}Resizable" style="${styleAttr}">
-        <img src="${data.image_path}" alt="题目图片" onclick="event.stopPropagation(); openLightbox('${data.image_path}')">
-      </div>
+    zone.innerHTML = `<img src="${data.image_path}" alt="题目图片" onclick="event.stopPropagation(); openLightbox('${data.image_path}')">
       <button class="image-replace-btn" onclick="event.stopPropagation(); triggerImageUpload()">替换图片</button>`;
-    const container = document.getElementById(zoneId + 'Resizable');
-    if (container) setupResizeObserver(container, sizeKey);
   } else {
     zone.classList.remove('has-image');
     zone.innerHTML = '<span class="image-upload-hint">点击或拖拽上传题目图片</span>';
@@ -910,7 +879,7 @@ function setupImageUpload(zoneId) {
   }
 
   zone.onclick = (e) => {
-    if (e.target.classList.contains('image-replace-btn') || e.target.closest('.image-resizable-container')) return;
+    if (zone.classList.contains('has-image')) return;
     _imageInput.click();
   };
   zone.ondragover = (e) => { e.preventDefault(); zone.classList.add('dragover'); };
@@ -950,8 +919,6 @@ async function uploadImage(file) {
     const data = await resp.json();
     if (data.success) {
       state.small.exampleData.image_path = data.image_url;
-      const sizeKey = `small_img_size_${state.small.currentTypeIdx}_${state.small.currentExampleIdx}`;
-      localStorage.removeItem(sizeKey);
       renderImageZone('smallLearnImageZone');
       renderImageZone('smallPracticeImageZone');
     } else {
