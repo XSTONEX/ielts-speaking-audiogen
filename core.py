@@ -9,6 +9,7 @@ import hashlib
 import shutil
 import threading
 import requests
+import yaml
 from datetime import datetime, timedelta
 from functools import wraps
 from flask import request, jsonify
@@ -45,6 +46,7 @@ WRITING_MD_FILE = 'writing_correction/resource/九分学长雅思写作论证块
 WRITING_SMALL_MD_FILE = 'writing_correction/resource/小作文仿写.md'
 WRITING_IMAGES_DIR = 'writing_correction/images'
 LISTENING_REVIEW_DIR = 'listening_review'
+PROMPTS_DIR = os.path.join(os.path.dirname(__file__), 'prompts')
 
 # 代理配置（用于访问需要翻墙的外部 API，如 Groq）
 PROXY_URL = os.getenv('PROXY_URL', '').strip()
@@ -55,6 +57,15 @@ def get_proxies():
     if PROXY_URL:
         return {'http': PROXY_URL, 'https': PROXY_URL}
     return None
+
+
+# ==================== Prompt 管理 ====================
+
+def load_prompt(name):
+    """从 prompts/ 目录加载指定的 YAML prompt 配置（每次读取磁盘，支持热加载）"""
+    filepath = os.path.join(PROMPTS_DIR, f'{name}.yaml')
+    with open(filepath, 'r', encoding='utf-8') as f:
+        return yaml.safe_load(f)
 
 
 # ==================== 目录初始化 ====================

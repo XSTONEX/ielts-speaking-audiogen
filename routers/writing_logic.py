@@ -9,7 +9,7 @@ from flask import Blueprint, request, jsonify, send_file, send_from_directory
 from core import (
     WRITING_CORRECTION_DIR, WRITING_DATA_DIR, WRITING_MD_FILE,
     WRITING_SMALL_MD_FILE, WRITING_IMAGES_DIR,
-    is_token_valid, load_tokens
+    is_token_valid, load_tokens, load_prompt
 )
 
 writing_bp = Blueprint('writing', __name__)
@@ -516,63 +516,28 @@ def small_writing_correct():
     if not translation.strip():
         return jsonify({'error': '翻译内容不能为空'}), 400
 
-    system_prompt = (
-        "你现在是一位现任的雅思官方写作考官。学生正在进行雅思 Task 1（小作文）的句子级或段落级仿写练习。\n"
-        "请严格参考雅思官方评分标准（Task Achievement, Coherence and Cohesion, Lexical Resource, Grammatical Range and Accuracy）进行批改。\n"
-        "你需要效仿官方考官提供的范文及考官评语的专业度和严谨性。\n\n"
-        "你的输入数据：\n"
-        "- question_text: 原题描述\n"
-        "- target_chinese: 学生需要翻译/表达的目标中文含义\n"
-        "- user_translation: 学生的实际英文作答\n"
-        "- standard_reference: 官方标准范文（7.0分及以上水平，供对标对照）\n\n"
-        "评分与批改逻辑：\n"
-        "1. Task Achievement (TA)：评估学生是否精准、完整地传达了 target_chinese 中的核心数据对比或特征（如极端数值、趋势变化等）。如果遗漏关键数据或逻辑歪曲，扣分。\n"
-        "2. Lexical Resource (LR)：关注拼写错误（必须指出并纠正）、用词的准确性和地道性。如果使用了非常精准的图表描述词汇，给予肯定；如果词汇单一或不当，提供符合 7.0 分标准的平替。\n"
-        "3. Grammatical Range and Accuracy (GRA)：严抓语法错误（时态、单复数、冠词、句型结构）。参考官方考官批改模式，明确指出错在哪里，并给出正确的修改形式及简要的语法规则解释。\n"
-        "4. 综合判定：如果学生的作答在 TA、LR、GRA 均表现出色，且意思与 standard_reference 高度一致，无论句型是否绝对一致，均可给出 7.0 分；若存在拼写或较明显的语法瑕疵，降至 6.0-6.5。\n\n"
-        "请严格输出以下 JSON 结构（直接返回 JSON，不要带有 markdown 代码块标记）：\n"
-        "{\n"
-        '  "score": "基于雅思官方标准的预估评分，如 7.0, 6.5, 6.0 等",\n'
-        '  "feedback_summary": "50字左右的综合考官评语，明确指出 TA/CC/LR/GRA 中的亮点与致命丢分点。",\n'
-        '  "grammar_corrections": [\n'
-        '    {\n'
-        '      "original": "学生的错误原表达（包含拼写错别字、语法错误；如果没有错误请留空）",\n'
-        '      "corrected": "纠正后的正确表达",\n'
-        '      "reason": "官方视角的错因分析（如：主谓一致错误、图表描述过去时态错误等）"\n'
-        '    }\n'
-        '  ],\n'
-        '  "vocabulary_upgrade": [\n'
-        '    {\n'
-        '      "original": "学生使用的普通或不地道词汇",\n'
-        '      "replacement": "更精准的学术/图表描述词汇（参考 7.0 分词汇库）",\n'
-        '      "reason": "为什么替换词更符合雅思 Task 1 的语境或搭配"\n'
-        '    }\n'
-        '  ],\n'
-        '  "native_version": "此处直接填入输入数据中的 standard_reference，作为官方高分示范"\n'
-        "}"
-    )
-
-    user_prompt = (
-        f"【原题描述】\n{question}\n\n"
-        f"【目标中文含义】\n{target}\n\n"
-        f"【官方标准范文】\n{reference}\n\n"
-        f"【学生英文作答】\n{translation}"
+    cfg = load_prompt('writing_small_correct')
+    user_prompt = cfg['user_prompt'].format(
+        question=question,
+        target=target,
+        reference=reference,
+        translation=translation,
     )
 
     try:
         api_key = os.getenv('DEER_API_KEY')
         resp = requests.post(
-            'https://api.deerapi.com/v1/chat/completions',
+            cfg['api_url'],
             headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
             json={
-                'model': 'gpt-4o-mini',
+                'model': cfg['model'],
                 'messages': [
-                    {'role': 'system', 'content': system_prompt},
+                    {'role': 'system', 'content': cfg['system_prompt']},
                     {'role': 'user', 'content': user_prompt}
                 ],
-                'temperature': 0.3
+                'temperature': cfg['temperature']
             },
-            timeout=30
+            timeout=cfg.get('timeout', 30)
         )
         resp.raise_for_status()
         content = resp.json()['choices'][0]['message']['content'].strip()
@@ -760,44 +725,28 @@ def writing_correct():
     if not translation.strip():
         return jsonify({'error': '翻译内容不能为空'}), 400
 
-    system_prompt = (
-        "你是一位专业的雅思写作考官。你的点评客观、直接、切中要害，不带任何主观情绪色彩。\n\n"
-        "【评分与评估重点】\n"
-        "1. **评分基准（满分7.0）**：以用户提供的【标准参考答案】作为 7.0 分的基准。如果用户的翻译在准确度与地道倾向上与参考答案差别不大，请直接给 7.0 分。如果有语法错误、逻辑不通或明显的中式英语，再酌情减分。\n"
-        "2. **客观纠错**：直接指出语法与拼写错误，无需任何客套话，该怎么改就怎么改。\n"
-        "3. **深度拓展**：提供至少3组高阶同义词替换建议及中文解释，帮助用户丰富词汇库。\n"
-        "4. **贴近原句修改**：这是最重要的要求。在最终示范中，必须先列出标准答案，然后提供一个【基于用户原句结构】的 7分优化版。尽量保留用户原本的语法框架，只修正错误和替换不地道的表达，以便用户对照理解。\n\n"
-        "【强制要求】\n必须且仅以纯 JSON 格式输出，而且以下结构必须全部包含，不要包含 Markdown 符号或额外解释，结构如下：\n"
-        "{\n"
-        '  "score": "预估单句分数 (以参考例句为7.0基准，如 5.5, 6.0, 6.5, 7.0)",\n'
-        '  "feedback_summary": "客观直接的一句话核心评价（一针见血地指出问题或亮点）",\n'
-        '  "grammar_corrections": [{"original": "原词", "corrected": "修改后", "reason": "客观修改原因"}],\n'
-        '  "vocabulary_upgrade": "必须写出具体的英文替换词！格式示范：\'1. [原英文] -> [高阶英文] (中文解释与适用语境)\'。提供至少3组同义词替换及句型优化建议，切忌只写中文解释不写英文单词！",\n'
-        '  "native_version": "1. 标准答案：[填入标准参考答案]\\n\\n2. 你的结构优化版：[在保留用户原句语法框架的基础上，修改而成的 7.0 分地道表达]"\n'
-        "}"
+    cfg = load_prompt('writing_correct')
+    user_prompt = cfg['user_prompt'].format(
+        question=question,
+        target=target,
+        reference=reference,
+        translation=translation,
     )
-    
-    user_prompt = (
-        f"【雅思例题】\n{question}\n\n"
-        f"【目标中文句】\n{target}\n\n"
-        f"【标准参考答案】\n{reference}\n\n"  # 【新增】将标准答案喂给 AI 当基准
-        f"【用户英文翻译】\n{translation}"
-    )
-    
+
     try:
         api_key = os.getenv('DEER_API_KEY')
         resp = requests.post(
-            'https://api.deerapi.com/v1/chat/completions',
+            cfg['api_url'],
             headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
             json={
-                'model': 'gpt-4o-mini',
+                'model': cfg['model'],
                 'messages': [
-                    {'role': 'system', 'content': system_prompt},
+                    {'role': 'system', 'content': cfg['system_prompt']},
                     {'role': 'user', 'content': user_prompt}
                 ],
-                'temperature': 0.3
+                'temperature': cfg['temperature']
             },
-            timeout=30
+            timeout=cfg.get('timeout', 30)
         )
         resp.raise_for_status()
         content = resp.json()['choices'][0]['message']['content'].strip()
