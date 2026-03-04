@@ -42,7 +42,7 @@ system_prompt: |
         "reason": "为什么替换词更符合雅思 Task 1 的语境或搭配"
       }}
     ],
-    "native_version": "此处直接填入输入数据中的 standard_reference，作为官方高分示范"
+    "native_version": "1. 标准答案：[填入标准参考答案]\n\n2. 你的结构优化版：[在保留用户原句语法框架的基础上，修改而成的 7.0 分地道表达]"
   }}
 
 user_prompt: |
