@@ -207,8 +207,12 @@ textarea, input { font-family: var(--serif); }
 .sub-card::before { content: ''; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(90deg, #e0f2fe 0%, #bae6fd 100%); z-index: -1; transition: clip-path .4s ease; clip-path: var(--prog-clip, inset(0 100% 0 0)); }
 .sub-card:hover { border-color: var(--accent); }
 .sub-name { font-weight: 600; font-size: 15px; }
-.sub-meta { font-size: 11px; color: var(--text3); display: flex; gap: 8px; margin-top: 2px; }
+.sub-meta { font-size: 11px; color: var(--text3); display: flex; gap: 8px; margin-top: 6px; }
 .sub-actions { display: flex; gap: 6px; }
+
+/* Small Essay Example List - 3 column layout */
+#smallExampleList { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+#smallExampleList .sub-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mode-btn { padding: 5px 12px; border-radius: 6px; border: 1.5px solid var(--border); font-size: 12px; background: var(--card); color: var(--text2); transition: all .15s; }
 .mode-btn:hover { border-color: var(--accent); color: var(--accent); }
 .mode-btn.learn:hover { border-color: var(--green); color: var(--green); background: var(--green-light); }
@@ -428,6 +432,7 @@ textarea, input { font-family: var(--serif); }
   .entry-grid { grid-template-columns: 1fr; gap: 24px; }
   .cat-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
   .sub-list { grid-template-columns: 1fr; }
+  #smallExampleList { grid-template-columns: 1fr; }
   .sentence-grid.split { grid-template-columns: 1fr; }
   .practice-header { position: relative; }
   .chart-type-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
@@ -724,7 +729,7 @@ async function enterChartType(typeIdx) {
     const pct = exProg && exProg.total > 0 ? Math.round(exProg.done / exProg.total * 100) : 0;
     return `<div class="sub-card" style="--prog-clip: inset(0 ${100-pct}% 0 0);">
       <div style="flex:1; min-width:0;">
-        <div class="sub-name">${ex.name}</div>
+        <div class="sub-name" title="${ex.name}">${ex.name}</div>
         <div class="sub-meta">
           <span class="small-ex-badge">${ex.chart_subtype}</span>
           <span>${ex.sentence_count} 句${pct > 0 ? ' · ' + pct + '%' : ''}</span>
