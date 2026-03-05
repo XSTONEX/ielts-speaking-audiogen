@@ -1092,7 +1092,7 @@ function renderSmallPracticeContent() {
         return `<span class="sent-score ${cls}" onclick="event.stopPropagation(); showSmallHistoryFeedback(${i}, ${ri})">${rec.score}</span>`;
       }).join('');
     }
-    if (justSaved) {
+    if (justSaved && !(histRecords && histRecords.length)) {
       const v = parseFloat(res.score) || 0;
       const cls = v >= 7 ? 'high' : v >= 6 ? 'mid' : 'low';
       scoreHtml += `<span class="sent-score ${cls}">${res.score}</span>`;
@@ -1515,7 +1515,7 @@ function renderExercise() {
         return `<span class="sent-score ${cls}" onclick="event.stopPropagation(); showHistoryFeedback(${i}, ${ri})">${rec.score}</span>`;
       }).join('');
     }
-    if (justSaved) {
+    if (justSaved && !(histRecords && histRecords.length)) {
       const v = parseFloat(res.score) || 0;
       const cls = v >= 7 ? 'high' : v >= 6 ? 'mid' : 'low';
       scoreHtml += `<span class="sent-score ${cls}">${res.score}</span>`;
