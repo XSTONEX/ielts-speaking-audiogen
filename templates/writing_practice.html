@@ -158,38 +158,51 @@ textarea, input { font-family: var(--serif); }
 .small-editor-input { width: 100%; min-height: 140px; padding: 14px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 15px; line-height: 1.7; resize: vertical; outline: none; transition: border-color .15s; }
 .small-editor-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(2,132,199,.08); }
 
-/* ==================== Review Drawer ==================== */
-.review-drawer { position: fixed; top: 0; right: -420px; width: 400px; height: 100vh; background: var(--card); box-shadow: -4px 0 30px rgba(0,0,0,.1); z-index: 1000; transition: right .3s cubic-bezier(.4,0,.2,1); display: flex; flex-direction: column; overflow: hidden; }
-.review-drawer.open { right: 0; }
-.drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.3); z-index: 999; opacity: 0; pointer-events: none; transition: opacity .3s; }
-.drawer-overlay.open { opacity: 1; pointer-events: auto; }
-.drawer-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
-.drawer-header h3 { font-size: 17px; font-weight: 700; }
-.drawer-close { background: none; border: none; font-size: 20px; color: var(--text3); cursor: pointer; padding: 4px; }
-.drawer-close:hover { color: var(--text); }
-.drawer-tabs { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-.drawer-tab { flex: 1; padding: 12px; text-align: center; border: none; background: transparent; font-size: 14px; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s; }
-.drawer-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-.drawer-body { flex: 1; overflow-y: auto; padding: 16px 20px; }
-.drawer-filter { margin-bottom: 12px; }
-.drawer-filter select { width: 100%; padding: 8px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; font-family: var(--serif); background: var(--card); color: var(--text); }
+/* ==================== Review Overlay (Full-screen) ==================== */
+.review-overlay { position: fixed; inset: 0; z-index: 1000; background: var(--card); display: flex; flex-direction: column; overflow: hidden; clip-path: circle(0% at calc(100% - 48px) calc(100% - 48px)); transition: clip-path .5s cubic-bezier(.4,0,.2,1); }
+.review-overlay.open { clip-path: circle(150% at calc(100% - 48px) calc(100% - 48px)); }
+.review-overlay-header { padding: 20px 40px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+.review-overlay-header h2 { font-size: 20px; font-weight: 700; }
+.review-overlay-close { background: none; border: none; font-size: 24px; color: var(--text3); cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: all .15s; }
+.review-overlay-close:hover { color: var(--text); background: var(--bg); }
+.review-overlay-tabs { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; padding: 0 40px; }
+.review-overlay-tab { padding: 12px 24px; border: none; background: transparent; font-size: 14px; font-weight: 600; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all .15s; }
+.review-overlay-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.review-overlay-tab:hover { color: var(--accent); }
+.review-overlay-body { flex: 1; overflow-y: auto; padding: 24px 40px; max-width: 900px; width: 100%; margin: 0 auto; }
 .review-fab { position: fixed; right: 24px; bottom: 24px; padding: 12px 20px; border-radius: 50px; background: var(--accent); color: #fff; border: none; font-size: 14px; font-weight: 600; box-shadow: var(--shadow-lg); cursor: pointer; z-index: 998; transition: transform .15s; }
 .review-fab:hover { transform: scale(1.05); }
 
-/* Drawer Record Cards */
-.drawer-type-card { padding: 14px; background: var(--card); border: 1.5px solid var(--border); border-radius: 10px; margin-bottom: 8px; cursor: pointer; transition: all .15s; }
-.drawer-type-card:hover { border-color: var(--accent); }
-.drawer-type-name { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
-.drawer-type-stats { font-size: 12px; color: var(--text2); display: flex; gap: 10px; }
-.drawer-records { padding-left: 0; margin-top: 8px; }
-.drawer-record { padding: 10px 12px; background: #f9fafb; border-radius: 8px; margin-bottom: 6px; cursor: pointer; transition: all .15s; }
-.drawer-record:hover { background: var(--accent-light); }
-.drawer-record .dr-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-.drawer-record .dr-score { font-weight: 700; font-size: 14px; }
-.drawer-record .dr-date { font-size: 11px; color: var(--text3); }
-.drawer-record .dr-cn { font-size: 12px; color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.drawer-record-detail { display: none; margin-top: 8px; }
-.drawer-record-detail.open { display: block; }
+/* Review Tree Nodes */
+.review-tree-l1 { margin-bottom: 16px; }
+.review-tree-l1-header { padding: 16px 20px; background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); cursor: pointer; transition: all .15s; display: flex; align-items: center; justify-content: space-between; }
+.review-tree-l1-header:hover { border-color: var(--accent); box-shadow: var(--shadow); }
+.review-tree-l1-name { font-size: 16px; font-weight: 700; }
+.review-tree-l1-stats { font-size: 12px; color: var(--text2); display: flex; gap: 10px; align-items: center; }
+.review-tree-l1-toggle { font-size: 16px; color: var(--text3); transition: transform .2s; }
+.review-tree-l1-toggle.open { transform: rotate(180deg); }
+.review-tree-l1-body { padding-left: 20px; margin-top: 8px; }
+
+.review-tree-l2 { margin-bottom: 10px; }
+.review-tree-l2-header { padding: 12px 16px; background: #f9fafb; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; transition: all .15s; display: flex; align-items: center; justify-content: space-between; }
+.review-tree-l2-header:hover { border-color: var(--accent); background: var(--accent-light); }
+.review-tree-l2-name { font-size: 14px; font-weight: 600; }
+.review-tree-l2-stats { font-size: 12px; color: var(--text2); display: flex; gap: 8px; }
+.review-tree-l2-toggle { font-size: 14px; color: var(--text3); transition: transform .2s; }
+.review-tree-l2-toggle.open { transform: rotate(180deg); }
+.review-tree-l2-body { padding-left: 16px; margin-top: 6px; }
+
+.review-tree-l3 { margin-bottom: 8px; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; }
+.review-tree-l3-header { font-size: 13px; color: var(--text); font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.review-tree-l3-section { font-size: 11px; color: var(--text3); font-weight: 400; }
+.review-tree-record { padding: 8px 12px; background: #f9fafb; border-radius: 6px; margin-bottom: 4px; cursor: pointer; transition: all .15s; }
+.review-tree-record:hover { background: var(--accent-light); }
+.review-tree-record .rtr-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
+.review-tree-record .rtr-score { font-weight: 700; font-size: 14px; }
+.review-tree-record .rtr-date { font-size: 11px; color: var(--text3); }
+.review-tree-record .rtr-trans { font-size: 12px; color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.review-tree-record-detail { display: none; margin-top: 8px; }
+.review-tree-record-detail.open { display: block; }
 
 /* ==================== Category Grid (Big Essay - kept) ==================== */
 .cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
@@ -437,7 +450,6 @@ textarea, input { font-family: var(--serif); }
   .practice-header { position: relative; }
   .chart-type-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
   .example-list-grid { grid-template-columns: 1fr; }
-  .review-drawer { width: 100vw; right: -100vw; }
 }
 </style>
 </head>
@@ -574,23 +586,22 @@ textarea, input { font-family: var(--serif); }
 </div>
 </div>
 
-<!-- Review Drawer -->
-<div id="reviewDrawer" class="review-drawer">
-  <div class="drawer-header">
-    <h3>复习中心</h3>
-    <button class="drawer-close" onclick="toggleDrawer()">&times;</button>
+<!-- Review Overlay (Full-screen) -->
+<div id="reviewOverlay" class="review-overlay">
+  <div class="review-overlay-header">
+    <h2>复习中心</h2>
+    <button class="review-overlay-close" onclick="toggleReview()">&times;</button>
   </div>
-  <div class="drawer-tabs">
-    <button class="drawer-tab active" data-tab="small" onclick="switchDrawerTab('small')">小作文</button>
-    <button class="drawer-tab" data-tab="big" onclick="switchDrawerTab('big')">大作文</button>
+  <div class="review-overlay-tabs">
+    <button class="review-overlay-tab active" data-tab="small" onclick="switchReviewTab('small')">小作文</button>
+    <button class="review-overlay-tab" data-tab="big" onclick="switchReviewTab('big')">大作文</button>
   </div>
-  <div class="drawer-body" id="drawerBody">
-    <div id="drawerSmallContent"></div>
-    <div id="drawerBigContent" style="display:none;"></div>
+  <div class="review-overlay-body" id="reviewBody">
+    <div id="reviewSmallContent"></div>
+    <div id="reviewBigContent" style="display:none;"></div>
   </div>
 </div>
-<div id="drawerOverlay" class="drawer-overlay" onclick="toggleDrawer()"></div>
-<button class="review-fab" onclick="toggleDrawer()">&#128221; 复习</button>
+<button class="review-fab" onclick="toggleReview()">&#128221; 复习</button>
 
 <!-- Image Lightbox -->
 <div id="imageLightbox" class="image-lightbox" style="display:none;" onclick="closeLightbox(event)">
@@ -639,13 +650,17 @@ let state = {
     activeSentIdx: -1,
     sentResults: {},
     submitting: false,
-    progressData: {}
+    progressData: {},
+    historySentences: {},
+    viewingHistory: null
   },
   // Drawer
   drawerOpen: false,
   drawerTab: 'small',
   drawerFilter: '',
-  drawerExpandedType: null
+  drawerExpandedType: null,
+  reviewExpandedTypes: {},
+  reviewExpandedExamples: {}
 };
 
 function resetSmallState() {
@@ -655,6 +670,8 @@ function resetSmallState() {
   state.small.activeSentIdx = -1;
   state.small.sentResults = {};
   state.small.submitting = false;
+  state.small.historySentences = {};
+  state.small.viewingHistory = null;
 }
 
 /* ==================== View Switching ==================== */
@@ -787,6 +804,20 @@ async function enterSmallPractice(typeIdx, exIdx) {
   state.small.currentExampleIdx = exIdx;
   const data = await API.get(`/api/writing/small/example/${typeIdx}/${exIdx}`);
   state.small.exampleData = data;
+  // Load historical sentence records (like big essay enterPractice)
+  try {
+    const prog = await API.get('/api/writing/small/practice_progress');
+    state.small.progressData = prog;
+    state.small.historySentences = {};
+    const exProg = prog[String(typeIdx)] && prog[String(typeIdx)].examples ? prog[String(typeIdx)].examples[String(exIdx)] : null;
+    if (exProg && exProg.sentences) {
+      exProg.sentences.forEach((records, si) => {
+        if (records && records.length) {
+          state.small.historySentences[si] = records;
+        }
+      });
+    }
+  } catch(e) { state.small.historySentences = {}; }
   renderSmallBreadcrumb('smallPractice', '实战');
   renderSmallQuestionArea('smallPractice');
   renderSmallPracticeContent();
@@ -820,7 +851,22 @@ function updateSmallProgress() {
 }
 
 async function refreshSmallProgress() {
-  try { state.small.progressData = await API.get('/api/writing/small/practice_progress'); } catch(e) {}
+  try {
+    state.small.progressData = await API.get('/api/writing/small/practice_progress');
+    // Refresh historySentences for current example
+    const ti = state.small.currentTypeIdx;
+    const ei = state.small.currentExampleIdx;
+    if (ti !== null && ei !== null) {
+      state.small.historySentences = {};
+      const exProg = state.small.progressData[String(ti)] && state.small.progressData[String(ti)].examples
+        ? state.small.progressData[String(ti)].examples[String(ei)] : null;
+      if (exProg && exProg.sentences) {
+        exProg.sentences.forEach((records, si) => {
+          if (records && records.length) state.small.historySentences[si] = records;
+        });
+      }
+    }
+  } catch(e) {}
   updateSmallProgress();
 }
 
@@ -830,7 +876,12 @@ function getSmallCompletedSentences() {
   if (ti === null || ei === null) return new Set();
   const prog = state.small.progressData[String(ti)];
   const exProg = prog && prog.examples ? prog.examples[String(ei)] : null;
-  return new Set(exProg ? exProg.completed || [] : []);
+  if (!exProg || !exProg.sentences) return new Set();
+  const result = new Set();
+  exProg.sentences.forEach((records, idx) => {
+    if (records && records.length) result.add(idx);
+  });
+  return result;
 }
 
 /* ==================== Small Essay: Image Upload ==================== */
@@ -1019,20 +1070,36 @@ function renderSmallPracticeContent() {
   html += allSentences.map((s, i) => {
     const res = state.small.sentResults[i];
     const isActive = i === state.small.activeSentIdx;
-    const isDoneSession = res && res._savedToReview !== 'pending';
-    const isDoneServer = completedFromServer.has(i);
-    const isDone = isDoneSession || isDoneServer;
+    const histRecords = state.small.historySentences[i];
+    const justSaved = res && res._savedToReview === true;
+    const isDoneServer = !!histRecords;
+    const isDone = justSaved || isDoneServer;
+
+    // Build score tags: history scores (clickable) + current session score
     let scoreHtml = '';
-    if (res) {
+    if (histRecords && histRecords.length) {
+      scoreHtml += histRecords.map((rec, ri) => {
+        const v = parseFloat(rec.score) || 0;
+        const cls = v >= 7 ? 'high' : v >= 6 ? 'mid' : 'low';
+        return `<span class="sent-score ${cls}" onclick="event.stopPropagation(); showSmallHistoryFeedback(${i}, ${ri})">${rec.score}</span>`;
+      }).join('');
+    }
+    if (justSaved) {
       const v = parseFloat(res.score) || 0;
       const cls = v >= 7 ? 'high' : v >= 6 ? 'mid' : 'low';
-      scoreHtml = `<span class="sent-score ${cls}">${res.score}</span>`;
+      scoreHtml += `<span class="sent-score ${cls}">${res.score}</span>`;
     }
-    const badgeText = isDoneSession ? '✓' : (isDoneServer ? '✓ 已做过' : '');
+
+    let badgeHtml = '';
+    if (justSaved) {
+      badgeHtml = '<span class="done-badge">✓ 已录入笔记</span>';
+    } else if (histRecords) {
+      badgeHtml = '<span class="done-badge">✓ 已做过</span>';
+    }
     return `<div class="sent-item${isActive ? ' active' : ''}${isDone ? ' done' : ''}" onclick="activateSmallSentence(${i})">
-      <div class="sent-idx">句 ${i + 1}${badgeText ? '<span class="done-badge">' + badgeText + '</span>' : ''}</div>
+      <div class="sent-idx">句 ${i + 1}${badgeHtml}</div>
       <div class="sent-cn">${s.translation}</div>
-      ${scoreHtml ? `<div style="position:absolute; top:10px; right:12px;">${scoreHtml}</div>` : ''}
+      ${scoreHtml ? `<div style="display:flex; gap:4px; flex-wrap:wrap; position:absolute; top:10px; right:12px;">${scoreHtml}</div>` : ''}
     </div>`;
   }).join('');
   html += '</div>';
@@ -1042,6 +1109,7 @@ function renderSmallPracticeContent() {
 }
 
 function activateSmallSentence(idx) {
+  state.small.viewingHistory = null;
   state.small.activeSentIdx = idx;
   renderSmallPracticeContent();
   // Show editor
@@ -1053,6 +1121,21 @@ function activateSmallSentence(idx) {
     renderSmallEditor(idx);
   }
   setTimeout(() => { const ta = document.getElementById('smallTransInput'); if (ta) ta.focus(); }, 100);
+}
+
+function showSmallHistoryFeedback(sentIdx, recordIdx) {
+  const records = state.small.historySentences[sentIdx];
+  if (!records || !records[recordIdx]) return;
+  state.small.activeSentIdx = sentIdx;
+  state.small.viewingHistory = { sentIdx, recordIdx };
+  renderSmallPracticeContent();
+  const body = document.getElementById('smallPracticeBody');
+  const editorPanel = document.getElementById('smallEditorPanel');
+  if (body) body.style.gridTemplateColumns = '1fr 1fr';
+  if (editorPanel) {
+    editorPanel.classList.add('show');
+    renderSmallEditor(sentIdx);
+  }
 }
 
 function renderSmallEditor(idx) {
@@ -1068,6 +1151,28 @@ function renderSmallEditor(idx) {
   if (!s) return;
   const res = state.small.sentResults[idx];
   const tagHtml = s.tags.map(t => `<span class="sentence-tag ${getTagClass(t)}">${t}</span>`).join('');
+
+  // Historical feedback view (like big essay renderEditor)
+  if (state.small.viewingHistory && state.small.viewingHistory.sentIdx === idx) {
+    const records = state.small.historySentences[idx];
+    const rec = records && records[state.small.viewingHistory.recordIdx];
+    if (rec) {
+      const fb = rec.feedback || {};
+      const ts = rec.timestamp ? new Date(rec.timestamp).toLocaleString('zh-CN', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
+      const panel = document.getElementById('smallEditorPanel');
+      panel.innerHTML = `
+        <div class="editor-context">
+          <div class="ctx-label">${s.sectionName} ${tagHtml ? '· ' + tagHtml : ''}</div>
+          <div class="ctx-cn">${s.translation}</div>
+        </div>
+        <div style="padding:10px 14px; background:#f0fdf4; border-radius:8px; margin-bottom:8px; font-size:13px; color:var(--text2);">
+          <span style="color:var(--text3); font-size:11px;">${ts}</span><br>你的翻译：${rec.user_translation || ''}
+        </div>
+        ${renderFeedbackCard(Object.assign({}, fb, { score: fb.score || rec.score || '-' }), { reviewPrompt: '', nextBtn: false })}
+        <button class="skip-btn" style="margin-top:10px;" onclick="activateSmallSentence(${idx})">返回编辑</button>`;
+      return;
+    }
+  }
 
   let feedbackHtml = '';
   if (res) {
@@ -1642,124 +1747,151 @@ function advanceNext() {
   activateSentence(next);
 }
 
-/* ==================== Review Drawer ==================== */
-function toggleDrawer() {
+/* ==================== Review Overlay ==================== */
+function toggleReview() {
   state.drawerOpen = !state.drawerOpen;
-  document.getElementById('reviewDrawer').classList.toggle('open', state.drawerOpen);
-  document.getElementById('drawerOverlay').classList.toggle('open', state.drawerOpen);
-  if (state.drawerOpen) loadDrawerContent();
+  document.getElementById('reviewOverlay').classList.toggle('open', state.drawerOpen);
+  document.body.style.overflow = state.drawerOpen ? 'hidden' : '';
+  if (state.drawerOpen) loadReviewContent();
 }
 
-function switchDrawerTab(tab) {
+function switchReviewTab(tab) {
   state.drawerTab = tab;
-  state.drawerExpandedType = null;
-  document.querySelectorAll('.drawer-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-  document.getElementById('drawerSmallContent').style.display = tab === 'small' ? '' : 'none';
-  document.getElementById('drawerBigContent').style.display = tab === 'big' ? '' : 'none';
-  loadDrawerContent();
+  state.reviewExpandedTypes = {};
+  state.reviewExpandedExamples = {};
+  document.querySelectorAll('.review-overlay-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.getElementById('reviewSmallContent').style.display = tab === 'small' ? '' : 'none';
+  document.getElementById('reviewBigContent').style.display = tab === 'big' ? '' : 'none';
+  loadReviewContent();
 }
 
-async function loadDrawerContent() {
+async function loadReviewContent() {
   if (state.drawerTab === 'small') {
-    const container = document.getElementById('drawerSmallContent');
+    const container = document.getElementById('reviewSmallContent');
     container.innerHTML = '<div class="loading-overlay"><span class="spinner"></span> 加载中…</div>';
     try {
       const data = await API.get('/api/writing/small/practice_history');
-      renderSmallDrawerContent(data);
+      renderSmallReviewContent(data);
     } catch (e) {
       container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
     }
   } else {
-    const container = document.getElementById('drawerBigContent');
+    const container = document.getElementById('reviewBigContent');
     container.innerHTML = '<div class="loading-overlay"><span class="spinner"></span> 加载中…</div>';
     try {
       const data = await API.get('/api/writing/practice_history');
       state.reviewData = data;
-      renderBigDrawerContent(data);
+      renderBigReviewContent(data);
     } catch (e) {
       container.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
     }
   }
 }
 
-function renderSmallDrawerContent(data) {
-  const container = document.getElementById('drawerSmallContent');
+function renderSmallReviewContent(data) {
+  const container = document.getElementById('reviewSmallContent');
   const types = Object.keys(data);
   if (!types.length) {
     container.innerHTML = '<div class="empty-state"><div class="empty-icon">&#128221;</div><p>暂无小作文练习记录</p></div>';
     return;
   }
 
-  // Filter
-  let filterHtml = '<div class="drawer-filter"><select onchange="filterSmallDrawer(this.value)"><option value="">全部图表类型</option>';
-  types.forEach(t => { filterHtml += `<option value="${t}" ${state.drawerFilter === t ? 'selected' : ''}>${t}</option>`; });
-  filterHtml += '</select></div>';
-
-  const displayTypes = state.drawerFilter ? types.filter(t => t === state.drawerFilter) : types;
-
-  let html = filterHtml;
-  for (const ct of displayTypes) {
+  let html = '';
+  for (const ct of types) {
     const info = data[ct];
     const avg = info.avg_score;
     const avgColor = avg >= 7 ? 'var(--green)' : avg >= 6 ? 'var(--amber)' : 'var(--red)';
-    const isExpanded = state.drawerExpandedType === ct;
+    const isExpanded = !!state.reviewExpandedTypes[ct];
 
-    html += `<div class="drawer-type-card" onclick="toggleDrawerType('${ct.replace(/'/g, "\\'")}')">
-      <div class="drawer-type-name">${ct}</div>
-      <div class="drawer-type-stats">
-        <span>练习 ${info.count} 句</span>
-        <span style="font-weight:700; color:${avgColor}">均分 ${avg}</span>
-      </div>
-    </div>`;
+    html += `<div class="review-tree-l1">
+      <div class="review-tree-l1-header" onclick="toggleReviewType('${ct.replace(/'/g, "\\'")}')">
+        <span class="review-tree-l1-name">${ct}</span>
+        <div class="review-tree-l1-stats">
+          <span>练习 ${info.count} 句</span>
+          <span style="font-weight:700; color:${avgColor}">均分 ${avg}</span>
+          <span class="review-tree-l1-toggle${isExpanded ? ' open' : ''}">&#9662;</span>
+        </div>
+      </div>`;
 
-    if (isExpanded && info.records) {
-      html += '<div class="drawer-records">';
-      for (const r of info.records) {
-        const sc = parseFloat(r.score) || 0;
-        const scoreColor = sc >= 7 ? 'var(--green)' : sc >= 6 ? 'var(--amber)' : 'var(--red)';
-        const date = new Date(r.timestamp).toLocaleString('zh-CN', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
-        html += `<div class="drawer-record" onclick="event.stopPropagation(); toggleDrawerRecordDetail(this)">
-          <div class="dr-top">
-            <span class="dr-score" style="color:${scoreColor}">${r.score || '-'}</span>
-            <span class="dr-date">${date}</span>
-          </div>
-          <div class="dr-cn">${r.target_chinese || ''}</div>
-          <div class="drawer-record-detail">
-            <div style="font-size:12px; color:var(--text2); margin-bottom:6px;">你的翻译：${r.user_translation || ''}</div>
-            ${r.feedback ? renderFeedbackCard(Object.assign({}, r.feedback, { score: r.feedback.score || r.score }), { reviewPrompt: '', nextBtn: false }) : ''}
-            <button class="skip-btn" style="margin-top:6px; font-size:11px; color:var(--red);" onclick="event.stopPropagation(); deleteSmallReview('${r.id}')">删除</button>
-          </div>
-        </div>`;
+    if (isExpanded && info.examples) {
+      html += '<div class="review-tree-l1-body">';
+      for (const exName of Object.keys(info.examples)) {
+        const exInfo = info.examples[exName];
+        const exAvg = exInfo.avg_score;
+        const exAvgColor = exAvg >= 7 ? 'var(--green)' : exAvg >= 6 ? 'var(--amber)' : 'var(--red)';
+        const exKey = `${ct}||${exName}`;
+        const isExExpanded = !!state.reviewExpandedExamples[exKey];
+
+        html += `<div class="review-tree-l2">
+          <div class="review-tree-l2-header" onclick="event.stopPropagation(); toggleReviewExample('${exKey.replace(/'/g, "\\'")}')">
+            <span class="review-tree-l2-name">${exName}</span>
+            <div class="review-tree-l2-stats">
+              <span>${exInfo.count} 条</span>
+              <span style="font-weight:700; color:${exAvgColor}">${exAvg}</span>
+              <span class="review-tree-l2-toggle${isExExpanded ? ' open' : ''}">&#9662;</span>
+            </div>
+          </div>`;
+
+        if (isExExpanded && exInfo.sentences) {
+          html += '<div class="review-tree-l2-body">';
+          for (const sentKey of Object.keys(exInfo.sentences)) {
+            const sentInfo = exInfo.sentences[sentKey];
+            html += `<div class="review-tree-l3">
+              <div class="review-tree-l3-header">
+                ${sentInfo.section_name ? `<span class="review-tree-l3-section">[${sentInfo.section_name}]</span>` : ''}
+                ${sentInfo.target_chinese}
+              </div>`;
+            for (const r of sentInfo.records) {
+              const sc = parseFloat(r.score) || 0;
+              const scoreColor = sc >= 7 ? 'var(--green)' : sc >= 6 ? 'var(--amber)' : 'var(--red)';
+              const date = new Date(r.timestamp).toLocaleString('zh-CN', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+              html += `<div class="review-tree-record" onclick="event.stopPropagation(); toggleReviewRecordDetail(this)">
+                <div class="rtr-top">
+                  <span class="rtr-score" style="color:${scoreColor}">${r.score || '-'}</span>
+                  <span class="rtr-date">${date}</span>
+                </div>
+                <div class="rtr-trans">${r.user_translation || ''}</div>
+                <div class="review-tree-record-detail">
+                  ${r.feedback ? renderFeedbackCard(Object.assign({}, r.feedback, { score: r.feedback.score || r.score }), { reviewPrompt: '', nextBtn: false }) : ''}
+                  <button class="skip-btn" style="margin-top:6px; font-size:11px; color:var(--red);" onclick="event.stopPropagation(); deleteSmallReview('${r.id}')">删除</button>
+                </div>
+              </div>`;
+            }
+            html += '</div>';
+          }
+          html += '</div>';
+        }
+        html += '</div>';
       }
       html += '</div>';
     }
+    html += '</div>';
   }
   container.innerHTML = html;
 }
 
-function filterSmallDrawer(val) {
-  state.drawerFilter = val;
-  state.drawerExpandedType = null;
-  loadDrawerContent();
+function toggleReviewType(ct) {
+  state.reviewExpandedTypes[ct] = !state.reviewExpandedTypes[ct];
+  loadReviewContent();
 }
 
-function toggleDrawerType(ct) {
-  state.drawerExpandedType = state.drawerExpandedType === ct ? null : ct;
-  loadDrawerContent();
+function toggleReviewExample(exKey) {
+  state.reviewExpandedExamples[exKey] = !state.reviewExpandedExamples[exKey];
+  loadReviewContent();
 }
 
-function toggleDrawerRecordDetail(el) {
-  el.querySelector('.drawer-record-detail').classList.toggle('open');
+function toggleReviewRecordDetail(el) {
+  el.querySelector('.review-tree-record-detail').classList.toggle('open');
 }
 
 async function deleteSmallReview(id) {
   if (!confirm('确认删除这条记录？')) return;
   await API.post(`/api/writing/small/delete_practice/${id}`);
-  loadDrawerContent();
+  loadReviewContent();
 }
 
-function renderBigDrawerContent(data) {
-  const container = document.getElementById('drawerBigContent');
+function renderBigReviewContent(data) {
+  const container = document.getElementById('reviewBigContent');
   if (!Object.keys(data).length) {
     container.innerHTML = '<div class="empty-state"><div class="empty-icon">&#128221;</div><p>暂无大作文练习记录</p></div>';
     return;
@@ -1770,40 +1902,44 @@ function renderBigDrawerContent(data) {
       const info = data[cat][sub];
       const avg = info.avg_score;
       const avgColor = avg >= 7 ? 'var(--green)' : avg >= 6 ? 'var(--amber)' : 'var(--red)';
-      html += `<div class="drawer-type-card" onclick="toggleBigDrawerSub(this)">
-        <div class="drawer-type-name">${cat} / ${sub}</div>
-        <div class="drawer-type-stats">
-          <span>练习 ${info.count} 句</span>
-          <span style="font-weight:700; color:${avgColor}">均分 ${avg}</span>
-        </div>
-      </div>
-      <div class="drawer-records" style="display:none;">`;
-      for (const r of info.records) {
-        const sc = parseFloat(r.score) || 0;
-        const scoreColor = sc >= 7 ? 'var(--green)' : sc >= 6 ? 'var(--amber)' : 'var(--red)';
-        const date = new Date(r.timestamp).toLocaleString('zh-CN', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
-        html += `<div class="drawer-record" onclick="event.stopPropagation(); toggleDrawerRecordDetail(this)">
-          <div class="dr-top">
-            <span class="dr-score" style="color:${scoreColor}">${r.score || '-'}</span>
-            <span class="dr-date">${date}</span>
-          </div>
-          <div class="dr-cn">${r.target_chinese || ''}</div>
-          <div class="drawer-record-detail">
-            <div style="font-size:12px; color:var(--text2); margin-bottom:6px;">你的翻译：${r.user_translation || ''}</div>
-            ${r.feedback ? renderFeedbackCard(Object.assign({}, r.feedback, { score: r.feedback.score || r.score }), { reviewPrompt: '', nextBtn: false }) : ''}
-            <button class="skip-btn" style="margin-top:6px; font-size:11px; color:var(--red);" onclick="event.stopPropagation(); deleteBigReview('${r.id}')">删除</button>
+      const exKey = `${cat}||${sub}`;
+      const isExpanded = !!state.reviewExpandedExamples[exKey];
+
+      html += `<div class="review-tree-l1">
+        <div class="review-tree-l1-header" onclick="toggleReviewExample('${exKey.replace(/'/g, "\\'")}')">
+          <span class="review-tree-l1-name">${cat} / ${sub}</span>
+          <div class="review-tree-l1-stats">
+            <span>练习 ${info.count} 句</span>
+            <span style="font-weight:700; color:${avgColor}">均分 ${avg}</span>
+            <span class="review-tree-l1-toggle${isExpanded ? ' open' : ''}">&#9662;</span>
           </div>
         </div>`;
+
+      if (isExpanded) {
+        html += '<div class="review-tree-l1-body">';
+        for (const r of info.records) {
+          const sc = parseFloat(r.score) || 0;
+          const scoreColor = sc >= 7 ? 'var(--green)' : sc >= 6 ? 'var(--amber)' : 'var(--red)';
+          const date = new Date(r.timestamp).toLocaleString('zh-CN', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+          html += `<div class="review-tree-record" onclick="event.stopPropagation(); toggleReviewRecordDetail(this)">
+            <div class="rtr-top">
+              <span class="rtr-score" style="color:${scoreColor}">${r.score || '-'}</span>
+              <span class="rtr-date">${date}</span>
+            </div>
+            <div class="rtr-trans">${r.target_chinese || ''}</div>
+            <div class="review-tree-record-detail">
+              <div style="font-size:12px; color:var(--text2); margin-bottom:6px;">你的翻译：${r.user_translation || ''}</div>
+              ${r.feedback ? renderFeedbackCard(Object.assign({}, r.feedback, { score: r.feedback.score || r.score }), { reviewPrompt: '', nextBtn: false }) : ''}
+              <button class="skip-btn" style="margin-top:6px; font-size:11px; color:var(--red);" onclick="event.stopPropagation(); deleteBigReview('${r.id}')">删除</button>
+            </div>
+          </div>`;
+        }
+        html += '</div>';
       }
       html += '</div>';
     }
   }
   container.innerHTML = html;
-}
-
-function toggleBigDrawerSub(el) {
-  const records = el.nextElementSibling;
-  if (records) records.style.display = records.style.display === 'none' ? '' : 'none';
 }
 
 function renderReviewRecords() {
@@ -1862,7 +1998,7 @@ function backToReviewGrid() {
 async function deleteBigReview(id) {
   if (!confirm('确认删除这条记录？')) return;
   await API.post(`/api/writing/delete_practice/${id}`);
-  loadDrawerContent();
+  loadReviewContent();
 }
 
 /* ==================== Init ==================== */

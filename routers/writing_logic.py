@@ -599,23 +599,54 @@ def small_practice_history():
     if chart_type_filter:
         review_records = [r for r in review_records if r.get('chart_type') == chart_type_filter]
 
+    # Three-level grouping: chart_type → example_name → sentence_key
     grouped = {}
     for r in review_records:
         ct = r.get('chart_type', '未分类')
-        if ct not in grouped:
-            grouped[ct] = {'records': [], 'avg_score': 0, 'count': 0}
-        grouped[ct]['records'].append(r)
+        ex_name = r.get('example_name', '未知例题')
+        section = r.get('section_name', '')
+        target = r.get('target_chinese', '')
+        sent_key = f"{section}||{target}"
 
-    for ct in grouped:
-        recs = grouped[ct]['records']
-        grouped[ct]['count'] = len(recs)
-        scores = []
-        for rec in recs:
+        if ct not in grouped:
+            grouped[ct] = {'avg_score': 0, 'count': 0, 'examples': {}}
+        if ex_name not in grouped[ct]['examples']:
+            grouped[ct]['examples'][ex_name] = {'avg_score': 0, 'count': 0, 'sentences': {}}
+        if sent_key not in grouped[ct]['examples'][ex_name]['sentences']:
+            grouped[ct]['examples'][ex_name]['sentences'][sent_key] = {
+                'section_name': section,
+                'target_chinese': target,
+                'records': []
+            }
+        grouped[ct]['examples'][ex_name]['sentences'][sent_key]['records'].append(r)
+
+    # Compute stats at each level
+    def _avg(scores_list):
+        vals = []
+        for s in scores_list:
             try:
-                scores.append(float(rec.get('score', 0)))
+                vals.append(float(s))
             except (ValueError, TypeError):
                 pass
-        grouped[ct]['avg_score'] = round(sum(scores) / len(scores), 1) if scores else 0
+        return round(sum(vals) / len(vals), 1) if vals else 0
+
+    for ct in grouped:
+        ct_scores = []
+        ct_count = 0
+        for ex_name in grouped[ct]['examples']:
+            ex_info = grouped[ct]['examples'][ex_name]
+            ex_scores = []
+            ex_count = 0
+            for sent_key in ex_info['sentences']:
+                recs = ex_info['sentences'][sent_key]['records']
+                ex_count += len(recs)
+                ex_scores.extend(rec.get('score', '') for rec in recs)
+            ex_info['avg_score'] = _avg(ex_scores)
+            ex_info['count'] = ex_count
+            ct_scores.extend(ex_scores)
+            ct_count += ex_count
+        grouped[ct]['avg_score'] = _avg(ct_scores)
+        grouped[ct]['count'] = ct_count
 
     return jsonify(grouped)
 
@@ -635,7 +666,7 @@ def small_delete_practice(record_id):
 
 @writing_bp.route('/api/writing/small/practice_progress', methods=['GET'])
 def small_practice_progress():
-    """返回小作文各图表类型、各例题的句子级完成进度"""
+    """返回小作文各图表类型、各例题的句子级完成进度（含历史记录详情）"""
     token = request.headers.get('Authorization', '').replace('Bearer ', '')
     if not is_token_valid(token):
         return jsonify({'error': '未登录'}), 401
@@ -643,10 +674,20 @@ def small_practice_progress():
     username = tokens.get(token, {}).get('username', 'anonymous')
     records = _load_small_practice(username)
 
-    completed = set()
+    # Collect full records per sentence (like big essay practice_progress)
+    completed = {}
     for r in records:
+        if not r.get('in_review', True):
+            continue
         key = f"{r.get('chart_type', '')}||{r.get('example_name', '')}||{r.get('target_chinese', '')}"
-        completed.add(key)
+        if key not in completed:
+            completed[key] = []
+        completed[key].append({
+            'score': r.get('score', ''),
+            'user_translation': r.get('user_translation', ''),
+            'feedback': r.get('feedback', {}),
+            'timestamp': r.get('timestamp', '')
+        })
 
     parsed = _parse_small_writing_md()
     progress = {}
@@ -657,14 +698,16 @@ def small_practice_progress():
         for ei, ex in enumerate(ct['examples']):
             ex_total = 0
             ex_done = 0
-            completed_indices = []
+            sent_status = []
             sent_idx = 0
             for section in ex['sections']:
                 for sent in section['sentences']:
                     key = f"{ct['name']}||{ex['name']}||{sent['translation']}"
-                    if key in completed:
+                    scores = completed.get(key, [])
+                    is_done = len(scores) > 0
+                    if is_done:
                         ex_done += 1
-                        completed_indices.append(sent_idx)
+                    sent_status.append(scores if is_done else None)
                     sent_idx += 1
                     ex_total += 1
             type_total += ex_total
@@ -672,7 +715,7 @@ def small_practice_progress():
             examples[str(ei)] = {
                 'total': ex_total,
                 'done': ex_done,
-                'completed': completed_indices
+                'sentences': sent_status
             }
         progress[str(ti)] = {
             'total': type_total,
