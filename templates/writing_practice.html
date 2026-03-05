@@ -159,7 +159,7 @@ textarea, input { font-family: var(--serif); }
 .small-editor-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(2,132,199,.08); }
 
 /* ==================== Review Overlay (Full-screen) ==================== */
-.review-overlay { position: fixed; inset: 0; z-index: 1000; background: var(--card); display: flex; flex-direction: column; overflow: hidden; clip-path: circle(0% at calc(100% - 48px) calc(100% - 48px)); transition: clip-path .5s cubic-bezier(.4,0,.2,1); }
+.review-overlay { position: fixed; inset: 0; z-index: 1000; background: #f0f4f8; display: flex; flex-direction: column; overflow: hidden; clip-path: circle(0% at calc(100% - 48px) calc(100% - 48px)); transition: clip-path .5s cubic-bezier(.4,0,.2,1); }
 .review-overlay.open { clip-path: circle(150% at calc(100% - 48px) calc(100% - 48px)); }
 .review-overlay-header { padding: 20px 40px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
 .review-overlay-header h2 { font-size: 20px; font-weight: 700; }
@@ -169,40 +169,45 @@ textarea, input { font-family: var(--serif); }
 .review-overlay-tab { padding: 12px 24px; border: none; background: transparent; font-size: 14px; font-weight: 600; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all .15s; }
 .review-overlay-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 .review-overlay-tab:hover { color: var(--accent); }
-.review-overlay-body { flex: 1; overflow-y: auto; padding: 24px 40px; max-width: 900px; width: 100%; margin: 0 auto; }
+.review-overlay-body { flex: 1; overflow-y: auto; padding: 32px 48px; max-width: 1100px; width: 100%; margin: 0 auto; scrollbar-width: none; -ms-overflow-style: none; }
+.review-overlay-body::-webkit-scrollbar { display: none; }
 .review-fab { position: fixed; right: 24px; bottom: 24px; padding: 12px 20px; border-radius: 50px; background: var(--accent); color: #fff; border: none; font-size: 14px; font-weight: 600; box-shadow: var(--shadow-lg); cursor: pointer; z-index: 998; transition: transform .15s; }
 .review-fab:hover { transform: scale(1.05); }
 
 /* Review Tree Nodes */
-.review-tree-l1 { margin-bottom: 16px; }
-.review-tree-l1-header { padding: 16px 20px; background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); cursor: pointer; transition: all .15s; display: flex; align-items: center; justify-content: space-between; }
-.review-tree-l1-header:hover { border-color: var(--accent); box-shadow: var(--shadow); }
+.review-tree-l1 { margin-bottom: 20px; }
+.review-tree-l1-header { padding: 18px 24px; background: var(--card); border: 1px solid rgba(226,232,240,0.5); border-radius: 16px; cursor: pointer; transition: all .2s; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow); }
+.review-tree-l1-header:hover { border-color: var(--accent); box-shadow: var(--shadow-lg); }
 .review-tree-l1-name { font-size: 16px; font-weight: 700; }
 .review-tree-l1-stats { font-size: 12px; color: var(--text2); display: flex; gap: 10px; align-items: center; }
 .review-tree-l1-toggle { font-size: 16px; color: var(--text3); transition: transform .2s; }
 .review-tree-l1-toggle.open { transform: rotate(180deg); }
-.review-tree-l1-body { padding-left: 20px; margin-top: 8px; }
+.review-tree-l1-body { padding-left: 24px; margin-top: 12px; }
 
-.review-tree-l2 { margin-bottom: 10px; }
-.review-tree-l2-header { padding: 12px 16px; background: #f9fafb; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; transition: all .15s; display: flex; align-items: center; justify-content: space-between; }
+.review-tree-l2 { margin-bottom: 12px; }
+.review-tree-l2-header { padding: 14px 18px; background: var(--card); border: 1px solid rgba(226,232,240,0.4); border-radius: 12px; cursor: pointer; transition: all .2s; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 12px rgba(15,23,42,.05); }
 .review-tree-l2-header:hover { border-color: var(--accent); background: var(--accent-light); }
 .review-tree-l2-name { font-size: 14px; font-weight: 600; }
 .review-tree-l2-stats { font-size: 12px; color: var(--text2); display: flex; gap: 8px; }
 .review-tree-l2-toggle { font-size: 14px; color: var(--text3); transition: transform .2s; }
 .review-tree-l2-toggle.open { transform: rotate(180deg); }
-.review-tree-l2-body { padding-left: 16px; margin-top: 6px; }
+.review-tree-l2-body { padding-left: 20px; margin-top: 10px; }
 
-.review-tree-l3 { margin-bottom: 8px; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; }
+.review-tree-l3 { margin-bottom: 10px; padding: 14px 18px; background: var(--card); border: 1px solid rgba(226,232,240,0.3); border-radius: 12px; box-shadow: 0 1px 6px rgba(15,23,42,.04); }
 .review-tree-l3-header { font-size: 13px; color: var(--text); font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
 .review-tree-l3-section { font-size: 11px; color: var(--text3); font-weight: 400; }
-.review-tree-record { padding: 8px 12px; background: #f9fafb; border-radius: 6px; margin-bottom: 4px; cursor: pointer; transition: all .15s; }
-.review-tree-record:hover { background: var(--accent-light); }
-.review-tree-record .rtr-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
+.review-tree-record { padding: 12px 16px; background: var(--card); border-radius: 10px; margin-bottom: 8px; cursor: default; transition: all .2s; box-shadow: 0 1px 4px rgba(15,23,42,.04); border: 1px solid rgba(226,232,240,0.3); }
+.review-tree-record:hover { background: #fafbfd; }
+.review-tree-record .rtr-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; cursor: pointer; }
+.review-tree-record .rtr-top:hover .rtr-score { opacity: .8; }
 .review-tree-record .rtr-score { font-weight: 700; font-size: 14px; }
 .review-tree-record .rtr-date { font-size: 11px; color: var(--text3); }
 .review-tree-record .rtr-trans { font-size: 12px; color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.review-tree-record-detail { display: none; margin-top: 8px; }
-.review-tree-record-detail.open { display: block; }
+.review-tree-record-detail { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease, margin-top .3s ease; margin-top: 0; }
+.review-tree-record-detail.open { grid-template-rows: 1fr; margin-top: 10px; }
+.review-tree-record-detail > .rtr-detail-inner { overflow: hidden; position: relative; padding-top: 4px; }
+.rtr-collapse-btn { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; position: absolute; top: 8px; right: 8px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text3); font-size: 14px; cursor: pointer; transition: all .15s; z-index: 1; line-height: 1; }
+.rtr-collapse-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
 
 /* ==================== Category Grid (Big Essay - kept) ==================== */
 .cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
@@ -310,39 +315,40 @@ textarea, input { font-family: var(--serif); }
 .skip-btn:hover { border-color: var(--accent); color: var(--accent); }
 
 /* Feedback */
-.feedback-card { margin-top: 12px; padding: 16px; background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); animation: fadeIn .3s; }
+.feedback-card { margin-top: 12px; padding: 20px; background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); animation: fadeIn .3s; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 .fb-score { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
 .fb-score.high { color: var(--green); }
 .fb-score.mid { color: var(--amber); }
 .fb-score.low { color: var(--red); }
 .fb-summary { font-size: 14px; color: var(--text); margin-bottom: 12px; line-height: 1.6; }
-.fb-section { margin-bottom: 10px; }
+.fb-section { margin-bottom: 14px; }
 .fb-section-title { font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
-.fb-correction { padding: 8px 12px; background: var(--red-light); border-radius: 6px; margin-bottom: 4px; font-size: 13px; }
+.fb-correction { padding: 10px 14px; background: var(--red-light); border-radius: 8px; margin-bottom: 6px; font-size: 13px; }
 .fb-correction .orig { text-decoration: line-through; color: var(--red); }
 .fb-correction .fixed { color: var(--green); font-weight: 600; }
 .fb-correction .reason { color: var(--text2); font-size: 12px; }
-.fb-vocab-item { padding: 8px 12px; background: var(--accent-light); border-radius: 6px; margin-bottom: 4px; font-size: 13px; }
+.fb-vocab-item { padding: 10px 14px; background: var(--accent-light); border-radius: 8px; margin-bottom: 6px; font-size: 13px; }
 .fb-vocab-item .orig { color: var(--amber); font-weight: 600; }
 .fb-vocab-item .fixed { color: var(--accent); font-weight: 600; }
 .fb-vocab-item .reason { color: var(--text2); font-size: 12px; }
-.fb-native { padding: 10px 14px; background: var(--green-light); border-radius: 8px; font-size: 14px; color: var(--text); line-height: 1.7; border-left: 3px solid var(--green); white-space: pre-wrap; }
+.fb-native { padding: 14px 18px; background: var(--green-light); border-radius: 10px; font-size: 14px; color: var(--text); line-height: 1.7; border-left: 3px solid var(--green); white-space: pre-wrap; }
 
 /* Review View */
 .review-list { display: flex; flex-direction: column; gap: 10px; }
-.review-item { padding: 14px 16px; background: var(--card); border: 1.5px solid var(--border); border-radius: 10px; cursor: pointer; transition: all .15s; position: relative; }
+.review-item { padding: 16px 20px; background: var(--card); border: 1px solid rgba(226,232,240,0.4); border-radius: 14px; cursor: default; transition: all .15s; position: relative; box-shadow: var(--shadow); }
 .review-item.open { cursor: default; }
-.review-item:hover { border-color: #c7d2fe; box-shadow: var(--shadow); }
-.review-item .ri-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.review-item:hover { border-color: #c7d2fe; box-shadow: var(--shadow-lg); }
+.review-item .ri-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; cursor: pointer; }
 .review-item .ri-score { font-weight: 700; font-size: 16px; }
 .review-item .ri-date { font-size: 11px; color: var(--text3); }
 .review-item .ri-cn { font-size: 13px; color: var(--text2); margin-bottom: 4px; }
 .review-item .ri-trans { font-size: 13px; color: var(--text); }
-.review-detail { padding: 14px; background: #f9fafb; border-radius: 8px; margin-top: 10px; display: none; position: relative; }
-.review-detail.open { display: block; }
-.review-detail .fold-btn { position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border: 1.5px solid var(--border); border-radius: 6px; background: var(--card); color: var(--text3); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; line-height: 1; }
-.review-detail .fold-btn:hover { border-color: var(--accent); color: var(--accent); }
+.review-detail { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease, margin-top .3s ease; margin-top: 0; position: relative; }
+.review-detail.open { grid-template-rows: 1fr; margin-top: 12px; }
+.review-detail > .rd-inner { overflow: hidden; position: relative; }
+.review-detail .fold-btn { position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text3); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; line-height: 1; z-index: 1; }
+.review-detail .fold-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
 .empty-state { text-align: center; padding: 60px 20px; color: var(--text3); }
 .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
 .empty-state p { font-size: 15px; }
@@ -350,10 +356,10 @@ textarea, input { font-family: var(--serif); }
 /* Review Dashboard Container */
 .review-dashboard {
   background: var(--card);
-  border-radius: var(--radius);
+  border-radius: 18px;
   box-shadow: var(--shadow);
-  padding: 24px;
-  border: 1.5px solid var(--border);
+  padding: 28px;
+  border: 1px solid rgba(226,232,240,0.4);
 }
 
 /* Review Category Titles */
@@ -448,6 +454,7 @@ textarea, input { font-family: var(--serif); }
   #smallExampleList { grid-template-columns: 1fr; }
   .sentence-grid.split { grid-template-columns: 1fr; }
   .practice-header { position: relative; }
+  .review-overlay-body { max-width: 100%; padding: 20px 16px; }
   .chart-type-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
   .example-list-grid { grid-template-columns: 1fr; }
 }
@@ -1845,15 +1852,18 @@ function renderSmallReviewContent(data) {
               const sc = parseFloat(r.score) || 0;
               const scoreColor = sc >= 7 ? 'var(--green)' : sc >= 6 ? 'var(--amber)' : 'var(--red)';
               const date = new Date(r.timestamp).toLocaleString('zh-CN', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
-              html += `<div class="review-tree-record" onclick="event.stopPropagation(); toggleReviewRecordDetail(this)">
-                <div class="rtr-top">
+              html += `<div class="review-tree-record">
+                <div class="rtr-top" onclick="event.stopPropagation(); expandReviewRecordDetail(this)">
                   <span class="rtr-score" style="color:${scoreColor}">${r.score || '-'}</span>
                   <span class="rtr-date">${date}</span>
                 </div>
                 <div class="rtr-trans">${r.user_translation || ''}</div>
                 <div class="review-tree-record-detail">
-                  ${r.feedback ? renderFeedbackCard(Object.assign({}, r.feedback, { score: r.feedback.score || r.score }), { reviewPrompt: '', nextBtn: false }) : ''}
-                  <button class="skip-btn" style="margin-top:6px; font-size:11px; color:var(--red);" onclick="event.stopPropagation(); deleteSmallReview('${r.id}')">删除</button>
+                  <div class="rtr-detail-inner">
+                    <button class="rtr-collapse-btn" onclick="event.stopPropagation(); collapseReviewRecordDetail(this)" title="收起">&#9650;</button>
+                    ${r.feedback ? renderFeedbackCard(Object.assign({}, r.feedback, { score: r.feedback.score || r.score }), { reviewPrompt: '', nextBtn: false }) : ''}
+                    <button class="skip-btn" style="margin-top:6px; font-size:11px; color:var(--red);" onclick="event.stopPropagation(); deleteSmallReview('${r.id}')">删除</button>
+                  </div>
                 </div>
               </div>`;
             }
@@ -1880,8 +1890,12 @@ function toggleReviewExample(exKey) {
   loadReviewContent();
 }
 
-function toggleReviewRecordDetail(el) {
-  el.querySelector('.review-tree-record-detail').classList.toggle('open');
+function expandReviewRecordDetail(topEl) {
+  const detail = topEl.closest('.review-tree-record').querySelector('.review-tree-record-detail');
+  if (!detail.classList.contains('open')) detail.classList.add('open');
+}
+function collapseReviewRecordDetail(btn) {
+  btn.closest('.review-tree-record-detail').classList.remove('open');
 }
 
 async function deleteSmallReview(id) {
@@ -1921,16 +1935,19 @@ function renderBigReviewContent(data) {
           const sc = parseFloat(r.score) || 0;
           const scoreColor = sc >= 7 ? 'var(--green)' : sc >= 6 ? 'var(--amber)' : 'var(--red)';
           const date = new Date(r.timestamp).toLocaleString('zh-CN', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
-          html += `<div class="review-tree-record" onclick="event.stopPropagation(); toggleReviewRecordDetail(this)">
-            <div class="rtr-top">
+          html += `<div class="review-tree-record">
+            <div class="rtr-top" onclick="event.stopPropagation(); expandReviewRecordDetail(this)">
               <span class="rtr-score" style="color:${scoreColor}">${r.score || '-'}</span>
               <span class="rtr-date">${date}</span>
             </div>
             <div class="rtr-trans">${r.target_chinese || ''}</div>
             <div class="review-tree-record-detail">
-              <div style="font-size:12px; color:var(--text2); margin-bottom:6px;">你的翻译：${r.user_translation || ''}</div>
-              ${r.feedback ? renderFeedbackCard(Object.assign({}, r.feedback, { score: r.feedback.score || r.score }), { reviewPrompt: '', nextBtn: false }) : ''}
-              <button class="skip-btn" style="margin-top:6px; font-size:11px; color:var(--red);" onclick="event.stopPropagation(); deleteBigReview('${r.id}')">删除</button>
+              <div class="rtr-detail-inner">
+                <button class="rtr-collapse-btn" onclick="event.stopPropagation(); collapseReviewRecordDetail(this)" title="收起">&#9650;</button>
+                <div style="font-size:12px; color:var(--text2); margin-bottom:6px;">你的翻译：${r.user_translation || ''}</div>
+                ${r.feedback ? renderFeedbackCard(Object.assign({}, r.feedback, { score: r.feedback.score || r.score }), { reviewPrompt: '', nextBtn: false }) : ''}
+                <button class="skip-btn" style="margin-top:6px; font-size:11px; color:var(--red);" onclick="event.stopPropagation(); deleteBigReview('${r.id}')">删除</button>
+              </div>
             </div>
           </div>`;
         }
@@ -1959,18 +1976,20 @@ function renderReviewRecords() {
     const fb = r.feedback || {};
     const date = new Date(r.timestamp).toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     html += `
-      <div class="review-item" onclick="toggleReviewDetail(this)">
-        <div class="ri-top">
+      <div class="review-item">
+        <div class="ri-top" onclick="expandReviewDetail(this)">
           <span class="ri-score" style="color:var(--${cls === 'high' ? 'green' : cls === 'mid' ? 'amber' : 'red'})">${r.score || '-'}</span>
           <span class="ri-date">${date}</span>
         </div>
         <div class="ri-cn">${r.target_chinese || ''}</div>
         <div class="ri-trans">${r.user_translation || ''}</div>
         <div class="review-detail">
-          <button class="fold-btn" onclick="event.stopPropagation(); closeReviewDetail(this)" title="收起">&#9650;</button>
-          ${renderFeedbackCard(Object.assign({}, fb, { score: fb.score || r.score || '-' }), { reviewPrompt: '', nextBtn: false })}
-          <button class="skip-btn" style="margin-top:8px; font-size:11px; color:var(--red);"
-            onclick="event.stopPropagation(); deleteBigReview('${r.id}')">删除</button>
+          <div class="rd-inner">
+            <button class="fold-btn" onclick="event.stopPropagation(); closeReviewDetail(this)" title="收起">&#9650;</button>
+            ${renderFeedbackCard(Object.assign({}, fb, { score: fb.score || r.score || '-' }), { reviewPrompt: '', nextBtn: false })}
+            <button class="skip-btn" style="margin-top:8px; font-size:11px; color:var(--red);"
+              onclick="event.stopPropagation(); deleteBigReview('${r.id}')">删除</button>
+          </div>
         </div>
       </div>`;
   }
@@ -1978,10 +1997,11 @@ function renderReviewRecords() {
   container.innerHTML = html;
 }
 
-function toggleReviewDetail(el) {
-  if (el.classList.contains('open')) return;
-  el.classList.add('open');
-  el.querySelector('.review-detail').classList.add('open');
+function expandReviewDetail(topEl) {
+  const item = topEl.closest('.review-item');
+  if (item.classList.contains('open')) return;
+  item.classList.add('open');
+  item.querySelector('.review-detail').classList.add('open');
 }
 
 function closeReviewDetail(btn) {
