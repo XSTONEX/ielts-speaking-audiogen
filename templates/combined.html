@@ -551,14 +551,6 @@
     </style>
 </head>
 <body>
-<div id="authOverlay" style="position:fixed;z-index:10000;left:0;top:0;width:100vw;height:100vh;background:rgba(240,245,255,0.98);display:flex;align-items:center;justify-content:center;">
-    <div style="background:#fff;border-radius:14px;box-shadow:0 8px 32px 0 rgba(31,38,135,0.15);padding:38px 32px 32px 32px;max-width:90vw;min-width:320px;text-align:center;">
-        <h2 style="color:#3b4a6b;margin-bottom:18px;">请输入访问密码</h2>
-        <input id="authPassword" type="password" placeholder="Password" style="padding:12px 16px;font-size:17px;border-radius:8px;border:1.5px solid #d1d5db;width:80%;max-width:260px;outline:none;" autofocus onkeydown="if(event.key==='Enter'){checkPassword();}">
-        <div id="authError" style="color:#e94e77;margin-top:14px;display:none;font-size:15px;">密码错误，请重试。</div>
-        <button onclick="checkPassword()" style="margin-top:22px;width:60%;max-width:180px;padding:12px 28px;border:none;border-radius:8px;background:linear-gradient(90deg, #4a90e2 60%, #6a82fb 100%);color:#fff;font-size:17px;font-weight:600;cursor:pointer;">进入</button>
-    </div>
-</div>
 
 <div class="container">
     <div class="header">
@@ -614,7 +606,6 @@
 </div>
 
 <script>
-let SERVER_PASSWORD = null;
 let currentFolder = null;
 let subtitles = [];
 let currentSubtitleIndex = -1;
@@ -624,14 +615,6 @@ let currentToken = null;
 let isGenerating = false; // 全局生成状态
 
 // 认证相关函数
-function fetchServerPassword() {
-    return fetch('/get_password')
-        .then(res => res.json())
-        .then(data => {
-            SERVER_PASSWORD = data.password;
-        });
-}
-
 function checkStoredToken() {
     const storedToken = localStorage.getItem('authToken');
     if (storedToken) {
@@ -656,35 +639,6 @@ function checkStoredToken() {
         });
     }
     return Promise.resolve(false);
-}
-
-function checkPassword() {
-    const input = document.getElementById('authPassword').value;
-    
-    fetch('/verify_password', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({password: input})
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            currentToken = data.token;
-            localStorage.setItem('authToken', data.token);
-            document.getElementById('authOverlay').style.display = 'none';
-            document.body.style.overflow = '';
-            loadFolderList();
-        } else {
-            document.getElementById('authError').style.display = '';
-            document.getElementById('authPassword').value = '';
-            document.getElementById('authPassword').focus();
-        }
-    })
-    .catch(err => {
-        document.getElementById('authError').style.display = '';
-        document.getElementById('authPassword').value = '';
-        document.getElementById('authPassword').focus();
-    });
 }
 
 // 加载文件夹列表
@@ -1151,18 +1105,11 @@ function showMessage(message, type) {
 
 // 页面加载
 window.onload = function() {
-    // 检查存储的token
     checkStoredToken().then(isValidToken => {
         if (isValidToken) {
-            // token有效，直接进入主界面
-            if (document.getElementById('authOverlay')) {
-                document.getElementById('authOverlay').style.display = 'none';
-                document.body.style.overflow = '';
-            }
             loadFolderList();
             setTimeout(checkURLHash, 1000);
         } else {
-            // token无效或不存在，重定向到登录页面
             window.location.href = '/login';
         }
     });

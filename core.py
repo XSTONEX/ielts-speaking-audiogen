@@ -10,7 +10,7 @@ import shutil
 import threading
 import requests
 import yaml
-from datetime import datetime, timedelta
+from datetime import datetime
 from functools import wraps
 from flask import request, jsonify
 from dotenv import load_dotenv
@@ -118,25 +118,21 @@ def generate_token():
     return secrets.token_urlsafe(32)
 
 def is_token_valid(token):
-    """检查token是否有效"""
+    """检查token是否有效（token永久有效，只需检查是否存在）"""
     tokens = load_tokens()
-    if token in tokens:
-        expire_time = datetime.fromisoformat(tokens[token]['expire_time'])
-        if datetime.now() < expire_time:
-            return True
-        else:
-            # token过期，删除
-            del tokens[token]
-            save_tokens(tokens)
-    return False
+    return token in tokens
 
 def create_token(username=None):
-    """创建新token"""
+    """创建新token，同时清理同一用户的旧token（保留最近30个）"""
     token = generate_token()
-    expire_time = datetime.now() + timedelta(days=7)
     tokens = load_tokens()
+    # 清理同一用户的旧token，防止tokens.json无限增长
+    if username:
+        user_tokens = [(k, v) for k, v in tokens.items() if v.get('username') == username]
+        user_tokens.sort(key=lambda x: x[1].get('created_time', ''), reverse=True)
+        for old_token, _ in user_tokens[30:]:
+            del tokens[old_token]
     tokens[token] = {
-        'expire_time': expire_time.isoformat(),
         'created_time': datetime.now().isoformat(),
         'username': username
     }

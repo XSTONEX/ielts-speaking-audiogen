@@ -2,8 +2,8 @@ import os
 import json
 from flask import Blueprint, request, jsonify, send_file
 from core import (
-    load_tokens, save_tokens, is_token_valid, create_token,
-    load_users, save_users, authenticate_user,
+    load_tokens, is_token_valid, create_token,
+    load_users, authenticate_user,
     verify_token_get_username, require_auth, USER_DATA_DIR
 )
 
@@ -59,36 +59,6 @@ def index():
 def login_page():
     """登录页面"""
     return send_file('templates/login.html')
-
-@auth_bp.route('/get_password')
-def get_password():
-    password = os.getenv('PASSWORD')
-    return jsonify({'password': password})
-
-@auth_bp.route('/verify_password', methods=['POST'])
-def verify_password():
-    """验证密码并返回token（向后兼容旧系统）"""
-    data = request.json
-    password = data.get('password')
-    server_password = os.getenv('PASSWORD')
-
-    if password == server_password:
-        # 尝试根据密码找到对应的用户
-        username = None
-        users = load_users()
-        for user_key, user_data in users.items():
-            if user_data.get('password') == password:
-                username = user_key
-                break
-
-        # 如果没找到用户，使用默认的guest用户
-        if not username:
-            username = 'guest'
-
-        token = create_token(username=username)
-        return jsonify({'success': True, 'token': token})
-    else:
-        return jsonify({'success': False, 'error': 'Invalid password'})
 
 @auth_bp.route('/verify_token', methods=['POST'])
 def verify_token():
