@@ -1047,7 +1047,8 @@ function renderSmallLearnContent() {
   document.getElementById('smallLearnContent').innerHTML = html;
 }
 
-function quickPracticeSmall(flatIdx) {
+async function quickPracticeSmall(flatIdx) {
+  await refreshSmallProgress();
   renderSmallBreadcrumb('smallPractice', '实战');
   renderSmallQuestionArea('smallPractice');
   renderSmallPracticeContent();
