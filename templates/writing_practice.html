@@ -9,6 +9,8 @@
 <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Crimson+Text:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
 <style>
 :root {
   --serif: 'PT Serif', 'Crimson Text', ui-serif, Georgia, serif;
@@ -458,6 +460,249 @@ textarea, input { font-family: var(--serif); }
   .chart-type-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
   .example-list-grid { grid-template-columns: 1fr; }
 }
+
+/* ==================== AI 浮窗助手 ==================== */
+.ai-float-btn {
+  position: fixed; right: 24px; bottom: 80px; padding: 12px 20px;
+  border-radius: 50px; border: none; cursor: pointer; z-index: 1100;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.35); color: #ffffff; font-size: 14px; font-weight: 600;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.ai-float-btn:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 12px 32px rgba(99, 102, 241, 0.45); }
+
+.ai-chat-window {
+  position: fixed; width: 420px; height: 540px; z-index: 1200;
+  border-radius: 16px; display: none; flex-direction: column; overflow: hidden;
+  background: rgba(255,255,255,0.88); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.12); border: 1px solid rgba(226,232,240,0.6);
+  transition: transform 0.4s cubic-bezier(0.25,1,0.5,1), opacity 0.4s cubic-bezier(0.25,1,0.5,1);
+  transform: scale(0); opacity: 0; transform-origin: bottom right;
+}
+.ai-chat-window.open { display: flex; transform: scale(1); opacity: 1; }
+.ai-chat-window.closing { transform: scale(0); opacity: 0; }
+
+.ai-chat-header {
+  padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+  border-bottom: 1px solid var(--border); cursor: grab; user-select: none; flex-shrink: 0;
+}
+.ai-chat-header:active { cursor: grabbing; }
+.ai-chat-header-title { font-size: 14px; font-weight: 700; color: var(--text); }
+.ai-chat-header-actions { display: flex; gap: 4px; }
+.ai-chat-header-actions button {
+  width: 30px; height: 30px; border-radius: 8px; border: none; cursor: pointer;
+  background: rgba(255,255,255,0.6); color: var(--text2); font-size: 16px;
+  display: flex; align-items: center; justify-content: center; transition: background 0.15s;
+}
+.ai-chat-header-actions button:hover { background: rgba(255,255,255,0.95); color: var(--text); }
+
+.ai-chat-dropzone {
+  min-height: 44px; margin: 10px 12px 4px; padding: 10px;
+  border: 2px dashed var(--border); border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  font-size: 12px; color: var(--text3); transition: all 0.2s; flex-shrink: 0;
+}
+.ai-chat-dropzone.dragover { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
+.ai-chat-dropzone.has-context { border-style: solid; border-color: #bae6fd; background: #f0f9ff; justify-content: flex-start; }
+
+.ai-chat-context-chip {
+  display: inline-flex; align-items: center; gap: 6px; max-width: 95%;
+  padding: 5px 10px; background: white; border-radius: 16px;
+  font-size: 12px; color: var(--accent); border: 1px solid #bae6fd;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ai-chat-context-chip .remove-ctx {
+  width: 18px; height: 18px; border-radius: 50%; border: none; cursor: pointer;
+  background: #e0f2fe; color: var(--text2); font-size: 12px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.ai-chat-context-chip .remove-ctx:hover { background: #fee2e2; color: var(--red); }
+
+.ai-chat-messages {
+  flex: 1; overflow-y: auto; padding: 10px 12px; display: flex;
+  flex-direction: column; gap: 8px; scrollbar-width: thin;
+}
+.ai-chat-msg {
+  max-width: 88%; padding: 10px 14px; border-radius: 14px;
+  font-size: 13px; line-height: 1.7; word-break: break-word;
+}
+.ai-chat-msg.user {
+  align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 4px;
+}
+.ai-chat-msg.assistant {
+  align-self: flex-start; background: #f1f5f9; color: var(--text); border-bottom-left-radius: 4px;
+}
+.ai-chat-msg.assistant h3, .ai-chat-msg.assistant h4 { margin: 8px 0 4px; font-size: 13px; }
+.ai-chat-msg.assistant p { margin: 4px 0; }
+.ai-chat-msg.assistant code { background: #e2e8f0; padding: 1px 4px; border-radius: 3px; font-size: 12px; }
+.ai-chat-msg.assistant ul, .ai-chat-msg.assistant ol { margin: 4px 0; padding-left: 18px; }
+.ai-chat-msg.assistant li { margin: 2px 0; }
+/* Typora-style Markdown body */
+.markdown-body {
+  font-family: var(--serif);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text);
+  word-wrap: break-word;
+}
+.markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4 {
+  margin: 12px 0 6px;
+  font-weight: 700;
+  line-height: 1.4;
+  font-family: var(--serif);
+}
+.markdown-body h1 { font-size: 18px; }
+.markdown-body h2 { font-size: 16px; }
+.markdown-body h3 { font-size: 14px; }
+.markdown-body h4 { font-size: 13px; }
+.markdown-body p { margin: 6px 0; }
+.markdown-body strong { font-weight: 700; }
+.markdown-body em { font-style: italic; }
+.markdown-body code {
+  background: #e2e8f0;
+  padding: 2px 5px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+}
+.markdown-body pre {
+  background: #1e293b;
+  color: #e2e8f0;
+  padding: 12px 14px;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 8px 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.markdown-body pre code {
+  background: none;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+}
+.markdown-body ul, .markdown-body ol {
+  margin: 6px 0;
+  padding-left: 20px;
+}
+.markdown-body li { margin: 3px 0; }
+.markdown-body li > ul, .markdown-body li > ol { margin: 2px 0; }
+.markdown-body blockquote {
+  margin: 8px 0;
+  padding: 4px 12px;
+  border-left: 3px solid var(--accent);
+  color: var(--text2);
+  background: rgba(59, 130, 246, 0.04);
+}
+.markdown-body table {
+  border-collapse: collapse;
+  margin: 8px 0;
+  width: 100%;
+  font-size: 12px;
+}
+.markdown-body th, .markdown-body td {
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  text-align: left;
+}
+.markdown-body th {
+  background: #f1f5f9;
+  font-weight: 700;
+}
+.markdown-body a {
+  color: var(--accent);
+  text-decoration: underline;
+}
+.markdown-body hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 12px 0;
+}
+.markdown-body > *:first-child { margin-top: 0; }
+.markdown-body > *:last-child { margin-bottom: 0; }
+.ai-chat-msg .typing-dot { display: inline-block; animation: typingBlink 1s infinite; }
+@keyframes typingBlink { 0%,100%{opacity:.2} 50%{opacity:1} }
+
+.ai-chat-preset-row {
+  display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 12px; flex-shrink: 0;
+}
+.ai-chat-preset-btn {
+  padding: 6px 12px; border: 1.5px solid var(--border); border-radius: 18px;
+  background: #fff; font-size: 12px; color: var(--text2); cursor: pointer;
+  transition: all 0.15s; white-space: nowrap;
+}
+.ai-chat-preset-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+
+.ai-chat-input-row {
+  display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--border);
+  background: rgba(255,255,255,0.6); flex-shrink: 0;
+}
+.ai-chat-input {
+  flex: 1; padding: 9px 14px; border: 1.5px solid var(--border); border-radius: 16px;
+  font-size: 13px; outline: none; resize: none; font-family: inherit;
+  transition: border-color 0.2s; min-height: 36px; max-height: 80px; overflow-y: auto;
+  line-height: 1.5;
+}
+.ai-chat-input:focus { border-color: var(--accent); }
+.ai-chat-send-btn {
+  width: 36px; height: 36px; border-radius: 50%; border: none; cursor: pointer;
+  background: var(--accent); color: #fff; display: flex; align-items: center;
+  justify-content: center; font-size: 16px; transition: background 0.15s; flex-shrink: 0;
+}
+.ai-chat-send-btn:hover { background: var(--accent-hover); }
+.ai-chat-send-btn:disabled { background: var(--text3); cursor: not-allowed; }
+
+.ai-chat-history-panel {
+  position: absolute; inset: 0; background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(8px); z-index: 5; display: none; flex-direction: column;
+  border-radius: 16px;
+}
+.ai-chat-history-panel.open { display: flex; }
+.ai-chat-history-item {
+  padding: 12px 16px; border-bottom: 1px solid var(--border);
+  cursor: pointer; transition: background 0.15s;
+}
+.ai-chat-history-item:hover { background: var(--accent-light); }
+.ai-chat-history-item .hist-ctx { font-size: 13px; color: var(--text); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ai-chat-history-item .hist-meta { font-size: 11px; color: var(--text3); margin-top: 3px; }
+.ai-chat-history-item .hist-del {
+  float: right; background: none; border: none; color: var(--text3); cursor: pointer; font-size: 14px;
+}
+.ai-chat-history-item .hist-del:hover { color: var(--red); }
+
+/* 实战追问样式 */
+.practice-followup {
+  margin-top: 14px; display: flex; gap: 8px; padding: 10px 14px;
+  background: #f8fafc; border-radius: 10px; border: 1px solid var(--border);
+}
+.practice-followup input {
+  flex: 1; border: none; background: transparent; font-size: 13px;
+  outline: none; font-family: inherit; color: var(--text);
+}
+.practice-followup input::placeholder { color: var(--text3); }
+.practice-followup .followup-send {
+  padding: 5px 14px; border-radius: 8px; background: var(--accent); color: #fff;
+  border: none; font-size: 12px; cursor: pointer; transition: background 0.15s; white-space: nowrap;
+}
+.practice-followup .followup-send:hover { background: var(--accent-hover); }
+.practice-followup-response {
+  margin-top: 10px; padding: 14px 16px; background: #f1f5f9; border-radius: 10px;
+  font-size: 13px; line-height: 1.7; color: var(--text);
+}
+.practice-followup-response h3, .practice-followup-response h4 { margin: 8px 0 4px; font-size: 13px; }
+.practice-followup-response p { margin: 4px 0; }
+.practice-followup-response code { background: #e2e8f0; padding: 1px 4px; border-radius: 3px; font-size: 12px; }
+
+/* 拖拽句子提示 */
+.sentence-pair[draggable="true"] { cursor: grab; transition: opacity 0.2s; }
+.sentence-pair[draggable="true"]:active { cursor: grabbing; }
+.sentence-pair.dragging { opacity: 0.4; }
+
+@media (max-width: 768px) {
+  .ai-chat-window { width: calc(100vw - 16px); height: 70vh; left: 8px !important; right: 8px !important; }
+  .ai-float-btn { right: 16px; bottom: 72px; padding: 10px 16px; font-size: 12px; }
+}
 </style>
 </head>
 <body>
@@ -610,6 +855,33 @@ textarea, input { font-family: var(--serif); }
 </div>
 <button class="review-fab" onclick="toggleReview()">&#128221; 复习</button>
 
+<!-- AI 浮动助手 -->
+<button class="ai-float-btn" id="aiFloatBtn" onclick="toggleAIChat()" title="助手">&#129302; 助手</button>
+<div class="ai-chat-window" id="aiChatWindow">
+  <div class="ai-chat-header" id="aiChatHeader">
+    <span class="ai-chat-header-title">AI 写作助手</span>
+    <div class="ai-chat-header-actions">
+      <button onclick="newAIChat()" title="新对话">+</button>
+      <button onclick="toggleAIChatHistory()" title="历史记录">&#128203;</button>
+      <button onclick="closeAIChat()" title="关闭">&times;</button>
+    </div>
+  </div>
+  <div class="ai-chat-dropzone" id="aiDropzone">&#128270; 将学习页的句子拖到这里开始提问</div>
+  <div class="ai-chat-messages" id="aiChatMessages"></div>
+  <div class="ai-chat-preset-row" id="aiPresetRow" style="display:none;"></div>
+  <div class="ai-chat-input-row">
+    <textarea class="ai-chat-input" id="aiChatInput" placeholder="输入你的问题... (Shift+Enter 换行)" rows="1" onkeydown="handleAIChatKey(event)"></textarea>
+    <button class="ai-chat-send-btn" id="aiChatSendBtn" onclick="sendAIChat()">&#10148;</button>
+  </div>
+  <div class="ai-chat-history-panel" id="aiHistoryPanel">
+    <div style="padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);">
+      <span style="font-weight:700;font-size:14px;">对话历史</span>
+      <button onclick="toggleAIChatHistory()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text2);">&times;</button>
+    </div>
+    <div id="aiHistoryList" style="flex:1;overflow-y:auto;"></div>
+  </div>
+</div>
+
 <!-- Image Lightbox -->
 <div id="imageLightbox" class="image-lightbox" style="display:none;" onclick="closeLightbox(event)">
   <button class="image-lightbox-close" onclick="closeLightbox(event)">&times;</button>
@@ -667,7 +939,16 @@ let state = {
   drawerFilter: '',
   drawerExpandedType: null,
   reviewExpandedTypes: {},
-  reviewExpandedExamples: {}
+  reviewExpandedExamples: {},
+  // AI Chat
+  aiChat: {
+    open: false,
+    context: null,
+    messages: [],
+    sessionId: null,
+    streaming: false,
+    historyOpen: false
+  }
 };
 
 function resetSmallState() {
@@ -1027,7 +1308,9 @@ function renderSmallLearnContent() {
       <div class="section-title">${section.name}${section.annotation ? `<span class="section-annotation">[${section.annotation}]</span>` : ''}</div>`;
     for (const sent of section.sentences) {
       const tagHtml = sent.tags.map(t => `<span class="sentence-tag ${getTagClass(t)}">${t}</span>`).join('');
-      html += `<div class="sentence-pair">
+      const dragInfo = JSON.stringify({ zh: sent.translation, en: sent.original, tags: sent.tags, module: 'small', chartType: data.chart_type || data.chart_subtype || '', exampleName: data.name || '', sentenceIndex: flatIdx }).replace(/'/g, '&#39;');
+      const isDrag = state.aiChat.open;
+      html += `<div class="sentence-pair${isDrag ? '' : ''}" ${isDrag ? 'draggable="true"' : ''} data-drag-info='${dragInfo}' ondragstart="onSentenceDragStart(event)" ondragend="onSentenceDragEnd(event)">
         ${tagHtml ? `<div class="tag-row">${tagHtml}</div>` : ''}
         <div class="sentence-cn">${sent.translation}</div>
         <div class="sentence-en">${sent.original}</div>
@@ -1196,7 +1479,9 @@ function renderSmallEditor(idx) {
         <button class="save-review-btn no" onclick="smallSkipSaveToReview(${idx})">不录入</button>
       </div>`;
     }
-    feedbackHtml = renderFeedbackCard(res, { reviewPrompt, nextBtn: true, nextFn: `advanceSmallNext()` });
+    const fKey = `small_${idx}`;
+    practiceFollowupCtx[fKey] = { target_chinese: s.translation, user_translation: res._userInput || '', ai_feedback_summary: res.feedback_summary || '', grammar_corrections: JSON.stringify(res.grammar_corrections || []) };
+    feedbackHtml = renderFeedbackCard(res, { reviewPrompt, nextBtn: true, nextFn: `advanceSmallNext()`, followupKey: fKey });
   }
 
   const panel = document.getElementById('smallEditorPanel');
@@ -1405,13 +1690,15 @@ function renderLearning(d) {
       <div class="example-body open">
         <div class="example-question">${ex.question}</div>
         ${ex.hints.length ? `<div class="example-hint">${ex.hints.join('<br>')}</div>` : ''}
-        ${ex.sentences.map((s, si) => `
-          <div class="sentence-pair">
+        ${ex.sentences.map((s, si) => {
+          const dragInfo = JSON.stringify({ zh: s.chinese, en: s.english, tags: [], module: 'big', category: catName, subcategory: d.name, exampleName: ex.title, sentenceIndex: si }).replace(/'/g, '&#39;');
+          const isDrag = state.aiChat.open;
+          return `<div class="sentence-pair" ${isDrag ? 'draggable="true"' : ''} data-drag-info='${dragInfo}' ondragstart="onSentenceDragStart(event)" ondragend="onSentenceDragEnd(event)">
             <div class="sentence-cn">${s.chinese}</div>
             <div class="sentence-en">${s.english}</div>
             <button class="quick-practice-btn" onclick="event.stopPropagation(); quickPractice(${i}, ${si})" title="练习此句">&#9998; 练</button>
-          </div>
-        `).join('')}
+          </div>`;
+        }).join('')}
       </div>
     </div>
   `).join('');
@@ -1616,6 +1903,8 @@ function renderFeedbackCard(fb, opts) {
   const gcHtml = formatGrammarCorrections(fb.grammar_corrections);
   const vuHtml = formatVocabUpgrade(fb.vocabulary_upgrade);
   const nextFn = opts.nextFn || 'advanceNext()';
+  const sentKey = opts.followupKey || '';
+  const showFollowup = opts.showFollowup !== false && sentKey;
   return `
     <div class="feedback-card">
       <div class="fb-score ${cls}">${fb.score}</div>
@@ -1637,7 +1926,13 @@ function renderFeedbackCard(fb, opts) {
         </div>` : ''}
       ${opts.reviewPrompt || ''}
       ${opts.nextBtn ? `<button class="skip-btn" style="margin-top:10px;" onclick="${nextFn}">下一句 →</button>` : ''}
-    </div>`;
+    </div>
+    ${showFollowup ? `
+      <div class="practice-followup" id="followup_${sentKey}">
+        <input type="text" placeholder="对批改结果有疑问？追问 AI..." onkeydown="if(event.key==='Enter')sendPracticeFollowup('${sentKey}')">
+        <button class="followup-send" onclick="sendPracticeFollowup('${sentKey}')">发送</button>
+      </div>
+      <div class="practice-followup-response markdown-body" id="followupResp_${sentKey}" style="display:none;"></div>` : ''}`;
 }
 
 function renderEditor(idx) {
@@ -1672,7 +1967,9 @@ function renderEditor(idx) {
     if (res._savedToReview === true) reviewPrompt = '<div class="saved-badge">✓ 已录入复习中心</div>';
     else if (res._savedToReview === 'skipped') reviewPrompt = '<div style="font-size:12px; color:var(--text3); margin-top:8px;">已跳过，未录入复习中心</div>';
     else if (res._savedToReview === 'pending') reviewPrompt = `<div class="save-review-prompt"><div class="prompt-text">是否将此条录入复习中心的笔记？</div><button class="save-review-btn yes" onclick="saveToReview(${idx})">录入笔记</button><button class="save-review-btn no" onclick="skipSaveToReview(${idx})">不录入</button></div>`;
-    feedbackHtml = renderFeedbackCard(res, { reviewPrompt, nextBtn: true });
+    const fKey = `big_${state.currentExIdx}_${idx}`;
+    practiceFollowupCtx[fKey] = { target_chinese: s.chinese, user_translation: res._userInput || '', ai_feedback_summary: res.feedback_summary || '', grammar_corrections: JSON.stringify(res.grammar_corrections || []) };
+    feedbackHtml = renderFeedbackCard(res, { reviewPrompt, nextBtn: true, followupKey: fKey });
   }
   document.getElementById('editorPanel').innerHTML = `
     <div class="editor-context"><div class="ctx-label">目标中文句</div><div class="ctx-cn">${s.chinese}</div>${chainHtml}${hintHtml}</div>
@@ -1760,6 +2057,7 @@ function toggleReview() {
   state.drawerOpen = !state.drawerOpen;
   document.getElementById('reviewOverlay').classList.toggle('open', state.drawerOpen);
   document.body.style.overflow = state.drawerOpen ? 'hidden' : '';
+  document.querySelector('.main-panel-wrapper').style.visibility = state.drawerOpen ? 'hidden' : '';
   if (state.drawerOpen) loadReviewContent();
 }
 
@@ -2023,6 +2321,387 @@ async function deleteBigReview(id) {
 }
 
 /* ==================== Init ==================== */
+
+/* ==================== AI 助手：全局配置 ==================== */
+const AI_PRESET_QUESTIONS = [
+  { icon: '\u{1F50D}', label: '主干拆解', query: '这个句子的主干是什么？能帮我简单拆解一下结构吗？' },
+  { icon: '\u{2728}', label: '词汇替换', query: '这句话里有哪些词比较高级？如果我平时写，可以用什么简单点的词代替吗？' },
+  { icon: '\u{270F}\u{FE0F}', label: '极简改写', query: '如果我觉得这句话太难了背不下来，你能帮我改写一个更简单、不容易出错的版本吗？' }
+];
+const practiceFollowupCtx = {};
+
+/* ==================== AI 浮窗：动画与拖拽 ==================== */
+function toggleAIChat() {
+  if (state.aiChat.open) { closeAIChat(); return; }
+  state.aiChat.open = true;
+  const win = document.getElementById('aiChatWindow');
+  const btn = document.getElementById('aiFloatBtn');
+  const btnRect = btn.getBoundingClientRect();
+  const saved = JSON.parse(localStorage.getItem('aiChatPos') || 'null');
+  const targetX = saved ? saved.x : window.innerWidth - 440;
+  const targetY = saved ? saved.y : window.innerHeight - 580;
+  win.style.left = targetX + 'px';
+  win.style.top = targetY + 'px';
+  win.style.transformOrigin = `${btnRect.left + 28 - targetX}px ${btnRect.top + 28 - targetY}px`;
+  win.classList.remove('closing');
+  win.style.display = 'flex';
+  requestAnimationFrame(() => { win.classList.add('open'); });
+  updateDraggableState();
+}
+
+function closeAIChat() {
+  const win = document.getElementById('aiChatWindow');
+  const btn = document.getElementById('aiFloatBtn');
+  const winRect = win.getBoundingClientRect();
+  const btnRect = btn.getBoundingClientRect();
+  win.style.transformOrigin = `${btnRect.left + 28 - winRect.left}px ${btnRect.top + 28 - winRect.top}px`;
+  win.classList.remove('open');
+  win.classList.add('closing');
+  setTimeout(() => {
+    win.style.display = 'none';
+    win.classList.remove('closing');
+    state.aiChat.open = false;
+    updateDraggableState();
+  }, 400);
+  if (state.aiChat.messages.length && state.aiChat.context) saveAIChatSession();
+}
+
+function initAIChatDrag() {
+  const header = document.getElementById('aiChatHeader');
+  const win = document.getElementById('aiChatWindow');
+  let dragging = false, offX = 0, offY = 0;
+  header.addEventListener('mousedown', e => {
+    if (e.target.tagName === 'BUTTON') return;
+    dragging = true; offX = e.clientX - win.offsetLeft; offY = e.clientY - win.offsetTop;
+    win.style.transition = 'none';
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const x = Math.max(0, Math.min(window.innerWidth - 100, e.clientX - offX));
+    const y = Math.max(0, Math.min(window.innerHeight - 100, e.clientY - offY));
+    win.style.left = x + 'px'; win.style.top = y + 'px';
+  });
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return; dragging = false;
+    win.style.transition = '';
+    localStorage.setItem('aiChatPos', JSON.stringify({ x: win.offsetLeft, y: win.offsetTop }));
+  });
+}
+
+/* ==================== AI 浮窗：Dropzone ==================== */
+function setupAIDropzone() {
+  const dz = document.getElementById('aiDropzone');
+  const msgs = document.getElementById('aiChatMessages');
+
+  async function handleSentenceDrop(e) {
+    e.preventDefault(); dz.classList.remove('dragover');
+    try {
+      const info = JSON.parse(e.dataTransfer.getData('application/json'));
+      if (!info || !info.en) return;
+      if (!state.aiChat.open) toggleAIChat();
+      const sentenceKey = `${info.module}|${info.chartType || info.category || ''}|${info.exampleName || ''}|${info.sentenceIndex}`;
+      if (state.aiChat.messages.length && state.aiChat.context) await saveAIChatSession();
+      state.aiChat.context = { ...info, sentenceKey };
+      state.aiChat.messages = [];
+      state.aiChat.sessionId = null;
+      try {
+        const resp = await fetch(`/api/writing/chat_history/find?sentence_key=${encodeURIComponent(sentenceKey)}`, { headers: API.headers() });
+        const existing = await resp.json();
+        if (existing && existing.id) {
+          state.aiChat.sessionId = existing.id;
+          state.aiChat.messages = existing.messages || [];
+        }
+      } catch(e) {}
+      renderAIDropzone(); renderAIChatMessages(); renderAIPresets();
+    } catch(err) {}
+  }
+
+  function handleDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; dz.classList.add('dragover'); }
+  function handleDragLeave(e) {
+    const win = document.getElementById('aiChatWindow');
+    if (win && !win.contains(e.relatedTarget)) dz.classList.remove('dragover');
+  }
+
+  [dz, msgs].forEach(el => {
+    el.addEventListener('dragover', handleDragOver);
+    el.addEventListener('dragleave', handleDragLeave);
+    el.addEventListener('drop', handleSentenceDrop);
+  });
+}
+
+function onSentenceDragStart(event) {
+  try {
+    const info = event.currentTarget.dataset.dragInfo;
+    event.dataTransfer.setData('application/json', info);
+    event.dataTransfer.effectAllowed = 'copy';
+    event.currentTarget.classList.add('dragging');
+  } catch(e) {}
+}
+
+function onSentenceDragEnd(event) {
+  event.currentTarget.classList.remove('dragging');
+}
+
+function updateDraggableState() {
+  const isDrag = state.aiChat.open;
+  document.querySelectorAll('.sentence-pair[data-drag-info]').forEach(el => {
+    if (isDrag) el.setAttribute('draggable', 'true');
+    else el.removeAttribute('draggable');
+  });
+}
+
+function renderAIDropzone() {
+  const dz = document.getElementById('aiDropzone');
+  const ctx = state.aiChat.context;
+  if (ctx) {
+    dz.classList.add('has-context');
+    const label = ctx.en.length > 50 ? ctx.en.substring(0, 50) + '...' : ctx.en;
+    dz.innerHTML = `<span class="ai-chat-context-chip"><span style="overflow:hidden;text-overflow:ellipsis;">${label}</span><button class="remove-ctx" onclick="clearAIContext()" title="移除">&times;</button></span>`;
+  } else {
+    dz.classList.remove('has-context');
+    dz.innerHTML = '&#128270; 将学习页的句子拖到这里开始提问';
+  }
+}
+
+function clearAIContext() {
+  if (state.aiChat.messages.length) saveAIChatSession();
+  state.aiChat.context = null; state.aiChat.messages = []; state.aiChat.sessionId = null;
+  renderAIDropzone(); renderAIChatMessages(); renderAIPresets();
+}
+
+/* ==================== AI 浮窗：预设问题 ==================== */
+function renderAIPresets() {
+  const row = document.getElementById('aiPresetRow');
+  if (state.aiChat.context && state.aiChat.messages.length === 0) {
+    row.style.display = 'flex';
+    row.innerHTML = AI_PRESET_QUESTIONS.map(q =>
+      `<button class="ai-chat-preset-btn" onclick="sendAIChat('${q.query.replace(/'/g, "\\'")}')">${q.icon} ${q.label}</button>`
+    ).join('');
+  } else {
+    row.style.display = 'none';
+  }
+}
+
+/* ==================== AI 浮窗：Markdown 渲染 ==================== */
+function renderMarkdown(md) {
+  if (!md) return '';
+  return DOMPurify.sanitize(marked.parse(md));
+}
+
+/* ==================== AI 浮窗：消息渲染 ==================== */
+function renderAIChatMessages() {
+  const container = document.getElementById('aiChatMessages');
+  if (!state.aiChat.messages.length) {
+    container.innerHTML = state.aiChat.context
+      ? '<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px;">点击下方预设问题或输入你的疑问</div>'
+      : '<div style="text-align:center;padding:40px 20px;color:var(--text3);font-size:12px;">拖入句子后即可开始对话</div>';
+    return;
+  }
+  container.innerHTML = state.aiChat.messages.map((m, i) => {
+    if (m.role === 'assistant' && !m.content && state.aiChat.streaming && i === state.aiChat.messages.length - 1) {
+      return `<div class="ai-chat-msg assistant"><span class="spinner" style="display:inline-block;width:14px;height:14px;"></span> AI 思考中...</div>`;
+    }
+    const content = m.role === 'assistant' ? renderMarkdown(m.content) : m.content.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+    return `<div class="ai-chat-msg ${m.role}${m.role === 'assistant' ? ' markdown-body' : ''}">${content}</div>`;
+  }).join('');
+  container.scrollTop = container.scrollHeight;
+}
+
+function updateLastAIChatMessage() {
+  const container = document.getElementById('aiChatMessages');
+  const msgs = container.querySelectorAll('.ai-chat-msg');
+  const lastMsg = msgs[msgs.length - 1];
+  if (lastMsg && state.aiChat.messages.length) {
+    const m = state.aiChat.messages[state.aiChat.messages.length - 1];
+    lastMsg.innerHTML = renderMarkdown(m.content) + (state.aiChat.streaming ? '<span class="typing-dot">|</span>' : '');
+  }
+  container.scrollTop = container.scrollHeight;
+}
+
+/* ==================== AI Provider 封装 ==================== */
+async function globalAIProvider(query, context, chatHistory, { onLoading, onDone, onError }) {
+  onLoading && onLoading();
+  try {
+    const resp = await API.post('/api/writing/ai_chat/global', {
+      context, user_query: query, chat_history: chatHistory
+    });
+    if (resp.error) { onError && onError(resp.error); return null; }
+    onDone && onDone(resp.content);
+    return resp.content;
+  } catch(e) {
+    onError && onError('请求失败，请重试');
+    return null;
+  }
+}
+
+async function practiceAIProvider(query, context, { onLoading, onDone, onError }) {
+  onLoading && onLoading();
+  try {
+    const resp = await API.post('/api/writing/ai_chat/practice', {
+      context, user_query: query
+    });
+    if (resp.error) { onError && onError(resp.error); return null; }
+    onDone && onDone(resp.content);
+    return resp.content;
+  } catch(e) {
+    onError && onError('请求失败，请重试');
+    return null;
+  }
+}
+
+/* ==================== AI 浮窗：发送消息 ==================== */
+function handleAIChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAIChat(); }
+}
+
+async function sendAIChat(presetQuery) {
+  const input = document.getElementById('aiChatInput');
+  const query = presetQuery || (input ? input.value.trim() : '');
+  if (!query || state.aiChat.streaming) return;
+  if (input) { input.value = ''; input.style.height = 'auto'; }
+
+  state.aiChat.messages.push({ role: 'user', content: query });
+  state.aiChat.messages.push({ role: 'assistant', content: '' });
+  renderAIChatMessages();
+  renderAIPresets();
+
+  state.aiChat.streaming = true;
+  const sendBtn = document.getElementById('aiChatSendBtn');
+  if (sendBtn) sendBtn.disabled = true;
+
+  const ctx = state.aiChat.context || {};
+  const history = state.aiChat.messages.slice(0, -2);
+
+  await globalAIProvider(query, ctx, history, {
+    onLoading: () => {
+      state.aiChat.messages[state.aiChat.messages.length - 1].content = '';
+      updateLastAIChatMessage();
+    },
+    onDone: (content) => {
+      state.aiChat.messages[state.aiChat.messages.length - 1].content = content || '';
+    },
+    onError: (err) => {
+      state.aiChat.messages[state.aiChat.messages.length - 1].content = `[${err}]`;
+    }
+  });
+
+  state.aiChat.streaming = false;
+  if (sendBtn) sendBtn.disabled = false;
+  renderAIChatMessages();
+  saveAIChatSession();
+}
+
+/* ==================== AI 浮窗：会话保存与历史 ==================== */
+async function saveAIChatSession() {
+  if (!state.aiChat.context || !state.aiChat.messages.length) return;
+  try {
+    const ctx = state.aiChat.context;
+    const resp = await API.post('/api/writing/chat_history/save', {
+      session_id: state.aiChat.sessionId || null,
+      sentence_key: ctx.sentenceKey || '',
+      context_zh: ctx.zh || '',
+      context_en: ctx.en || '',
+      context_tags: ctx.tags || [],
+      module: ctx.module || '',
+      detail_info: `${ctx.chartType || ctx.category || ''} > ${ctx.exampleName || ''}`,
+      messages: state.aiChat.messages
+    });
+    if (resp.session_id) state.aiChat.sessionId = resp.session_id;
+  } catch(e) {}
+}
+
+async function newAIChat() {
+  if (state.aiChat.messages.length && state.aiChat.context) await saveAIChatSession();
+  state.aiChat.context = null; state.aiChat.messages = []; state.aiChat.sessionId = null;
+  renderAIDropzone(); renderAIChatMessages(); renderAIPresets();
+  document.getElementById('aiChatInput').focus();
+}
+
+async function toggleAIChatHistory() {
+  state.aiChat.historyOpen = !state.aiChat.historyOpen;
+  const panel = document.getElementById('aiHistoryPanel');
+  if (state.aiChat.historyOpen) {
+    panel.classList.add('open');
+    try {
+      const sessions = await API.get('/api/writing/chat_history/list');
+      renderAIChatHistoryList(sessions);
+    } catch(e) {
+      document.getElementById('aiHistoryList').innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);">加载失败</div>';
+    }
+  } else {
+    panel.classList.remove('open');
+  }
+}
+
+function renderAIChatHistoryList(sessions) {
+  const container = document.getElementById('aiHistoryList');
+  if (!sessions.length) {
+    container.innerHTML = '<div style="padding:30px;text-align:center;color:var(--text3);font-size:13px;">暂无历史对话</div>';
+    return;
+  }
+  container.innerHTML = sessions.map(s => {
+    const date = s.updated_at ? new Date(s.updated_at).toLocaleString('zh-CN', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
+    const ctx = s.context_en ? (s.context_en.length > 40 ? s.context_en.substring(0, 40) + '...' : s.context_en) : (s.detail_info || '对话');
+    return `<div class="ai-chat-history-item" onclick="loadAIChatSession('${s.id}')">
+      <button class="hist-del" onclick="event.stopPropagation();deleteAIChatSession('${s.id}')" title="删除">&times;</button>
+      <div class="hist-ctx">${ctx}</div>
+      <div class="hist-meta">${s.detail_info || ''} · ${s.message_count || 0} 条消息 · ${date}</div>
+    </div>`;
+  }).join('');
+}
+
+async function loadAIChatSession(sessionId) {
+  try {
+    const session = await API.get(`/api/writing/chat_history/${sessionId}`);
+    if (!session || session.error) return;
+    state.aiChat.sessionId = session.id;
+    state.aiChat.messages = session.messages || [];
+    state.aiChat.context = {
+      zh: session.context_zh || '', en: session.context_en || '',
+      tags: session.context_tags || [], module: session.module || '',
+      sentenceKey: session.sentence_key || '', detail_info: session.detail_info || ''
+    };
+    state.aiChat.historyOpen = false;
+    document.getElementById('aiHistoryPanel').classList.remove('open');
+    renderAIDropzone(); renderAIChatMessages(); renderAIPresets();
+  } catch(e) {}
+}
+
+async function deleteAIChatSession(sessionId) {
+  if (!confirm('确认删除这条对话？')) return;
+  try {
+    await API.post(`/api/writing/chat_history/delete/${sessionId}`);
+    const sessions = await API.get('/api/writing/chat_history/list');
+    renderAIChatHistoryList(sessions);
+    if (state.aiChat.sessionId === sessionId) {
+      state.aiChat.context = null; state.aiChat.messages = []; state.aiChat.sessionId = null;
+      renderAIDropzone(); renderAIChatMessages(); renderAIPresets();
+    }
+  } catch(e) {}
+}
+
+/* ==================== 实战追问助手 ==================== */
+async function sendPracticeFollowup(sentKey) {
+  const container = document.getElementById('followup_' + sentKey);
+  if (!container) return;
+  const input = container.querySelector('input');
+  const query = input ? input.value.trim() : '';
+  if (!query) return;
+  input.value = '';
+
+  const ctx = practiceFollowupCtx[sentKey];
+  if (!ctx) return;
+
+  const respDiv = document.getElementById('followupResp_' + sentKey);
+  respDiv.style.display = 'block';
+
+  await practiceAIProvider(query, ctx, {
+    onLoading: () => { respDiv.innerHTML = '<span class="spinner" style="display:inline-block;width:16px;height:16px;"></span> AI 思考中...'; },
+    onDone: (content) => { respDiv.innerHTML = content ? renderMarkdown(content) : '<span style="color:var(--text3);">无回复</span>'; },
+    onError: (err) => { respDiv.innerHTML = `<span style="color:var(--red);">${err}</span>`; }
+  });
+}
+
 (async function init() {
   const tk = localStorage.getItem('authToken');
   if (!tk) { window.location.href = '/login'; return; }
@@ -2032,6 +2711,8 @@ async function deleteBigReview(id) {
     if (!d.valid) { window.location.href = '/login'; return; }
   } catch (e) { window.location.href = '/login'; return; }
   // Start at entry view (default visible)
+  initAIChatDrag();
+  setupAIDropzone();
 })();
 </script>
 </body>

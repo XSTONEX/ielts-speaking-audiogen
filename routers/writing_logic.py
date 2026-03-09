@@ -8,7 +8,7 @@ from datetime import datetime
 from flask import Blueprint, request, jsonify, send_file, send_from_directory
 from core import (
     WRITING_CORRECTION_DIR, WRITING_DATA_DIR, WRITING_MD_FILE,
-    WRITING_SMALL_MD_FILE, WRITING_IMAGES_DIR,
+    WRITING_SMALL_MD_FILE, WRITING_IMAGES_DIR, WRITING_CHAT_DIR,
     is_token_valid, load_tokens, load_prompt
 )
 
@@ -967,4 +967,244 @@ def writing_delete_practice(record_id):
     records = _load_practice(username)
     records = [r for r in records if r['id'] != record_id]
     _save_practice(username, records)
+    return jsonify({'success': True})
+
+
+# ===================== AI 聊天历史数据 =====================
+
+def _chat_dir(username):
+    d = os.path.join(WRITING_CHAT_DIR, username)
+    os.makedirs(d, exist_ok=True)
+    return d
+
+def _load_chat_session(username, session_id):
+    p = os.path.join(_chat_dir(username), f'{session_id}.json')
+    if os.path.exists(p):
+        with open(p, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    return None
+
+def _save_chat_session(username, session_id, data):
+    p = os.path.join(_chat_dir(username), f'{session_id}.json')
+    with open(p, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+def _list_chat_sessions(username):
+    d = _chat_dir(username)
+    sessions = []
+    for fname in os.listdir(d):
+        if not fname.endswith('.json'):
+            continue
+        try:
+            with open(os.path.join(d, fname), 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            sessions.append({
+                'id': data['id'],
+                'sentence_key': data.get('sentence_key', ''),
+                'context_zh': data.get('context_zh', ''),
+                'context_en': data.get('context_en', ''),
+                'module': data.get('module', ''),
+                'detail_info': data.get('detail_info', ''),
+                'updated_at': data.get('updated_at', ''),
+                'message_count': len(data.get('messages', []))
+            })
+        except Exception:
+            continue
+    sessions.sort(key=lambda x: x.get('updated_at', ''), reverse=True)
+    return sessions
+
+def _find_session_by_key(username, sentence_key):
+    d = _chat_dir(username)
+    for fname in os.listdir(d):
+        if not fname.endswith('.json'):
+            continue
+        try:
+            with open(os.path.join(d, fname), 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            if data.get('sentence_key') == sentence_key:
+                return data
+        except Exception:
+            continue
+    return None
+
+
+# ===================== AI 聊天辅助 =====================
+
+def _call_ai_chat(messages, cfg):
+    """调用 AI 聊天接口，返回完整回复文本"""
+    api_key = os.getenv('DEER_API_KEY')
+    resp = requests.post(
+        cfg['api_url'],
+        headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
+        json={
+            'model': cfg['model'],
+            'messages': messages,
+            'temperature': cfg.get('temperature', 0.6)
+        },
+        timeout=cfg.get('timeout', 60)
+    )
+    resp.raise_for_status()
+    return resp.json()['choices'][0]['message']['content'].strip()
+
+
+# ===================== AI 聊天 API 路由 =====================
+
+@writing_bp.route('/api/writing/ai_chat/global', methods=['POST'])
+def writing_ai_chat_global():
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    if not is_token_valid(token):
+        return jsonify({'error': '未登录'}), 401
+
+    data = request.json or {}
+    context = data.get('context', {})
+    user_query = data.get('user_query', '')
+    chat_history = data.get('chat_history', [])
+
+    if not user_query.strip():
+        return jsonify({'error': '问题不能为空'}), 400
+
+    cfg = load_prompt('writing_ai_chat_global')
+    system_content = cfg['system_prompt'].format(
+        context_zh=context.get('zh', ''),
+        context_en=context.get('en', ''),
+        context_tags=', '.join(context.get('tags', []))
+    )
+
+    messages = [{'role': 'system', 'content': system_content}]
+    for msg in chat_history:
+        if msg.get('role') in ('user', 'assistant') and msg.get('content'):
+            messages.append({'role': msg['role'], 'content': msg['content']})
+    messages.append({'role': 'user', 'content': user_query})
+
+    try:
+        content = _call_ai_chat(messages, cfg)
+        return jsonify({'content': content})
+    except requests.exceptions.Timeout:
+        return jsonify({'error': 'AI 服务超时，请重试'}), 504
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@writing_bp.route('/api/writing/ai_chat/practice', methods=['POST'])
+def writing_ai_chat_practice():
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    if not is_token_valid(token):
+        return jsonify({'error': '未登录'}), 401
+
+    data = request.json or {}
+    context = data.get('context', {})
+    user_query = data.get('user_query', '')
+
+    if not user_query.strip():
+        return jsonify({'error': '问题不能为空'}), 400
+
+    cfg = load_prompt('writing_ai_chat_practice')
+    system_content = cfg['system_prompt'].format(
+        target_chinese=context.get('target_chinese', ''),
+        user_translation=context.get('user_translation', ''),
+        ai_feedback_summary=context.get('ai_feedback_summary', ''),
+        grammar_corrections=context.get('grammar_corrections', ''),
+        user_query=user_query
+    )
+
+    messages = [
+        {'role': 'system', 'content': system_content},
+        {'role': 'user', 'content': user_query}
+    ]
+
+    try:
+        content = _call_ai_chat(messages, cfg)
+        return jsonify({'content': content})
+    except requests.exceptions.Timeout:
+        return jsonify({'error': 'AI 服务超时，请重试'}), 504
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@writing_bp.route('/api/writing/chat_history/save', methods=['POST'])
+def writing_chat_save():
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    if not is_token_valid(token):
+        return jsonify({'error': '未登录'}), 401
+    tokens = load_tokens()
+    username = tokens.get(token, {}).get('username', 'anonymous')
+
+    data = request.json or {}
+    session_id = data.get('session_id')
+    now = datetime.now().isoformat()
+
+    if session_id:
+        existing = _load_chat_session(username, session_id)
+        if existing:
+            existing['messages'] = data.get('messages', existing['messages'])
+            existing['updated_at'] = now
+            _save_chat_session(username, session_id, existing)
+            return jsonify({'success': True, 'session_id': session_id})
+
+    session_id = str(uuid.uuid4())
+    session_data = {
+        'id': session_id,
+        'sentence_key': data.get('sentence_key', ''),
+        'context_zh': data.get('context_zh', ''),
+        'context_en': data.get('context_en', ''),
+        'context_tags': data.get('context_tags', []),
+        'module': data.get('module', ''),
+        'detail_info': data.get('detail_info', ''),
+        'created_at': now,
+        'updated_at': now,
+        'messages': data.get('messages', [])
+    }
+    _save_chat_session(username, session_id, session_data)
+    return jsonify({'success': True, 'session_id': session_id})
+
+
+@writing_bp.route('/api/writing/chat_history/list', methods=['GET'])
+def writing_chat_list():
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    if not is_token_valid(token):
+        return jsonify({'error': '未登录'}), 401
+    tokens = load_tokens()
+    username = tokens.get(token, {}).get('username', 'anonymous')
+    return jsonify(_list_chat_sessions(username))
+
+
+@writing_bp.route('/api/writing/chat_history/<session_id>', methods=['GET'])
+def writing_chat_get(session_id):
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    if not is_token_valid(token):
+        return jsonify({'error': '未登录'}), 401
+    tokens = load_tokens()
+    username = tokens.get(token, {}).get('username', 'anonymous')
+    session = _load_chat_session(username, session_id)
+    if not session:
+        return jsonify({'error': '会话不存在'}), 404
+    return jsonify(session)
+
+
+@writing_bp.route('/api/writing/chat_history/find', methods=['GET'])
+def writing_chat_find():
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    if not is_token_valid(token):
+        return jsonify({'error': '未登录'}), 401
+    tokens = load_tokens()
+    username = tokens.get(token, {}).get('username', 'anonymous')
+    sentence_key = request.args.get('sentence_key', '')
+    if not sentence_key:
+        return jsonify({'error': '缺少 sentence_key'}), 400
+    session = _find_session_by_key(username, sentence_key)
+    if session:
+        return jsonify(session)
+    return jsonify(None)
+
+
+@writing_bp.route('/api/writing/chat_history/delete/<session_id>', methods=['POST'])
+def writing_chat_delete(session_id):
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    if not is_token_valid(token):
+        return jsonify({'error': '未登录'}), 401
+    tokens = load_tokens()
+    username = tokens.get(token, {}).get('username', 'anonymous')
+    p = os.path.join(_chat_dir(username), f'{session_id}.json')
+    if os.path.exists(p):
+        os.remove(p)
     return jsonify({'success': True})

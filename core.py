@@ -45,6 +45,7 @@ WRITING_DATA_DIR = 'writing_correction/data'
 WRITING_MD_FILE = 'writing_correction/resource/九分学长雅思写作论证块.md'
 WRITING_SMALL_MD_FILE = 'writing_correction/resource/小作文仿写.md'
 WRITING_IMAGES_DIR = 'writing_correction/images'
+WRITING_CHAT_DIR = 'writing_correction/data/chat_history'
 LISTENING_REVIEW_DIR = 'listening_review'
 PROMPTS_DIR = os.path.join(os.path.dirname(__file__), 'prompts')
 
@@ -93,6 +94,7 @@ def init_directories():
     os.makedirs(AUDIO_TRANSCRIPTION_DIR, exist_ok=True)
     os.makedirs(WRITING_DATA_DIR, exist_ok=True)
     os.makedirs(WRITING_IMAGES_DIR, exist_ok=True)
+    os.makedirs(WRITING_CHAT_DIR, exist_ok=True)
     os.makedirs(LISTENING_REVIEW_DIR, exist_ok=True)
 
 
