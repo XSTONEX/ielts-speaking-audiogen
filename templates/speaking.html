@@ -1,6 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>
+        (function () {
+            try {
+                var preference = localStorage.getItem('ui-theme');
+                if (preference !== 'light' && preference !== 'dark' && preference !== 'system') preference = 'system';
+                var isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                var theme = preference === 'system' ? (isDark ? 'dark' : 'light') : preference;
+                var root = document.documentElement;
+                root.dataset.themePreference = preference;
+                root.dataset.theme = theme;
+                root.style.colorScheme = theme;
+                root.classList.toggle('dark', theme === 'dark');
+            } catch (error) {
+                document.documentElement.dataset.themePreference = 'system';
+                document.documentElement.dataset.theme = 'light';
+                document.documentElement.style.colorScheme = 'light';
+            }
+        })();
+    </script>
     <meta charset="UTF-8">
     <title>Audio TTS Generator - Speaking</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -162,8 +181,10 @@
           }
         }
     </style>
+    <link rel="stylesheet" href="/static/theme.css">
+    <script src="/static/theme.js" defer></script>
 </head>
-<body>
+<body class="theme-page page-speaking">
 <div class="container">
     <div class="actions" style="justify-content:center; margin-top:0; margin-bottom:12px;">
         <button onclick="location.href='/'" style="background:#6b7280;color:#fff;">返回模块选择</button>
@@ -313,5 +334,4 @@
     </script>
 </body>
 </html>
-
 

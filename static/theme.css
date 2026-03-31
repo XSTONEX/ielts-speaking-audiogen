@@ -1,0 +1,694 @@
+:root {
+  --bg-page: #f5f7fc;
+  --bg-page-accent: #dfe7ff;
+  --bg-surface: #ffffff;
+  --bg-elevated: #ffffff;
+  --bg-muted: #f8fafc;
+  --bg-subtle: #eef2f7;
+  --bg-panel: rgba(255, 255, 255, 0.95);
+  --text-primary: #162033;
+  --text-secondary: #475569;
+  --text-muted: #6b7280;
+  --border-default: #d9e2ec;
+  --border-strong: #cbd5e1;
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
+  --accent-soft: #e6ebff;
+  --success: #059669;
+  --success-soft: #dcfce7;
+  --warning: #d97706;
+  --warning-soft: #fef3c7;
+  --danger: #dc2626;
+  --danger-soft: #fee2e2;
+  --overlay: rgba(15, 23, 42, 0.48);
+  --shadow-rgb: 15, 23, 42;
+  --page-gradient: linear-gradient(135deg, var(--bg-page-accent) 0%, var(--bg-page) 100%);
+  --surface-gradient: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.98) 100%);
+  --header-gradient: linear-gradient(135deg, #667eea 0%, #7c3aed 100%);
+}
+
+html[data-theme="dark"] {
+  --bg-page: #0a1220;
+  --bg-page-accent: #111d34;
+  --bg-surface: #101b2d;
+  --bg-elevated: #14233a;
+  --bg-muted: #162437;
+  --bg-subtle: #1d2d45;
+  --bg-panel: rgba(16, 27, 45, 0.94);
+  --text-primary: #edf3ff;
+  --text-secondary: #b7c4db;
+  --text-muted: #8ea1c0;
+  --border-default: #2b3c59;
+  --border-strong: #3d4f6e;
+  --accent: #8a95ff;
+  --accent-hover: #a5b0ff;
+  --accent-soft: rgba(138, 149, 255, 0.18);
+  --success: #34d399;
+  --success-soft: rgba(52, 211, 153, 0.16);
+  --warning: #f59e0b;
+  --warning-soft: rgba(245, 158, 11, 0.18);
+  --danger: #f87171;
+  --danger-soft: rgba(248, 113, 113, 0.18);
+  --overlay: rgba(2, 6, 23, 0.72);
+  --shadow-rgb: 2, 6, 23;
+  --page-gradient: linear-gradient(135deg, var(--bg-page) 0%, #121b31 100%);
+  --surface-gradient: linear-gradient(180deg, rgba(16, 27, 45, 0.98) 0%, rgba(20, 35, 58, 0.98) 100%);
+  --header-gradient: linear-gradient(135deg, #283f71 0%, #47265f 100%);
+}
+
+html {
+  background: var(--bg-page);
+}
+
+body.theme-page {
+  background: var(--page-gradient) !important;
+  color: var(--text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+body.theme-page,
+body.theme-page button,
+body.theme-page input,
+body.theme-page select,
+body.theme-page textarea {
+  color: var(--text-primary);
+}
+
+body.theme-page ::selection {
+  background: rgba(79, 70, 229, 0.28);
+}
+
+body.theme-page a {
+  color: var(--accent);
+}
+
+body.theme-page input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+body.theme-page select,
+body.theme-page textarea {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border-color: var(--border-default);
+  caret-color: var(--accent);
+}
+
+body.theme-page input::placeholder,
+body.theme-page textarea::placeholder {
+  color: var(--text-muted);
+}
+
+body.theme-page input:focus,
+body.theme-page select:focus,
+body.theme-page textarea:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.16) !important;
+}
+
+body.theme-page .container,
+body.theme-page .wrap,
+body.theme-page .main-content,
+body.theme-page .main-panel-wrapper,
+body.theme-page .login-container,
+body.theme-page .card,
+body.theme-page .item,
+body.theme-page .section,
+body.theme-page .sidebar,
+body.theme-page .content,
+body.theme-page .content-area,
+body.theme-page .post-card,
+body.theme-page .module,
+body.theme-page .folder-card,
+body.theme-page .audio-folder,
+body.theme-page .comment-form,
+body.theme-page .comments-section,
+body.theme-page .recording-section,
+body.theme-page .recording-status,
+body.theme-page .upload-section,
+body.theme-page .file-preview,
+body.theme-page .vocab-item,
+body.theme-page .small-ex-card,
+body.theme-page .sentence-card,
+body.theme-page .review-tree-l1-header,
+body.theme-page .review-tree-l2-header,
+body.theme-page .review-tree-l3,
+body.theme-page .review-tree-record {
+  border-color: var(--border-default);
+}
+
+body.theme-page .modal,
+body.theme-page #textModal,
+body.theme-page #uploadModal,
+body.theme-page .image-lightbox,
+body.theme-page .image-modal,
+body.theme-page .review-overlay,
+body.theme-page .modal-overlay {
+  background: var(--overlay);
+}
+
+body.theme-page .modal-content,
+body.theme-page #textModal .modal-content,
+body.theme-page .export-menu,
+body.theme-page .image-lightbox img,
+body.theme-page .challenge-alert,
+body.theme-page #vocabPopover,
+body.theme-page .login-container,
+body.theme-page .main-panel-wrapper,
+body.theme-page .review-overlay-body,
+body.theme-page .review-overlay-header,
+body.theme-page .review-overlay-tabs,
+body.theme-page .highlights-panel,
+body.theme-page #playerBar,
+body.theme-page #topBar,
+body.theme-page .theme-surface {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border-color: var(--border-default);
+  box-shadow: 0 18px 44px rgba(var(--shadow-rgb), 0.28);
+}
+
+body.theme-page code,
+body.theme-page pre,
+body.theme-page .hljs {
+  background: var(--bg-muted) !important;
+  color: var(--text-primary) !important;
+}
+
+body.theme-page ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+body.theme-page ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+body.theme-page ::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 999px;
+}
+
+.theme-switcher {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 900;
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 10px 28px rgba(var(--shadow-rgb), 0.2);
+  backdrop-filter: blur(14px);
+}
+
+html[data-theme="dark"] .theme-switcher {
+  background: rgba(16, 27, 45, 0.78);
+  border-color: rgba(61, 79, 110, 0.85);
+}
+
+.theme-switcher__btn {
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  padding: 7px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.theme-switcher__btn:hover {
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+}
+
+.theme-switcher__btn.is-active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(var(--shadow-rgb), 0.22);
+}
+
+@media (max-width: 640px) {
+  .theme-switcher {
+    top: 12px;
+    right: 12px;
+    transform: scale(0.94);
+    transform-origin: top right;
+  }
+}
+
+body.theme-page.page-writing-practice {
+  --bg: var(--bg-page);
+  --card: var(--bg-surface);
+  --border: var(--border-default);
+  --text: var(--text-primary);
+  --text2: var(--text-secondary);
+  --text3: var(--text-muted);
+  --accent: var(--accent);
+  --accent-light: var(--accent-soft);
+  --accent-hover: var(--accent-hover);
+  --green: var(--success);
+  --green-light: var(--success-soft);
+  --amber: var(--warning);
+  --amber-light: var(--warning-soft);
+  --red: var(--danger);
+  --red-light: var(--danger-soft);
+  --shadow: 0 6px 24px rgba(var(--shadow-rgb), 0.18);
+  --shadow-lg: 0 18px 42px rgba(var(--shadow-rgb), 0.26);
+}
+
+body.page-writing-practice .main-panel-wrapper,
+body.page-audio-transcription .container,
+body.page-login .login-container,
+body.page-modules .wrap,
+body.page-speaking .container,
+body.page-combined .container,
+body.page-reading .container,
+body.page-vocabulary .main-content,
+body.page-intensive .container,
+body.page-intensive-new .container,
+body.page-vocab-summary .container,
+body.page-message-board .container,
+body.page-study-techniques .container {
+  background: var(--surface-gradient) !important;
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  box-shadow: 0 20px 48px rgba(var(--shadow-rgb), 0.26);
+}
+
+body.page-modules h1,
+body.page-speaking h2,
+body.page-reading h2,
+body.page-combined .header h2,
+body.page-login .login-title,
+body.page-intensive h2,
+body.page-intensive-new h2,
+body.page-vocab-summary .header .title,
+body.page-study-techniques .header h1,
+body.page-message-board .header h1 {
+  color: var(--text-primary) !important;
+}
+
+body.page-modules .card,
+body.page-speaking .audio-folder,
+body.page-combined .folder-card,
+body.page-reading .card,
+body.page-reading .item,
+body.page-vocabulary .sidebar,
+body.page-vocabulary .tab.active,
+body.page-vocabulary .word-item-card,
+body.page-intensive .section,
+body.page-intensive .viewer,
+body.page-intensive .viewer .header,
+body.page-intensive .viewer-body .content > .reader,
+body.page-intensive .highlights-panel,
+body.page-vocab-summary .sidebar,
+body.page-vocab-summary .content,
+body.page-vocab-summary .article-item,
+body.page-vocab-summary .vocab-item,
+body.page-message-board .post-card,
+body.page-message-board .comments-section,
+body.page-message-board .comment-form,
+body.page-study-techniques .module,
+body.page-study-techniques .item,
+body.page-audio-transcription .mode-selector,
+body.page-audio-transcription .recording-section,
+body.page-audio-transcription .recording-status,
+body.page-audio-transcription .audio-preview,
+body.page-audio-transcription .upload-section,
+body.page-listening #playerBar,
+body.page-listening #topBar,
+body.page-listening #vocabPopover {
+  background: var(--bg-surface) !important;
+  color: var(--text-primary);
+  border-color: var(--border-default) !important;
+}
+
+body.page-modules .card,
+body.page-speaking .audio-folder,
+body.page-reading .card,
+body.page-reading .item,
+body.page-intensive .card,
+body.page-study-techniques .module,
+body.page-study-techniques .item {
+  background: var(--bg-muted) !important;
+}
+
+body.page-modules .card.speaking,
+body.page-modules .card.reading,
+body.page-modules .card.combined,
+body.page-combined .category-title,
+body.page-intensive .hp-item,
+body.page-speaking .audio-text-content,
+body.page-speaking .audio-question,
+body.page-reading .tag,
+body.page-reading .badge,
+body.page-vocab-summary .article-item.active,
+body.page-vocab-summary .challenge-header,
+body.page-audio-transcription .mode-btn.active,
+body.page-study-techniques .category-tab.active,
+body.page-message-board .header,
+body.page-audio-transcription .header {
+  background: var(--accent-soft) !important;
+}
+
+body.page-message-board .header,
+body.page-audio-transcription .header,
+body.page-vocabulary .header,
+body.page-vocab-summary .challenge-header,
+body.page-login .logo,
+body.page-combined .category-btn.active,
+body.page-study-techniques .category-tab.active,
+body.page-combined .generate-btn,
+body.page-audio-transcription .record-btn.primary {
+  background-image: var(--header-gradient) !important;
+}
+
+body.page-vocabulary .header,
+body.page-vocabulary .header h1,
+body.page-vocabulary .header p,
+body.page-vocabulary .header kbd,
+body.page-vocabulary .back-btn,
+body.page-audio-transcription .header,
+body.page-audio-transcription .header h1,
+body.page-audio-transcription .header p,
+body.page-audio-transcription .back-btn,
+body.page-message-board .header,
+body.page-message-board .header h1,
+body.page-message-board .user-info,
+body.page-message-board .new-post-btn,
+body.page-message-board .back-btn {
+  color: #fff !important;
+}
+
+body.page-vocabulary .back-btn,
+body.page-message-board .new-post-btn,
+body.page-message-board .back-btn,
+body.page-audio-transcription .back-btn {
+  border-color: rgba(255, 255, 255, 0.32) !important;
+}
+
+body.page-audio-transcription .mode-btn.active {
+  background-image: var(--header-gradient) !important;
+  color: #fff !important;
+}
+
+body.page-modules .title,
+body.page-modules .desc,
+body.page-modules #userDisplay span,
+body.page-speaking label,
+body.page-speaking .audio-list h3,
+body.page-speaking .audio-file span,
+body.page-combined .folder-name,
+body.page-combined .folder-info,
+body.page-reading .user-info,
+body.page-reading .card h3,
+body.page-reading .btn.outline,
+body.page-vocabulary .sort-subcategories-select,
+body.page-vocabulary .tab,
+body.page-vocabulary .sidebar *,
+body.page-intensive .muted,
+body.page-intensive .muted,
+body.page-intensive .viewer .title,
+body.page-vocab-summary .article-meta,
+body.page-vocab-summary .vocab-meaning,
+body.page-message-board .post-time,
+body.page-message-board .post-content,
+body.page-study-techniques .module-title,
+body.page-study-techniques .word-primary,
+body.page-study-techniques .word-group-title,
+body.page-audio-transcription .recording-text,
+body.page-audio-transcription .recording-hint,
+body.page-listening .translation-line {
+  color: var(--text-secondary) !important;
+}
+
+body.page-modules .title,
+body.page-speaking h2,
+body.page-reading .card h3,
+body.page-vocabulary .header h1,
+body.page-intensive h2,
+body.page-intensive .viewer .title,
+body.page-vocab-summary .article-title,
+body.page-vocab-summary .vocab-word,
+body.page-message-board .user-name,
+body.page-study-techniques .module-title,
+body.page-audio-transcription .header h1,
+body.page-listening .lyrics-line.active .line-text {
+  color: var(--text-primary) !important;
+}
+
+body.page-listening .lyrics-line .line-text {
+  color: var(--text-secondary);
+}
+
+html[data-theme="dark"] body.page-listening .lyrics-line.active {
+  background: rgba(55, 120, 255, 0.18);
+  border-left-color: var(--accent);
+}
+
+html[data-theme="dark"] body.page-listening .lyrics-line.starred:not(.active) {
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.18), transparent 60%);
+}
+
+html[data-theme="dark"] body.page-listening .lyrics-line.active.starred {
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.2) 0%, rgba(55, 120, 255, 0.18) 40%);
+}
+
+html[data-theme="dark"] body.page-listening #topBar,
+html[data-theme="dark"] body.page-listening #playerBar {
+  background: rgba(10, 18, 32, 0.82) !important;
+  border-color: rgba(61, 79, 110, 0.65) !important;
+}
+
+html[data-theme="dark"] body.page-listening #uploadModal > div,
+html[data-theme="dark"] body.page-listening #vocabPopover,
+html[data-theme="dark"] body.page-listening #toast {
+  background: var(--bg-surface) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-default) !important;
+}
+
+html[data-theme="dark"] body.page-listening #toast {
+  background: #0f172a !important;
+}
+
+html[data-theme="dark"] body.page-listening #projectGrid > div,
+html[data-theme="dark"] body.page-listening #lyricsContainer > div,
+html[data-theme="dark"] body.page-listening .speed-btn,
+html[data-theme="dark"] body.page-listening .modal-tab,
+html[data-theme="dark"] body.page-listening #selectionBadge button {
+  border-color: var(--border-default) !important;
+}
+
+html[data-theme="dark"] body.page-listening #projectGrid > div {
+  background: var(--bg-surface) !important;
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="dark"] body.page-listening .text-slate-800,
+html[data-theme="dark"] body.page-listening .text-slate-700,
+html[data-theme="dark"] body.page-listening .text-slate-600,
+html[data-theme="dark"] body.page-listening .text-slate-500,
+html[data-theme="dark"] body.page-listening .text-slate-400 {
+  color: var(--text-secondary) !important;
+}
+
+html[data-theme="dark"] body.page-listening .bg-white,
+html[data-theme="dark"] body.page-listening .bg-slate-50,
+html[data-theme="dark"] body.page-listening .bg-slate-100 {
+  background: var(--bg-surface) !important;
+}
+
+html[data-theme="dark"] body.page-listening .border-slate-200,
+html[data-theme="dark"] body.page-listening .border-slate-300 {
+  border-color: var(--border-default) !important;
+}
+
+html[data-theme="dark"] body.page-listening .hover\:bg-slate-100:hover,
+html[data-theme="dark"] body.page-listening .hover\:bg-slate-200:hover,
+html[data-theme="dark"] body.page-listening .hover\:bg-blue-50:hover {
+  background: var(--bg-subtle) !important;
+}
+
+html[data-theme="dark"] body.page-listening .bg-blue-50,
+html[data-theme="dark"] body.page-listening .bg-blue-100 {
+  background: var(--accent-soft) !important;
+}
+
+html[data-theme="dark"] body.page-listening .bg-emerald-50 {
+  background: rgba(52, 211, 153, 0.16) !important;
+}
+
+html[data-theme="dark"] body.page-listening .bg-amber-50 {
+  background: rgba(245, 158, 11, 0.16) !important;
+}
+
+html[data-theme="dark"] body.page-listening .bg-red-50 {
+  background: rgba(248, 113, 113, 0.16) !important;
+}
+
+html[data-theme="dark"] body.page-listening .bg-purple-50 {
+  background: rgba(168, 85, 247, 0.16) !important;
+}
+
+html[data-theme="dark"] body.page-listening .text-emerald-600 {
+  color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] body.page-listening .text-amber-600,
+html[data-theme="dark"] body.page-listening .text-amber-500 {
+  color: #fbbf24 !important;
+}
+
+html[data-theme="dark"] body.page-listening .text-red-600 {
+  color: #fca5a5 !important;
+}
+
+html[data-theme="dark"] body.page-listening .text-purple-600 {
+  color: #d8b4fe !important;
+}
+
+html[data-theme="dark"] body.theme-page [style*="background:#fff"],
+html[data-theme="dark"] body.theme-page [style*="background: #fff"],
+html[data-theme="dark"] body.theme-page [style*="background:white"],
+html[data-theme="dark"] body.theme-page [style*="background: white"] {
+  background: var(--bg-surface) !important;
+}
+
+html[data-theme="dark"] body.theme-page [style*="background:#f8fafc"],
+html[data-theme="dark"] body.theme-page [style*="background: #f8fafc"],
+html[data-theme="dark"] body.theme-page [style*="background:#fafafa"],
+html[data-theme="dark"] body.theme-page [style*="background: #fafafa"],
+html[data-theme="dark"] body.theme-page [style*="background:#f9fafb"],
+html[data-theme="dark"] body.theme-page [style*="background: #f9fafb"],
+html[data-theme="dark"] body.theme-page [style*="background:#f3f4f6"],
+html[data-theme="dark"] body.theme-page [style*="background: #f3f4f6"],
+html[data-theme="dark"] body.theme-page [style*="background:#f4f8ff"],
+html[data-theme="dark"] body.theme-page [style*="background: #f4f8ff"] {
+  background: var(--bg-muted) !important;
+}
+
+html[data-theme="dark"] body.theme-page [style*="background:#eef2ff"],
+html[data-theme="dark"] body.theme-page [style*="background: #eef2ff"],
+html[data-theme="dark"] body.theme-page [style*="background:#f0f9ff"],
+html[data-theme="dark"] body.theme-page [style*="background: #f0f9ff"],
+html[data-theme="dark"] body.theme-page [style*="background:#e0f2fe"],
+html[data-theme="dark"] body.theme-page [style*="background: #e0f2fe"] {
+  background: var(--accent-soft) !important;
+}
+
+html[data-theme="dark"] body.theme-page [style*="background:#fffbe6"],
+html[data-theme="dark"] body.theme-page [style*="background: #fffbe6"],
+html[data-theme="dark"] body.theme-page [style*="background:#fffbeb"],
+html[data-theme="dark"] body.theme-page [style*="background: #fffbeb"],
+html[data-theme="dark"] body.theme-page [style*="background:#fef3c7"],
+html[data-theme="dark"] body.theme-page [style*="background: #fef3c7"] {
+  background: var(--warning-soft) !important;
+}
+
+html[data-theme="dark"] body.theme-page [style*="background:#fef2f2"],
+html[data-theme="dark"] body.theme-page [style*="background: #fef2f2"],
+html[data-theme="dark"] body.theme-page [style*="background:#fee2e2"],
+html[data-theme="dark"] body.theme-page [style*="background: #fee2e2"] {
+  background: var(--danger-soft) !important;
+}
+
+html[data-theme="dark"] body.theme-page [style*="color:#111827"],
+html[data-theme="dark"] body.theme-page [style*="color: #111827"],
+html[data-theme="dark"] body.theme-page [style*="color:#1f2937"],
+html[data-theme="dark"] body.theme-page [style*="color: #1f2937"],
+html[data-theme="dark"] body.theme-page [style*="color:#374151"],
+html[data-theme="dark"] body.theme-page [style*="color: #374151"],
+html[data-theme="dark"] body.theme-page [style*="color:#333"],
+html[data-theme="dark"] body.theme-page [style*="color: #333"],
+html[data-theme="dark"] body.theme-page [style*="color:#2d3748"],
+html[data-theme="dark"] body.theme-page [style*="color: #2d3748"] {
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="dark"] body.theme-page [style*="color:#4a5568"],
+html[data-theme="dark"] body.theme-page [style*="color: #4a5568"],
+html[data-theme="dark"] body.theme-page [style*="color:#4b5563"],
+html[data-theme="dark"] body.theme-page [style*="color: #4b5563"],
+html[data-theme="dark"] body.theme-page [style*="color:#475569"],
+html[data-theme="dark"] body.theme-page [style*="color: #475569"],
+html[data-theme="dark"] body.theme-page [style*="color:#6b7280"],
+html[data-theme="dark"] body.theme-page [style*="color: #6b7280"],
+html[data-theme="dark"] body.theme-page [style*="color:#64748b"],
+html[data-theme="dark"] body.theme-page [style*="color: #64748b"],
+html[data-theme="dark"] body.theme-page [style*="color:#718096"],
+html[data-theme="dark"] body.theme-page [style*="color: #718096"],
+html[data-theme="dark"] body.theme-page [style*="color:#9ca3af"],
+html[data-theme="dark"] body.theme-page [style*="color: #9ca3af"] {
+  color: var(--text-secondary) !important;
+}
+
+html[data-theme="dark"] body.theme-page [style*="border: 1px solid #e5e7eb"],
+html[data-theme="dark"] body.theme-page [style*="border:1px solid #e5e7eb"],
+html[data-theme="dark"] body.theme-page [style*="border: 1px solid #e2e8f0"],
+html[data-theme="dark"] body.theme-page [style*="border:1px solid #e2e8f0"],
+html[data-theme="dark"] body.theme-page [style*="border: 1px solid #d1d5db"],
+html[data-theme="dark"] body.theme-page [style*="border:1px solid #d1d5db"],
+html[data-theme="dark"] body.theme-page [style*="border-left: 4px solid #4a90e2"],
+html[data-theme="dark"] body.theme-page [style*="border-left:4px solid #4a90e2"] {
+  border-color: var(--border-default) !important;
+}
+
+html[data-theme="dark"] body.page-login .bg-circle {
+  background: rgba(138, 149, 255, 0.1);
+}
+
+html[data-theme="dark"] body.page-login .register-link,
+html[data-theme="dark"] body.page-login .form-input,
+html[data-theme="dark"] body.page-modules .card,
+html[data-theme="dark"] body.page-speaking .audio-text-content,
+html[data-theme="dark"] body.page-speaking .audio-question,
+html[data-theme="dark"] body.page-combined .folder-card,
+html[data-theme="dark"] body.page-reading .card,
+html[data-theme="dark"] body.page-reading .item,
+html[data-theme="dark"] body.page-vocabulary .tabs,
+html[data-theme="dark"] body.page-vocabulary .sidebar,
+html[data-theme="dark"] body.page-intensive .card,
+html[data-theme="dark"] body.page-intensive .section,
+html[data-theme="dark"] body.page-vocab-summary .article-item,
+html[data-theme="dark"] body.page-message-board .post-card,
+html[data-theme="dark"] body.page-study-techniques .module,
+html[data-theme="dark"] body.page-audio-transcription .recording-section {
+  background: var(--bg-muted) !important;
+}
+
+html[data-theme="dark"] body.page-vocabulary .back-btn,
+html[data-theme="dark"] body.page-message-board .write-comment-btn,
+html[data-theme="dark"] body.page-study-techniques .back-btn,
+html[data-theme="dark"] body.page-modules #userDisplay button,
+html[data-theme="dark"] body.page-reading .btn.outline,
+html[data-theme="dark"] body.page-speaking .view-text-btn,
+html[data-theme="dark"] body.page-combined .back-btn,
+html[data-theme="dark"] body.page-intensive .toolbar button,
+html[data-theme="dark"] body.page-vocab-summary .btn,
+html[data-theme="dark"] body.page-audio-transcription .record-btn.secondary {
+  background: var(--bg-subtle) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-default) !important;
+}
+
+html[data-theme="dark"] body.page-vocabulary .tab.active,
+html[data-theme="dark"] body.page-vocab-summary .btn.primary,
+html[data-theme="dark"] body.page-intensive .toolbar .btn,
+html[data-theme="dark"] body.page-intensive .action-btn.primary,
+html[data-theme="dark"] body.page-intensive .vocab-btn.active,
+html[data-theme="dark"] body.page-writing-practice .nav-btn.active {
+  background: var(--accent) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+}
+
+html[data-theme="dark"] body.page-speaking audio,
+html[data-theme="dark"] body.page-combined audio,
+html[data-theme="dark"] body.page-intensive audio,
+html[data-theme="dark"] body.page-audio-transcription audio {
+  filter: brightness(0.9);
+}

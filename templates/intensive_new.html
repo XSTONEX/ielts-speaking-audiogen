@@ -1,6 +1,25 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+  <script>
+    (function () {
+      try {
+        var preference = localStorage.getItem('ui-theme');
+        if (preference !== 'light' && preference !== 'dark' && preference !== 'system') preference = 'system';
+        var isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var theme = preference === 'system' ? (isDark ? 'dark' : 'light') : preference;
+        var root = document.documentElement;
+        root.dataset.themePreference = preference;
+        root.dataset.theme = theme;
+        root.style.colorScheme = theme;
+        root.classList.toggle('dark', theme === 'dark');
+      } catch (error) {
+        document.documentElement.dataset.themePreference = 'system';
+        document.documentElement.dataset.theme = 'light';
+        document.documentElement.style.colorScheme = 'light';
+      }
+    })();
+  </script>
   <meta charset="UTF-8">
   <title>新增文章 - 文章精读</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -155,8 +174,10 @@
       .btn { padding: 12px 24px; }
     }
   </style>
+  <link rel="stylesheet" href="/static/theme.css">
+  <script src="/static/theme.js" defer></script>
 </head>
-<body>
+<body class="theme-page page-intensive-new">
   <div class="container">
     <div class="toolbar">
       <button onclick="location.href='/intensive'">返回文章列表</button>
@@ -391,5 +412,4 @@
   </script>
 </body>
 </html>
-
 

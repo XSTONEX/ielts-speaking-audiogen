@@ -1,6 +1,25 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+  <script>
+    (function () {
+      try {
+        var preference = localStorage.getItem('ui-theme');
+        if (preference !== 'light' && preference !== 'dark' && preference !== 'system') preference = 'system';
+        var isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var theme = preference === 'system' ? (isDark ? 'dark' : 'light') : preference;
+        var root = document.documentElement;
+        root.dataset.themePreference = preference;
+        root.dataset.theme = theme;
+        root.style.colorScheme = theme;
+        root.classList.toggle('dark', theme === 'dark');
+      } catch (error) {
+        document.documentElement.dataset.themePreference = 'system';
+        document.documentElement.dataset.theme = 'light';
+        document.documentElement.style.colorScheme = 'light';
+      }
+    })();
+  </script>
   <meta charset="UTF-8" />
   <title>Listening Review</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -56,8 +75,10 @@
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
   </style>
+  <link rel="stylesheet" href="/static/theme.css">
+  <script src="/static/theme.js" defer></script>
 </head>
-<body class="bg-slate-50 min-h-screen">
+<body class="theme-page page-listening bg-slate-50 min-h-screen">
 
   <!-- ==================== Top Bar ==================== -->
   <header id="topBar" class="fixed top-0 inset-x-0 h-14 bg-white/70 backdrop-blur-md border-b border-slate-200/50 z-50 flex items-center px-5 md:px-8">

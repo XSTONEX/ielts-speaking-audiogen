@@ -1,6 +1,25 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+<script>
+  (function () {
+    try {
+      var preference = localStorage.getItem('ui-theme');
+      if (preference !== 'light' && preference !== 'dark' && preference !== 'system') preference = 'system';
+      var isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var theme = preference === 'system' ? (isDark ? 'dark' : 'light') : preference;
+      var root = document.documentElement;
+      root.dataset.themePreference = preference;
+      root.dataset.theme = theme;
+      root.style.colorScheme = theme;
+      root.classList.toggle('dark', theme === 'dark');
+    } catch (error) {
+      document.documentElement.dataset.themePreference = 'system';
+      document.documentElement.dataset.theme = 'light';
+      document.documentElement.style.colorScheme = 'light';
+    }
+  })();
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>雅思写作训练</title>
@@ -704,8 +723,10 @@ textarea, input { font-family: var(--serif); }
   .ai-float-btn { right: 16px; bottom: 72px; padding: 10px 16px; font-size: 12px; }
 }
 </style>
+<link rel="stylesheet" href="/static/theme.css">
+<script src="/static/theme.js" defer></script>
 </head>
-<body>
+<body class="theme-page page-writing-practice">
 
 <div class="main-panel-wrapper">
 <div class="app" id="app">
