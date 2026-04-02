@@ -935,6 +935,181 @@ html[data-theme="dark"] body.page-writing-practice .editor-context .ctx-hint {
   color: var(--text-secondary) !important;
 }
 
+html[data-theme="dark"] body.page-writing-practice .ai-float-btn {
+  background: linear-gradient(135deg, #3730a3 0%, #6d28d9 100%) !important;
+  color: #fff !important;
+  box-shadow: 0 12px 28px rgba(var(--shadow-rgb), 0.28) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .ai-chat-window {
+  background: rgba(16, 27, 45, 0.9) !important;
+  border-color: rgba(61, 79, 110, 0.85) !important;
+  box-shadow: 0 20px 44px rgba(var(--shadow-rgb), 0.34) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .ai-chat-header {
+  background: linear-gradient(135deg, rgba(29, 78, 216, 0.22) 0%, rgba(67, 56, 202, 0.18) 100%) !important;
+  border-bottom-color: var(--border-default) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .ai-chat-header-title {
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .ai-chat-header-actions button {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: var(--text-secondary) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .ai-chat-header-actions button:hover {
+  background: rgba(255, 255, 255, 0.14) !important;
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .ai-chat-dropzone {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-color: var(--border-default) !important;
+  color: var(--text-muted) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .ai-chat-dropzone.dragover {
+  background: var(--accent-soft) !important;
+  border-color: var(--accent) !important;
+  color: var(--accent-hover) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .ai-chat-dropzone.has-context {
+  background: rgba(59, 130, 246, 0.12) !important;
+  border-color: var(--progress-border) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .ai-chat-context-chip {
+  background: var(--bg-elevated) !important;
+  border-color: var(--progress-border) !important;
+  color: #bfdbfe !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .ai-chat-context-chip .remove-ctx {
+  background: rgba(59, 130, 246, 0.16) !important;
+  color: var(--text-secondary) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .ai-chat-context-chip .remove-ctx:hover {
+  background: rgba(248, 113, 113, 0.16) !important;
+  color: #f87171 !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .ai-chat-msg.assistant {
+  background: var(--surface-soft) !important;
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .ai-chat-msg.assistant code,
+html[data-theme="dark"] body.page-writing-practice .markdown-body code,
+html[data-theme="dark"] body.page-writing-practice .practice-followup-response code {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #dbeafe !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .markdown-body,
+html[data-theme="dark"] body.page-writing-practice .markdown-body h1,
+html[data-theme="dark"] body.page-writing-practice .markdown-body h2,
+html[data-theme="dark"] body.page-writing-practice .markdown-body h3,
+html[data-theme="dark"] body.page-writing-practice .markdown-body h4,
+html[data-theme="dark"] body.page-writing-practice .markdown-body p,
+html[data-theme="dark"] body.page-writing-practice .markdown-body li {
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .markdown-body blockquote {
+  background: rgba(59, 130, 246, 0.08) !important;
+  color: var(--text-secondary) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .markdown-body th {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .markdown-body th,
+html[data-theme="dark"] body.page-writing-practice .markdown-body td {
+  border-color: var(--border-default) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .ai-chat-preset-btn {
+  background: var(--bg-elevated) !important;
+  color: var(--text-secondary) !important;
+  border-color: var(--border-default) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .ai-chat-preset-btn:hover {
+  background: var(--accent-soft) !important;
+  color: var(--accent-hover) !important;
+  border-color: var(--accent) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .ai-chat-input-row {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-top-color: var(--border-default) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .ai-chat-input {
+  background: var(--bg-elevated) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-default) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .ai-chat-input::placeholder {
+  color: var(--text-muted) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .ai-chat-send-btn {
+  background: var(--accent) !important;
+  color: #fff !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .ai-chat-send-btn:hover {
+  background: var(--accent-hover) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .ai-chat-send-btn:disabled {
+  background: #475569 !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .ai-chat-history-panel {
+  background: rgba(16, 27, 45, 0.97) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .ai-chat-history-item {
+  border-bottom-color: var(--border-default) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .ai-chat-history-item:hover {
+  background: var(--accent-soft) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .ai-chat-history-item .hist-ctx {
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .ai-chat-history-item .hist-meta,
+html[data-theme="dark"] body.page-writing-practice .ai-chat-history-item .hist-del {
+  color: var(--text-muted) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .practice-followup {
+  background: var(--surface-soft) !important;
+  border-color: var(--border-default) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .practice-followup input {
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .practice-followup-response {
+  background: var(--surface-soft) !important;
+  color: var(--text-primary) !important;
+}
+
 html[data-theme="dark"] body.page-message-board .comment-item {
   background: var(--bg-surface) !important;
   border-color: var(--border-default) !important;
