@@ -54,143 +54,135 @@ html[data-theme="dark"] {
   --page-gradient: linear-gradient(135deg, var(--bg-page) 0%, #121b31 100%);
   --surface-gradient: linear-gradient(180deg, rgba(16, 27, 45, 0.98) 0%, rgba(20, 35, 58, 0.98) 100%);
   --header-gradient: linear-gradient(135deg, #283f71 0%, #47265f 100%);
-}
-
-html {
   background: var(--bg-page);
 }
 
-body.theme-page {
+html[data-theme="dark"] body.theme-page {
   background: var(--page-gradient) !important;
   color: var(--text-primary);
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-body.theme-page,
-body.theme-page button,
-body.theme-page input,
-body.theme-page select,
-body.theme-page textarea {
+html[data-theme="dark"] body.theme-page,
+html[data-theme="dark"] body.theme-page input,
+html[data-theme="dark"] body.theme-page select,
+html[data-theme="dark"] body.theme-page textarea {
   color: var(--text-primary);
 }
 
-body.theme-page ::selection {
+html[data-theme="dark"] body.theme-page ::selection {
   background: rgba(79, 70, 229, 0.28);
 }
 
-body.theme-page a {
+html[data-theme="dark"] body.theme-page a {
   color: var(--accent);
 }
 
-body.theme-page input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
-body.theme-page select,
-body.theme-page textarea {
+html[data-theme="dark"] body.theme-page input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+html[data-theme="dark"] body.theme-page select,
+html[data-theme="dark"] body.theme-page textarea {
   background: var(--bg-elevated);
   color: var(--text-primary);
   border-color: var(--border-default);
   caret-color: var(--accent);
 }
 
-body.theme-page input::placeholder,
-body.theme-page textarea::placeholder {
+html[data-theme="dark"] body.theme-page input::placeholder,
+html[data-theme="dark"] body.theme-page textarea::placeholder {
   color: var(--text-muted);
 }
 
-body.theme-page input:focus,
-body.theme-page select:focus,
-body.theme-page textarea:focus {
+html[data-theme="dark"] body.theme-page input:focus,
+html[data-theme="dark"] body.theme-page select:focus,
+html[data-theme="dark"] body.theme-page textarea:focus {
   border-color: var(--accent) !important;
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.16) !important;
 }
 
-body.theme-page .container,
-body.theme-page .wrap,
-body.theme-page .main-content,
-body.theme-page .main-panel-wrapper,
-body.theme-page .login-container,
-body.theme-page .card,
-body.theme-page .item,
-body.theme-page .section,
-body.theme-page .sidebar,
-body.theme-page .content,
-body.theme-page .content-area,
-body.theme-page .post-card,
-body.theme-page .module,
-body.theme-page .folder-card,
-body.theme-page .audio-folder,
-body.theme-page .comment-form,
-body.theme-page .comments-section,
-body.theme-page .recording-section,
-body.theme-page .recording-status,
-body.theme-page .upload-section,
-body.theme-page .file-preview,
-body.theme-page .vocab-item,
-body.theme-page .small-ex-card,
-body.theme-page .sentence-card,
-body.theme-page .review-tree-l1-header,
-body.theme-page .review-tree-l2-header,
-body.theme-page .review-tree-l3,
-body.theme-page .review-tree-record {
+html[data-theme="dark"] body.theme-page .container,
+html[data-theme="dark"] body.theme-page .wrap,
+html[data-theme="dark"] body.theme-page .main-content,
+html[data-theme="dark"] body.theme-page .main-panel-wrapper,
+html[data-theme="dark"] body.theme-page .login-container,
+html[data-theme="dark"] body.theme-page .card,
+html[data-theme="dark"] body.theme-page .item,
+html[data-theme="dark"] body.theme-page .section,
+html[data-theme="dark"] body.theme-page .sidebar,
+html[data-theme="dark"] body.theme-page .content,
+html[data-theme="dark"] body.theme-page .content-area,
+html[data-theme="dark"] body.theme-page .post-card,
+html[data-theme="dark"] body.theme-page .module,
+html[data-theme="dark"] body.theme-page .folder-card,
+html[data-theme="dark"] body.theme-page .audio-folder,
+html[data-theme="dark"] body.theme-page .comment-form,
+html[data-theme="dark"] body.theme-page .comments-section,
+html[data-theme="dark"] body.theme-page .recording-section,
+html[data-theme="dark"] body.theme-page .recording-status,
+html[data-theme="dark"] body.theme-page .upload-section,
+html[data-theme="dark"] body.theme-page .file-preview,
+html[data-theme="dark"] body.theme-page .vocab-item,
+html[data-theme="dark"] body.theme-page .small-ex-card,
+html[data-theme="dark"] body.theme-page .sentence-card,
+html[data-theme="dark"] body.theme-page .review-tree-l1-header,
+html[data-theme="dark"] body.theme-page .review-tree-l2-header,
+html[data-theme="dark"] body.theme-page .review-tree-l3,
+html[data-theme="dark"] body.theme-page .review-tree-record {
   border-color: var(--border-default);
 }
 
-body.theme-page .modal,
-body.theme-page #textModal,
-body.theme-page #uploadModal,
-body.theme-page .image-lightbox,
-body.theme-page .image-modal,
-body.theme-page .review-overlay,
-body.theme-page .modal-overlay {
+html[data-theme="dark"] body.theme-page .modal,
+html[data-theme="dark"] body.theme-page #textModal,
+html[data-theme="dark"] body.theme-page #uploadModal,
+html[data-theme="dark"] body.theme-page .image-lightbox,
+html[data-theme="dark"] body.theme-page .image-modal,
+html[data-theme="dark"] body.theme-page .review-overlay,
+html[data-theme="dark"] body.theme-page .modal-overlay {
   background: var(--overlay);
 }
 
-body.theme-page .modal-content,
-body.theme-page #textModal .modal-content,
-body.theme-page .export-menu,
-body.theme-page .image-lightbox img,
-body.theme-page .challenge-alert,
-body.theme-page #vocabPopover,
-body.theme-page .login-container,
-body.theme-page .main-panel-wrapper,
-body.theme-page .review-overlay-body,
-body.theme-page .review-overlay-header,
-body.theme-page .review-overlay-tabs,
-body.theme-page .highlights-panel,
-body.theme-page #playerBar,
-body.theme-page #topBar,
-body.theme-page .theme-surface {
+html[data-theme="dark"] body.theme-page .modal-content,
+html[data-theme="dark"] body.theme-page #textModal .modal-content,
+html[data-theme="dark"] body.theme-page .export-menu,
+html[data-theme="dark"] body.theme-page .image-lightbox img,
+html[data-theme="dark"] body.theme-page .challenge-alert,
+html[data-theme="dark"] body.theme-page #vocabPopover,
+html[data-theme="dark"] body.theme-page .login-container,
+html[data-theme="dark"] body.theme-page .main-panel-wrapper,
+html[data-theme="dark"] body.theme-page .review-overlay-body,
+html[data-theme="dark"] body.theme-page .review-overlay-header,
+html[data-theme="dark"] body.theme-page .review-overlay-tabs,
+html[data-theme="dark"] body.theme-page .highlights-panel,
+html[data-theme="dark"] body.theme-page #playerBar,
+html[data-theme="dark"] body.theme-page #topBar,
+html[data-theme="dark"] body.theme-page .theme-surface {
   background: var(--bg-surface);
   color: var(--text-primary);
   border-color: var(--border-default);
   box-shadow: 0 18px 44px rgba(var(--shadow-rgb), 0.28);
 }
 
-body.theme-page code,
-body.theme-page pre,
-body.theme-page .hljs {
+html[data-theme="dark"] body.theme-page code,
+html[data-theme="dark"] body.theme-page pre,
+html[data-theme="dark"] body.theme-page .hljs {
   background: var(--bg-muted) !important;
   color: var(--text-primary) !important;
 }
 
-body.theme-page ::-webkit-scrollbar {
+html[data-theme="dark"] body.theme-page ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
-body.theme-page ::-webkit-scrollbar-track {
+html[data-theme="dark"] body.theme-page ::-webkit-scrollbar-track {
   background: transparent;
 }
 
-body.theme-page ::-webkit-scrollbar-thumb {
+html[data-theme="dark"] body.theme-page ::-webkit-scrollbar-thumb {
   background: var(--border-strong);
   border-radius: 999px;
 }
 
 .theme-switcher {
-  position: fixed;
-  top: 16px;
-  right: 16px;
-  z-index: 900;
   display: inline-flex;
   gap: 4px;
   padding: 4px;
@@ -230,16 +222,28 @@ html[data-theme="dark"] .theme-switcher {
   box-shadow: 0 8px 18px rgba(var(--shadow-rgb), 0.22);
 }
 
+#themeSwitcherMount {
+  display: flex;
+  justify-content: flex-end;
+}
+
+body.page-modules #themeSwitcherMount .theme-switcher {
+  margin-top: 10px;
+}
+
 @media (max-width: 640px) {
-  .theme-switcher {
-    top: 12px;
-    right: 12px;
-    transform: scale(0.94);
-    transform-origin: top right;
+  #themeSwitcherMount {
+    justify-content: flex-start;
+  }
+
+  body.page-modules #themeSwitcherMount .theme-switcher {
+    margin-top: 8px;
+    transform: scale(0.96);
+    transform-origin: top left;
   }
 }
 
-body.theme-page.page-writing-practice {
+html[data-theme="dark"] body.theme-page.page-writing-practice {
   --bg: var(--bg-page);
   --card: var(--bg-surface);
   --border: var(--border-default);
@@ -257,190 +261,237 @@ body.theme-page.page-writing-practice {
   --red-light: var(--danger-soft);
   --shadow: 0 6px 24px rgba(var(--shadow-rgb), 0.18);
   --shadow-lg: 0 18px 42px rgba(var(--shadow-rgb), 0.26);
+  --progress-bg-start: rgba(59, 130, 246, 0.12);
+  --progress-bg-end: rgba(14, 165, 233, 0.18);
+  --progress-border: rgba(96, 165, 250, 0.42);
+  --surface-soft: #162437;
+  --surface-soft-border: #2b3c59;
+  --surface-soft-hover: #1b304b;
+  --tag-blue-bg: rgba(59, 130, 246, 0.18);
+  --tag-blue-text: #bfdbfe;
+  --tag-orange-bg: rgba(249, 115, 22, 0.18);
+  --tag-orange-text: #fdba74;
+  --tag-green-bg: rgba(16, 185, 129, 0.18);
+  --tag-green-text: #86efac;
+  --tag-pink-bg: rgba(236, 72, 153, 0.18);
+  --tag-pink-text: #f9a8d4;
+  --tag-indigo-bg: rgba(99, 102, 241, 0.18);
+  --tag-indigo-text: #c7d2fe;
+  --tag-yellow-bg: rgba(245, 158, 11, 0.18);
+  --tag-yellow-text: #fcd34d;
+  --tag-purple-bg: rgba(168, 85, 247, 0.18);
+  --tag-purple-text: #e9d5ff;
+  --tag-teal-bg: rgba(20, 184, 166, 0.18);
+  --tag-teal-text: #99f6e4;
+  --tag-sky-bg: rgba(14, 165, 233, 0.18);
+  --tag-sky-text: #bae6fd;
+  --tag-rose-bg: rgba(244, 63, 94, 0.18);
+  --tag-rose-text: #fecdd3;
+  --tag-lime-bg: rgba(132, 204, 22, 0.18);
+  --tag-lime-text: #bef264;
+  --tag-fuchsia-bg: rgba(217, 70, 239, 0.18);
+  --tag-fuchsia-text: #f5d0fe;
 }
 
-body.page-writing-practice .main-panel-wrapper,
-body.page-audio-transcription .container,
-body.page-login .login-container,
-body.page-modules .wrap,
-body.page-speaking .container,
-body.page-combined .container,
-body.page-reading .container,
-body.page-vocabulary .main-content,
-body.page-intensive .container,
-body.page-intensive-new .container,
-body.page-vocab-summary .container,
-body.page-message-board .container,
-body.page-study-techniques .container {
+html[data-theme="dark"] body.page-writing-practice .main-panel-wrapper,
+html[data-theme="dark"] body.page-audio-transcription .container,
+html[data-theme="dark"] body.page-login .login-container,
+html[data-theme="dark"] body.page-modules .wrap,
+html[data-theme="dark"] body.page-speaking .container,
+html[data-theme="dark"] body.page-combined .container,
+html[data-theme="dark"] body.page-reading .container,
+html[data-theme="dark"] body.page-vocabulary .main-content,
+html[data-theme="dark"] body.page-intensive .container,
+html[data-theme="dark"] body.page-intensive-new .container,
+html[data-theme="dark"] body.page-vocab-summary .container,
+html[data-theme="dark"] body.page-message-board .container,
+html[data-theme="dark"] body.page-study-techniques .container {
   background: var(--surface-gradient) !important;
   color: var(--text-primary);
   border: 1px solid var(--border-default);
   box-shadow: 0 20px 48px rgba(var(--shadow-rgb), 0.26);
 }
 
-body.page-modules h1,
-body.page-speaking h2,
-body.page-reading h2,
-body.page-combined .header h2,
-body.page-login .login-title,
-body.page-intensive h2,
-body.page-intensive-new h2,
-body.page-vocab-summary .header .title,
-body.page-study-techniques .header h1,
-body.page-message-board .header h1 {
+html[data-theme="dark"] body.page-vocabulary .word-card,
+html[data-theme="dark"] body.page-vocabulary .subcategory-link,
+html[data-theme="dark"] body.page-vocabulary .quick-add,
+html[data-theme="dark"] body.page-vocabulary .quick-input,
+html[data-theme="dark"] body.page-vocabulary .sort-select,
+html[data-theme="dark"] body.page-vocabulary .sort-label,
+html[data-theme="dark"] body.page-vocabulary .word-title,
+html[data-theme="dark"] body.page-vocabulary .word-meaning,
+html[data-theme="dark"] body.page-vocabulary .word-meta,
+html[data-theme="dark"] body.page-vocabulary .audio-status,
+html[data-theme="dark"] body.page-vocabulary .subcategory-name,
+html[data-theme="dark"] body.page-vocabulary .subcategory-count,
+html[data-theme="dark"] body.page-vocabulary .subcategory-action,
+html[data-theme="dark"] body.page-vocabulary .word-action-btn {
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] body.page-modules h1,
+html[data-theme="dark"] body.page-speaking h2,
+html[data-theme="dark"] body.page-reading h2,
+html[data-theme="dark"] body.page-combined .header h2,
+html[data-theme="dark"] body.page-login .login-title,
+html[data-theme="dark"] body.page-intensive h2,
+html[data-theme="dark"] body.page-intensive-new h2,
+html[data-theme="dark"] body.page-vocab-summary .header .title,
+html[data-theme="dark"] body.page-study-techniques .header h1,
+html[data-theme="dark"] body.page-message-board .header h1 {
   color: var(--text-primary) !important;
 }
 
-body.page-modules .card,
-body.page-speaking .audio-folder,
-body.page-combined .folder-card,
-body.page-reading .card,
-body.page-reading .item,
-body.page-vocabulary .sidebar,
-body.page-vocabulary .tab.active,
-body.page-vocabulary .word-item-card,
-body.page-intensive .section,
-body.page-intensive .viewer,
-body.page-intensive .viewer .header,
-body.page-intensive .viewer-body .content > .reader,
-body.page-intensive .highlights-panel,
-body.page-vocab-summary .sidebar,
-body.page-vocab-summary .content,
-body.page-vocab-summary .article-item,
-body.page-vocab-summary .vocab-item,
-body.page-message-board .post-card,
-body.page-message-board .comments-section,
-body.page-message-board .comment-form,
-body.page-study-techniques .module,
-body.page-study-techniques .item,
-body.page-audio-transcription .mode-selector,
-body.page-audio-transcription .recording-section,
-body.page-audio-transcription .recording-status,
-body.page-audio-transcription .audio-preview,
-body.page-audio-transcription .upload-section,
-body.page-listening #playerBar,
-body.page-listening #topBar,
-body.page-listening #vocabPopover {
+html[data-theme="dark"] body.page-modules .card,
+html[data-theme="dark"] body.page-speaking .audio-folder,
+html[data-theme="dark"] body.page-combined .folder-card,
+html[data-theme="dark"] body.page-reading .card,
+html[data-theme="dark"] body.page-reading .item,
+html[data-theme="dark"] body.page-vocabulary .sidebar,
+html[data-theme="dark"] body.page-vocabulary .tab.active,
+html[data-theme="dark"] body.page-vocabulary .word-item-card,
+html[data-theme="dark"] body.page-intensive .section,
+html[data-theme="dark"] body.page-intensive .viewer,
+html[data-theme="dark"] body.page-intensive .viewer .header,
+html[data-theme="dark"] body.page-intensive .viewer-body .content > .reader,
+html[data-theme="dark"] body.page-intensive .highlights-panel,
+html[data-theme="dark"] body.page-vocab-summary .sidebar,
+html[data-theme="dark"] body.page-vocab-summary .content,
+html[data-theme="dark"] body.page-vocab-summary .article-item,
+html[data-theme="dark"] body.page-vocab-summary .vocab-item,
+html[data-theme="dark"] body.page-message-board .post-card,
+html[data-theme="dark"] body.page-message-board .comments-section,
+html[data-theme="dark"] body.page-message-board .comment-form,
+html[data-theme="dark"] body.page-study-techniques .module,
+html[data-theme="dark"] body.page-study-techniques .item,
+html[data-theme="dark"] body.page-audio-transcription .mode-selector,
+html[data-theme="dark"] body.page-audio-transcription .recording-section,
+html[data-theme="dark"] body.page-audio-transcription .recording-status,
+html[data-theme="dark"] body.page-audio-transcription .audio-preview,
+html[data-theme="dark"] body.page-audio-transcription .upload-section,
+html[data-theme="dark"] body.page-listening #playerBar,
+html[data-theme="dark"] body.page-listening #topBar,
+html[data-theme="dark"] body.page-listening #vocabPopover {
   background: var(--bg-surface) !important;
   color: var(--text-primary);
   border-color: var(--border-default) !important;
 }
 
-body.page-modules .card,
-body.page-speaking .audio-folder,
-body.page-reading .card,
-body.page-reading .item,
-body.page-intensive .card,
-body.page-study-techniques .module,
-body.page-study-techniques .item {
+html[data-theme="dark"] body.page-modules .card,
+html[data-theme="dark"] body.page-speaking .audio-folder,
+html[data-theme="dark"] body.page-reading .card,
+html[data-theme="dark"] body.page-reading .item,
+html[data-theme="dark"] body.page-intensive .card,
+html[data-theme="dark"] body.page-study-techniques .module,
+html[data-theme="dark"] body.page-study-techniques .item {
   background: var(--bg-muted) !important;
 }
 
-body.page-modules .card.speaking,
-body.page-modules .card.reading,
-body.page-modules .card.combined,
-body.page-combined .category-title,
-body.page-intensive .hp-item,
-body.page-speaking .audio-text-content,
-body.page-speaking .audio-question,
-body.page-reading .tag,
-body.page-reading .badge,
-body.page-vocab-summary .article-item.active,
-body.page-vocab-summary .challenge-header,
-body.page-audio-transcription .mode-btn.active,
-body.page-study-techniques .category-tab.active,
-body.page-message-board .header,
-body.page-audio-transcription .header {
+html[data-theme="dark"] body.page-modules .card.speaking,
+html[data-theme="dark"] body.page-modules .card.reading,
+html[data-theme="dark"] body.page-modules .card.combined,
+html[data-theme="dark"] body.page-combined .category-title,
+html[data-theme="dark"] body.page-intensive .hp-item,
+html[data-theme="dark"] body.page-speaking .audio-text-content,
+html[data-theme="dark"] body.page-speaking .audio-question,
+html[data-theme="dark"] body.page-reading .tag,
+html[data-theme="dark"] body.page-reading .badge,
+html[data-theme="dark"] body.page-vocab-summary .article-item.active,
+html[data-theme="dark"] body.page-vocab-summary .challenge-header,
+html[data-theme="dark"] body.page-audio-transcription .mode-btn.active,
+html[data-theme="dark"] body.page-study-techniques .category-tab.active,
+html[data-theme="dark"] body.page-message-board .header,
+html[data-theme="dark"] body.page-audio-transcription .header {
   background: var(--accent-soft) !important;
 }
 
-body.page-message-board .header,
-body.page-audio-transcription .header,
-body.page-vocabulary .header,
-body.page-vocab-summary .challenge-header,
-body.page-login .logo,
-body.page-combined .category-btn.active,
-body.page-study-techniques .category-tab.active,
-body.page-combined .generate-btn,
-body.page-audio-transcription .record-btn.primary {
+html[data-theme="dark"] body.page-message-board .header,
+html[data-theme="dark"] body.page-audio-transcription .header,
+html[data-theme="dark"] body.page-vocabulary .header,
+html[data-theme="dark"] body.page-vocab-summary .challenge-header,
+html[data-theme="dark"] body.page-login .logo,
+html[data-theme="dark"] body.page-combined .category-btn.active,
+html[data-theme="dark"] body.page-study-techniques .category-tab.active,
+html[data-theme="dark"] body.page-combined .generate-btn,
+html[data-theme="dark"] body.page-audio-transcription .record-btn.primary {
   background-image: var(--header-gradient) !important;
 }
 
-body.page-vocabulary .header,
-body.page-vocabulary .header h1,
-body.page-vocabulary .header p,
-body.page-vocabulary .header kbd,
-body.page-vocabulary .back-btn,
-body.page-audio-transcription .header,
-body.page-audio-transcription .header h1,
-body.page-audio-transcription .header p,
-body.page-audio-transcription .back-btn,
-body.page-message-board .header,
-body.page-message-board .header h1,
-body.page-message-board .user-info,
-body.page-message-board .new-post-btn,
-body.page-message-board .back-btn {
+html[data-theme="dark"] body.page-vocabulary .header,
+html[data-theme="dark"] body.page-vocabulary .header h1,
+html[data-theme="dark"] body.page-vocabulary .header p,
+html[data-theme="dark"] body.page-vocabulary .header kbd,
+html[data-theme="dark"] body.page-vocabulary .back-btn,
+html[data-theme="dark"] body.page-audio-transcription .header,
+html[data-theme="dark"] body.page-audio-transcription .header h1,
+html[data-theme="dark"] body.page-audio-transcription .header p,
+html[data-theme="dark"] body.page-audio-transcription .back-btn,
+html[data-theme="dark"] body.page-message-board .header,
+html[data-theme="dark"] body.page-message-board .header h1,
+html[data-theme="dark"] body.page-message-board .user-info,
+html[data-theme="dark"] body.page-message-board .new-post-btn,
+html[data-theme="dark"] body.page-message-board .back-btn {
   color: #fff !important;
 }
 
-body.page-vocabulary .back-btn,
-body.page-message-board .new-post-btn,
-body.page-message-board .back-btn,
-body.page-audio-transcription .back-btn {
+html[data-theme="dark"] body.page-vocabulary .back-btn,
+html[data-theme="dark"] body.page-message-board .new-post-btn,
+html[data-theme="dark"] body.page-message-board .back-btn,
+html[data-theme="dark"] body.page-audio-transcription .back-btn {
   border-color: rgba(255, 255, 255, 0.32) !important;
 }
 
-body.page-audio-transcription .mode-btn.active {
+html[data-theme="dark"] body.page-audio-transcription .mode-btn.active {
   background-image: var(--header-gradient) !important;
   color: #fff !important;
 }
 
-body.page-modules .title,
-body.page-modules .desc,
-body.page-modules #userDisplay span,
-body.page-speaking label,
-body.page-speaking .audio-list h3,
-body.page-speaking .audio-file span,
-body.page-combined .folder-name,
-body.page-combined .folder-info,
-body.page-reading .user-info,
-body.page-reading .card h3,
-body.page-reading .btn.outline,
-body.page-vocabulary .sort-subcategories-select,
-body.page-vocabulary .tab,
-body.page-vocabulary .sidebar *,
-body.page-intensive .muted,
-body.page-intensive .muted,
-body.page-intensive .viewer .title,
-body.page-vocab-summary .article-meta,
-body.page-vocab-summary .vocab-meaning,
-body.page-message-board .post-time,
-body.page-message-board .post-content,
-body.page-study-techniques .module-title,
-body.page-study-techniques .word-primary,
-body.page-study-techniques .word-group-title,
-body.page-audio-transcription .recording-text,
-body.page-audio-transcription .recording-hint,
-body.page-listening .translation-line {
+html[data-theme="dark"] body.page-modules .title,
+html[data-theme="dark"] body.page-modules .desc,
+html[data-theme="dark"] body.page-modules #userDisplay span,
+html[data-theme="dark"] body.page-speaking label,
+html[data-theme="dark"] body.page-speaking .audio-list h3,
+html[data-theme="dark"] body.page-speaking .audio-file span,
+html[data-theme="dark"] body.page-combined .folder-name,
+html[data-theme="dark"] body.page-combined .folder-info,
+html[data-theme="dark"] body.page-reading .user-info,
+html[data-theme="dark"] body.page-reading .card h3,
+html[data-theme="dark"] body.page-reading .btn.outline,
+html[data-theme="dark"] body.page-vocabulary .sort-subcategories-select,
+html[data-theme="dark"] body.page-vocabulary .tab,
+html[data-theme="dark"] body.page-vocabulary .sidebar *,
+html[data-theme="dark"] body.page-intensive .muted,
+html[data-theme="dark"] body.page-intensive .muted,
+html[data-theme="dark"] body.page-intensive .viewer .title,
+html[data-theme="dark"] body.page-vocab-summary .article-meta,
+html[data-theme="dark"] body.page-vocab-summary .vocab-meaning,
+html[data-theme="dark"] body.page-message-board .post-time,
+html[data-theme="dark"] body.page-message-board .post-content,
+html[data-theme="dark"] body.page-study-techniques .module-title,
+html[data-theme="dark"] body.page-study-techniques .word-primary,
+html[data-theme="dark"] body.page-study-techniques .word-group-title,
+html[data-theme="dark"] body.page-audio-transcription .recording-text,
+html[data-theme="dark"] body.page-audio-transcription .recording-hint,
+html[data-theme="dark"] body.page-listening .translation-line {
   color: var(--text-secondary) !important;
 }
 
-body.page-modules .title,
-body.page-speaking h2,
-body.page-reading .card h3,
-body.page-vocabulary .header h1,
-body.page-intensive h2,
-body.page-intensive .viewer .title,
-body.page-vocab-summary .article-title,
-body.page-vocab-summary .vocab-word,
-body.page-message-board .user-name,
-body.page-study-techniques .module-title,
-body.page-audio-transcription .header h1,
-body.page-listening .lyrics-line.active .line-text {
+html[data-theme="dark"] body.page-modules .title,
+html[data-theme="dark"] body.page-speaking h2,
+html[data-theme="dark"] body.page-reading .card h3,
+html[data-theme="dark"] body.page-vocabulary .header h1,
+html[data-theme="dark"] body.page-intensive h2,
+html[data-theme="dark"] body.page-intensive .viewer .title,
+html[data-theme="dark"] body.page-vocab-summary .article-title,
+html[data-theme="dark"] body.page-vocab-summary .vocab-word,
+html[data-theme="dark"] body.page-message-board .user-name,
+html[data-theme="dark"] body.page-study-techniques .module-title,
+html[data-theme="dark"] body.page-audio-transcription .header h1,
+html[data-theme="dark"] body.page-listening .lyrics-line.active .line-text {
   color: var(--text-primary) !important;
 }
 
-body.page-listening .lyrics-line .line-text {
+html[data-theme="dark"] body.page-listening .lyrics-line .line-text {
   color: var(--text-secondary);
 }
 
@@ -691,4 +742,302 @@ html[data-theme="dark"] body.page-combined audio,
 html[data-theme="dark"] body.page-intensive audio,
 html[data-theme="dark"] body.page-audio-transcription audio {
   filter: brightness(0.9);
+}
+
+html[data-theme="dark"] body.page-vocabulary .subcategory-link {
+  background: var(--bg-surface) !important;
+  color: var(--text-primary) !important;
+  border: 2px solid transparent !important;
+}
+
+html[data-theme="dark"] body.page-vocabulary .subcategory-link:hover {
+  border-color: var(--border-strong) !important;
+  background: var(--bg-muted) !important;
+}
+
+html[data-theme="dark"] body.page-vocabulary .subcategory-link.active {
+  border-color: var(--accent) !important;
+  background: var(--accent-soft) !important;
+  color: var(--accent-hover) !important;
+}
+
+html[data-theme="dark"] body.page-vocabulary .subcategory-count,
+html[data-theme="dark"] body.page-vocabulary .word-meta {
+  color: var(--text-muted) !important;
+}
+
+html[data-theme="dark"] body.page-vocabulary .quick-add {
+  background: var(--bg-muted) !important;
+  border-color: var(--border-default) !important;
+}
+
+html[data-theme="dark"] body.page-vocabulary .quick-add:hover {
+  background: var(--accent-soft) !important;
+  border-color: var(--accent) !important;
+}
+
+html[data-theme="dark"] body.page-vocabulary .quick-input,
+html[data-theme="dark"] body.page-vocabulary .sort-select {
+  background: var(--bg-surface) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-default) !important;
+}
+
+html[data-theme="dark"] body.page-vocabulary .word-card {
+  background: var(--bg-surface) !important;
+  border-color: var(--border-default) !important;
+  box-shadow: 0 12px 28px rgba(var(--shadow-rgb), 0.18) !important;
+}
+
+html[data-theme="dark"] body.page-vocabulary .word-card:hover {
+  border-color: var(--accent) !important;
+  box-shadow: 0 18px 36px rgba(var(--shadow-rgb), 0.24) !important;
+}
+
+html[data-theme="dark"] body.page-vocabulary .word-card.playing {
+  border-color: var(--success) !important;
+  background: rgba(52, 211, 153, 0.12) !important;
+}
+
+html[data-theme="dark"] body.page-vocabulary .word-card.favorited {
+  border-color: #fbbf24 !important;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.14) 0%, rgba(251, 191, 36, 0.08) 100%) !important;
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.12) !important;
+}
+
+html[data-theme="dark"] body.page-vocabulary .word-card.favorited:hover {
+  border-color: #fcd34d !important;
+  box-shadow: 0 14px 28px rgba(245, 158, 11, 0.18) !important;
+}
+
+html[data-theme="dark"] body.page-vocabulary .word-title {
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="dark"] body.page-vocabulary .word-meaning {
+  color: var(--text-secondary) !important;
+}
+
+html[data-theme="dark"] body.page-vocabulary .word-action-btn {
+  background: transparent !important;
+}
+
+html[data-theme="dark"] body.page-vocabulary .favorite-btn {
+  color: #475569 !important;
+}
+
+html[data-theme="dark"] body.page-vocabulary .favorite-btn:hover {
+  background: rgba(251, 191, 36, 0.16) !important;
+  color: #fbbf24 !important;
+}
+
+html[data-theme="dark"] body.page-vocabulary .favorite-btn.favorited {
+  color: #fbbf24 !important;
+  text-shadow: 0 0 8px rgba(251, 191, 36, 0.28) !important;
+}
+
+html[data-theme="dark"] body.page-vocabulary .delete-btn {
+  color: #fca5a5 !important;
+}
+
+html[data-theme="dark"] body.page-vocabulary .delete-btn:hover {
+  background: rgba(248, 113, 113, 0.16) !important;
+  color: #f87171 !important;
+}
+
+html[data-theme="dark"] body.page-vocabulary .edit-subcategory-btn {
+  background: #c2410c !important;
+  color: #fff !important;
+}
+
+html[data-theme="dark"] body.page-vocabulary .edit-subcategory-btn:hover {
+  background: #ea580c !important;
+}
+
+html[data-theme="dark"] body.page-vocabulary .delete-subcategory-btn {
+  background: #b91c1c !important;
+  color: #fff !important;
+}
+
+html[data-theme="dark"] body.page-vocabulary .delete-subcategory-btn:hover {
+  background: #dc2626 !important;
+}
+
+html[data-theme="dark"] body.page-vocabulary .audio-status.audio-ready {
+  color: #86efac !important;
+}
+
+html[data-theme="dark"] body.page-vocabulary .audio-status.audio-generating {
+  color: #fbbf24 !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .review-fab {
+  background: linear-gradient(135deg, #1d4ed8, #4338ca) !important;
+  color: #fff !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+html[data-theme="dark"] body.page-writing-practice .image-upload-zone {
+  background: var(--surface-soft) !important;
+  border-color: var(--border-default) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .image-upload-zone:hover,
+html[data-theme="dark"] body.page-writing-practice .image-upload-zone.dragover {
+  background: var(--surface-soft-hover) !important;
+  border-color: var(--accent) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .image-upload-zone.has-image {
+  background: var(--surface-soft) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .image-replace-btn {
+  background: var(--bg-elevated) !important;
+  color: var(--text-secondary) !important;
+  border-color: var(--border-default) !important;
+  box-shadow: 0 6px 16px rgba(var(--shadow-rgb), 0.12);
+}
+
+html[data-theme="dark"] body.page-writing-practice .image-replace-btn:hover {
+  background: var(--surface-soft-hover) !important;
+  color: var(--accent-hover) !important;
+  border-color: var(--accent) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .chain-card {
+  background: linear-gradient(135deg, var(--accent-light) 0%, var(--surface-soft-hover) 100%) !important;
+  border-color: var(--progress-border) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .chain-en {
+  color: var(--text-secondary) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .example-header {
+  background: var(--surface-soft) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .example-header:hover {
+  background: var(--surface-soft-hover) !important;
+  border-bottom-color: var(--progress-border) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .example-header h4 {
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="dark"] body.page-writing-practice .example-hint,
+html[data-theme="dark"] body.page-writing-practice .editor-context .ctx-hint {
+  background: var(--surface-soft) !important;
+  border: 1px solid var(--surface-soft-border) !important;
+  color: var(--text-secondary) !important;
+}
+
+html[data-theme="dark"] body.page-message-board .comment-item {
+  background: var(--bg-surface) !important;
+  border-color: var(--border-default) !important;
+}
+
+html[data-theme="dark"] body.page-message-board .comment-avatar {
+  border-color: var(--border-default) !important;
+}
+
+html[data-theme="dark"] body.page-message-board .comment-user-name,
+html[data-theme="dark"] body.page-message-board .comment-content,
+html[data-theme="dark"] body.page-message-board .card-title {
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="dark"] body.page-message-board .comment-time,
+html[data-theme="dark"] body.page-message-board .card-desc,
+html[data-theme="dark"] body.page-message-board .card-meta {
+  color: var(--text-secondary) !important;
+}
+
+html[data-theme="dark"] body.page-message-board .comment-delete-btn {
+  color: var(--text-muted) !important;
+}
+
+html[data-theme="dark"] body.page-message-board .comment-delete-btn:hover {
+  background: rgba(248, 113, 113, 0.16) !important;
+  color: #f87171 !important;
+}
+
+html[data-theme="dark"] body.page-message-board .audio-card,
+html[data-theme="dark"] body.page-message-board .article-card {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.14) 0%, rgba(59, 130, 246, 0.08) 100%) !important;
+  border-color: rgba(96, 165, 250, 0.42) !important;
+  box-shadow: 0 10px 24px rgba(var(--shadow-rgb), 0.16) !important;
+}
+
+html[data-theme="dark"] body.page-message-board .audio-card:hover,
+html[data-theme="dark"] body.page-message-board .article-card:hover {
+  box-shadow: 0 16px 32px rgba(var(--shadow-rgb), 0.22) !important;
+}
+
+html[data-theme="dark"] body.page-message-board .challenge-card {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.96) 0%, rgba(17, 24, 39, 0.98) 100%) !important;
+  border-color: var(--border-default) !important;
+  box-shadow: 0 14px 30px rgba(var(--shadow-rgb), 0.2) !important;
+}
+
+html[data-theme="dark"] body.page-message-board .challenge-card:hover {
+  border-color: var(--accent) !important;
+}
+
+html[data-theme="dark"] body.page-message-board .challenge-card .card-title {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] body.page-message-board .challenge-card .card-desc,
+html[data-theme="dark"] body.page-message-board .challenge-card .card-meta {
+  color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] body.page-message-board .challenge-card [data-challenge-btn] {
+  background: rgba(52, 211, 153, 0.16) !important;
+  border-color: rgba(52, 211, 153, 0.5) !important;
+  color: #86efac !important;
+}
+
+html[data-theme="dark"] body.page-message-board .challenge-card [data-challenge-btn] span,
+html[data-theme="dark"] body.page-message-board .challenge-card .card-meta span[style] {
+  color: inherit !important;
+}
+
+html[data-theme="dark"] body.page-intensive .audio-panel {
+  background: linear-gradient(180deg, rgba(22, 36, 55, 0.98) 0%, rgba(16, 27, 45, 0.98) 100%) !important;
+  border-top-color: var(--border-default) !important;
+  box-shadow: 0 -8px 22px rgba(var(--shadow-rgb), 0.28) !important;
+}
+
+html[data-theme="dark"] body.page-intensive .audio-controls button,
+html[data-theme="dark"] body.page-intensive #downloadAudioBtn,
+html[data-theme="dark"] body.page-intensive .vocab-btn,
+html[data-theme="dark"] body.page-intensive .close-btn {
+  background: var(--bg-subtle) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-default) !important;
+}
+
+html[data-theme="dark"] body.page-intensive .audio-controls button:hover,
+html[data-theme="dark"] body.page-intensive #downloadAudioBtn:hover,
+html[data-theme="dark"] body.page-intensive .vocab-btn:hover,
+html[data-theme="dark"] body.page-intensive .close-btn:hover {
+  background: var(--bg-muted) !important;
+  border-color: var(--border-strong) !important;
+}
+
+html[data-theme="dark"] body.page-intensive #vocabToggle.active,
+html[data-theme="dark"] body.page-intensive .vocab-btn.active {
+  background: var(--accent) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+}
+
+html[data-theme="dark"] body.page-intensive .audio-controls audio,
+html[data-theme="dark"] body.page-intensive #articleAudio {
+  filter: brightness(0.88) contrast(1.05);
 }

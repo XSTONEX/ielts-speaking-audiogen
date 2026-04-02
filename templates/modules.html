@@ -132,9 +132,12 @@
 </head>
 <body class="theme-page page-modules">
   <div class="wrap">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 20px; flex-wrap: wrap;">
       <h1 style="margin: 0;">请选择模块</h1>
-      <div id="userDisplay" style="text-align: right;"></div>
+      <div style="display: flex; flex-direction: column; align-items: flex-end; text-align: right;">
+        <div id="userDisplay" style="text-align: right;"></div>
+        <div id="themeSwitcherMount"></div>
+      </div>
     </div>
     <div class="grid">
       <div class="card speaking" onclick="location.href='/speaking'">
@@ -211,4 +214,3 @@
   </div>
 </body>
 </html>
-

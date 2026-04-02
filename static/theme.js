@@ -77,6 +77,15 @@
       return;
     }
 
+    if (window.location.pathname !== '/') {
+      return;
+    }
+
+    var mount = document.getElementById('themeSwitcherMount');
+    if (!mount) {
+      return;
+    }
+
     var switcher = document.createElement('div');
     switcher.className = 'theme-switcher';
     switcher.setAttribute('role', 'group');
@@ -87,7 +96,7 @@
       '<button type="button" class="theme-switcher__btn" data-theme-option="dark" aria-label="深色模式">深色</button>'
     ].join('');
     switcher.addEventListener('click', handleThemeSelection);
-    document.body.appendChild(switcher);
+    mount.appendChild(switcher);
     updateSwitcher(getStoredPreference());
   }
 
