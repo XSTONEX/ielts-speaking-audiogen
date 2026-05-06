@@ -23,193 +23,386 @@
   <meta charset="UTF-8" />
   <title>模块选择</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  
-  <!-- Favicon -->
+
   <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/static/android-chrome-192x192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="/static/android-chrome-512x512.png">
-  
+
   <link href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Crimson+Text:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'PT Serif', 'Crimson Text', ui-serif, 'Times New Roman', 'Georgia', serif; background: linear-gradient(135deg, #e0e7ff 0%, #f4f6fa 100%); margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; padding: 14px; box-sizing: border-box; }
-    .wrap { background:#fff; border-radius:20px; box-shadow: 0 16px 48px rgba(31,38,135,0.20); padding:22px; width:min(980px, 100%); }
-    h1 { margin: 6px 0 18px; text-align:center; color:#1f2937; letter-spacing:.3px; font-size: 24px; }
-    .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:14px; }
-    .card { position:relative; border:1.5px solid #e5e7eb; border-radius:16px; padding:18px; background:#fafafa; transition: transform .15s ease, box-shadow .18s ease, border-color .15s ease; cursor:pointer; display:flex; gap:14px; align-items:center; min-height: 92px; overflow: hidden; }
-    .card::after { content:""; position:absolute; inset:0; opacity:.08; background: radial-gradient(1200px 1200px at -10% -10%, #4f46e5 10%, transparent 40%), radial-gradient(1200px 1200px at 110% 110%, #06b6d4 10%, transparent 40%); pointer-events:none; }
-    .card:hover { transform: translateY(-3px); border-color:#c7d2fe; box-shadow: 0 14px 32px rgba(31,38,135,0.18); }
-    .card.speaking { background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); }
-    .card.reading { background: linear-gradient(180deg, #ffffff 0%, #f0f9ff 100%); }
-    .card.combined { background: linear-gradient(180deg, #ffffff 0%, #fefce8 100%); }
-    .icon { font-size:28px; width:42px; height:42px; display:flex; align-items:center; justify-content:center; border-radius:12px; background:#f1f5f9; }
-    .card.speaking .icon { background:#eef2ff; }
-    .card.reading .icon { background:#ecfeff; }
-    .card.combined .icon { background:#fef9c3; }
-    .title { font-weight:800; color:#111827; letter-spacing:.2px; font-size:18px; }
-    .desc { color:#6b7280; margin-top:4px; font-size:13px; line-height:1.5; }
-    @media (max-width: 700px){
-      .wrap { padding:16px; border-radius:16px; }
-      h1 { font-size:20px; margin-bottom:12px; }
-      .card { padding:14px; border-radius:14px; min-height: 82px; }
-      .icon { width:38px; height:38px; font-size:24px; border-radius:10px; }
-      .title { font-size:16px; }
-      .desc { font-size:12px; }
+    body {
+      font-family: 'PT Serif', 'Crimson Text', ui-serif, 'Times New Roman', 'Georgia', serif;
+      background: linear-gradient(135deg, #e0e7ff 0%, #f4f6fa 100%);
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+      box-sizing: border-box;
+    }
+
+    .wrap {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 16px 48px rgba(31, 38, 135, 0.20);
+      padding: 22px;
+      width: min(980px, 100%);
+    }
+
+    .module-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      margin: 0;
+      text-align: center;
+      color: #1f2937;
+      letter-spacing: 0.3px;
+      font-size: 24px;
+    }
+
+    .user-tools {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      text-align: right;
+    }
+
+    .user-display {
+      text-align: right;
+    }
+
+    .user-display__profile {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .user-display__avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+    }
+
+    .user-display__name {
+      color: #374151;
+      font-weight: 600;
+    }
+
+    .logout-btn {
+      background: #f3f4f6;
+      border: 1px solid #d1d5db;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      color: #6b7280;
+      font-family: inherit;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      position: relative;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 18px;
+      background: #fafafa;
+      transition: transform 0.15s ease, box-shadow 0.18s ease, border-color 0.15s ease;
+      cursor: pointer;
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      min-height: 92px;
+      overflow: hidden;
+      text-decoration: none;
+    }
+
+    .card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: 0.08;
+      background:
+        radial-gradient(1200px 1200px at -10% -10%, #4f46e5 10%, transparent 40%),
+        radial-gradient(1200px 1200px at 110% 110%, #06b6d4 10%, transparent 40%);
+      pointer-events: none;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      border-color: #c7d2fe;
+      box-shadow: 0 14px 32px rgba(31, 38, 135, 0.18);
+    }
+
+    .card.speaking {
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    }
+
+    .card.reading {
+      background: linear-gradient(180deg, #ffffff 0%, #f0f9ff 100%);
+    }
+
+    .card.combined {
+      background: linear-gradient(180deg, #ffffff 0%, #fefce8 100%);
+    }
+
+    .icon {
+      font-size: 28px;
+      width: 42px;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      background: #f1f5f9;
+      flex: 0 0 auto;
+    }
+
+    .card.speaking .icon {
+      background: #eef2ff;
+    }
+
+    .card.reading .icon {
+      background: #ecfeff;
+    }
+
+    .card.combined .icon {
+      background: #fef9c3;
+    }
+
+    .title {
+      font-weight: 800;
+      color: #111827;
+      letter-spacing: 0.2px;
+      font-size: 18px;
+    }
+
+    .desc {
+      color: #6b7280;
+      margin-top: 4px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 700px) {
+      .wrap {
+        padding: 16px;
+        border-radius: 16px;
+      }
+
+      .module-header {
+        margin-bottom: 12px;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+
+      .card {
+        padding: 14px;
+        border-radius: 14px;
+        min-height: 82px;
+      }
+
+      .icon {
+        width: 38px;
+        height: 38px;
+        font-size: 24px;
+        border-radius: 10px;
+      }
+
+      .title {
+        font-size: 16px;
+      }
+
+      .desc {
+        font-size: 12px;
+      }
     }
   </style>
   <script>
-    let currentToken = null;
-    let currentUser = null;
-    
-    function checkStoredToken(){
-      const tk = localStorage.getItem('authToken');
-      if(!tk) return Promise.resolve(false);
-      return fetch('/verify_token',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({token:tk})})
-        .then(r=>r.json()).then(d=>{ 
-          if(d.valid){ 
-            currentToken=tk; 
-            // 尝试获取存储的用户信息
-            const userStr = localStorage.getItem('currentUser');
-            if(userStr) {
+    var currentToken = null;
+    var currentUser = null;
+
+    function checkStoredToken() {
+      var token = localStorage.getItem('authToken');
+      if (!token) {
+        return Promise.resolve(false);
+      }
+
+      return fetch('/verify_token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: token })
+      })
+        .then(function (response) { return response.json(); })
+        .then(function (data) {
+          if (data.valid) {
+            currentToken = token;
+            if (data.user) {
+              currentUser = data.user;
+              localStorage.setItem('currentUser', JSON.stringify(data.user));
+            } else {
               try {
-                currentUser = JSON.parse(userStr);
-              } catch(e) {}
+                currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+              } catch (error) {
+                currentUser = null;
+              }
             }
             return true;
-          } 
-          localStorage.removeItem('authToken'); 
-          localStorage.removeItem('currentUser');
-          return false; 
+          }
+          clearSession();
+          return false;
         })
-        .catch(()=>{ 
-          localStorage.removeItem('authToken'); 
-          localStorage.removeItem('currentUser');
-          return false; 
+        .catch(function () {
+          clearSession();
+          return false;
         });
     }
-    
-    function redirectToLogin() {
-      window.location.href = '/login';
-    }
-    
-    function showUserInfo() {
-      if(currentUser) {
-        const userDisplay = document.getElementById('userDisplay');
-        if(userDisplay) {
-          userDisplay.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-              <img src="/static/${currentUser.avatar}" alt="${currentUser.display_name}" style="width: 24px; height: 24px; border-radius: 50%;">
-              <span style="color: #374151; font-weight: 600;">${currentUser.display_name}</span>
-            </div>
-            <button onclick="logout()" style="background: #f3f4f6; border: 1px solid #d1d5db; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; color: #6b7280;">退出登录</button>
-          `;
-        }
-      }
-    }
-    
-    function logout() {
+
+    function clearSession() {
       localStorage.removeItem('authToken');
       localStorage.removeItem('currentUser');
       currentToken = null;
       currentUser = null;
+    }
+
+    function redirectToLogin() {
+      window.location.href = '/login';
+    }
+
+    function showUserInfo() {
+      var userDisplay = document.getElementById('userDisplay');
+      if (!currentUser || !userDisplay) {
+        return;
+      }
+
+      userDisplay.innerHTML = [
+        '<div class="user-display__profile">',
+        '<img class="user-display__avatar" src="/static/' + encodeURIComponent(currentUser.avatar || 'avatar_admin.svg') + '" alt="">',
+        '<span class="user-display__name"></span>',
+        '</div>',
+        '<button class="logout-btn" type="button">退出登录</button>'
+      ].join('');
+      userDisplay.querySelector('.user-display__name').textContent = currentUser.display_name || currentUser.username || '学习者';
+      userDisplay.querySelector('.logout-btn').addEventListener('click', logout);
+    }
+
+    function logout() {
+      clearSession();
       redirectToLogin();
     }
-    
-    window.onload = function(){
-      checkStoredToken().then(valid=>{
-        if(valid) {
+
+    window.addEventListener('load', function () {
+      checkStoredToken().then(function (valid) {
+        if (valid) {
           showUserInfo();
         } else {
           redirectToLogin();
         }
       });
-    }
+    });
   </script>
   <link rel="stylesheet" href="/static/theme.css">
   <script src="/static/theme.js" defer></script>
 </head>
-<body class="theme-page page-modules">
+<body class="theme-page page-modules" data-app-shell="off">
   <div class="wrap">
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 20px; flex-wrap: wrap;">
-      <h1 style="margin: 0;">请选择模块</h1>
-      <div style="display: flex; flex-direction: column; align-items: flex-end; text-align: right;">
-        <div id="userDisplay" style="text-align: right;"></div>
+    <div class="module-header">
+      <h1>请选择模块</h1>
+      <div class="user-tools">
+        <div class="user-display" id="userDisplay"></div>
         <div id="themeSwitcherMount"></div>
       </div>
     </div>
+
     <div class="grid">
-      <div class="card speaking" onclick="location.href='/speaking'">
+      <a class="card speaking" href="/speaking">
         <div class="icon">🎤</div>
         <div>
           <div class="title">Speaking</div>
           <div class="desc">原有口语练习与音频管理界面</div>
         </div>
-      </div>
-      <div class="card combined" onclick="location.href='/combined'">
+      </a>
+
+      <a class="card combined" href="/combined">
         <div class="icon">🎵</div>
         <div>
           <div class="title">Speaking 合集播放</div>
           <div class="desc">从各话题生成/播放合集音频与字幕</div>
         </div>
-      </div>
-      <div class="card reading" onclick="location.href='/reading'">
+      </a>
+
+      <a class="card reading" href="/reading">
         <div class="icon">📖</div>
         <div>
           <div class="title">Reading</div>
           <div class="desc">真题目录检索、HTML 内嵌全屏预览、PDF 下载</div>
         </div>
-      </div>
-      <div class="card reading" onclick="location.href='/intensive'">
+      </a>
+
+      <a class="card reading" href="/intensive">
         <div class="icon">📝</div>
         <div>
           <div class="title">文章精读</div>
           <div class="desc">提交长文、对词汇高亮并添加释义，悬停查看</div>
         </div>
-      </div>
-      <div class="card speaking" onclick="location.href='/message_board'">
+      </a>
+
+      <a class="card speaking" href="/message_board">
         <div class="icon">📚</div>
         <div>
           <div class="title">学习交流小天地</div>
           <div class="desc">分享学习心得、音频内容和精读文章，互相交流</div>
         </div>
-      </div>
-      <div class="card reading" onclick="location.href='/vocabulary'">
+      </a>
+
+      <a class="card reading" href="/vocabulary">
         <div class="icon">📚</div>
         <div>
           <div class="title">单词本</div>
           <div class="desc">按听说读写分类管理词汇，支持发音播放和批量导入</div>
         </div>
-      </div>
-      <div class="card speaking" onclick="location.href='/study_techniques'">
+      </a>
+
+      <a class="card speaking" href="/study_techniques">
         <div class="icon">🎯</div>
         <div>
           <div class="title">学习技巧</div>
           <div class="desc">记录听说读写的词汇替换、上下义词和做题技巧</div>
         </div>
-      </div>
-      <!-- <div class="card reading" onclick="location.href='/audio_transcription'">
-        <div class="icon">🎙️</div>
-        <div>
-          <div class="title">音频转文本</div>
-          <div class="desc">上传音频文件，使用AI技术转换为文本内容</div>
-        </div>
-      </div> -->
-      <div class="card combined" onclick="location.href='/writing_practice'">
+      </a>
+
+      <a class="card combined" href="/writing_practice">
         <div class="icon">✍️</div>
         <div>
           <div class="title">写作逻辑链训练</div>
           <div class="desc">逻辑链语料学习、单句翻译实战与 AI 批改</div>
         </div>
-      </div>
-      <div class="card speaking" onclick="location.href='/listening_review'">
+      </a>
+
+      <a class="card speaking" href="/listening_review">
         <div class="icon">🎧</div>
         <div>
           <div class="title">听力精听复习</div>
           <div class="desc">上传音频自动转录，歌词滚动播放，生词标注与长难句收藏</div>
         </div>
-      </div>
+      </a>
     </div>
   </div>
 </body>

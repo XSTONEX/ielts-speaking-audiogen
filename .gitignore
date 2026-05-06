@@ -19,3 +19,5 @@ users.json
 tokens.json
 writing_correction/
 listening_review/
+.playwright-cli/
+output/
