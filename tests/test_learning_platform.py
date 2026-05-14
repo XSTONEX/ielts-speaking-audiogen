@@ -302,6 +302,17 @@ class LearningPlatformTestCase(unittest.TestCase):
         self.assertIn("vocabulary_audio", sources)
         self.assertIn("listening_review", sources)
 
+    def test_listening_template_pauses_audio_during_vocab_lookup(self):
+        response = self.client.get("/listening_review")
+
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn("beginVocabAudioPause", html)
+        self.assertIn("endVocabAudioPause", html)
+        self.assertIn("vocabAudioManualOverride", html)
+        self.assertIn("hideSelectionBadge({ resumeAudio: false })", html)
+        self.assertIn("markVocabAudioManualOverride", html)
+
     def test_json_store_round_trips_with_atomic_save(self):
         from utils.json_store import load_json, save_json_atomic
 

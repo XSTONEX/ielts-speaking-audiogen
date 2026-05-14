@@ -237,10 +237,40 @@ const state = {
   pollingTimer: null,
   showTranslations: true,
   pendingVocab: null,    // { segmentId, word, startOffset, endOffset }
-  viewingAnnot: null      // { id, segmentId } — for delete mode
+  viewingAnnot: null,     // { id, segmentId } — for delete mode
+  vocabAudioPauseActive: false,
+  vocabAudioWasPlaying: false,
+  vocabAudioManualOverride: false
 };
 
 const audioEl = document.getElementById('audioEl');
+
+function beginVocabAudioPause() {
+  if (state.vocabAudioPauseActive) {
+    if (!state.vocabAudioManualOverride && !audioEl.paused) audioEl.pause();
+    return;
+  }
+
+  state.vocabAudioWasPlaying = !audioEl.paused;
+  state.vocabAudioPauseActive = true;
+  state.vocabAudioManualOverride = false;
+
+  if (!audioEl.paused) audioEl.pause();
+}
+
+function markVocabAudioManualOverride() {
+  if (state.vocabAudioPauseActive) state.vocabAudioManualOverride = true;
+}
+
+function endVocabAudioPause() {
+  const shouldResume = state.vocabAudioPauseActive && state.vocabAudioWasPlaying && !state.vocabAudioManualOverride;
+
+  state.vocabAudioPauseActive = false;
+  state.vocabAudioWasPlaying = false;
+  state.vocabAudioManualOverride = false;
+
+  if (shouldResume && audioEl.paused) audioEl.play().catch(() => {});
+}
 
 // ===================================================================
 //  API Helper
@@ -576,6 +606,7 @@ lyricsContainer.addEventListener('click', (e) => {
     e.stopPropagation();
     const sel = window.getSelection();
     if (sel && !sel.isCollapsed && sel.toString().trim()) return; // user was selecting
+    beginVocabAudioPause();
     showViewPopover(annotEl);
     return;
   }
@@ -624,7 +655,7 @@ lyricsContainer.addEventListener('mouseup', (e) => {
     state.pendingVocab = { segmentId: segId, word: trimmed, startOffset, endOffset };
   }
 
-  // Show the small "+" badge above the selection — doesn't steal focus or clear selection
+  beginVocabAudioPause();
   showSelectionBadge(range.getBoundingClientRect());
 });
 
@@ -646,7 +677,7 @@ function getTextOffset(root, node, offset) {
 
 // --- Badge: lightweight "+" button shown on text selection ---
 function showSelectionBadge(rect) {
-  hideSelectionBadge(); // clear any previous badge
+  hideSelectionBadge({ resumeAudio: false }); // clear any previous badge
   const badge = document.getElementById('selectionBadge');
   const x = rect.left + window.scrollX + rect.width / 2 - 14;
   const y = rect.top + window.scrollY - 34;
@@ -655,8 +686,9 @@ function showSelectionBadge(rect) {
   badge.classList.remove('hidden');
 }
 
-function hideSelectionBadge() {
+function hideSelectionBadge({ resumeAudio = true } = {}) {
   document.getElementById('selectionBadge').classList.add('hidden');
+  if (resumeAudio) endVocabAudioPause();
 }
 
 // Badge click → open the full add-annotation Popover
@@ -665,12 +697,13 @@ document.getElementById('selectionBadge').addEventListener('click', (e) => {
   if (!state.pendingVocab) return;
   const badge = document.getElementById('selectionBadge');
   const rect = badge.getBoundingClientRect();
-  hideSelectionBadge();
+  hideSelectionBadge({ resumeAudio: false });
   showAddPopover(state.pendingVocab.word, rect);
 });
 
 // --- Popover: full annotation form ---
 function showAddPopover(word, rect) {
+  beginVocabAudioPause();
   const pop = document.getElementById('vocabPopover');
   document.getElementById('vpWord').textContent = word;
   document.getElementById('vpInput').value = '';
@@ -689,7 +722,8 @@ function showViewPopover(annotEl) {
   const annot = state.currentData?.vocab_annotations.find(a => a.id === aid);
   if (!annot) return;
 
-  hideSelectionBadge();
+  beginVocabAudioPause();
+  hideSelectionBadge({ resumeAudio: false });
   const pop = document.getElementById('vocabPopover');
   document.getElementById('vpWord').textContent = annot.word;
   document.getElementById('vpMeaning').textContent = annot.meaning;
@@ -718,10 +752,11 @@ function positionPopover(pop, rect) {
   });
 }
 
-function hideVocabPopover() {
+function hideVocabPopover({ resumeAudio = true } = {}) {
   document.getElementById('vocabPopover').classList.add('hidden');
   state.pendingVocab = null;
   state.viewingAnnot = null;
+  if (resumeAudio) endVocabAudioPause();
 }
 
 async function saveVocab() {
@@ -803,7 +838,10 @@ audioEl.addEventListener('loadedmetadata', () => {
   audioEl.playbackRate = state.playbackRate;
 });
 
-function togglePlay() { audioEl.paused ? audioEl.play() : audioEl.pause(); }
+function togglePlay() {
+  markVocabAudioManualOverride();
+  audioEl.paused ? audioEl.play() : audioEl.pause();
+}
 
 function updateProgressBar(t) {
   const dur = audioEl.duration || 1;
