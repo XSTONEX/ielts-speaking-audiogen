@@ -246,7 +246,8 @@ def _transcribe_async(project_id, audio_path, username):
         _save_project_data(project_id, {
             'segments': result['segments'],
             'starred_segments': [],
-            'vocab_annotations': []
+            'vocab_annotations': [],
+            'notes': []
         })
         _update_project_status(username, project_id, status='completed')
         print(f"Listening review done: {project_id}")
@@ -261,6 +262,11 @@ def _transcribe_async(project_id, audio_path, username):
 @listening_review_bp.route('/listening_review')
 def listening_review_page():
     return send_file('templates/listening.html')
+
+
+@listening_review_bp.route('/listening_review/notes')
+def listening_notes_page():
+    return send_file('templates/listening_notes.html')
 
 
 @listening_review_bp.route('/api/listening_review/upload', methods=['POST'])
@@ -392,8 +398,80 @@ def list_projects():
     for p in projects:
         data = _load_project_data(p['id'])
         p['vocab_count'] = len(data.get('vocab_annotations', [])) if data else 0
+        p['note_count'] = len(data.get('notes', [])) if data else 0
 
     return jsonify({'success': True, 'projects': projects})
+
+
+@listening_review_bp.route('/api/listening_review/all_notes', methods=['GET'])
+def all_notes():
+    """Aggregate every note + vocab annotation across all of a user's projects,
+    each carrying its original sentence for context-first review."""
+    username = _get_auth_username()
+    if not username:
+        return jsonify({'error': '未登录或token无效'}), 401
+
+    projects = _load_user_projects(username)
+    projects.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+
+    articles = []
+    total_notes = 0
+    total_vocab = 0
+
+    for p in projects:
+        data = _load_project_data(p['id'])
+        if not data:
+            continue
+        seg_map = {s['id']: s for s in data.get('segments', [])}
+
+        entries = []
+        for n in data.get('notes', []):
+            seg = seg_map.get(n['segment_id'], {})
+            entries.append({
+                'kind': 'note', 'id': n['id'],
+                'segment_id': n['segment_id'], 'sentence': seg.get('text', ''),
+                'start': seg.get('start', 0), 'end': seg.get('end', 0),
+                'quote': n['quote'], 'body': n['note'],
+                'start_offset': n['start_offset'], 'end_offset': n['end_offset'],
+                'created_at': n.get('created_at', '')
+            })
+        for v in data.get('vocab_annotations', []):
+            seg = seg_map.get(v['segment_id'], {})
+            entries.append({
+                'kind': 'vocab', 'id': v['id'],
+                'segment_id': v['segment_id'], 'sentence': seg.get('text', ''),
+                'start': seg.get('start', 0), 'end': seg.get('end', 0),
+                'quote': v['word'], 'body': v['meaning'],
+                'start_offset': v['start_offset'], 'end_offset': v['end_offset'],
+                'created_at': ''
+            })
+
+        if not entries:
+            continue
+
+        entries.sort(key=lambda e: (e['start'], e['start_offset']))
+        note_n = sum(1 for e in entries if e['kind'] == 'note')
+        vocab_n = len(entries) - note_n
+        total_notes += note_n
+        total_vocab += vocab_n
+
+        articles.append({
+            'project_id': p['id'],
+            'title': p.get('title', 'Untitled'),
+            'created_at': p.get('created_at', ''),
+            'audio_filename': p.get('audio_filename'),
+            'note_count': note_n,
+            'vocab_count': vocab_n,
+            'entries': entries
+        })
+
+    return jsonify({
+        'success': True,
+        'articles': articles,
+        'total_notes': total_notes,
+        'total_vocab': total_vocab,
+        'article_count': len(articles)
+    })
 
 
 @listening_review_bp.route('/api/listening_review/project/<project_id>', methods=['GET'])
@@ -596,6 +674,85 @@ def delete_vocab(project_id, word_id):
 
     annotations = data.get('vocab_annotations', [])
     data['vocab_annotations'] = [a for a in annotations if a['id'] != word_id]
+    _save_project_data(project_id, data)
+
+    return jsonify({'success': True, 'data': data})
+
+
+@listening_review_bp.route('/api/listening_review/project/<project_id>/note', methods=['PUT'])
+def add_note(project_id):
+    """Add a new note (on a word or sentence) or update an existing note's body."""
+    username = _get_auth_username()
+    if not username:
+        return jsonify({'error': '未登录或token无效'}), 401
+
+    projects, idx = _find_user_project(username, project_id)
+    if idx == -1:
+        return jsonify({'error': '项目不存在'}), 404
+
+    body = request.get_json(silent=True) or {}
+    note_text = (body.get('note') or '').strip()
+    existing_id = body.get('id')
+
+    data = _load_project_data(project_id)
+    if not data:
+        return jsonify({'error': '项目数据不存在'}), 404
+
+    notes = data.get('notes', [])
+
+    if existing_id:
+        # Update an existing note's body
+        if not note_text:
+            return jsonify({'error': '笔记内容不能为空'}), 400
+        found = False
+        for n in notes:
+            if n['id'] == existing_id:
+                n['note'] = note_text
+                n['updated_at'] = datetime.now().isoformat()
+                found = True
+                break
+        if not found:
+            return jsonify({'error': '笔记不存在'}), 404
+    else:
+        # Create a new note anchored to a span within a segment
+        segment_id = body.get('segment_id')
+        quote = (body.get('quote') or '').strip()
+        start_offset = body.get('start_offset')
+        end_offset = body.get('end_offset')
+        if segment_id is None or not quote or not note_text or start_offset is None or end_offset is None:
+            return jsonify({'error': '缺少必要参数'}), 400
+        notes.append({
+            'id': f"n_{str(uuid.uuid4())[:6]}",
+            'segment_id': segment_id,
+            'quote': quote,
+            'note': note_text,
+            'start_offset': start_offset,
+            'end_offset': end_offset,
+            'created_at': datetime.now().isoformat()
+        })
+
+    data['notes'] = notes
+    _save_project_data(project_id, data)
+
+    return jsonify({'success': True, 'data': data})
+
+
+@listening_review_bp.route('/api/listening_review/project/<project_id>/note/<note_id>', methods=['DELETE'])
+def delete_note(project_id, note_id):
+    username = _get_auth_username()
+    if not username:
+        return jsonify({'error': '未登录或token无效'}), 401
+
+    projects, idx = _find_user_project(username, project_id)
+    if idx == -1:
+        return jsonify({'error': '项目不存在'}), 404
+
+    data = _load_project_data(project_id)
+    if not data:
+        return jsonify({'error': '项目数据不存在'}), 404
+
+    notes = data.get('notes', [])
+    data['notes'] = [n for n in notes if n['id'] != note_id]
     _save_project_data(project_id, data)
 
     return jsonify({'success': True, 'data': data})

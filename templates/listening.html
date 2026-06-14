@@ -57,6 +57,17 @@
     .annotated-word::before { content: ''; position: absolute; bottom: calc(100% + 2px); left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: #1e293b; pointer-events: none; opacity: 0; transition: opacity .15s; z-index: 150; }
     .annotated-word:hover::after, .annotated-word:hover::before { opacity: 1; }
 
+    /* Note highlight — full-word amber highlighter */
+    .note-mark { background-color: rgba(251,191,36,.42); border-radius: 3px; cursor: pointer; padding: 1px 2px; box-decoration-break: clone; -webkit-box-decoration-break: clone; transition: background-color .15s; }
+    .note-mark:hover { background-color: rgba(245,158,11,.55); }
+    /* When a span is both a note and a vocab annotation, keep the amber highlight + blue underline */
+    .note-mark.annotated-word { background-color: rgba(251,191,36,.42); }
+
+    /* Context highlight inside the annotated "notes article" (no tooltip) */
+    .ctx-mark { border-radius: 3px; padding: 1px 2px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+    .ctx-mark.note  { background-color: rgba(251,191,36,.5); }
+    .ctx-mark.vocab { background-color: rgba(191,219,254,.75); text-decoration: underline solid #60a5fa; text-decoration-thickness: 1.5px; text-underline-offset: 2px; }
+
     /* Progress bar hover */
     .progress-wrap:hover .progress-thumb { transform: translate(-50%,-50%) scale(1.5); }
     .progress-wrap:hover .progress-track-inner { height: 6px; }
@@ -98,6 +109,7 @@
       <div class="ml-auto flex items-center gap-2 flex-shrink-0">
         <button id="masteredBtn" onclick="toggleMastered()" class="inline-flex items-center gap-1 bg-slate-100 text-slate-500 font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-emerald-50 hover:text-emerald-600 transition-colors border-none cursor-pointer" title="标记为已掌握">&#10003; 标熟</button>
         <button id="checkinBtn" onclick="doCheckin()" class="inline-flex items-center gap-1 bg-slate-100 text-slate-500 font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-amber-50 hover:text-amber-600 transition-colors border-none cursor-pointer" title="打卡">&#9998; 打卡 <span id="checkinCount" class="ml-0.5 text-[10px] opacity-70"></span></button>
+        <button id="notesBtn" onclick="openNotesView()" class="inline-flex items-center gap-1 bg-amber-100 text-amber-700 font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-amber-200 transition-colors border-none cursor-pointer" title="本篇笔记">&#128221; 笔记 <span id="notesCount" class="ml-0.5 text-[10px] opacity-80"></span></button>
         <button id="toggleTransBtn" onclick="toggleTranslations()" class="inline-flex items-center gap-1 bg-blue-100 text-blue-600 font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-blue-200 transition-colors border-none cursor-pointer" title="Toggle translations">&#35793; Translation</button>
       </div>
     </div>
@@ -110,6 +122,7 @@
     <div id="listView" class="max-w-5xl mx-auto px-4 md:px-8 py-6">
       <div class="flex gap-3 mb-5">
         <button onclick="openUploadModal()" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-colors border-none cursor-pointer shadow-sm">+ New Project</button>
+        <a href="/listening_review/notes" class="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 font-semibold text-sm px-5 py-2.5 rounded-xl hover:bg-amber-100 transition-colors border border-amber-100 cursor-pointer no-underline">&#128218; 全部笔记 · 复习</a>
       </div>
       <div id="projectGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
     </div>
@@ -194,9 +207,17 @@
     </div>
   </div>
 
-  <!-- ==================== Selection Badge (step 1: non-intrusive) ==================== -->
-  <div id="selectionBadge" class="absolute z-[200] hidden">
-    <button class="w-7 h-7 rounded-full bg-blue-500 text-white text-sm font-bold shadow-md border-none cursor-pointer hover:bg-blue-600 hover:scale-110 transition-all flex items-center justify-center leading-none">+</button>
+  <!-- ==================== Selection Toolbar (step 1: appears on text selection) ==================== -->
+  <div id="selectionToolbar" class="absolute z-[200] hidden">
+    <div class="flex items-stretch bg-white rounded-full shadow-lg border border-slate-200 overflow-hidden text-xs font-semibold select-none">
+      <button id="selVocabBtn" class="flex items-center gap-0.5 pl-3 pr-3 py-1.5 text-blue-600 hover:bg-blue-50 border-none cursor-pointer bg-transparent transition-colors leading-none">
+        <span class="text-sm">+</span><span>释义</span>
+      </button>
+      <span class="w-px bg-slate-200 my-1.5"></span>
+      <button id="selNoteBtn" class="flex items-center gap-0.5 pl-3 pr-3 py-1.5 text-amber-600 hover:bg-amber-50 border-none cursor-pointer bg-transparent transition-colors leading-none">
+        <span class="text-sm">+</span><span>笔记</span>
+      </button>
+    </div>
   </div>
 
   <!-- ==================== Vocab Popover (step 2: after badge click) ==================== -->
@@ -220,6 +241,55 @@
     </div>
   </div>
 
+  <!-- ==================== Note Popover (rich note editor for word/sentence) ==================== -->
+  <div id="notePopover" class="absolute z-[200] bg-white rounded-xl shadow-xl border border-slate-200 p-3 w-[min(320px,90vw)] hidden">
+    <div class="flex items-center gap-1.5 mb-2">
+      <span class="text-[10px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded flex-shrink-0">笔记</span>
+      <span id="npQuote" class="text-xs text-slate-500 italic truncate"></span>
+    </div>
+    <!-- Edit mode -->
+    <div id="npEditMode">
+      <textarea id="npInput" rows="3" class="w-full px-2.5 py-2 border border-slate-200 rounded-lg text-[13px] leading-relaxed outline-none focus:border-amber-400 transition-colors resize-none" placeholder="写下你的笔记…（语法点 / 搭配 / 易错 / 联想）"></textarea>
+      <div class="flex items-center gap-1.5 justify-between mt-2">
+        <span class="text-[10px] text-slate-300 select-none">⌘/Ctrl + Enter 保存</span>
+        <div class="flex gap-1.5">
+          <button onclick="hideNotePopover()" class="px-3 py-1 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-500 border-none cursor-pointer hover:bg-slate-200 transition-colors">取消</button>
+          <button onclick="saveNote()" class="px-3 py-1 rounded-md text-[11px] font-semibold bg-amber-500 text-white border-none cursor-pointer hover:bg-amber-600 transition-colors">保存</button>
+        </div>
+      </div>
+    </div>
+    <!-- View mode -->
+    <div id="npViewMode" class="hidden">
+      <div id="npBody" class="text-[13px] text-slate-700 leading-relaxed whitespace-pre-wrap mb-2.5 max-h-48 overflow-y-auto"></div>
+      <div class="flex gap-1.5 justify-end">
+        <button onclick="hideNotePopover()" class="px-3 py-1 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-500 border-none cursor-pointer hover:bg-slate-200 transition-colors">关闭</button>
+        <button onclick="editCurrentNote()" class="px-3 py-1 rounded-md text-[11px] font-semibold bg-blue-500 text-white border-none cursor-pointer hover:bg-blue-600 transition-colors">编辑</button>
+        <button onclick="deleteNote()" class="px-3 py-1 rounded-md text-[11px] font-semibold bg-red-500 text-white border-none cursor-pointer hover:bg-red-600 transition-colors">删除</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== Notes Article View (single-article, context-first 批注稿) ==================== -->
+  <div id="notesView" class="fixed inset-0 z-[150] hidden flex items-center justify-center p-3 md:p-6">
+    <div id="notesViewOverlay" class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
+    <div id="notesViewCard" class="relative w-full max-w-3xl max-h-[90vh] bg-white rounded-2xl shadow-2xl flex flex-col opacity-0 scale-95 transition-all duration-300">
+      <header class="flex items-center gap-3 px-6 md:px-8 py-4 border-b border-slate-100 flex-shrink-0">
+        <div class="flex-1 min-w-0">
+          <div id="notesViewTitle" class="text-lg font-bold text-slate-800 truncate">本篇笔记</div>
+          <div id="notesViewCount" class="text-xs text-slate-400 mt-0.5"></div>
+        </div>
+        <a href="/listening_review/notes" class="hidden sm:inline-flex items-center gap-1 bg-slate-100 text-slate-600 font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-slate-200 transition-colors no-underline flex-shrink-0">全部笔记 &#8594;</a>
+        <button onclick="closeNotesView()" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 border-none cursor-pointer bg-transparent text-xl leading-none flex-shrink-0">&times;</button>
+      </header>
+      <div class="flex gap-1.5 px-6 md:px-8 py-3 border-b border-slate-100 flex-shrink-0">
+        <button class="notes-filter-btn px-3 py-1 rounded-full text-xs font-semibold border border-slate-200 bg-slate-50 text-slate-500 cursor-pointer transition-colors hover:bg-slate-100" data-filter="all" onclick="setNotesFilter('all')">全部</button>
+        <button class="notes-filter-btn px-3 py-1 rounded-full text-xs font-semibold border border-slate-200 bg-slate-50 text-slate-500 cursor-pointer transition-colors hover:bg-slate-100" data-filter="note" onclick="setNotesFilter('note')">笔记</button>
+        <button class="notes-filter-btn px-3 py-1 rounded-full text-xs font-semibold border border-slate-200 bg-slate-50 text-slate-500 cursor-pointer transition-colors hover:bg-slate-100" data-filter="vocab" onclick="setNotesFilter('vocab')">释义</button>
+      </div>
+      <div id="notesViewBody" class="flex-1 overflow-y-auto px-6 md:px-8 py-5"></div>
+    </div>
+  </div>
+
   <!-- ==================== Toast ==================== -->
   <div id="toast" class="fixed bottom-24 left-1/2 bg-slate-800 text-white px-6 py-2.5 rounded-xl text-sm z-[300] pointer-events-none opacity-0 transition-all duration-300" style="transform:translateX(-50%) translateY(80px)"></div>
 
@@ -236,8 +306,12 @@ const state = {
   playbackRate: 1.0,
   pollingTimer: null,
   showTranslations: true,
-  pendingVocab: null,    // { segmentId, word, startOffset, endOffset }
-  viewingAnnot: null,     // { id, segmentId } — for delete mode
+  pendingVocab: null,    // { segmentId, word, startOffset, endOffset } — pending text selection
+  viewingAnnot: null,     // { id, segmentId } — for vocab delete mode
+  notePending: null,      // { segmentId, word, startOffset, endOffset } — selection awaiting a new note
+  viewingNote: null,      // the note object currently shown in the popover
+  editingNote: null,      // the note object currently being edited
+  notesFilter: 'all',
   vocabAudioPauseActive: false,
   vocabAudioWasPlaying: false,
   vocabAudioManualOverride: false
@@ -307,7 +381,28 @@ const API = {
     if (!d.valid) { localStorage.removeItem('authToken'); location.href = '/login'; return; }
   } catch { location.href = '/login'; return; }
   await loadProjects();
+  await maybeDeepLinkFromUrl();
 })();
+
+// Deep-link support: /listening_review?project=<id>&seg=<segId> opens a project and jumps to a segment.
+async function maybeDeepLinkFromUrl() {
+  const params = new URLSearchParams(location.search);
+  const pid = params.get('project');
+  if (!pid) return;
+  history.replaceState(null, '', '/listening_review'); // avoid re-triggering on refresh
+  await openProject(pid);
+  if (state.view !== 'detail') return; // openProject bailed (still processing / error)
+  const segParam = params.get('seg');
+  if (segParam === null) return;
+  const segId = parseInt(segParam);
+  const seg = state.currentData?.segments.find(s => s.id === segId);
+  if (!seg) return;
+  state.activeSegmentId = segId;
+  highlightSegment(segId);
+  const applySeek = () => { audioEl.currentTime = seg.start; };
+  if (audioEl.readyState >= 1) applySeek();
+  else audioEl.addEventListener('loadedmetadata', applySeek, { once: true });
+}
 
 // ===================================================================
 //  View Switching
@@ -382,6 +477,7 @@ function renderListView() {
     const isMastered = !!p.mastered;
     const checkinCount = p.checkin_count || 0;
     const vocabCount = p.vocab_count || 0;
+    const noteCount = p.note_count || 0;
     const cardBorder = isMastered ? 'border-slate-100 opacity-60' : 'border-slate-200';
     const retryBtn = p.status === 'error'
       ? `<button class="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-md mt-2 ml-1.5 bg-blue-50 text-blue-600 border-none cursor-pointer hover:bg-blue-100 transition-colors" onclick="event.stopPropagation();retryProject('${p.id}')">&#8635; Retry</button>`
@@ -392,7 +488,7 @@ function renderListView() {
         <button class="absolute top-2.5 right-2.5 w-7 h-7 flex items-center justify-center bg-transparent border-none text-slate-300 hover:text-red-500 hover:bg-red-50 cursor-pointer text-lg rounded transition-colors" onclick="event.stopPropagation();deleteProject('${p.id}')" title="Delete">&times;</button>
         <div class="font-bold text-slate-800 text-[15px] mb-1.5 pr-6 break-words">${esc(p.title)}</div>
         <div class="text-xs text-slate-400 flex items-center gap-3 flex-wrap">
-          <span>${date}</span><span>${dur}</span>${checkinCount > 0 ? `<span class="text-amber-500" title="打卡次数">&#9998; ${checkinCount}</span>` : ''}${vocabCount > 0 ? `<span class="text-blue-400" title="标注单词数">&#9679; ${vocabCount} 词</span>` : ''}
+          <span>${date}</span><span>${dur}</span>${checkinCount > 0 ? `<span class="text-amber-500" title="打卡次数">&#9998; ${checkinCount}</span>` : ''}${vocabCount > 0 ? `<span class="text-blue-400" title="标注单词数">&#9679; ${vocabCount} 词</span>` : ''}${noteCount > 0 ? `<span class="text-amber-500" title="笔记数">&#128221; ${noteCount}</span>` : ''}
         </div>
         <div class="flex items-center flex-wrap">
           <span class="inline-block text-[11px] font-semibold px-2 py-0.5 rounded-md mt-2 ${statusCls}">${statusText}</span>
@@ -510,9 +606,14 @@ async function openProject(id) {
   audioEl.src = `/api/listening_review/audio/${id}/${r.project.audio_filename}?token=${encodeURIComponent(tk)}`;
   audioEl.load();
   renderLyrics();
+  updateNotesButton();
 }
 
 function backToList() {
+  hideNotePopover({ resumeAudio: false });
+  hideVocabPopover({ resumeAudio: false });
+  hideSelectionToolbar({ resumeAudio: false });
+  if (!document.getElementById('notesView').classList.contains('hidden')) closeNotesView();
   audioEl.pause();
   audioEl.src = '';
   state.currentProject = null;
@@ -545,12 +646,14 @@ function renderLyrics() {
   const segs = state.currentData.segments;
   const starred = state.currentData.starred_segments || [];
   const annots = state.currentData.vocab_annotations || [];
+  const notes = state.currentData.notes || [];
 
   container.innerHTML = segs.map(seg => {
     const isActive = seg.id === state.activeSegmentId;
     const isStarred = starred.includes(seg.id);
     const segAnnots = annots.filter(a => a.segment_id === seg.id);
-    const textHtml = renderAnnotatedText(seg.text, segAnnots);
+    const segNotes = notes.filter(n => n.segment_id === seg.id);
+    const textHtml = renderAnnotatedText(seg.text, segAnnots, segNotes);
 
     let cls = 'lyrics-line group flex items-start gap-2 px-5 md:px-8 py-3 cursor-pointer rounded-r-lg transition-all duration-300';
     if (isActive)  cls += ' active';
@@ -570,19 +673,39 @@ function renderLyrics() {
   }).join('');
 }
 
-function renderAnnotatedText(text, annotations) {
-  if (!annotations || annotations.length === 0) return esc(text);
-  const sorted = [...annotations].sort((a, b) => a.start_offset - b.start_offset);
-  let result = '';
-  let lastEnd = 0;
-  for (const ann of sorted) {
-    if (ann.start_offset > lastEnd) result += esc(text.substring(lastEnd, ann.start_offset));
-    const word = text.substring(ann.start_offset, ann.end_offset);
-    result += `<span class="annotated-word" data-aid="${ann.id}" data-seg-id="${ann.segment_id}" data-meaning="${esc(ann.meaning)}">${esc(word)}</span>`;
-    lastEnd = ann.end_offset;
+// Render a segment's text with overlap-safe vocab underlines + note highlights.
+// Both annotation types can coexist on the same characters; we split the text at
+// every annotation boundary so the markup never breaks, even when ranges overlap.
+function renderAnnotatedText(text, vocabAnnots, noteAnnots) {
+  const ranges = [];
+  (vocabAnnots || []).forEach(a => ranges.push({ start: a.start_offset, end: a.end_offset, type: 'vocab', id: a.id, meaning: a.meaning, segId: a.segment_id }));
+  (noteAnnots  || []).forEach(n => ranges.push({ start: n.start_offset, end: n.end_offset, type: 'note',  id: n.id }));
+  if (ranges.length === 0) return esc(text);
+
+  const bounds = new Set([0, text.length]);
+  ranges.forEach(r => {
+    if (r.start >= 0 && r.start <= text.length) bounds.add(r.start);
+    if (r.end   >= 0 && r.end   <= text.length) bounds.add(r.end);
+  });
+  const points = [...bounds].sort((a, b) => a - b);
+
+  let html = '';
+  for (let i = 0; i < points.length - 1; i++) {
+    const b0 = points[i], b1 = points[i + 1];
+    if (b1 <= b0) continue;
+    const slice = text.substring(b0, b1);
+    const covering = ranges.filter(r => r.start <= b0 && r.end >= b1);
+    if (covering.length === 0) { html += esc(slice); continue; }
+
+    const vocab = covering.find(r => r.type === 'vocab');
+    const note  = covering.find(r => r.type === 'note');
+    const cls = [];
+    let attrs = '';
+    if (vocab) { cls.push('annotated-word'); attrs += ` data-aid="${vocab.id}" data-seg-id="${vocab.segId}" data-meaning="${esc(vocab.meaning)}"`; }
+    if (note)  { cls.push('note-mark');      attrs += ` data-note-id="${note.id}"`; }
+    html += `<span class="${cls.join(' ')}"${attrs}>${esc(slice)}</span>`;
   }
-  if (lastEnd < text.length) result += esc(text.substring(lastEnd));
-  return result;
+  return html;
 }
 
 // ===================================================================
@@ -597,6 +720,16 @@ lyricsContainer.addEventListener('click', (e) => {
   if (starBtn) {
     e.stopPropagation();
     toggleStar(parseInt(starBtn.dataset.segId));
+    return;
+  }
+
+  // Note highlight → view note (checked first so it wins over vocab on overlap)
+  const noteEl = e.target.closest('.note-mark');
+  if (noteEl) {
+    e.stopPropagation();
+    const sel = window.getSelection();
+    if (sel && !sel.isCollapsed && sel.toString().trim()) return; // user was selecting
+    openNoteView(noteEl);
     return;
   }
 
@@ -637,7 +770,8 @@ lyricsContainer.addEventListener('mouseup', (e) => {
 
   const rawText = sel.toString();
   const trimmed = rawText.trim();
-  if (!trimmed || trimmed.length > 60) return;
+  // Allow selecting a single word up to a full sentence within one segment.
+  if (!trimmed || trimmed.length > 600) return;
 
   // Calculate plain-text offset by walking text nodes
   const rawStart = getTextOffset(lineText, range.startContainer, range.startOffset);
@@ -656,7 +790,7 @@ lyricsContainer.addEventListener('mouseup', (e) => {
   }
 
   beginVocabAudioPause();
-  showSelectionBadge(range.getBoundingClientRect());
+  showSelectionToolbar(range.getBoundingClientRect());
 });
 
 /** Walk text nodes inside `root` and return the plain-text offset of `(node, offset)`. */
@@ -675,30 +809,43 @@ function getTextOffset(root, node, offset) {
 //  Selection Badge & Vocab Popover
 // ===================================================================
 
-// --- Badge: lightweight "+" button shown on text selection ---
-function showSelectionBadge(rect) {
-  hideSelectionBadge({ resumeAudio: false }); // clear any previous badge
-  const badge = document.getElementById('selectionBadge');
-  const x = rect.left + window.scrollX + rect.width / 2 - 14;
-  const y = rect.top + window.scrollY - 34;
-  badge.style.left = Math.max(4, x) + 'px';
-  badge.style.top  = Math.max(4, y) + 'px';
-  badge.classList.remove('hidden');
+// --- Toolbar: "+释义 / +笔记" pill shown on text selection ---
+function showSelectionToolbar(rect) {
+  hideSelectionToolbar({ resumeAudio: false }); // clear any previous toolbar
+  const tb = document.getElementById('selectionToolbar');
+  tb.classList.remove('hidden');
+  // Centre the (variable-width) pill above the selection.
+  const cx = rect.left + window.scrollX + rect.width / 2;
+  const w = tb.offsetWidth;
+  let left = cx - w / 2;
+  left = Math.max(6, Math.min(left, document.documentElement.clientWidth - w - 6));
+  let top = rect.top + window.scrollY - tb.offsetHeight - 8;
+  if (top < window.scrollY + 6) top = rect.bottom + window.scrollY + 8;
+  tb.style.left = left + 'px';
+  tb.style.top  = top  + 'px';
 }
 
-function hideSelectionBadge({ resumeAudio = true } = {}) {
-  document.getElementById('selectionBadge').classList.add('hidden');
+function hideSelectionToolbar({ resumeAudio = true } = {}) {
+  document.getElementById('selectionToolbar').classList.add('hidden');
   if (resumeAudio) endVocabAudioPause();
 }
 
-// Badge click → open the full add-annotation Popover
-document.getElementById('selectionBadge').addEventListener('click', (e) => {
+// "+释义" → quick vocab meaning (existing flow)
+document.getElementById('selVocabBtn').addEventListener('click', (e) => {
   e.stopPropagation();
   if (!state.pendingVocab) return;
-  const badge = document.getElementById('selectionBadge');
-  const rect = badge.getBoundingClientRect();
-  hideSelectionBadge({ resumeAudio: false });
+  const rect = document.getElementById('selectionToolbar').getBoundingClientRect();
+  hideSelectionToolbar({ resumeAudio: false });
   showAddPopover(state.pendingVocab.word, rect);
+});
+
+// "+笔记" → rich note on the selected word/sentence
+document.getElementById('selNoteBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (!state.pendingVocab) return;
+  const rect = document.getElementById('selectionToolbar').getBoundingClientRect();
+  hideSelectionToolbar({ resumeAudio: false });
+  openNoteAdd(state.pendingVocab, rect);
 });
 
 // --- Popover: full annotation form ---
@@ -723,7 +870,7 @@ function showViewPopover(annotEl) {
   if (!annot) return;
 
   beginVocabAudioPause();
-  hideSelectionBadge({ resumeAudio: false });
+  hideSelectionToolbar({ resumeAudio: false });
   const pop = document.getElementById('vocabPopover');
   document.getElementById('vpWord').textContent = annot.word;
   document.getElementById('vpMeaning').textContent = annot.meaning;
@@ -770,6 +917,8 @@ async function saveVocab() {
   if (r.success && r.data) {
     state.currentData = r.data;
     renderLyrics();
+    refreshNotesView();
+    updateNotesButton();
     showToast('标注已保存');
   }
   hideVocabPopover();
@@ -781,6 +930,8 @@ async function deleteVocab() {
   if (r.success && r.data) {
     state.currentData = r.data;
     renderLyrics();
+    refreshNotesView();
+    updateNotesButton();
     showToast('标注已删除');
   }
   hideVocabPopover();
@@ -791,18 +942,289 @@ document.getElementById('vpInput').addEventListener('keydown', (e) => {
   if (e.key === 'Escape') hideVocabPopover();
 });
 
-// Dismiss badge / popover on outside click
+// Dismiss toolbar / popovers on outside click
 document.addEventListener('mousedown', (e) => {
-  const pop   = document.getElementById('vocabPopover');
-  const badge = document.getElementById('selectionBadge');
+  const vpop    = document.getElementById('vocabPopover');
+  const npop    = document.getElementById('notePopover');
+  const toolbar = document.getElementById('selectionToolbar');
 
-  if (!pop.classList.contains('hidden') && !pop.contains(e.target)) {
+  if (!vpop.classList.contains('hidden') && !vpop.contains(e.target)) {
     hideVocabPopover();
     return;
   }
-  if (!badge.classList.contains('hidden') && !badge.contains(e.target)) {
-    hideSelectionBadge();
+  if (!npop.classList.contains('hidden') && !npop.contains(e.target)) {
+    hideNotePopover();
+    return;
+  }
+  if (!toolbar.classList.contains('hidden') && !toolbar.contains(e.target)) {
+    hideSelectionToolbar();
     state.pendingVocab = null;
+  }
+});
+
+// ===================================================================
+//  Notes (rich note on a word / sentence)
+// ===================================================================
+
+// Open the editor for a brand-new note on the current selection.
+function openNoteAdd(pending, rect) {
+  beginVocabAudioPause();
+  state.notePending = { ...pending };
+  state.viewingNote = null;
+  state.editingNote = null;
+
+  const pop = document.getElementById('notePopover');
+  document.getElementById('npQuote').textContent = pending.word;
+  document.getElementById('npInput').value = '';
+  document.getElementById('npEditMode').classList.remove('hidden');
+  document.getElementById('npViewMode').classList.add('hidden');
+
+  pop.classList.remove('hidden');
+  positionPopover(pop, rect);
+  setTimeout(() => document.getElementById('npInput').focus(), 30);
+}
+
+// Open an existing note in read mode (anchored to its highlight element).
+function openNoteView(noteEl) {
+  const nid = noteEl.dataset.noteId;
+  const note = (state.currentData?.notes || []).find(n => n.id === nid);
+  if (!note) return;
+
+  beginVocabAudioPause();
+  hideSelectionToolbar({ resumeAudio: false });
+  state.viewingNote = note;
+  state.notePending = null;
+  state.editingNote = null;
+
+  const pop = document.getElementById('notePopover');
+  document.getElementById('npQuote').textContent = note.quote;
+  document.getElementById('npBody').textContent = note.note;
+  document.getElementById('npEditMode').classList.add('hidden');
+  document.getElementById('npViewMode').classList.remove('hidden');
+
+  pop.classList.remove('hidden');
+  positionPopover(pop, noteEl.getBoundingClientRect());
+}
+
+// View mode → edit mode for the current note.
+function editCurrentNote() {
+  if (!state.viewingNote) return;
+  state.editingNote = state.viewingNote;
+  document.getElementById('npInput').value = state.viewingNote.note;
+  document.getElementById('npEditMode').classList.remove('hidden');
+  document.getElementById('npViewMode').classList.add('hidden');
+  setTimeout(() => document.getElementById('npInput').focus(), 30);
+}
+
+async function saveNote() {
+  const body = document.getElementById('npInput').value.trim();
+  if (!body) { showToast('请输入笔记内容'); return; }
+
+  let payload;
+  if (state.editingNote) {
+    payload = { id: state.editingNote.id, note: body };
+  } else if (state.notePending) {
+    const p = state.notePending;
+    payload = { segment_id: p.segmentId, quote: p.word, note: body, start_offset: p.startOffset, end_offset: p.endOffset };
+  } else {
+    return;
+  }
+
+  const r = await API.put(`/api/listening_review/project/${state.currentProject.id}/note`, payload);
+  if (r.success && r.data) {
+    state.currentData = r.data;
+    renderLyrics();
+    refreshNotesView();
+    updateNotesButton();
+    showToast('笔记已保存');
+  } else if (r.error) {
+    showToast(r.error);
+  }
+  hideNotePopover();
+}
+
+async function deleteNote() {
+  const target = state.editingNote || state.viewingNote;
+  if (!target) return;
+  const r = await API.del(`/api/listening_review/project/${state.currentProject.id}/note/${target.id}`);
+  if (r.success && r.data) {
+    state.currentData = r.data;
+    renderLyrics();
+    refreshNotesView();
+    updateNotesButton();
+    showToast('笔记已删除');
+  }
+  hideNotePopover();
+}
+
+function hideNotePopover({ resumeAudio = true } = {}) {
+  document.getElementById('notePopover').classList.add('hidden');
+  state.notePending = null;
+  state.viewingNote = null;
+  state.editingNote = null;
+  if (resumeAudio) endVocabAudioPause();
+}
+
+document.getElementById('npInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); saveNote(); }
+  if (e.key === 'Escape') { e.preventDefault(); hideNotePopover(); }
+});
+
+// ===================================================================
+//  Notes Article View (single article — context-first 批注稿)
+// ===================================================================
+function updateNotesButton() {
+  const n = (state.currentData?.notes || []).length + (state.currentData?.vocab_annotations || []).length;
+  const el = document.getElementById('notesCount');
+  if (el) el.textContent = n > 0 ? `(${n})` : '';
+}
+
+function openNotesView() {
+  const v = document.getElementById('notesView');
+  v.classList.remove('hidden');
+  setNotesFilter(state.notesFilter || 'all');
+  requestAnimationFrame(() => {
+    document.getElementById('notesViewOverlay').classList.remove('opacity-0');
+    const card = document.getElementById('notesViewCard');
+    card.classList.remove('opacity-0', 'scale-95');
+  });
+}
+
+function closeNotesView() {
+  document.getElementById('notesViewOverlay').classList.add('opacity-0');
+  document.getElementById('notesViewCard').classList.add('opacity-0', 'scale-95');
+  setTimeout(() => document.getElementById('notesView').classList.add('hidden'), 300);
+}
+
+function refreshNotesView() {
+  if (!document.getElementById('notesView').classList.contains('hidden')) renderNotesView();
+}
+
+function setNotesFilter(f) {
+  state.notesFilter = f;
+  document.querySelectorAll('.notes-filter-btn').forEach(b => {
+    const active = b.dataset.filter === f;
+    b.classList.toggle('bg-blue-500', active);
+    b.classList.toggle('text-white', active);
+    b.classList.toggle('border-blue-500', active);
+    b.classList.toggle('bg-slate-50', !active);
+    b.classList.toggle('text-slate-500', !active);
+    b.classList.toggle('border-slate-200', !active);
+  });
+  renderNotesView();
+}
+
+// Render a sentence with one entry's span highlighted (no tooltip — for reading).
+function renderSentenceWithSpan(text, start, end, kind) {
+  if (text == null) return '';
+  const s = Math.max(0, Math.min(start ?? 0, text.length));
+  const e = Math.max(s, Math.min(end ?? 0, text.length));
+  const cls = kind === 'note' ? 'ctx-mark note' : 'ctx-mark vocab';
+  return esc(text.substring(0, s)) + `<span class="${cls}">` + esc(text.substring(s, e)) + '</span>' + esc(text.substring(e));
+}
+
+function renderNotesView() {
+  const body = document.getElementById('notesViewBody');
+  const countEl = document.getElementById('notesViewCount');
+  document.getElementById('notesViewTitle').textContent = state.currentProject?.title || '本篇笔记';
+
+  const segMap = {};
+  (state.currentData?.segments || []).forEach(s => { segMap[s.id] = s; });
+
+  const mk = (kind, a) => {
+    const seg = segMap[a.segment_id] || {};
+    return {
+      kind, id: a.id, segId: a.segment_id,
+      quote: kind === 'note' ? a.quote : a.word,
+      body:  kind === 'note' ? a.note  : a.meaning,
+      startOff: a.start_offset, endOff: a.end_offset,
+      start: seg.start ?? 0, sentence: seg.text || ''
+    };
+  };
+  const notes = (state.currentData?.notes || []).map(n => mk('note', n));
+  const vocab = (state.currentData?.vocab_annotations || []).map(v => mk('vocab', v));
+
+  const all = [...notes, ...vocab].sort((a, b) => a.start - b.start || a.startOff - b.startOff);
+  countEl.textContent = `${notes.length} 条笔记 · ${vocab.length} 个生词释义`;
+
+  const f = state.notesFilter;
+  const items = all.filter(it => f === 'all' || it.kind === f);
+
+  if (items.length === 0) {
+    const tip = f === 'vocab' ? '还没有生词释义' : f === 'note' ? '还没有笔记' : '还没有任何标注';
+    body.innerHTML = `
+      <div class="text-center py-16 text-slate-300 text-sm">
+        <div class="text-4xl mb-3">&#128221;</div>
+        ${tip}<br>
+        <span class="text-xs">在正文里选中词或句子，即可添加</span>
+      </div>`;
+    return;
+  }
+
+  body.innerHTML = items.map(it => {
+    const isNote = it.kind === 'note';
+    const tag = isNote
+      ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">笔记</span>'
+      : '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">生词</span>';
+    const accent = isNote ? 'bg-amber-300' : 'bg-blue-300';
+    const editBtn = isNote
+      ? `<button onclick="editNoteFromView('${it.id}')" title="编辑" class="w-6 h-6 rounded flex items-center justify-center text-slate-400 hover:text-blue-500 hover:bg-blue-50 border-none bg-transparent cursor-pointer text-xs">&#9998;</button>`
+      : '';
+    const sentenceHtml = renderSentenceWithSpan(it.sentence, it.startOff, it.endOff, it.kind);
+    return `
+      <article class="group py-4 border-b border-slate-100 last:border-0 first:pt-0">
+        <div class="flex items-center gap-2 mb-2">
+          ${tag}
+          <button onclick="jumpToNote(${it.segId})" class="text-[11px] text-slate-400 hover:text-blue-500 font-mono border-none bg-transparent cursor-pointer p-0 inline-flex items-center gap-1" title="跳到音频此处">&#9655; ${formatTime(it.start)}</button>
+          <div class="ml-auto flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+            ${editBtn}
+            <button onclick="deleteFromView('${it.kind}','${it.id}')" title="删除" class="w-6 h-6 rounded flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 border-none bg-transparent cursor-pointer text-base leading-none">&times;</button>
+          </div>
+        </div>
+        <p class="text-[15px] md:text-base leading-[1.9] text-slate-700 select-text">${sentenceHtml}</p>
+        <div class="mt-2.5 flex gap-2.5">
+          <div class="w-[3px] rounded-full ${accent} flex-shrink-0"></div>
+          <div class="text-[13.5px] text-slate-600 leading-relaxed whitespace-pre-wrap break-words flex-1 pt-0.5">${esc(it.body)}</div>
+        </div>
+      </article>`;
+  }).join('');
+}
+
+function jumpToNote(segId) {
+  closeNotesView();
+  const seg = state.currentData?.segments.find(s => s.id === segId);
+  if (!seg) return;
+  audioEl.currentTime = seg.start;
+  state.activeSegmentId = segId;
+  highlightSegment(segId);
+}
+
+function editNoteFromView(noteId) {
+  closeNotesView();
+  const el = document.querySelector(`.note-mark[data-note-id="${noteId}"]`);
+  if (!el) return;
+  el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  setTimeout(() => { openNoteView(el); editCurrentNote(); }, 320);
+}
+
+async function deleteFromView(kind, id) {
+  const url = kind === 'note'
+    ? `/api/listening_review/project/${state.currentProject.id}/note/${id}`
+    : `/api/listening_review/project/${state.currentProject.id}/vocab/${id}`;
+  const r = await API.del(url);
+  if (r.success && r.data) {
+    state.currentData = r.data;
+    renderLyrics();
+    renderNotesView();
+    updateNotesButton();
+    showToast('已删除');
+  }
+}
+
+document.getElementById('notesViewOverlay').addEventListener('click', closeNotesView);
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !document.getElementById('notesView').classList.contains('hidden')) {
+    closeNotesView();
   }
 });
 

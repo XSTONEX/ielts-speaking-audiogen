@@ -251,6 +251,33 @@ body.has-app-shell {
   padding-top: 56px !important;
 }
 
+/* ============================================================
+   App-shell overlap compensation
+   The global nav (.app-shell-nav) is fixed at the top, 56px tall,
+   z-index 1200. Some pages were built with their own fixed/sticky
+   top bars (pinned at top:0, low z-index) or full-screen overlays
+   (z-index < 1200); without these rules the nav covers those bars
+   or pokes over those overlays. Every rule is page-scoped and only
+   applies when the shell is actually present (body.has-app-shell).
+   ============================================================ */
+
+/* Page top bars → drop below the nav so they stay fully visible */
+body.has-app-shell #topBar { top: 56px; }                                /* listening.html, listening_notes.html */
+body.has-app-shell.page-writing-practice .practice-header { top: 56px; } /* sticky essay header */
+
+/* Top-anchored toasts → nudge below the nav so notifications aren't hidden behind it */
+body.has-app-shell.page-vocabulary .notification { top: 72px; }
+body.has-app-shell.page-audio-transcription .toast { top: 72px; }
+
+/* Full-screen / side overlays → lift above the nav so their own controls aren't covered */
+body.has-app-shell.page-intensive .viewer { z-index: 1300; }
+body.has-app-shell.page-intensive .highlights-panel { z-index: 1400; }
+body.has-app-shell.page-writing-practice .review-overlay { z-index: 1300; }
+body.has-app-shell.page-vocabulary .modal { z-index: 1300; }
+body.has-app-shell.page-message-board .modal-overlay { z-index: 1300; }
+body.has-app-shell.page-listening #uploadModal,
+body.has-app-shell.page-listening #notesView { z-index: 1300; }
+
 html[data-theme="dark"] .app-shell-nav {
   background: rgba(16, 27, 45, 0.92);
 }

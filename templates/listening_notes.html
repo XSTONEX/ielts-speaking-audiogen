@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <script>
+    (function () {
+      try {
+        var preference = localStorage.getItem('ui-theme');
+        if (preference !== 'light' && preference !== 'dark' && preference !== 'system') preference = 'system';
+        var isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var theme = preference === 'system' ? (isDark ? 'dark' : 'light') : preference;
+        var root = document.documentElement;
+        root.dataset.themePreference = preference;
+        root.dataset.theme = theme;
+        root.style.colorScheme = theme;
+        root.classList.toggle('dark', theme === 'dark');
+      } catch (error) {
+        document.documentElement.dataset.themePreference = 'system';
+        document.documentElement.dataset.theme = 'light';
+        document.documentElement.style.colorScheme = 'light';
+      }
+    })();
+  </script>
+  <meta charset="UTF-8" />
+  <title>听力笔记本</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+  <link href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Crimson+Text:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { fontFamily: { serif: ['PT Serif', 'Crimson Text', 'ui-serif', 'Georgia', 'Cambria', '"Times New Roman"', 'Times', 'serif'] } } }
+    }
+  </script>
+  <style>
+    body { font-family: 'PT Serif', 'Crimson Text', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif; }
+
+    /* Context highlight (no tooltip) — full-word */
+    .ctx-mark { border-radius: 3px; padding: 1px 2px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+    .ctx-mark.note  { background-color: rgba(251,191,36,.5); }
+    .ctx-mark.vocab { background-color: rgba(191,219,254,.75); text-decoration: underline solid #60a5fa; text-decoration-thickness: 1.5px; text-underline-offset: 2px; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    .toast-show { transform: translateX(-50%) translateY(0) !important; opacity: 1 !important; }
+  </style>
+  <link rel="stylesheet" href="/static/theme.css">
+  <script src="/static/theme.js" defer></script>
+  <script src="/static/api-client.js" defer></script>
+  <script src="/static/auth.js" defer></script>
+  <script src="/static/ui-feedback.js" defer></script>
+  <script src="/static/app-shell.js" defer></script>
+</head>
+<body class="theme-page bg-slate-50 min-h-screen">
+
+  <!-- Top Bar -->
+  <header id="topBar" class="fixed top-0 inset-x-0 h-14 bg-white/70 backdrop-blur-md border-b border-slate-200/50 z-50 flex items-center px-5 md:px-8">
+    <div class="flex items-center gap-2.5">
+      <span class="text-xl">&#128218;</span>
+      <h1 class="text-xl font-bold text-slate-800 tracking-tight">听力笔记本</h1>
+    </div>
+    <a href="/listening_review" class="ml-auto inline-flex items-center gap-1.5 bg-blue-50 text-blue-600 font-semibold text-sm px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors no-underline">&#8592; 听力复习</a>
+  </header>
+
+  <main class="pt-14">
+    <div class="max-w-4xl mx-auto px-4 md:px-8 py-6">
+
+      <!-- Controls -->
+      <div class="flex items-center gap-3 flex-wrap mb-4">
+        <div id="statsLine" class="text-sm text-slate-500"></div>
+        <div id="modeToggle" class="ml-auto flex items-center bg-slate-100 rounded-xl p-1 gap-1">
+          <button id="modeBrowseBtn" onclick="setMode('browse')" class="px-4 py-1.5 rounded-lg text-sm font-semibold border-none cursor-pointer transition-colors bg-white text-slate-800 shadow-sm">&#128214; 浏览</button>
+          <button id="modeReviewBtn" onclick="setMode('review')" class="px-4 py-1.5 rounded-lg text-sm font-semibold border-none cursor-pointer transition-colors bg-transparent text-slate-500">&#127919; 复习</button>
+        </div>
+      </div>
+
+      <!-- Filter + search -->
+      <div class="flex items-center gap-2 flex-wrap mb-6">
+        <button class="filter-chip px-3.5 py-1.5 rounded-full text-xs font-semibold border border-slate-200 bg-slate-50 text-slate-500 cursor-pointer transition-colors hover:bg-slate-100" data-filter="all" onclick="setFilter('all')">全部</button>
+        <button class="filter-chip px-3.5 py-1.5 rounded-full text-xs font-semibold border border-slate-200 bg-slate-50 text-slate-500 cursor-pointer transition-colors hover:bg-slate-100" data-filter="note" onclick="setFilter('note')">笔记</button>
+        <button class="filter-chip px-3.5 py-1.5 rounded-full text-xs font-semibold border border-slate-200 bg-slate-50 text-slate-500 cursor-pointer transition-colors hover:bg-slate-100" data-filter="vocab" onclick="setFilter('vocab')">生词</button>
+        <div class="relative ml-auto">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-sm pointer-events-none">&#128269;</span>
+          <input id="searchInput" oninput="onSearch(this.value)" placeholder="搜索词、笔记或原句…" class="w-[min(260px,60vw)] pl-8 pr-3 py-1.5 border border-slate-200 rounded-full text-sm text-slate-700 outline-none focus:border-blue-400 transition-colors bg-white" />
+        </div>
+      </div>
+
+      <div id="browseRoot"></div>
+      <div id="reviewRoot" class="hidden"></div>
+
+    </div>
+  </main>
+
+  <!-- Hidden audio element: plays the sentence of the clicked / current card -->
+  <audio id="npAudio" preload="none"></audio>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed bottom-10 left-1/2 bg-slate-800 text-white px-6 py-2.5 rounded-xl text-sm z-[300] pointer-events-none opacity-0 transition-all duration-300" style="transform:translateX(-50%) translateY(80px)"></div>
+
+<script>
+// ===================================================================
+//  State
+// ===================================================================
+const state = {
+  raw: { articles: [], total_notes: 0, total_vocab: 0, article_count: 0 },
+  filter: 'all',
+  search: '',
+  mode: 'browse',
+  playingUid: null,
+  // review session
+  deck: [],
+  idx: 0,
+  revealed: false
+};
+
+const audio = document.getElementById('npAudio');
+
+const API = {
+  _headers() { const h = {}; const tk = localStorage.getItem('authToken'); if (tk) h['Authorization'] = 'Bearer ' + tk; return h; },
+  async get(url) { return (await fetch(url, { headers: this._headers() })).json(); },
+  async del(url) { return (await fetch(url, { method: 'DELETE', headers: this._headers() })).json(); }
+};
+
+// ===================================================================
+//  Init
+// ===================================================================
+(async function init() {
+  const tk = localStorage.getItem('authToken');
+  if (!tk) { location.href = '/login'; return; }
+  try {
+    const r = await fetch('/verify_token', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: tk }) });
+    const d = await r.json();
+    if (!d.valid) { localStorage.removeItem('authToken'); location.href = '/login'; return; }
+  } catch { location.href = '/login'; return; }
+  await loadNotes();
+})();
+
+async function loadNotes() {
+  const r = await API.get('/api/listening_review/all_notes');
+  if (r.error) { showToast(r.error); return; }
+  state.raw = r;
+  // Enrich every entry with its article context so cards/cards-deck can play audio directly.
+  (state.raw.articles || []).forEach(a => {
+    (a.entries || []).forEach(e => {
+      e.project_id = a.project_id;
+      e.project_title = a.title;
+      e.audio_filename = a.audio_filename;
+      e.uid = a.project_id + ':' + e.id;
+    });
+  });
+  renderStats();
+  setFilter(state.filter); // also paints the active filter chip and renders the current mode
+}
+
+// ===================================================================
+//  Shared helpers
+// ===================================================================
+function allEntries() {
+  const out = [];
+  (state.raw.articles || []).forEach(a => a.entries.forEach(e => out.push(e)));
+  return out;
+}
+
+// ===================================================================
+//  Sentence audio playback (browse click + review auto-play)
+// ===================================================================
+function playEntry(e) {
+  if (!e || !e.audio_filename) return;
+  const tk = localStorage.getItem('authToken');
+  const src = `/api/listening_review/audio/${e.project_id}/${encodeURIComponent(e.audio_filename)}?token=${encodeURIComponent(tk)}`;
+  audio.dataset.playEnd = (e.end != null ? e.end : '');
+  state.playingUid = e.uid;
+  const begin = () => { try { audio.currentTime = e.start || 0; } catch (_) {} audio.play().catch(() => {}); };
+  if (audio.dataset.curSrc !== src) {
+    audio.dataset.curSrc = src;
+    audio.src = src;
+    audio.load();
+    audio.addEventListener('loadedmetadata', begin, { once: true });
+  } else {
+    begin();
+  }
+}
+
+function playEntryByUid(uid) {
+  if (state.playingUid === uid && !audio.paused) { audio.pause(); return; } // toggle: click again to pause
+  const e = allEntries().find(x => x.uid === uid);
+  if (e) playEntry(e);
+}
+
+function playCurrentCard() {
+  if (state.mode === 'review' && state.deck.length && state.idx < state.deck.length) playEntry(state.deck[state.idx]);
+}
+function replayCurrent() { if (state.deck.length) playEntry(state.deck[state.idx]); }
+
+// Stop at the end of the sentence so only this segment plays.
+audio.addEventListener('timeupdate', () => {
+  const pe = parseFloat(audio.dataset.playEnd);
+  if (!isNaN(pe) && audio.currentTime >= pe) audio.pause();
+});
+['play', 'pause', 'ended'].forEach(ev => audio.addEventListener(ev, updatePlayingUI));
+
+function updatePlayingUI() {
+  document.querySelectorAll('.np-card').forEach(card => {
+    const on = card.dataset.uid === state.playingUid && !audio.paused;
+    card.classList.toggle('bg-amber-50', on);
+    const glyph = card.querySelector('.np-glyph');
+    if (glyph) glyph.innerHTML = on ? '&#10074;&#10074;' : '&#9654;';
+  });
+  const rb = document.getElementById('reviewPlayBtn');
+  if (rb) rb.innerHTML = (state.playingUid && !audio.paused) ? '&#10074;&#10074; 播放中' : '&#128266; 重听';
+}
+
+function matches(e) {
+  const f = state.filter, q = state.search.trim().toLowerCase();
+  if (f !== 'all' && e.kind !== f) return false;
+  if (q && !(`${e.quote} ${e.body} ${e.sentence}`.toLowerCase().includes(q))) return false;
+  return true;
+}
+
+function renderSentenceWithSpan(text, start, end, kind) {
+  if (text == null) return '';
+  const s = Math.max(0, Math.min(start ?? 0, text.length));
+  const e = Math.max(s, Math.min(end ?? 0, text.length));
+  const cls = kind === 'note' ? 'ctx-mark note' : 'ctx-mark vocab';
+  return esc(text.substring(0, s)) + `<span class="${cls}">` + esc(text.substring(s, e)) + '</span>' + esc(text.substring(e));
+}
+
+function tagHtml(kind) {
+  return kind === 'note'
+    ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">笔记</span>'
+    : '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">生词</span>';
+}
+
+function renderStats() {
+  const el = document.getElementById('statsLine');
+  const a = state.raw.article_count || 0, v = state.raw.total_vocab || 0, n = state.raw.total_notes || 0;
+  el.textContent = `${a} 篇文章 · ${v} 个生词 · ${n} 条笔记`;
+}
+
+// ===================================================================
+//  Mode / filter / search
+// ===================================================================
+function setMode(m) {
+  state.mode = m;
+  audio.pause();
+  document.getElementById('browseRoot').classList.toggle('hidden', m !== 'browse');
+  document.getElementById('reviewRoot').classList.toggle('hidden', m !== 'review');
+  const bb = document.getElementById('modeBrowseBtn'), rb = document.getElementById('modeReviewBtn');
+  bb.classList.toggle('bg-white', m === 'browse'); bb.classList.toggle('text-slate-800', m === 'browse'); bb.classList.toggle('shadow-sm', m === 'browse');
+  bb.classList.toggle('bg-transparent', m !== 'browse'); bb.classList.toggle('text-slate-500', m !== 'browse');
+  rb.classList.toggle('bg-white', m === 'review'); rb.classList.toggle('text-slate-800', m === 'review'); rb.classList.toggle('shadow-sm', m === 'review');
+  rb.classList.toggle('bg-transparent', m !== 'review'); rb.classList.toggle('text-slate-500', m !== 'review');
+
+  if (m === 'review') buildDeck();
+  else renderBrowse();
+}
+
+function setFilter(f) {
+  state.filter = f;
+  document.querySelectorAll('.filter-chip').forEach(b => {
+    const active = b.dataset.filter === f;
+    b.classList.toggle('bg-blue-500', active);
+    b.classList.toggle('text-white', active);
+    b.classList.toggle('border-blue-500', active);
+    b.classList.toggle('bg-slate-50', !active);
+    b.classList.toggle('text-slate-500', !active);
+    b.classList.toggle('border-slate-200', !active);
+  });
+  if (state.mode === 'review') buildDeck();
+  else renderBrowse();
+}
+
+let searchTimer = null;
+function onSearch(v) {
+  state.search = v;
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => { if (state.mode === 'review') buildDeck(); else renderBrowse(); }, 180);
+}
+
+// ===================================================================
+//  Browse mode (grouped by article, context-first)
+// ===================================================================
+function renderBrowse() {
+  const root = document.getElementById('browseRoot');
+  let html = '', shown = 0;
+
+  (state.raw.articles || []).forEach(a => {
+    const ents = a.entries.filter(e => matches({ ...e }));
+    if (!ents.length) return;
+    shown += ents.length;
+    html += `
+      <section class="mb-9">
+        <div class="flex items-center gap-3 mb-3 pb-2 border-b-2 border-slate-100">
+          <h2 class="text-lg font-bold text-slate-800 truncate">${esc(a.title)}</h2>
+          <span class="text-xs text-slate-400 flex-shrink-0 whitespace-nowrap">${a.note_count} 笔记 · ${a.vocab_count} 生词</span>
+          <a href="/listening_review?project=${a.project_id}" class="ml-auto text-xs font-semibold text-blue-500 hover:text-blue-600 no-underline flex-shrink-0 whitespace-nowrap">去精听 &#8594;</a>
+        </div>
+        <div class="space-y-1">
+          ${ents.map(e => entryCardHtml(e)).join('')}
+        </div>
+      </section>`;
+  });
+
+  root.innerHTML = shown ? html : emptyStateHtml();
+  updatePlayingUI();
+}
+
+function entryCardHtml(e) {
+  const isNote = e.kind === 'note';
+  const accent = isNote ? 'bg-amber-300' : 'bg-blue-300';
+  const sentence = renderSentenceWithSpan(e.sentence, e.start_offset, e.end_offset, e.kind);
+  return `
+    <article data-uid="${e.uid}" onclick="playEntryByUid('${e.uid}')" class="np-card group py-3.5 px-3 rounded-xl cursor-pointer transition-colors hover:bg-slate-50" title="点击播放这句">
+      <div class="flex items-center gap-2 mb-2">
+        ${tagHtml(e.kind)}
+        <span class="text-[11px] text-slate-400 font-mono inline-flex items-center gap-1.5"><span class="np-glyph text-amber-500">&#9654;</span>${formatTime(e.start)}</span>
+        <div class="ml-auto flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <a href="/listening_review?project=${e.project_id}&seg=${e.segment_id}" onclick="event.stopPropagation()" class="text-[11px] font-semibold text-blue-500 hover:text-blue-600 no-underline px-1.5">去原文</a>
+          <button onclick="event.stopPropagation();deleteEntry('${e.project_id}','${e.kind}','${e.id}')" title="删除" class="w-6 h-6 rounded flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 border-none bg-transparent cursor-pointer text-base leading-none">&times;</button>
+        </div>
+      </div>
+      <p class="text-[15px] md:text-base leading-[1.9] text-slate-700">${sentence}</p>
+      <div class="mt-2.5 flex gap-2.5">
+        <div class="w-[3px] rounded-full ${accent} flex-shrink-0"></div>
+        <div class="text-[13.5px] text-slate-600 leading-relaxed whitespace-pre-wrap break-words flex-1 pt-0.5">${esc(e.body)}</div>
+      </div>
+    </article>`;
+}
+
+function emptyStateHtml() {
+  const tip = state.search ? '没有匹配的内容' : (state.filter === 'vocab' ? '还没有生词' : state.filter === 'note' ? '还没有笔记' : '还没有任何笔记');
+  return `
+    <div class="text-center py-24 text-slate-300">
+      <div class="text-5xl mb-4">&#128221;</div>
+      <div class="text-base">${tip}</div>
+      <div class="text-sm mt-2">去精听一篇文章，选中词或句子开始记录吧</div>
+      <a href="/listening_review" class="inline-block mt-5 bg-blue-500 hover:bg-blue-600 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-colors no-underline">去听力复习 &#8594;</a>
+    </div>`;
+}
+
+async function deleteEntry(pid, kind, id) {
+  if (!confirm('删除这条' + (kind === 'note' ? '笔记' : '生词') + '？')) return;
+  const url = kind === 'note'
+    ? `/api/listening_review/project/${pid}/note/${id}`
+    : `/api/listening_review/project/${pid}/vocab/${id}`;
+  const r = await API.del(url);
+  if (!r.success) { showToast(r.error || '删除失败'); return; }
+
+  const art = state.raw.articles.find(a => a.project_id === pid);
+  if (art) {
+    art.entries = art.entries.filter(e => e.id !== id);
+    if (kind === 'note') art.note_count = Math.max(0, art.note_count - 1);
+    else art.vocab_count = Math.max(0, art.vocab_count - 1);
+    if (!art.entries.length) state.raw.articles = state.raw.articles.filter(a => a !== art);
+  }
+  state.raw.article_count = state.raw.articles.length;
+  state.raw.total_notes = state.raw.articles.reduce((s, a) => s + a.note_count, 0);
+  state.raw.total_vocab = state.raw.articles.reduce((s, a) => s + a.vocab_count, 0);
+  renderStats();
+  if (state.mode === 'review') { state.deck = state.deck.filter(e => e.uid !== (pid + ':' + id)); renderReview(); }
+  else renderBrowse();
+  showToast('已删除');
+}
+
+// ===================================================================
+//  Review mode (flashcards: term + context → reveal note)
+// ===================================================================
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildDeck() {
+  state.deck = shuffle(allEntries().filter(matches));
+  state.idx = 0;
+  state.revealed = false;
+  renderReview();
+  playCurrentCard();
+}
+
+function renderReview() {
+  const root = document.getElementById('reviewRoot');
+
+  if (!state.deck.length) {
+    root.innerHTML = `
+      <div class="text-center py-20 text-slate-400">
+        <div class="text-5xl mb-4">&#127881;</div>
+        <div class="text-lg font-semibold text-slate-600">这一轮复习完成！</div>
+        <div class="text-sm mt-1">${state.search || state.filter !== 'all' ? '当前筛选下没有更多卡片' : '所有卡片都过了一遍'}</div>
+        <div class="flex items-center justify-center gap-3 mt-6">
+          <button onclick="buildDeck()" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold text-sm px-5 py-2.5 rounded-xl border-none cursor-pointer transition-colors">再来一轮</button>
+          <button onclick="setMode('browse')" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold text-sm px-5 py-2.5 rounded-xl border-none cursor-pointer transition-colors">回到浏览</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  if (state.idx >= state.deck.length) state.idx = state.deck.length - 1;
+  const e = state.deck[state.idx];
+  const sentence = renderSentenceWithSpan(e.sentence, e.start_offset, e.end_offset, e.kind);
+  const pos = state.idx + 1, total = state.deck.length;
+
+  const back = state.revealed
+    ? `<div class="mt-6 pt-5 border-t border-slate-100">
+         <div class="text-xs font-semibold ${e.kind === 'note' ? 'text-amber-600' : 'text-blue-600'} mb-1.5">${e.kind === 'note' ? '笔记' : '释义'}</div>
+         <div class="text-[15px] md:text-base text-slate-700 leading-relaxed whitespace-pre-wrap break-words">${esc(e.body)}</div>
+       </div>`
+    : `<button onclick="revealCard()" class="mt-7 mx-auto block bg-slate-800 hover:bg-slate-700 text-white font-semibold text-sm px-6 py-2.5 rounded-xl border-none cursor-pointer transition-colors">点击翻面查看笔记</button>`;
+
+  const masterBtn = state.revealed
+    ? `<button onclick="masterCard()" class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-600 font-semibold text-sm px-5 py-2.5 rounded-xl border border-emerald-100 cursor-pointer hover:bg-emerald-100 transition-colors">&#10003; 记住了</button>`
+    : '';
+
+  root.innerHTML = `
+    <div class="max-w-2xl mx-auto">
+      <div class="flex items-center justify-between mb-4 text-xs text-slate-400">
+        <span class="font-mono">${pos} / ${total}</span>
+        <div class="flex gap-3">
+          <button onclick="buildDeck()" class="hover:text-slate-600 border-none bg-transparent cursor-pointer text-xs">&#8635; 洗牌</button>
+          <button onclick="setMode('browse')" class="hover:text-slate-600 border-none bg-transparent cursor-pointer text-xs">退出复习</button>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-7 md:p-9 min-h-[280px] flex flex-col">
+        <div class="flex items-center gap-2 mb-5">
+          ${tagHtml(e.kind)}
+          <span class="text-xs text-slate-400 truncate">${esc(e.project_title)}</span>
+          <a href="/listening_review?project=${e.project_id}&seg=${e.segment_id}" class="ml-auto text-xs text-slate-300 hover:text-blue-500 no-underline whitespace-nowrap">去原文</a>
+        </div>
+        <p class="text-lg md:text-xl leading-[1.9] text-slate-600">${sentence}</p>
+        <div class="text-center mt-5">
+          <div class="text-2xl md:text-3xl font-bold text-slate-800 break-words">${esc(e.quote)}</div>
+          <button id="reviewPlayBtn" onclick="replayCurrent()" class="mt-3 text-xs text-slate-400 hover:text-amber-600 border-none bg-transparent cursor-pointer inline-flex items-center gap-1">&#128266; 重听</button>
+        </div>
+        ${back}
+      </div>
+
+      <div class="flex items-center justify-center gap-3 mt-6">
+        <button onclick="prevCard()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold text-sm px-5 py-2.5 rounded-xl border-none cursor-pointer transition-colors">&#8592; 上一张</button>
+        ${masterBtn}
+        <button onclick="nextCard()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold text-sm px-5 py-2.5 rounded-xl border-none cursor-pointer transition-colors">下一张 &#8594;</button>
+      </div>
+    </div>`;
+}
+
+function revealCard() { state.revealed = true; renderReview(); }
+
+function nextCard() {
+  if (state.idx < state.deck.length - 1) { state.idx++; state.revealed = false; renderReview(); playCurrentCard(); }
+}
+
+function prevCard() {
+  if (state.idx > 0) { state.idx--; state.revealed = false; renderReview(); playCurrentCard(); }
+}
+
+function masterCard() {
+  state.deck.splice(state.idx, 1);
+  state.revealed = false;
+  if (state.idx >= state.deck.length) state.idx = Math.max(0, state.deck.length - 1);
+  renderReview();
+  playCurrentCard();
+}
+
+// Keyboard shortcuts for review
+document.addEventListener('keydown', (e) => {
+  if (state.mode !== 'review') return;
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.code === 'Space' || e.code === 'Enter') {
+    e.preventDefault();
+    if (!state.revealed) revealCard(); else nextCard();
+  } else if (e.code === 'ArrowRight') { e.preventDefault(); nextCard(); }
+  else if (e.code === 'ArrowLeft') { e.preventDefault(); prevCard(); }
+});
+
+// ===================================================================
+//  Utilities
+// ===================================================================
+function esc(s) {
+  if (s == null) return '';
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function formatTime(s) {
+  if (!s || isNaN(s)) return '0:00';
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return m + ':' + (sec < 10 ? '0' : '') + sec;
+}
+
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('toast-show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('toast-show'), 2600);
+}
+</script>
+</body>
+</html>
