@@ -824,6 +824,104 @@ def _save_practice(username, data):
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
+# ===================== 学习页选词高亮 =====================
+# 数据结构：{ "<key>": [ {id,start,end,text,field,created_at}, ... ] }
+# key 由前端拼接，含文章上下文（模块|分类|题目|句序|字段），便于按前缀加载。
+
+def _highlights_path(username):
+    return os.path.join(WRITING_DATA_DIR, f'{username}_highlights.json')
+
+
+def _load_highlights(username):
+    p = _highlights_path(username)
+    if os.path.exists(p):
+        with open(p, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    return {}
+
+
+def _save_highlights(username, data):
+    os.makedirs(WRITING_DATA_DIR, exist_ok=True)
+    with open(_highlights_path(username), 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def _highlights_user():
+    """校验 token 并返回用户名，未登录返回 None。"""
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    if not is_token_valid(token):
+        return None
+    tokens = load_tokens()
+    return tokens.get(token, {}).get('username', 'anonymous')
+
+
+@writing_bp.route('/api/writing/highlights', methods=['GET'])
+def writing_highlights_get():
+    username = _highlights_user()
+    if not username:
+        return jsonify({'error': '未登录'}), 401
+    data = _load_highlights(username)
+    prefix = request.args.get('prefix')
+    if prefix:
+        data = {k: v for k, v in data.items() if k.startswith(prefix)}
+    return jsonify(data)
+
+
+@writing_bp.route('/api/writing/highlights', methods=['POST'])
+def writing_highlights_add():
+    username = _highlights_user()
+    if not username:
+        return jsonify({'error': '未登录'}), 401
+    body = request.json or {}
+    key = (body.get('key') or '').strip()
+    text = body.get('text') or ''
+    try:
+        start = int(body.get('start'))
+        end = int(body.get('end'))
+    except (TypeError, ValueError):
+        return jsonify({'error': '参数错误'}), 400
+    if not key or not text or start < 0 or end <= start:
+        return jsonify({'error': '参数错误'}), 400
+
+    data = _load_highlights(username)
+    items = data.setdefault(key, [])
+    # 相同区间已存在则直接复用，避免重复
+    for it in items:
+        if it.get('start') == start and it.get('end') == end:
+            return jsonify({'success': True, 'highlight': it, 'duplicate': True})
+    hl = {
+        'id': str(uuid.uuid4()),
+        'start': start,
+        'end': end,
+        'text': text,
+        'field': body.get('field', ''),
+        'created_at': datetime.now().isoformat(),
+    }
+    items.append(hl)
+    _save_highlights(username, data)
+    return jsonify({'success': True, 'highlight': hl})
+
+
+@writing_bp.route('/api/writing/highlights/<hid>', methods=['DELETE'])
+def writing_highlights_delete(hid):
+    username = _highlights_user()
+    if not username:
+        return jsonify({'error': '未登录'}), 401
+    data = _load_highlights(username)
+    changed = False
+    for key in list(data.keys()):
+        kept = [it for it in data[key] if it.get('id') != hid]
+        if len(kept) != len(data[key]):
+            changed = True
+        if kept:
+            data[key] = kept
+        else:
+            del data[key]
+    if changed:
+        _save_highlights(username, data)
+    return jsonify({'success': True})
+
+
 @writing_bp.route('/api/writing/save_practice', methods=['POST'])
 def writing_save_practice():
     token = request.headers.get('Authorization', '').replace('Bearer ', '')

@@ -749,6 +749,74 @@ textarea, input { font-family: var(--serif); }
 .sentence-pair[draggable="true"]:active { cursor: grabbing; }
 .sentence-pair.dragging { opacity: 0.4; }
 
+/* ===== 学习页选词高亮（荧光笔） ===== */
+.wp-hl {
+  background-color: rgba(251, 191, 36, .42);
+  border-radius: 3px;
+  padding: 0 1px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  cursor: pointer;
+  transition: background-color .15s;
+}
+.wp-hl:hover { background-color: rgba(245, 158, 11, .6); }
+html[data-theme="dark"] .wp-hl { background-color: rgba(251, 191, 36, .34); }
+html[data-theme="dark"] .wp-hl:hover { background-color: rgba(251, 191, 36, .5); }
+
+/* 选词浮动操作条 —— 简洁悬浮胶囊，明暗自适应 */
+.wp-hl-toolbar {
+  position: absolute;
+  z-index: 400;
+  display: none;
+  transform: translate(-50%, -100%);
+  margin-top: -10px;
+  --wp-accent: #0284c7;   /* 自带强调色，规避页面 --accent 不继承的问题 */
+}
+html[data-theme="dark"] .wp-hl-toolbar { --wp-accent: #8a95ff; }
+.wp-hl-toolbar.show { display: block; animation: wpHlPop .13s cubic-bezier(.2,.9,.3,1.2); }
+@keyframes wpHlPop {
+  from { opacity: 0; transform: translate(-50%, -100%) scale(.9); }
+  to   { opacity: 1; transform: translate(-50%, -100%) scale(1); }
+}
+.wp-hl-toolbar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px 7px 11px;
+  background: var(--bg-elevated, #fff);
+  color: var(--text-primary, #1e293b);
+  border: 1px solid var(--border-default, #e2e8f0);
+  border-radius: 10px;
+  font-family: var(--serif);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: .01em;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 6px 22px rgba(var(--shadow-rgb, 15,23,42), .16), 0 1px 3px rgba(var(--shadow-rgb, 15,23,42), .1);
+  transition: border-color .15s, color .15s, box-shadow .15s, transform .1s;
+}
+.wp-hl-toolbar button:hover {
+  border-color: var(--wp-accent);
+  color: var(--wp-accent);
+  box-shadow: 0 9px 28px rgba(var(--shadow-rgb, 15,23,42), .2), 0 1px 4px rgba(var(--shadow-rgb, 15,23,42), .12);
+}
+.wp-hl-toolbar button:active { transform: translateY(.5px); }
+.wp-hl-toolbar svg {
+  width: 15px; height: 15px; flex-shrink: 0;
+  fill: none; stroke: currentColor; stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round;
+  color: var(--wp-accent);
+}
+/* 取消高亮：克制的红色，悬停时显意图 */
+.wp-hl-toolbar.is-remove svg { color: var(--text-muted, #94a3b8); }
+.wp-hl-toolbar.is-remove button:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+.wp-hl-toolbar.is-remove button:hover svg { color: #ef4444; }
+
 @media (max-width: 768px) {
   .ai-chat-window { width: calc(100vw - 16px); height: 70vh; left: 8px !important; right: 8px !important; }
   .ai-float-btn { right: 16px; bottom: 72px; padding: 10px 16px; font-size: 12px; }
@@ -953,7 +1021,8 @@ const API = {
     return h;
   },
   async get(url) { const r = await fetch(url, { headers: this.headers() }); return r.json(); },
-  async post(url, body) { const r = await fetch(url, { method: 'POST', headers: this.headers(), body: JSON.stringify(body) }); return r.json(); }
+  async post(url, body) { const r = await fetch(url, { method: 'POST', headers: this.headers(), body: JSON.stringify(body) }); return r.json(); },
+  async del(url) { const r = await fetch(url, { method: 'DELETE', headers: this.headers() }); return r.json(); }
 };
 
 /* ==================== State ==================== */
@@ -1357,6 +1426,7 @@ function getTagClass(tag) {
 function renderSmallLearnContent() {
   const data = state.small.exampleData;
   if (!data) return;
+  const hlBase = `small|${data.chart_type || data.chart_subtype || ''}|${data.name || ''}|`;
   let html = '';
   let flatIdx = 0;
   for (const section of data.sections) {
@@ -1368,8 +1438,8 @@ function renderSmallLearnContent() {
       const isDrag = state.aiChat.open;
       html += `<div class="sentence-pair${isDrag ? '' : ''}" ${isDrag ? 'draggable="true"' : ''} data-drag-info='${dragInfo}' ondragstart="onSentenceDragStart(event)" ondragend="onSentenceDragEnd(event)">
         ${tagHtml ? `<div class="tag-row">${tagHtml}</div>` : ''}
-        <div class="sentence-cn">${sent.translation}</div>
-        <div class="sentence-en">${sent.original}</div>
+        <div class="sentence-cn" data-hl-key="${hlBase}${flatIdx}|cn">${sent.translation}</div>
+        <div class="sentence-en" data-hl-key="${hlBase}${flatIdx}|en">${sent.original}</div>
         <button class="quick-practice-btn" onclick="event.stopPropagation(); quickPracticeSmall(${flatIdx})" title="练习此句">&#9998; 练</button>
       </div>`;
       flatIdx++;
@@ -1384,6 +1454,7 @@ function renderSmallLearnContent() {
       </tbody></table></div>`;
   }
   document.getElementById('smallLearnContent').innerHTML = html;
+  Highlights.loadAndApply('smallLearnContent', hlBase);
 }
 
 async function quickPracticeSmall(flatIdx) {
@@ -1726,6 +1797,7 @@ async function enterLearning(catIdx, subIdx) {
 
 function renderLearning(d) {
   const catName = state.categories[state.currentCat].name;
+  const hlBase = `big|${catName}|${d.name}|`;
   document.getElementById('learnBreadcrumb').innerHTML =
     `<span onclick="backToDirectory()">${catName}</span><span class="sep">/</span><span class="current">${d.name}</span>`;
   document.getElementById('learnTitle').textContent = d.name;
@@ -1750,14 +1822,15 @@ function renderLearning(d) {
           const dragInfo = JSON.stringify({ zh: s.chinese, en: s.english, tags: [], module: 'big', category: catName, subcategory: d.name, exampleName: ex.title, sentenceIndex: si }).replace(/'/g, '&#39;');
           const isDrag = state.aiChat.open;
           return `<div class="sentence-pair" ${isDrag ? 'draggable="true"' : ''} data-drag-info='${dragInfo}' ondragstart="onSentenceDragStart(event)" ondragend="onSentenceDragEnd(event)">
-            <div class="sentence-cn">${s.chinese}</div>
-            <div class="sentence-en">${s.english}</div>
+            <div class="sentence-cn" data-hl-key="${hlBase}${i}_${si}|cn">${s.chinese}</div>
+            <div class="sentence-en" data-hl-key="${hlBase}${i}_${si}|en">${s.english}</div>
             <button class="quick-practice-btn" onclick="event.stopPropagation(); quickPractice(${i}, ${si})" title="练习此句">&#9998; 练</button>
           </div>`;
         }).join('')}
       </div>
     </div>
   `).join('');
+  Highlights.loadAndApply('exampleList', hlBase);
 }
 
 function toggleExample(header) { header.classList.toggle('open'); header.nextElementSibling.classList.toggle('open'); }
@@ -2758,6 +2831,212 @@ async function sendPracticeFollowup(sentKey) {
   });
 }
 
+/* ==================== 学习页选词高亮 ====================
+ * 仅当 AI 助手未呼出时启用：选中正文 → 浮动「高亮」→ 持久化；
+ * 点击已有高亮 → 浮动「取消高亮」。高亮自动吸附到整个英文单词。
+ */
+const Highlights = {
+  cache: {},        // key -> [ {id,start,end,text,field}, ... ]
+  toolbar: null,
+  mode: null,       // 'create' | 'remove'
+  pending: null,    // 待创建：{ key, start, end, text, field }
+  removeIds: null,  // 待删除的 id 列表
+  removeKey: null,
+
+  // 词内字符：英文字母/数字/重音拉丁/连字符/撇号（中文逐字选择，不扩展）
+  isWordChar(ch) { return !!ch && /[A-Za-z0-9À-ɏ'’\-]/.test(ch); },
+
+  escapeHtml(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  },
+
+  // 走 root 下的文本节点，求 (node,offset) 对应的纯文本偏移
+  textOffset(root, node, offset) {
+    let pos = 0;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    let cur;
+    while ((cur = walker.nextNode())) {
+      if (cur === node) return pos + offset;
+      pos += cur.textContent.length;
+    }
+    return -1;
+  },
+
+  // 去掉首尾空白后，把选区扩展到完整的英文单词
+  expandToWord(text, start, end) {
+    while (start < end && /\s/.test(text[start])) start++;
+    while (end > start && /\s/.test(text[end - 1])) end--;
+    while (start > 0 && this.isWordChar(text[start - 1]) && this.isWordChar(text[start])) start--;
+    while (end < text.length && this.isWordChar(text[end - 1]) && this.isWordChar(text[end])) end++;
+    return [start, end];
+  },
+
+  // 简洁线性图标（Lucide 风格）：荧光笔 / 橡皮擦
+  ICONS: {
+    create: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 11-6 6v3h9l3-3"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/></svg>',
+    remove: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>'
+  },
+
+  initToolbar() {
+    if (this.toolbar) return;
+    const tb = document.createElement('div');
+    tb.className = 'wp-hl-toolbar';
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.addEventListener('mousedown', e => e.preventDefault()); // 别让选区消失
+    btn.addEventListener('click', e => { e.stopPropagation(); this.onAction(); });
+    tb.appendChild(btn);
+    document.body.appendChild(tb);
+    this.toolbar = tb;
+  },
+
+  showToolbar(rect, mode, label) {
+    this.initToolbar();
+    this.toolbar.querySelector('button').innerHTML = `${this.ICONS[mode] || ''}<span>${label}</span>`;
+    this.toolbar.classList.toggle('is-remove', mode === 'remove');
+    this.toolbar.style.left = (rect.left + rect.width / 2 + window.scrollX) + 'px';
+    this.toolbar.style.top = (rect.top + window.scrollY) + 'px';
+    this.toolbar.classList.add('show');
+  },
+
+  hideToolbar() {
+    if (this.toolbar) this.toolbar.classList.remove('show');
+    this.mode = null; this.pending = null; this.removeIds = null; this.removeKey = null;
+  },
+
+  // 用纯文本 + 高亮区间重建元素内容（合并重叠区间，整词覆盖）
+  applyToElement(el, items) {
+    const text = el.textContent;
+    const ranges = (items || [])
+      .map(it => ({ id: it.id, start: Math.max(0, it.start | 0), end: Math.min(text.length, it.end | 0) }))
+      .filter(r => r.end > r.start)
+      .sort((a, b) => a.start - b.start);
+    if (!ranges.length) { el.innerHTML = this.escapeHtml(text); return; }
+    const merged = [];
+    for (const r of ranges) {
+      const last = merged[merged.length - 1];
+      if (last && r.start <= last.end) { last.end = Math.max(last.end, r.end); last.ids.push(r.id); }
+      else merged.push({ start: r.start, end: r.end, ids: [r.id] });
+    }
+    let html = '', pos = 0;
+    for (const m of merged) {
+      html += this.escapeHtml(text.slice(pos, m.start));
+      html += `<mark class="wp-hl" data-hl-ids="${m.ids.join(',')}">${this.escapeHtml(text.slice(m.start, m.end))}</mark>`;
+      pos = m.end;
+    }
+    html += this.escapeHtml(text.slice(pos));
+    el.innerHTML = html;
+  },
+
+  elByKey(key) {
+    return Array.from(document.querySelectorAll('[data-hl-key]')).find(el => el.dataset.hlKey === key) || null;
+  },
+
+  reapplyKey(key) {
+    const el = this.elByKey(key);
+    if (el) this.applyToElement(el, this.cache[key] || []);
+  },
+
+  // 进入学习页时按文章前缀拉取并应用已有高亮
+  async loadAndApply(containerId, prefix) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    let data = {};
+    try { data = await API.get('/api/writing/highlights?prefix=' + encodeURIComponent(prefix)) || {}; }
+    catch (e) { data = {}; }
+    if (data.error) data = {};
+    Object.keys(this.cache).forEach(k => { if (k.startsWith(prefix)) delete this.cache[k]; });
+    Object.assign(this.cache, data);
+    container.querySelectorAll('[data-hl-key]').forEach(el => {
+      const items = this.cache[el.dataset.hlKey];
+      if (items && items.length) this.applyToElement(el, items);
+    });
+  },
+
+  onMouseUp(e) {
+    if (this.toolbar && this.toolbar.contains(e.target)) return;
+    if (state.aiChat.open) { this.hideToolbar(); return; }   // AI 开启 = 拖拽模式
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.toString().trim()) { this.hideToolbar(); return; }
+
+    const range = sel.getRangeAt(0);
+    let host = range.commonAncestorContainer;
+    host = host.nodeType === 3 ? host.parentElement : host;
+    const el = host && host.closest('[data-hl-key]');
+    if (!el || !el.contains(range.startContainer) || !el.contains(range.endContainer)) { this.hideToolbar(); return; }
+
+    const text = el.textContent;
+    let start = this.textOffset(el, range.startContainer, range.startOffset);
+    let end = this.textOffset(el, range.endContainer, range.endOffset);
+    if (start < 0 || end < 0) { this.hideToolbar(); return; }
+    if (start > end) { const t = start; start = end; end = t; }
+    [start, end] = this.expandToWord(text, start, end);
+    if (end <= start) { this.hideToolbar(); return; }
+
+    const key = el.dataset.hlKey;
+    this.mode = 'create';
+    this.pending = { key, start, end, text: text.slice(start, end), field: key.endsWith('|en') ? 'en' : 'cn' };
+    this.showToolbar(range.getBoundingClientRect(), 'create', '高亮');
+  },
+
+  onMarkClick(mark) {
+    if (state.aiChat.open) return;
+    const ids = (mark.dataset.hlIds || '').split(',').filter(Boolean);
+    if (!ids.length) return;
+    const el = mark.closest('[data-hl-key]');
+    this.mode = 'remove';
+    this.removeIds = ids;
+    this.removeKey = el ? el.dataset.hlKey : null;
+    this.showToolbar(mark.getBoundingClientRect(), 'remove', '取消高亮');
+  },
+
+  onAction() {
+    if (this.mode === 'create') this.create();
+    else if (this.mode === 'remove') this.remove();
+    this.hideToolbar();
+  },
+
+  async create() {
+    const p = this.pending;
+    if (!p) return;
+    window.getSelection().removeAllRanges();
+    const res = await API.post('/api/writing/highlights', { key: p.key, start: p.start, end: p.end, text: p.text, field: p.field });
+    if (res && res.highlight) {
+      const list = this.cache[p.key] || (this.cache[p.key] = []);
+      if (!list.some(it => it.id === res.highlight.id)) list.push(res.highlight);
+      this.reapplyKey(p.key);
+    }
+  },
+
+  async remove() {
+    const ids = this.removeIds, key = this.removeKey;
+    if (!ids) return;
+    await Promise.all(ids.map(id => API.del('/api/writing/highlights/' + id)));
+    if (key && this.cache[key]) {
+      this.cache[key] = this.cache[key].filter(it => !ids.includes(it.id));
+      this.reapplyKey(key);
+    }
+  },
+
+  init() {
+    document.addEventListener('mouseup', e => this.onMouseUp(e));
+    document.addEventListener('mousedown', e => {
+      if (this.toolbar && !this.toolbar.contains(e.target)) this.hideToolbar();
+    });
+    document.addEventListener('click', e => {
+      const mark = e.target.closest && e.target.closest('.wp-hl');
+      if (mark) {
+        const sel = window.getSelection();
+        if (sel && !sel.isCollapsed && sel.toString().trim()) return; // 选择优先
+        e.stopPropagation();
+        this.onMarkClick(mark);
+      }
+    });
+    window.addEventListener('scroll', () => this.hideToolbar(), true);
+    window.addEventListener('resize', () => this.hideToolbar());
+  }
+};
+
 (async function init() {
   const tk = localStorage.getItem('authToken');
   if (!tk) { window.location.href = '/login'; return; }
@@ -2769,6 +3048,7 @@ async function sendPracticeFollowup(sentKey) {
   // Start at entry view (default visible)
   initAIChatDrag();
   setupAIDropzone();
+  Highlights.init();
 })();
 </script>
 </body>
