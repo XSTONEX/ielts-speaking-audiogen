@@ -1249,8 +1249,9 @@
     function escapeHtml(s){ return (s||'').replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c])); }
     function getContainerText(container){ const walker=createWalker(container); let t='', n; while(n=walker.nextNode()){ t+=n.nodeValue; } return t; }
     function getOffsetsFromRange(container, range){ try{ const walker=createWalker(container); let pos=0, n; let sN=range.startContainer, eN=range.endContainer; let sO=range.startOffset, eO=range.endOffset; let start=-1,end=-1; while(n=walker.nextNode()){ if(n===sN){ start = pos + sO; } if(n===eN){ end = pos + eO; break; } pos += n.nodeValue.length; } if(start>=0 && end>start) return {start,end}; }catch(e){} return null; }
-    function wrapContainerOffsets(container, start, end, meta){ const walker=createWalker(container); let n, pos=0; let sN=null,sO=0,eN=null,eO=0; while(n=walker.nextNode()){ const next=pos + n.nodeValue.length; if(sN===null && start>=pos && start<=next){ sN=n; sO=start-pos; } if(eN===null && end>=pos && end<=next){ eN=n; eO=end-pos; break; } pos=next; } if(!sN||!eN) return; const r=document.createRange(); r.setStart(sN, sO); r.setEnd(eN, eO); const mark=document.createElement('mark'); mark.className='hl'; mark.setAttribute('data-hid', meta.id); mark.style.cursor='pointer'; const tip=document.createElement('span'); tip.className='tooltip'; tip.textContent=meta.meaning||''; r.surroundContents(mark); mark.appendChild(tip); mark.addEventListener('contextmenu', function(ev){ ev.preventDefault(); if(confirm('删除该高亮/笔记？')){ deleteHighlight(meta.id); } }); mark.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); const word = meta.text || mark.textContent.replace(tip.textContent, '').trim(); if(word && window.playWordPronunciation){ window.playWordPronunciation(word, currentArticle?.id); } }); }
-    function createWalker(container){ return document.createTreeWalker(container, NodeFilter.SHOW_TEXT, { acceptNode: function(node){ let p=node.parentNode; while(p){ if(p.nodeType===1 && p.classList && p.classList.contains('tooltip')) return NodeFilter.FILTER_REJECT; p=p.parentNode; } return NodeFilter.FILTER_ACCEPT; } }); }
+    function wrapContainerOffsets(container, start, end, meta){ const walker=createWalker(container); let n, pos=0; let sN=null,sO=0,eN=null,eO=0; while(n=walker.nextNode()){ const next=pos + n.nodeValue.length; // 起点取"节点开头"一侧、终点取"节点结尾"一侧，避免偏移正好落在文本节点边界时把段间换行节点选进来，导致 surroundContents 跨段报错
+        if(sN===null && start>=pos && start<next){ sN=n; sO=start-pos; } if(eN===null && end>pos && end<=next){ eN=n; eO=end-pos; } if(sN && eN) break; pos=next; } if(!sN||!eN) return; const r=document.createRange(); r.setStart(sN, sO); r.setEnd(eN, eO); const mark=document.createElement('mark'); mark.className='hl'; mark.setAttribute('data-hid', meta.id); mark.style.cursor='pointer'; const tip=document.createElement('span'); tip.className='tooltip'; tip.textContent=meta.meaning||''; r.surroundContents(mark); mark.appendChild(tip); mark.addEventListener('contextmenu', function(ev){ ev.preventDefault(); if(confirm('删除该高亮/笔记？')){ deleteHighlight(meta.id); } }); mark.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); const word = meta.text || mark.textContent.replace(tip.textContent, '').trim(); if(word && window.playWordPronunciation){ window.playWordPronunciation(word, currentArticle?.id); } }); }
+    function createWalker(container){ return document.createTreeWalker(container, NodeFilter.SHOW_TEXT, { acceptNode: function(node){ let p=node.parentNode; while(p){ if(p.nodeType===1 && p.classList && (p.classList.contains('tooltip') || p.classList.contains('article-images'))) return NodeFilter.FILTER_REJECT; p=p.parentNode; } return NodeFilter.FILTER_ACCEPT; } }); }
     function closestBlock(node, selector){ let el = node.nodeType===1 ? node : node.parentNode; if(!el) return null; if(el.closest) return el.closest(selector); while(el){ if(el.matches && el.matches(selector)) return el; el = el.parentNode; } return null; }
     // 音频生成相关功能
     let currentAudioUrl = null;
@@ -2374,8 +2375,15 @@
       
       while(o < olen && c < clen){
         // 如果已经到达目标位置
-        if(o === oi) return c;
-        
+        if(o === oi){
+          // 目标为非空白字符时，先跳过容器里被折叠的空白（如段间换行），对齐到该字符本身，
+          // 否则段首词会把前面的换行算进起点，导致首字母丢失或跨段包裹失败
+          if(oi < olen && !/\s/.test(original[oi])){
+            while(c < clen && /\s/.test(container[c]) && container[c] !== original[oi]) c++;
+          }
+          return c;
+        }
+
         const origChar = original[o];
         
         // 跳过原文中的换行符、回车符和多余的空格
@@ -2461,9 +2469,13 @@
         while(c < clen && /\s/.test(container[c]) && container[c] !== origChar){
           c++;
         }
-        
+
+        // 跳过空白后可能正好落在目标位置（段首字符紧跟换行的情形），
+        // 此时必须在消费该字符前返回，否则段首词的首字母会被吞掉
+        if(c === ci) return o;
+
         if(c >= clen) break;
-        
+
         // 检查字符是否匹配
         if(origChar === container[c]){
           o++;
