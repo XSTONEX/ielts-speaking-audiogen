@@ -1807,7 +1807,7 @@ function renderLearning(d) {
   ).join('');
   document.getElementById('chainFlow').innerHTML = d.chains.map(c => `
     <div class="chain-card"><div class="chain-num">${c.id}</div><div class="chain-body">
-      <div class="chain-cn">${c.chinese}</div><div class="chain-en">${c.english}</div></div></div>
+      <div class="chain-cn" data-hl-key="${hlBase}chain${c.id}|cn">${c.chinese}</div><div class="chain-en" data-hl-key="${hlBase}chain${c.id}|en">${c.english}</div></div></div>
   `).join('');
   document.getElementById('exampleList').innerHTML = d.examples.map((ex, i) => `
     <div class="example-block">
@@ -1830,7 +1830,7 @@ function renderLearning(d) {
       </div>
     </div>
   `).join('');
-  Highlights.loadAndApply('exampleList', hlBase);
+  Highlights.loadAndApply('learningView', hlBase);
 }
 
 function toggleExample(header) { header.classList.toggle('open'); header.nextElementSibling.classList.toggle('open'); }
