@@ -922,6 +922,109 @@ def writing_highlights_delete(hid):
     return jsonify({'success': True})
 
 
+# ===================== 练习速记（记事本） =====================
+# 数据结构：{ "tabs": [ {id,title,content(html),created_at,updated_at} ],
+#            "active_tab_id": "...", "updated_at": "..." }
+# 每用户一个文件，鉴权复用 _highlights_user()（Bearer token → 用户名）。
+
+NOTEBOOK_MAX_BYTES = 1024 * 1024   # 整本上限 1MB，防滥用
+NOTEBOOK_MAX_TABS = 50             # 最多 50 个标签页
+NOTEBOOK_TAB_MAX_CHARS = 200000    # 单个标签内容上限
+
+
+def _notebook_path(username):
+    return os.path.join(WRITING_DATA_DIR, f'{username}_notebook.json')
+
+
+def _load_notebook(username):
+    p = _notebook_path(username)
+    if os.path.exists(p):
+        with open(p, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    return None
+
+
+def _save_notebook(username, data):
+    os.makedirs(WRITING_DATA_DIR, exist_ok=True)
+    with open(_notebook_path(username), 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def _default_notebook():
+    """首次使用：种一个空标签页。"""
+    tid = str(uuid.uuid4())
+    now = datetime.now().isoformat()
+    return {
+        'tabs': [{'id': tid, 'title': '速记 1', 'content': '',
+                  'created_at': now, 'updated_at': now}],
+        'active_tab_id': tid,
+        'updated_at': now,
+    }
+
+
+@writing_bp.route('/api/writing/notebook', methods=['GET'])
+def writing_notebook_get():
+    username = _highlights_user()
+    if not username:
+        return jsonify({'error': '未登录'}), 401
+    doc = _load_notebook(username)
+    if not doc or not isinstance(doc.get('tabs'), list) or not doc['tabs']:
+        doc = _default_notebook()
+    return jsonify(doc)
+
+
+@writing_bp.route('/api/writing/notebook', methods=['PUT'])
+def writing_notebook_save():
+    username = _highlights_user()
+    if not username:
+        return jsonify({'error': '未登录'}), 401
+
+    body = request.get_json(silent=True) or {}
+    tabs = body.get('tabs')
+    if not isinstance(tabs, list) or not tabs:
+        return jsonify({'error': '参数错误'}), 400
+
+    now = datetime.now().isoformat()
+    clean_tabs = []
+    for t in tabs[:NOTEBOOK_MAX_TABS]:
+        if not isinstance(t, dict):
+            continue
+        title = (str(t.get('title') or '速记')).strip()[:40] or '速记'
+        clean_tabs.append({
+            'id': str(t.get('id') or uuid.uuid4()),
+            'title': title,
+            'content': str(t.get('content') or '')[:NOTEBOOK_TAB_MAX_CHARS],
+            'created_at': str(t.get('created_at') or now),
+            'updated_at': now,
+        })
+    if not clean_tabs:
+        return jsonify({'error': '参数错误'}), 400
+
+    ids = {t['id'] for t in clean_tabs}
+    active = body.get('active_tab_id')
+    if active not in ids:
+        active = clean_tabs[0]['id']
+
+    doc = {'tabs': clean_tabs, 'active_tab_id': active, 'updated_at': now}
+    if len(json.dumps(doc, ensure_ascii=False).encode('utf-8')) > NOTEBOOK_MAX_BYTES:
+        return jsonify({'error': '内容过大'}), 413
+
+    _save_notebook(username, doc)
+    return jsonify({'success': True, 'updated_at': now})
+
+
+@writing_bp.route('/api/writing/notebook', methods=['DELETE'])
+def writing_notebook_delete():
+    """彻底删除该用户的整本速记：直接删文件，后端不再保留任何内容。"""
+    username = _highlights_user()
+    if not username:
+        return jsonify({'error': '未登录'}), 401
+    p = _notebook_path(username)
+    if os.path.exists(p):
+        os.remove(p)
+    return jsonify({'success': True})
+
+
 @writing_bp.route('/api/writing/save_practice', methods=['POST'])
 def writing_save_practice():
     token = request.headers.get('Authorization', '').replace('Bearer ', '')
