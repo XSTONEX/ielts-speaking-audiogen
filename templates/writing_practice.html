@@ -27,7 +27,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
-<link href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Crimson+Text:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=PT+Serif:wght@400;700&family=Crimson+Text:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
 <style>
@@ -509,6 +509,122 @@ textarea, input { font-family: var(--serif); }
   .review-overlay-body { max-width: 100%; padding: 20px 16px; }
   .chart-type-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
   .example-list-grid { grid-template-columns: 1fr; }
+}
+
+/* ==================== 练习速记（记事本浮窗） ==================== */
+.np-fab {
+  position: fixed; right: 24px; bottom: 136px; padding: 12px 20px;
+  border-radius: 50px; border: none; cursor: pointer; z-index: 1100;
+  background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+  box-shadow: 0 8px 24px rgba(13,148,136,0.35); color: #fff; font-size: 14px; font-weight: 600;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.np-fab:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 12px 32px rgba(13,148,136,0.45); }
+
+.np-window {
+  --np-font: 'Nunito', ui-rounded, 'PingFang SC', system-ui, -apple-system, sans-serif;
+  position: fixed; width: 440px; height: 564px; z-index: 1200;
+  border-radius: 18px; display: none; flex-direction: column; overflow: hidden;
+  background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.14); border: 1px solid rgba(226,232,240,0.7);
+  transition: transform 0.4s cubic-bezier(0.25,1,0.5,1), opacity 0.4s cubic-bezier(0.25,1,0.5,1);
+  transform: scale(0); opacity: 0; transform-origin: bottom right;
+  font-family: var(--np-font);
+}
+.np-window.open { display: flex; transform: scale(1); opacity: 1; }
+.np-window.closing { transform: scale(0); opacity: 0; }
+
+.np-header {
+  padding: 11px 14px; display: flex; justify-content: space-between; align-items: center;
+  background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+  border-bottom: 1px solid rgba(13,148,136,0.18); cursor: grab; user-select: none; flex-shrink: 0;
+}
+.np-header:active { cursor: grabbing; }
+.np-title { font-size: 14px; font-weight: 700; color: #0f766e; display: flex; align-items: center; gap: 7px; }
+.np-header-actions { display: flex; gap: 4px; }
+.np-header-actions button {
+  width: 30px; height: 30px; border-radius: 8px; border: none; cursor: pointer;
+  background: rgba(255,255,255,0.55); color: #0f766e; font-size: 17px; line-height: 1;
+  display: flex; align-items: center; justify-content: center; transition: background 0.15s;
+}
+.np-header-actions button:hover { background: rgba(255,255,255,0.95); }
+.np-header-actions button.np-del:hover { background: #fecaca; color: #b91c1c; }
+
+.np-tabs {
+  display: flex; align-items: flex-end; gap: 4px; padding: 7px 8px 0; flex-shrink: 0;
+  background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+  overflow-x: auto; scrollbar-width: none;
+}
+.np-tabs::-webkit-scrollbar { display: none; }
+.np-tab {
+  display: flex; align-items: center; gap: 5px; max-width: 150px; padding: 6px 10px;
+  border-radius: 11px 11px 0 0; font-size: 13px; font-weight: 600; color: #5e7d78;
+  background: rgba(255,255,255,0.4); cursor: pointer; white-space: nowrap; flex-shrink: 0;
+}
+.np-tab.on { background: #fff; color: #0f172a; }
+.np-tab-name { overflow: hidden; text-overflow: ellipsis; }
+.np-tab-close {
+  border: none; background: none; cursor: pointer; color: #94a3b8; font-size: 15px;
+  line-height: 1; padding: 0 2px; border-radius: 4px;
+}
+.np-tab-close:hover { color: #dc2626; background: rgba(0,0,0,0.05); }
+.np-tab-add {
+  border: none; background: rgba(255,255,255,0.4); cursor: pointer; color: #0f766e;
+  font-size: 16px; font-weight: 700; width: 28px; height: 30px; border-radius: 11px 11px 0 0; flex-shrink: 0;
+}
+.np-tab-add:hover { background: #fff; }
+
+.np-toolbar {
+  display: flex; align-items: center; gap: 9px; padding: 8px 13px; flex-shrink: 0;
+  background: #fff; border-bottom: 1px solid #eef2f6;
+}
+.np-toolbar-label { font-size: 12px; color: #64748b; white-space: nowrap; }
+.np-sw {
+  width: 20px; height: 20px; border-radius: 50%; border: none; cursor: pointer; padding: 0;
+  box-shadow: 0 0 0 1px #cbd5e1; transition: box-shadow 0.15s, transform 0.1s;
+}
+.np-sw:hover { transform: scale(1.12); }
+.np-sw.on { box-shadow: 0 0 0 2px #0d9488; }
+.np-sw-yellow { background: #fde047; }
+.np-sw-green { background: #86efac; }
+.np-sw-pink { background: #f9a8d4; }
+.np-sw-blue { background: #7dd3fc; }
+.np-erase {
+  border: none; background: none; cursor: pointer; color: #64748b; font-size: 15px;
+  width: 26px; height: 26px; border-radius: 7px; display: flex; align-items: center; justify-content: center;
+}
+.np-erase:hover { background: #f1f5f9; color: #1e293b; }
+.np-status { margin-left: auto; font-size: 12px; color: #059669; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+.np-status .np-check { font-style: normal; }
+.np-status .np-dot { width: 8px; height: 8px; border-radius: 50%; background: #f59e0b; display: inline-block; animation: npPulse 1s infinite; }
+@keyframes npPulse { 0%,100%{opacity:.35;} 50%{opacity:1;} }
+
+.np-editor {
+  flex: 1; overflow-y: auto; padding: 15px 17px; font-size: 15px; line-height: 1.9;
+  color: #1e293b; outline: none; font-family: var(--np-font); word-break: break-word;
+}
+.np-editor:empty:before { content: attr(data-placeholder); color: #94a3b8; }
+.np-editor mark.np-hl { padding: 0 2px; border-radius: 4px; color: inherit; }
+.np-hl-yellow { background: #fde047; }
+.np-hl-green { background: #86efac; }
+.np-hl-pink { background: #f9a8d4; }
+.np-hl-blue { background: #7dd3fc; }
+
+html[data-theme="dark"] .np-window { background: rgba(30,41,59,0.95); border-color: rgba(51,65,85,0.8); }
+html[data-theme="dark"] .np-header,
+html[data-theme="dark"] .np-tabs { background: linear-gradient(135deg, #134e4a 0%, #115e59 100%); }
+html[data-theme="dark"] .np-title { color: #5eead4; }
+html[data-theme="dark"] .np-header-actions button { background: rgba(255,255,255,0.08); color: #5eead4; }
+html[data-theme="dark"] .np-tab { background: rgba(255,255,255,0.05); color: #94a3b8; }
+html[data-theme="dark"] .np-tab.on { background: #1e293b; color: #f1f5f9; }
+html[data-theme="dark"] .np-tab-add { background: rgba(255,255,255,0.05); color: #5eead4; }
+html[data-theme="dark"] .np-toolbar { background: #1e293b; border-color: #334155; }
+html[data-theme="dark"] .np-editor { background: #1e293b; color: #e2e8f0; }
+html[data-theme="dark"] .np-editor mark.np-hl { color: #1e293b; }
+
+@media (max-width: 600px) {
+  .np-fab { right: 16px; bottom: 120px; padding: 10px 16px; font-size: 12px; }
+  .np-window { width: calc(100vw - 24px); height: 70vh; }
 }
 
 /* ==================== AI 浮窗助手 ==================== */
@@ -1004,6 +1120,31 @@ html[data-theme="dark"] .wp-hl-toolbar { --wp-accent: #8a95ff; }
     </div>
     <div id="aiHistoryList" style="flex:1;overflow-y:auto;"></div>
   </div>
+</div>
+
+<!-- 练习速记（记事本） -->
+<button class="np-fab" id="npFab" onclick="Notepad.toggle()" title="速记">&#128210; 速记</button>
+<div class="np-window" id="npWindow">
+  <div class="np-header" id="npHeader">
+    <span class="np-title">&#128210; 练习速记</span>
+    <div class="np-header-actions">
+      <button onclick="Notepad.newTab()" title="新建标签页">&#43;</button>
+      <button class="np-del" onclick="Notepad.deleteAll()" title="删除全部速记">&#128465;</button>
+      <button onclick="Notepad.close()" title="收起">&times;</button>
+    </div>
+  </div>
+  <div class="np-tabs" id="npTabs"></div>
+  <div class="np-toolbar" id="npToolbar">
+    <span class="np-toolbar-label">荧光笔</span>
+    <button class="np-sw np-sw-yellow on" data-color="yellow" onclick="Notepad.setColor('yellow')" title="黄色高亮" aria-label="黄色高亮"></button>
+    <button class="np-sw np-sw-green" data-color="green" onclick="Notepad.setColor('green')" title="绿色高亮" aria-label="绿色高亮"></button>
+    <button class="np-sw np-sw-pink" data-color="pink" onclick="Notepad.setColor('pink')" title="粉色高亮" aria-label="粉色高亮"></button>
+    <button class="np-sw np-sw-blue" data-color="blue" onclick="Notepad.setColor('blue')" title="蓝色高亮" aria-label="蓝色高亮"></button>
+    <button class="np-erase" onclick="Notepad.eraseHighlight()" title="清除选中文字的高亮" aria-label="清除高亮">&#9003;</button>
+    <span class="np-status" id="npStatus"></span>
+  </div>
+  <div class="np-editor" id="npEditor" contenteditable="true" spellcheck="false"
+       data-placeholder="在这里打字练习，增强肌肉记忆…（选中文字后点上方颜色即可高亮）"></div>
 </div>
 
 <!-- Image Lightbox -->
@@ -3037,6 +3178,307 @@ const Highlights = {
   }
 };
 
+/* ==================== 练习速记（记事本） ====================
+ * 全局通用的多标签记事本：边打边防抖自动存到后端（按用户区分），
+ * 四色荧光笔基于 contentEditable 的 <mark> 实现，内容过 DOMPurify 白名单。
+ */
+var Notepad = {
+  win: null, fab: null, editor: null, tabsBar: null, statusEl: null,
+  doc: { tabs: [], active_tab_id: null },
+  activeColor: 'yellow',
+  open: false,
+  loaded: false,
+  dirty: false,
+  saveTimer: null,
+
+  init() {
+    this.win = document.getElementById('npWindow');
+    this.fab = document.getElementById('npFab');
+    this.editor = document.getElementById('npEditor');
+    this.tabsBar = document.getElementById('npTabs');
+    this.statusEl = document.getElementById('npStatus');
+    if (!this.win) return;
+    this.initDrag();
+    this.editor.addEventListener('input', () => this.scheduleSave());
+    // 离开页面前用 keepalive 兜底保存未提交的编辑
+    const flush = () => { if (this.loaded && this.dirty) this.flushOnUnload(); };
+    window.addEventListener('pagehide', flush);
+    window.addEventListener('beforeunload', flush);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) flush(); });
+  },
+
+  uid() { return 'np_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); },
+
+  defaultDoc() {
+    const id = this.uid(); const now = new Date().toISOString();
+    return { tabs: [{ id, title: '速记 1', content: '', created_at: now, updated_at: now }], active_tab_id: id };
+  },
+
+  async ensureLoaded() {
+    if (this.loaded) return;
+    try {
+      const r = await fetch('/api/writing/notebook', { headers: API.headers() });
+      const d = r.ok ? await r.json() : null;
+      this.doc = (d && Array.isArray(d.tabs) && d.tabs.length) ? d : this.defaultDoc();
+    } catch (e) {
+      const local = localStorage.getItem('npDocFallback');
+      this.doc = local ? JSON.parse(local) : this.defaultDoc();
+    }
+    if (!this.doc.tabs.length) this.doc = this.defaultDoc();
+    if (!this.doc.active_tab_id || !this.doc.tabs.find(t => t.id === this.doc.active_tab_id))
+      this.doc.active_tab_id = this.doc.tabs[0].id;
+    this.loaded = true;
+    this.renderTabs();
+    this.renderEditor();
+  },
+
+  /* ---- 弹出/收回：复用 AI 助手的「精灵」动画 ---- */
+  async toggle() {
+    if (this.open) { this.close(); return; }
+    await this.ensureLoaded();
+    this.open = true;
+    const btnRect = this.fab.getBoundingClientRect();
+    const saved = JSON.parse(localStorage.getItem('npPos') || 'null');
+    const targetX = saved ? saved.x : Math.max(12, window.innerWidth - 460);
+    const targetY = saved ? saved.y : Math.max(12, window.innerHeight - 600);
+    this.win.style.left = targetX + 'px';
+    this.win.style.top = targetY + 'px';
+    this.win.style.transformOrigin = `${btnRect.left + 28 - targetX}px ${btnRect.top + 28 - targetY}px`;
+    this.win.classList.remove('closing');
+    this.win.style.display = 'flex';
+    requestAnimationFrame(() => this.win.classList.add('open'));
+    this.editor.focus();
+  },
+
+  close() {
+    this.flush();
+    const btnRect = this.fab.getBoundingClientRect();
+    const winRect = this.win.getBoundingClientRect();
+    this.win.style.transformOrigin = `${btnRect.left + 28 - winRect.left}px ${btnRect.top + 28 - winRect.top}px`;
+    this.win.classList.remove('open');
+    this.win.classList.add('closing');
+    setTimeout(() => {
+      this.win.style.display = 'none';
+      this.win.classList.remove('closing');
+      this.open = false;
+    }, 400);
+  },
+
+  initDrag() {
+    const header = document.getElementById('npHeader');
+    const win = this.win;
+    let dragging = false, offX = 0, offY = 0;
+    header.addEventListener('mousedown', e => {
+      if (e.target.closest('button')) return;
+      dragging = true; offX = e.clientX - win.offsetLeft; offY = e.clientY - win.offsetTop;
+      win.style.transition = 'none';
+    });
+    document.addEventListener('mousemove', e => {
+      if (!dragging) return;
+      const x = Math.max(0, Math.min(window.innerWidth - 100, e.clientX - offX));
+      const y = Math.max(0, Math.min(window.innerHeight - 100, e.clientY - offY));
+      win.style.left = x + 'px'; win.style.top = y + 'px';
+    });
+    document.addEventListener('mouseup', () => {
+      if (!dragging) return; dragging = false;
+      win.style.transition = '';
+      localStorage.setItem('npPos', JSON.stringify({ x: win.offsetLeft, y: win.offsetTop }));
+    });
+  },
+
+  /* ---- 标签页 ---- */
+  activeTab() { return this.doc.tabs.find(t => t.id === this.doc.active_tab_id) || this.doc.tabs[0]; },
+
+  renderTabs() {
+    const bar = this.tabsBar; bar.innerHTML = '';
+    this.doc.tabs.forEach(t => {
+      const el = document.createElement('div');
+      el.className = 'np-tab' + (t.id === this.doc.active_tab_id ? ' on' : '');
+      const name = document.createElement('span');
+      name.className = 'np-tab-name'; name.textContent = t.title; name.title = t.title;
+      name.addEventListener('dblclick', e => { e.stopPropagation(); this.renameTab(t.id); });
+      el.appendChild(name);
+      const x = document.createElement('button');
+      x.className = 'np-tab-close'; x.innerHTML = '&times;'; x.title = '关闭标签';
+      x.addEventListener('click', e => { e.stopPropagation(); this.closeTab(t.id); });
+      el.appendChild(x);
+      el.addEventListener('click', () => this.switchTab(t.id));
+      bar.appendChild(el);
+    });
+    const add = document.createElement('button');
+    add.className = 'np-tab-add'; add.innerHTML = '&#43;'; add.title = '新建标签页';
+    add.addEventListener('click', () => this.newTab());
+    bar.appendChild(add);
+  },
+
+  renderEditor() {
+    const t = this.activeTab();
+    this.editor.innerHTML = this.sanitize(t ? t.content : '');
+  },
+
+  switchTab(id) {
+    if (id === this.doc.active_tab_id) return;
+    this.captureEditor();
+    this.doc.active_tab_id = id;
+    this.renderTabs();
+    this.renderEditor();
+    this.scheduleSave();
+  },
+
+  newTab() {
+    this.captureEditor();
+    const id = this.uid(); const now = new Date().toISOString();
+    this.doc.tabs.push({ id, title: '速记 ' + (this.doc.tabs.length + 1), content: '', created_at: now, updated_at: now });
+    this.doc.active_tab_id = id;
+    this.renderTabs();
+    this.renderEditor();
+    this.editor.focus();
+    this.scheduleSave();
+  },
+
+  renameTab(id) {
+    const t = this.doc.tabs.find(x => x.id === id);
+    if (!t) return;
+    const name = prompt('重命名标签页', t.title);
+    if (name === null) return;
+    t.title = (name.trim() || t.title).slice(0, 40);
+    this.renderTabs();
+    this.scheduleSave();
+  },
+
+  closeTab(id) {
+    this.captureEditor();
+    const t = this.doc.tabs.find(x => x.id === id);
+    if (t && this.htmlToText(t.content).trim() && !confirm('这个标签页有内容，确定关闭吗？')) return;
+    if (this.doc.tabs.length <= 1) {
+      this.doc = this.defaultDoc();   // 关掉最后一个标签 → 重置为一个空白页
+    } else {
+      const idx = this.doc.tabs.findIndex(x => x.id === id);
+      this.doc.tabs.splice(idx, 1);
+      if (this.doc.active_tab_id === id) this.doc.active_tab_id = this.doc.tabs[Math.max(0, idx - 1)].id;
+    }
+    this.renderTabs();
+    this.renderEditor();
+    this.scheduleSave();
+  },
+
+  // 彻底删除整本速记：调后端 DELETE 真删文件，本地重置为一个空白页，
+  // 之后不主动回写——你不打字，后端就一直是空的（连文件都没有）。
+  async deleteAll() {
+    if (!confirm('确定删除全部速记吗？所有标签页和内容都会从后端永久删除，无法恢复。')) return;
+    clearTimeout(this.saveTimer);
+    try { await fetch('/api/writing/notebook', { method: 'DELETE', headers: API.headers() }); } catch (e) {}
+    try { localStorage.removeItem('npDocFallback'); } catch (e) {}
+    this.doc = this.defaultDoc();
+    this.dirty = false;
+    this.renderTabs();
+    this.renderEditor();
+    this.setStatus('deleted');
+  },
+
+  /* ---- 内容采集 / 清洗 ---- */
+  captureEditor() {
+    const t = this.activeTab();
+    if (!t) return;
+    t.content = this.sanitize(this.editor.innerHTML);
+    t.updated_at = new Date().toISOString();
+  },
+
+  htmlToText(html) {
+    const d = document.createElement('div'); d.innerHTML = this.sanitize(html || '');
+    return d.textContent || '';
+  },
+
+  sanitize(html) {
+    if (window.DOMPurify) {
+      return DOMPurify.sanitize(html || '', {
+        ALLOWED_TAGS: ['mark', 'br', 'div', 'p', 'span', 'b', 'strong', 'i', 'em', 'u'],
+        ALLOWED_ATTR: ['class']
+      });
+    }
+    return html || '';
+  },
+
+  /* ---- 四色荧光笔 ---- */
+  setColor(c) {
+    this.activeColor = c;
+    document.querySelectorAll('#npToolbar .np-sw').forEach(el => el.classList.toggle('on', el.dataset.color === c));
+    this.applyHighlight(c);
+  },
+
+  applyHighlight(color) {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+    const range = sel.getRangeAt(0);
+    if (!this.editor.contains(range.commonAncestorContainer)) return;
+    const mark = document.createElement('mark');
+    mark.className = 'np-hl np-hl-' + color;
+    try {
+      range.surroundContents(mark);
+    } catch (e) {
+      const frag = range.extractContents();
+      mark.appendChild(frag);
+      range.insertNode(mark);
+    }
+    sel.removeAllRanges();
+    this.captureEditor();
+    this.scheduleSave();
+  },
+
+  eraseHighlight() {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+    if (!this.editor.contains(sel.getRangeAt(0).commonAncestorContainer)) return;
+    this.editor.querySelectorAll('mark.np-hl').forEach(m => {
+      if (sel.containsNode(m, true)) {
+        const parent = m.parentNode;
+        while (m.firstChild) parent.insertBefore(m.firstChild, m);
+        parent.removeChild(m);
+        parent.normalize();
+      }
+    });
+    this.captureEditor();
+    this.scheduleSave();
+  },
+
+  /* ---- 自动保存 ---- */
+  scheduleSave() {
+    this.dirty = true;
+    this.setStatus('saving');
+    clearTimeout(this.saveTimer);
+    this.saveTimer = setTimeout(() => this.flush(), 800);
+  },
+
+  async flush() {
+    clearTimeout(this.saveTimer);
+    if (!this.loaded) return;
+    this.captureEditor();
+    const payload = JSON.stringify(this.doc);
+    try { localStorage.setItem('npDocFallback', payload); } catch (e) {}
+    try {
+      const r = await fetch('/api/writing/notebook', { method: 'PUT', headers: API.headers(), body: payload });
+      if (r.ok) { this.dirty = false; this.setStatus('saved'); }
+      else { this.setStatus('local'); }
+    } catch (e) { this.setStatus('local'); }
+  },
+
+  flushOnUnload() {
+    try {
+      this.captureEditor();
+      fetch('/api/writing/notebook', { method: 'PUT', headers: API.headers(), body: JSON.stringify(this.doc), keepalive: true });
+    } catch (e) {}
+  },
+
+  setStatus(kind) {
+    if (!this.statusEl) return;
+    const hhmm = new Date().toTimeString().slice(0, 5);
+    if (kind === 'saving') this.statusEl.innerHTML = '<span class="np-dot"></span>保存中…';
+    else if (kind === 'saved') this.statusEl.innerHTML = '<i class="np-check">✓</i>已保存 ' + hhmm;
+    else if (kind === 'deleted') this.statusEl.innerHTML = '已清空';
+    else this.statusEl.innerHTML = '<i class="np-check">✓</i>已本地保存';
+  }
+};
+
 (async function init() {
   const tk = localStorage.getItem('authToken');
   if (!tk) { window.location.href = '/login'; return; }
@@ -3049,6 +3491,7 @@ const Highlights = {
   initAIChatDrag();
   setupAIDropzone();
   Highlights.init();
+  Notepad.init();
 })();
 </script>
 </body>
