@@ -604,7 +604,12 @@ textarea, input { font-family: var(--serif); }
   color: #1e293b; outline: none; font-family: var(--np-font); word-break: break-word;
 }
 .np-editor:empty:before { content: attr(data-placeholder); color: #94a3b8; }
-.np-editor mark.np-hl { padding: 0 2px; border-radius: 4px; color: inherit; }
+/* 荧光笔：纵向略加粗成笔触感；横向 padding 用等量负 margin 抵消，
+   高亮色微微盖过单词边缘但不挤动后面的文字（避免被“拉伸”）；无圆角。 */
+.np-editor mark.np-hl {
+  padding: 0.12em 0.1em; margin: 0 -0.1em; border-radius: 0; color: inherit;
+  -webkit-box-decoration-break: clone; box-decoration-break: clone;
+}
 .np-hl-yellow { background: #fde047; }
 .np-hl-green { background: #86efac; }
 .np-hl-pink { background: #f9a8d4; }
