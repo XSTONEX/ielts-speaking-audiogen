@@ -20,7 +20,7 @@ from core import (
     is_token_valid, load_tokens, load_users,
     verify_token_get_username,
     delete_article_vocab_audio, generate_challenge_vocab_audio,
-    get_vocab_audio_path
+    get_vocab_audio_path, is_safe_path_segment
 )
 from routers.intensive_reading import _article_path
 
@@ -195,7 +195,7 @@ def upload_message_image():
         file = request.files['image']
         username = request.form.get('user_id')  # 前端传的是username
 
-        if not username:
+        if not username or not is_safe_path_segment(username):
             return jsonify({'error': '用户信息无效'}), 400
 
         if file.filename == '':
@@ -238,8 +238,6 @@ def _allowed_file(filename):
 
 def _is_valid_image_file(file):
     """检查文件是否为有效的图片文件"""
-    import imghdr
-
     # 检查文件扩展名
     if file.filename and not _allowed_file(file.filename):
         return False
@@ -254,7 +252,7 @@ def _is_valid_image_file(file):
         if file.mimetype not in allowed_mimes:
             return False
 
-    # 通过文件头检查图片格式
+    # 通过文件头检查图片格式（imghdr 在 Python 3.13 中已移除，这里直接比对文件头）
     file.seek(0)  # 重置文件指针
     try:
         header = file.read(512)  # 读取文件头
@@ -272,10 +270,7 @@ def _is_valid_image_file(file):
         elif b'ftyp' in header[:20] and (b'heic' in header[:20] or b'heif' in header[:20]):  # HEIC/HEIF
             return True
 
-        # 使用imghdr作为后备检查
-        file.seek(0)
-        image_type = imghdr.what(file)
-        return image_type in ['jpeg', 'png', 'gif', 'webp']
+        return False
 
     except Exception:
         return False
@@ -1269,25 +1264,28 @@ def cleanup_orphaned_challenges():
         if not username:
             return jsonify({'error': '无效token'}), 401
 
-        # 获取所有消息中的挑战ID
-        messages = load_messages()
+        # 获取所有消息和评论中的挑战ID（评论也可以携带挑战，不能漏掉）
         active_challenge_ids = set()
-
-        for message in messages:
-            if (message.get('type') == 'mixed_content' and
-                message.get('content', {}).get('challenge')):
-                challenge_id = message['content']['challenge'].get('id')
+        for item in load_messages() + load_comments():
+            if (item.get('type') == 'mixed_content' and
+                item.get('content', {}).get('challenge')):
+                challenge_id = item['content']['challenge'].get('id')
                 if challenge_id:
                     active_challenge_ids.add(challenge_id)
 
-        # 检查挑战文件夹中的所有挑战
+        # 检查挑战文件夹中的所有挑战。
+        # 注意：CHALLENGES_DIR 里还存有每用户的挑战记录（vocab_summary_*.json）
+        # 和错词本（wrong_words_*.json），它们不是挑战文件，绝不能当作孤立挑战删除。
         orphaned_challenges = []
         if os.path.exists(CHALLENGES_DIR):
             for filename in os.listdir(CHALLENGES_DIR):
-                if filename.endswith('.json'):
-                    challenge_id = filename.replace('.json', '')
-                    if challenge_id not in active_challenge_ids:
-                        orphaned_challenges.append(challenge_id)
+                if not filename.endswith('.json'):
+                    continue
+                if filename.startswith('vocab_summary_') or filename.startswith('wrong_words_'):
+                    continue
+                challenge_id = filename[:-5]
+                if challenge_id not in active_challenge_ids:
+                    orphaned_challenges.append(challenge_id)
 
         # 删除孤立的挑战记录
         deleted_count = 0

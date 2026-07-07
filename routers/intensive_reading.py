@@ -10,7 +10,7 @@ from core import (
     generate_tts, generate_token, get_vocab_audio_path,
     generate_and_save_vocab_audio, delete_vocab_audio,
     delete_article_vocab_audio, delete_article_audio_files,
-    generate_vocab_audio_async
+    generate_vocab_audio_async, is_safe_path_segment
 )
 
 intensive_reading_bp = Blueprint('intensive_reading', __name__)
@@ -248,11 +248,6 @@ def intensive_page():
 def vocab_summary():
     return send_file('templates/vocab_summary.html')
 
-@intensive_reading_bp.route('/test_pronunciation')
-def test_pronunciation():
-    """单词发音功能测试页面"""
-    return send_file('test_pronunciation.html')
-
 @intensive_reading_bp.route('/intensive/new')
 def intensive_new_page():
     return send_file('templates/intensive_new.html')
@@ -489,11 +484,16 @@ def intensive_upload_image():
         file = request.files['image']
         article_id = request.form.get('article_id')
 
-        if not article_id:
+        if not article_id or not is_safe_path_segment(article_id):
             return jsonify({'error': '缺少文章ID'}), 400
 
         if file.filename == '':
             return jsonify({'error': '没有选择文件'}), 400
+
+        # 先确认文章存在，再落盘图片，避免留下孤儿文件
+        article_path = _article_path(article_id)
+        if not os.path.exists(article_path):
+            return jsonify({'error': '文章不存在'}), 404
 
         if file and _allowed_file(file.filename):
             # 创建文章专属图片目录
@@ -507,11 +507,6 @@ def intensive_upload_image():
 
             filepath = os.path.join(article_image_dir, filename)
             file.save(filepath)
-
-            # 更新文章数据，添加图片信息
-            article_path = _article_path(article_id)
-            if not os.path.exists(article_path):
-                return jsonify({'error': '文章不存在'}), 404
 
             with open(article_path, 'r', encoding='utf-8') as f:
                 article_data = json.load(f)
@@ -549,6 +544,8 @@ def intensive_upload_image():
 @intensive_reading_bp.route('/intensive_image/<article_id>/<filename>')
 def serve_intensive_image(article_id, filename):
     """提供精读文章图片文件"""
+    if not is_safe_path_segment(article_id):
+        return jsonify({'error': '无效的文章ID'}), 400
     return send_from_directory(os.path.join(INTENSIVE_IMAGES_DIR, article_id), filename)
 
 @intensive_reading_bp.route('/intensive_delete_image', methods=['POST'])
@@ -689,6 +686,8 @@ def intensive_update_title():
 @intensive_reading_bp.route('/vocab_audio/<article_id>/<word>')
 def get_vocab_audio(article_id, word):
     """获取词汇音频文件"""
+    if not is_safe_path_segment(article_id):
+        return jsonify({'error': '无效的文章ID'}), 400
     # URL解码单词
     word = unquote(word)
 
@@ -708,6 +707,8 @@ def get_vocab_audio(article_id, word):
 @intensive_reading_bp.route('/vocab_audio/articles/<article_id>/<filename>')
 def get_article_audio(article_id, filename):
     """获取文章音频文件"""
+    if not is_safe_path_segment(article_id) or not is_safe_path_segment(filename):
+        return jsonify({'error': '无效的路径'}), 400
     # 构建音频文件路径
     audio_path = os.path.join(VOCAB_AUDIO_DIR, 'articles', article_id, filename)
 
@@ -748,6 +749,7 @@ def generate_article_audio():
 
         # 检查文本长度，决定是否需要分段处理（增加40%冗余）
         MAX_CHARS = 2200  # 更保守的字符限制
+        segments_count = 1
 
         if len(text) <= MAX_CHARS:
             # 文本较短，直接生成
@@ -775,6 +777,7 @@ def generate_article_audio():
             target_segments = int(base_segments * 1.4)  # 增加40%冗余
             target_segments = max(3, min(12, target_segments))  # 3-12段之间
             segments = split_text_intelligently(text, target_segments, MAX_CHARS)
+            segments_count = len(segments)
 
             # 创建临时目录存储分段音频
             temp_dir = os.path.join(article_audio_dir, f"temp_{timestamp}")
@@ -820,7 +823,7 @@ def generate_article_audio():
             'audio_url': audio_url,
             'filename': filename,
             'text_length': len(text),
-            'segments_count': len(split_text_intelligently(text, MAX_CHARS)) if len(text) > MAX_CHARS else 1
+            'segments_count': segments_count
         })
 
     except requests.exceptions.Timeout:
@@ -886,6 +889,8 @@ def generate_audio_segment():
 
     if not all([article_id, text, task_id is not None]):
         return jsonify({'error': '缺少必要参数'}), 400
+    if not is_safe_path_segment(article_id) or not is_safe_path_segment(str(task_id)):
+        return jsonify({'error': '无效的参数'}), 400
 
     try:
         # 创建任务目录
@@ -916,6 +921,8 @@ def check_segment_status():
 
     if not all([article_id, task_id, segments_count]):
         return jsonify({'error': '缺少必要参数'}), 400
+    if not is_safe_path_segment(article_id) or not is_safe_path_segment(str(task_id)):
+        return jsonify({'error': '无效的参数'}), 400
 
     try:
         # 检查任务目录
@@ -967,6 +974,8 @@ def combine_audio_segments():
 
     if not all([article_id, task_id, segments_count]):
         return jsonify({'error': '缺少必要参数'}), 400
+    if not is_safe_path_segment(article_id) or not is_safe_path_segment(str(task_id)):
+        return jsonify({'error': '无效的参数'}), 400
 
     try:
         # 找到任务目录
@@ -1037,6 +1046,8 @@ def combine_audio_segments():
 @intensive_reading_bp.route('/find_unfinished_audio_tasks/<article_id>')
 def find_unfinished_audio_tasks(article_id):
     """查找指定文章的未完成音频生成任务"""
+    if not is_safe_path_segment(article_id):
+        return jsonify({'error': '无效的文章ID'}), 400
     try:
         article_audio_dir = os.path.join(VOCAB_AUDIO_DIR, 'articles', article_id)
 
@@ -1115,6 +1126,8 @@ def cleanup_article_audio():
 
     if not article_id:
         return jsonify({'error': '缺少文章ID'}), 400
+    if not is_safe_path_segment(article_id):
+        return jsonify({'error': '无效的文章ID'}), 400
 
     try:
         article_audio_dir = os.path.join(VOCAB_AUDIO_DIR, 'articles', article_id)

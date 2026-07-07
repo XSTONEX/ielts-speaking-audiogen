@@ -135,7 +135,7 @@ def _writing_review_items(records):
                 "source": "writing",
                 "priority": "high" if score < 5.5 else "medium",
                 "title": record.get("target_chinese", "写作句子复习"),
-                "description": record.get("feedback", {}).get("feedback_summary", ""),
+                "description": (record.get("feedback") or {}).get("feedback_summary", ""),
                 "score": score,
                 "url": "/writing_practice",
                 "created_at": record.get("timestamp", ""),
@@ -413,7 +413,7 @@ def export_writing():
                 "",
             ]
         )
-        summary = record.get("feedback", {}).get("feedback_summary")
+        summary = (record.get("feedback") or {}).get("feedback_summary")
         if summary:
             lines.extend([f"Feedback: {summary}", ""])
     return Response(

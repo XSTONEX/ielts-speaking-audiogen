@@ -104,18 +104,22 @@ def add_audio_task(word_id, word, category, subcategory_id):
     return task['id']
 
 def get_pending_audio_tasks():
-    """获取所有待处理的音频任务"""
+    """获取所有待处理的音频任务。
+    除 pending 外，也回收 failed（未达最大重试次数，等待重试）
+    和 processing（进程崩溃/重启遗留的孤儿任务）状态的任务，
+    否则失败任务永远不会被重试。"""
     tasks = []
     if not os.path.exists(VOCABULARY_TASKS_DIR):
         return tasks
 
+    RETRYABLE_STATUSES = {'pending', 'failed', 'processing'}
     for filename in os.listdir(VOCABULARY_TASKS_DIR):
         if filename.endswith('.json'):
             try:
                 task_file = os.path.join(VOCABULARY_TASKS_DIR, filename)
                 with open(task_file, 'r', encoding='utf-8') as f:
                     task = json.load(f)
-                    if task['status'] == 'pending' and task['attempts'] < task['max_attempts']:
+                    if task['status'] in RETRYABLE_STATUSES and task['attempts'] < task['max_attempts']:
                         tasks.append(task)
             except:
                 continue
@@ -536,7 +540,8 @@ def upload_vocabulary_csv():
         import csv
         import io
 
-        content = file.read().decode('utf-8')
+        # utf-8-sig 兼容 Excel 导出的带 BOM 文件，避免首个单词带上
+        content = file.read().decode('utf-8-sig')
         csv_reader = csv.reader(io.StringIO(content))
 
         category_data = load_category_data(category)

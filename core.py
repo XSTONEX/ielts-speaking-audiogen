@@ -69,6 +69,17 @@ def load_prompt(name):
         return yaml.safe_load(f)
 
 
+# ==================== 路径安全 ====================
+
+def is_safe_path_segment(name):
+    """校验用户提供的单段路径名：非空、不含路径分隔符、不为 . / ..，防止路径穿越"""
+    if not name or not isinstance(name, str):
+        return False
+    if name in ('.', '..'):
+        return False
+    return '/' not in name and '\\' not in name and '\x00' not in name
+
+
 # ==================== 目录初始化 ====================
 
 def init_directories():
@@ -222,6 +233,8 @@ def generate_tts(text, folder):
         'Content-Type': 'application/json'
     }
     response = requests.request("POST", url, headers=headers, data=payload)
+    if response.status_code != 200:
+        raise Exception(f'TTS API错误: {response.status_code}, 响应: {response.text[:200]}')
     audio_data = response.content
     folder_path = os.path.join(MOTHER_DIR, folder)
     os.makedirs(folder_path, exist_ok=True)

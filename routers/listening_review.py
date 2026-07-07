@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify, send_file
 import os, json, re, uuid, threading, shutil, requests, time
 from datetime import datetime
 from openai import OpenAI
-from core import LISTENING_REVIEW_DIR, is_token_valid, load_tokens, get_proxies, load_prompt
+from core import LISTENING_REVIEW_DIR, is_token_valid, load_tokens, get_proxies, load_prompt, is_safe_path_segment
 
 listening_review_bp = Blueprint('listening_review', __name__)
 
@@ -763,6 +763,9 @@ def serve_audio(project_id, filename):
     username = _get_auth_username()
     if not username:
         return jsonify({'error': '未授权'}), 401
+
+    if not is_safe_path_segment(project_id) or not is_safe_path_segment(filename):
+        return jsonify({'error': '无效的路径'}), 400
 
     proj_dir = _project_dir(project_id)
     file_path = os.path.join(proj_dir, filename)
