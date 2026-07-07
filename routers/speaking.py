@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, send_file, send_from_directory
 import os, json, shutil
-from core import MOTHER_DIR, generate_tts
+from core import MOTHER_DIR, generate_tts, is_safe_path_segment
 
 speaking_bp = Blueprint('speaking', __name__)
 
@@ -16,6 +16,8 @@ def generate_audio():
     question = data.get('question')
     if not text or not folder:
         return jsonify({'error': 'Missing text or folder'}), 400
+    if not is_safe_path_segment(folder):
+        return jsonify({'error': 'Invalid folder name'}), 400
     # PART2 生成时写入 question.txt
     if folder.startswith('P2') and question:
         folder_path = os.path.join(MOTHER_DIR, folder)
@@ -23,7 +25,10 @@ def generate_audio():
         question_file = os.path.join(folder_path, 'question.txt')
         with open(question_file, 'w', encoding='utf-8') as f:
             f.write(question.strip())
-    folder, filename = generate_tts(text, folder)
+    try:
+        folder, filename = generate_tts(text, folder)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
     return jsonify({'folder': folder, 'filename': filename})
 
 @speaking_bp.route('/list_audio', methods=['GET'])
@@ -100,10 +105,14 @@ def list_folders():
 
 @speaking_bp.route('/audio/<folder>/<filename>')
 def serve_audio(folder, filename):
+    if not is_safe_path_segment(folder):
+        return jsonify({'error': 'Invalid folder name'}), 400
     return send_from_directory(os.path.join(MOTHER_DIR, folder), filename)
 
 @speaking_bp.route('/text/<folder>/<filename>')
 def get_text(folder, filename):
+    if not is_safe_path_segment(folder) or not is_safe_path_segment(filename):
+        return jsonify({'error': 'Invalid path'}), 400
     txt_filename = filename.replace('.mp3', '.txt')
     txt_path = os.path.join(MOTHER_DIR, folder, txt_filename)
     if not os.path.exists(txt_path):
@@ -118,6 +127,8 @@ def delete_folder():
     folder = data.get('folder')
     if not folder:
         return jsonify({'error': 'Missing folder'}), 400
+    if not is_safe_path_segment(folder):
+        return jsonify({'error': 'Invalid folder name'}), 400
     folder_path = os.path.join(MOTHER_DIR, folder)
     if not os.path.exists(folder_path):
         return jsonify({'error': 'Folder not found'}), 404
@@ -134,6 +145,8 @@ def delete_audio():
     filename = data.get('filename')
     if not folder or not filename:
         return jsonify({'error': 'Missing folder or filename'}), 400
+    if not is_safe_path_segment(folder) or not is_safe_path_segment(filename):
+        return jsonify({'error': 'Invalid path'}), 400
     folder_path = os.path.join(MOTHER_DIR, folder)
     audio_path = os.path.join(folder_path, filename)
     txt_path = audio_path.replace('.mp3', '.txt')
@@ -154,6 +167,8 @@ def set_part2_question():
     question = data.get('question')
     if not folder or not question:
         return jsonify({'error': 'Missing folder or question'}), 400
+    if not is_safe_path_segment(folder):
+        return jsonify({'error': 'Invalid folder name'}), 400
     folder_path = os.path.join(MOTHER_DIR, folder)
     if not os.path.exists(folder_path):
         return jsonify({'error': 'Folder not found'}), 404

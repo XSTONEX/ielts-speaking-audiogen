@@ -310,7 +310,7 @@ class LearningPlatformTestCase(unittest.TestCase):
         self.assertIn("beginVocabAudioPause", html)
         self.assertIn("endVocabAudioPause", html)
         self.assertIn("vocabAudioManualOverride", html)
-        self.assertIn("hideSelectionBadge({ resumeAudio: false })", html)
+        self.assertIn("hideSelectionToolbar({ resumeAudio: false })", html)
         self.assertIn("markVocabAudioManualOverride", html)
 
     def test_json_store_round_trips_with_atomic_save(self):

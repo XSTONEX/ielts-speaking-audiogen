@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, send_file, send_from_directory
 import os, json, re
 from werkzeug.wrappers import Response
+from werkzeug.utils import safe_join
 
 from core import READING_DIR
 
@@ -87,8 +88,10 @@ def reading_page():
 @reading_bp.route('/reading_view/<path:subpath>')
 def reading_view(subpath):
     """提供带有本地暂存功能的HTML预览，非侵入式注入脚本。"""
-    # 仅允许 HTML 文件通过此视图
-    file_path = os.path.join(READING_DIR, subpath)
+    # 仅允许 HTML 文件通过此视图；safe_join 防止 ../ 路径穿越读取任意文件
+    file_path = safe_join(READING_DIR, subpath)
+    if file_path is None:
+        return jsonify({'error': 'Invalid path'}), 400
     if not os.path.exists(file_path) or not file_path.lower().endswith('.html'):
         # 对于非 html，回退到静态提供
         return send_from_directory(READING_DIR, subpath)

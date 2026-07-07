@@ -456,6 +456,14 @@ def small_upload_image():
 
     question_id = ex['id']
     img_dir = os.path.join(WRITING_IMAGES_DIR, question_id)
+
+    # 先校验新图片格式，通过后再删除旧图片，避免上传失败时丢失原图
+    filename = file.filename or 'image.png'
+    ext = os.path.splitext(filename)[1].lower() or '.png'
+    allowed = {'.png', '.jpg', '.jpeg', '.gif', '.webp'}
+    if ext not in allowed:
+        return jsonify({'error': '不支持的图片格式'}), 400
+
     # 删除旧图片
     if os.path.isdir(img_dir):
         for old_file in os.listdir(img_dir):
@@ -464,12 +472,6 @@ def small_upload_image():
             except OSError:
                 pass
     os.makedirs(img_dir, exist_ok=True)
-
-    filename = file.filename or 'image.png'
-    ext = os.path.splitext(filename)[1].lower() or '.png'
-    allowed = {'.png', '.jpg', '.jpeg', '.gif', '.webp'}
-    if ext not in allowed:
-        return jsonify({'error': '不支持的图片格式'}), 400
 
     save_name = f"{uuid.uuid4().hex[:8]}{ext}"
     save_path = os.path.join(img_dir, save_name)

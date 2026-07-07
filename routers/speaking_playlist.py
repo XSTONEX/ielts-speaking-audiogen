@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, send_file, send_from_directory
 import os, json
 from pydub import AudioSegment
-from core import MOTHER_DIR, COMBINED_DIR
+from core import MOTHER_DIR, COMBINED_DIR, is_safe_path_segment
 
 speaking_playlist_bp = Blueprint('speaking_playlist', __name__)
 
@@ -27,6 +27,8 @@ def generate_combined_audio():
     folder = data.get('folder')
     if not folder:
         return jsonify({'error': 'Missing folder'}), 400
+    if not is_safe_path_segment(folder):
+        return jsonify({'error': 'Invalid folder name'}), 400
 
     folder_path = os.path.join(MOTHER_DIR, folder)
     if not os.path.exists(folder_path):
@@ -151,6 +153,8 @@ def serve_combined_audio(folder):
 @speaking_playlist_bp.route('/get_subtitles/<folder>')
 def get_subtitles(folder):
     """获取文件夹的字幕数据"""
+    if not is_safe_path_segment(folder):
+        return jsonify({'error': 'Invalid folder name'}), 400
     subtitles_path = os.path.join(COMBINED_DIR, f"{folder}_subtitles.json")
     if not os.path.exists(subtitles_path):
         return jsonify({'error': 'Subtitles not found'}), 404
