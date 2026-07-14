@@ -33,8 +33,8 @@ system_prompt: |
   - 新增一个 translation 字段，填入对应的中文翻译。
   - 不要输出任何多余的解释性文字、不可包含 markdown 标记，确保结果可以直接被 json.loads() 解析。
 
-  输出结构示例：
-  {{"segments": [{{"id": 0, "start": 0.0, "end": 8.46, "text": "Part 1. You will hear a telephone conversation.", "translation": "第一部分。你将听到一段电话对话。"}}]}}
+  输出结构示例（使用单花括号 { }，不要使用双花括号 {{ }}）：
+  {"segments": [{"id": 0, "start": 0.0, "end": 8.46, "text": "Part 1. You will hear a telephone conversation.", "translation": "第一部分。你将听到一段电话对话。"}]}
 
 user_prompt: |
   请处理以下 ASR 提取出的字幕数据。严格按照上述定义的 JSON 格式输出结果。
