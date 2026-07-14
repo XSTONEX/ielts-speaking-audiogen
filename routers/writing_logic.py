@@ -19,6 +19,53 @@ writing_bp = Blueprint('writing', __name__)
 
 _writing_cache = None
 
+
+def _parse_ai_json(content):
+    """解析 AI 返回的 JSON，兼容常见异常格式。
+
+    已知问题：prompt 示例里若出现 Python format 转义的双花括号 {{ }}，
+    模型会原样模仿，导致 json.loads 失败。
+    """
+    if content is None:
+        raise json.JSONDecodeError('empty content', '', 0)
+
+    text = content.strip()
+    # 去掉 markdown 代码块围栏
+    text = re.sub(r'^```(?:json)?\s*', '', text)
+    text = re.sub(r'\s*```$', '', text)
+    text = text.strip()
+
+    candidates = [text]
+
+    # 模型照抄 {{ ... }} 时：把双花括号压成单花括号
+    if '{{' in text or '}}' in text:
+        candidates.append(text.replace('{{', '{').replace('}}', '}'))
+
+    # 外层仍可能夹杂说明文字，尝试截取首个完整 JSON 对象
+    start = text.find('{')
+    end = text.rfind('}')
+    if start != -1 and end > start:
+        extracted = text[start:end + 1]
+        candidates.append(extracted)
+        if '{{' in extracted or '}}' in extracted:
+            candidates.append(extracted.replace('{{', '{').replace('}}', '}'))
+
+    last_error = None
+    seen = set()
+    for candidate in candidates:
+        if candidate in seen:
+            continue
+        seen.add(candidate)
+        try:
+            return json.loads(candidate)
+        except json.JSONDecodeError as exc:
+            last_error = exc
+
+    if last_error is not None:
+        raise last_error
+    raise json.JSONDecodeError('unable to parse AI JSON', text, 0)
+
+
 def _has_chinese(text):
     return bool(re.search(r'[\u4e00-\u9fff]', text))
 
@@ -543,9 +590,7 @@ def small_writing_correct():
         )
         resp.raise_for_status()
         content = resp.json()['choices'][0]['message']['content'].strip()
-        content = re.sub(r'^```(?:json)?\s*', '', content)
-        content = re.sub(r'\s*```$', '', content)
-        result = json.loads(content)
+        result = _parse_ai_json(content)
         return jsonify(result)
     except requests.exceptions.Timeout:
         return jsonify({'error': 'AI 服务超时，请重试'}), 504
@@ -795,12 +840,7 @@ def writing_correct():
         )
         resp.raise_for_status()
         content = resp.json()['choices'][0]['message']['content'].strip()
-        
-        # 兼容处理可能携带的 markdown JSON 代码块标记
-        content = re.sub(r'^```(?:json)?\s*', '', content)
-        content = re.sub(r'\s*```$', '', content)
-        
-        result = json.loads(content)
+        result = _parse_ai_json(content)
         return jsonify(result)
         
     except requests.exceptions.Timeout:

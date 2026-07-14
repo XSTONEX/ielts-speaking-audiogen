@@ -321,6 +321,45 @@ class LearningPlatformTestCase(unittest.TestCase):
 
         self.assertEqual(load_json(path, {}), {"ok": True})
 
+    def test_parse_ai_json_handles_double_braces_and_markdown(self):
+        """AI 有时照抄 prompt 里的 {{ }}，或包一层 markdown 代码块。"""
+        from routers.writing_logic import _parse_ai_json
+
+        # 生产复现：外层双花括号 + 内层正常 JSON 对象
+        raw_double = (
+            '{{\n'
+            '  "score": "5.5",\n'
+            '  "feedback_summary": "句子结构不完整",\n'
+            '  "grammar_corrections": [\n'
+            '    {"original": "One reason of this trend", '
+            '"corrected": "One reason for this trend", "reason": "介词"}\n'
+            '  ],\n'
+            '  "vocabulary_upgrade": "1. [value] -> [worth]",\n'
+            '  "native_version": "1. 标准答案：x"\n'
+            '}}'
+        )
+        result = _parse_ai_json(raw_double)
+        self.assertEqual(result["score"], "5.5")
+        self.assertEqual(len(result["grammar_corrections"]), 1)
+
+        # 模型完全照抄嵌套双花括号
+        full_double = (
+            '{{\n'
+            '  "score": "6.0",\n'
+            '  "grammar_corrections": [{{"original": "a", "corrected": "b", "reason": "c"}}]\n'
+            '}}'
+        )
+        result2 = _parse_ai_json(full_double)
+        self.assertEqual(result2["score"], "6.0")
+        self.assertEqual(result2["grammar_corrections"][0]["original"], "a")
+
+        # markdown 代码块
+        fenced = '```json\n{"score": "6.5", "feedback_summary": "ok"}\n```'
+        self.assertEqual(_parse_ai_json(fenced)["score"], "6.5")
+
+        # 正常 JSON
+        self.assertEqual(_parse_ai_json('{"score": "7.0"}')["score"], "7.0")
+
     def test_intensive_article_create_still_works(self):
         response = self.client.post(
             "/intensive_create",
