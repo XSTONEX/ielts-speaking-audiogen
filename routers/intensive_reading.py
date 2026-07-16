@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, send_file, send_from_directory
-import os, json, re, uuid, shutil, time, requests
+import os, json, re, uuid, shutil, requests
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from pydub import AudioSegment
@@ -10,7 +10,7 @@ from core import (
     generate_tts, generate_token, get_vocab_audio_path,
     generate_and_save_vocab_audio, delete_vocab_audio,
     delete_article_vocab_audio, delete_article_audio_files,
-    generate_vocab_audio_async, is_safe_path_segment
+    generate_vocab_audio_async, is_safe_path_segment, _request_tts_audio
 )
 
 intensive_reading_bp = Blueprint('intensive_reading', __name__)
@@ -160,19 +160,8 @@ def split_long_segment(segment, max_chars):
 
     return sub_segments
 
-def generate_tts_segment(text, temp_dir, segment_index, max_retries=3):
-    """生成单个文本段的TTS音频，带重试机制"""
-    url = "https://api.deerapi.com/v1/audio/speech"
-    payload = json.dumps({
-        "model": "tts-1",
-        "input": text,
-        "voice": "nova"
-    })
-    headers = {
-        'Authorization': f"Bearer {os.getenv('DEER_API_KEY')}",
-        'Content-Type': 'application/json'
-    }
-
+def generate_tts_segment(text, temp_dir, segment_index):
+    """生成单个文本段的 TTS 音频（HTTP 层由 api_retry 统一重试）"""
     segment_path = os.path.join(temp_dir, f"segment_{segment_index:03d}.mp3")
 
     # 检查是否已存在该分片文件
@@ -180,61 +169,19 @@ def generate_tts_segment(text, temp_dir, segment_index, max_retries=3):
         print(f"分片 {segment_index} 已存在，跳过生成")
         return segment_path
 
-    last_error = None
-    for attempt in range(max_retries):
-        try:
-            print(f"正在生成分片 {segment_index}，尝试 {attempt + 1}/{max_retries}")
+    print(f"正在生成分片 {segment_index}")
+    # timeout 为 (connect, read)；_request_tts_audio 接受单值时用同一 timeout
+    audio_data = _request_tts_audio(text, timeout=(10, 60))
 
-            # 使用更长的超时时间，并设置连接和读取超时
-            response = requests.post(
-                url,
-                headers=headers,
-                data=payload,
-                timeout=(10, 60)  # (连接超时, 读取超时)
-            )
-
-            if response.status_code == 200:
-                # 先写入临时文件，然后重命名，避免写入过程中的问题
-                temp_path = segment_path + '.tmp'
-                with open(temp_path, 'wb') as f:
-                    f.write(response.content)
-
-                # 验证文件完整性
-                if os.path.getsize(temp_path) > 0:
-                    os.rename(temp_path, segment_path)
-                    print(f"分片 {segment_index} 生成成功")
-                    return segment_path
-                else:
-                    os.remove(temp_path) if os.path.exists(temp_path) else None
-                    raise Exception("生成的音频文件为空")
-            else:
-                raise Exception(f'TTS API错误: {response.status_code}, 响应: {response.text}')
-
-        except requests.exceptions.Timeout as e:
-            last_error = f"请求超时: {str(e)}"
-            print(f"分片 {segment_index} 第 {attempt + 1} 次尝试超时: {last_error}")
-            if attempt < max_retries - 1:
-                # 指数退避：等待 2^attempt 秒
-                wait_time = 2 ** attempt
-                print(f"等待 {wait_time} 秒后重试...")
-                time.sleep(wait_time)
-        except requests.exceptions.RequestException as e:
-            last_error = f"网络请求错误: {str(e)}"
-            print(f"分片 {segment_index} 第 {attempt + 1} 次尝试网络错误: {last_error}")
-            if attempt < max_retries - 1:
-                wait_time = 2 ** attempt
-                print(f"等待 {wait_time} 秒后重试...")
-                time.sleep(wait_time)
-        except Exception as e:
-            last_error = str(e)
-            print(f"分片 {segment_index} 第 {attempt + 1} 次尝试出错: {last_error}")
-            if attempt < max_retries - 1:
-                wait_time = 1 + attempt
-                print(f"等待 {wait_time} 秒后重试...")
-                time.sleep(wait_time)
-
-    # 所有重试都失败了
-    raise Exception(f'分片 {segment_index} 生成失败，已重试 {max_retries} 次。最后错误: {last_error}')
+    temp_path = segment_path + '.tmp'
+    with open(temp_path, 'wb') as f:
+        f.write(audio_data)
+    if os.path.getsize(temp_path) <= 0:
+        os.remove(temp_path)
+        raise Exception(f'分片 {segment_index} 生成的音频文件为空')
+    os.rename(temp_path, segment_path)
+    print(f"分片 {segment_index} 生成成功")
+    return segment_path
 
 # ------------------------
 # Routes
@@ -752,25 +699,10 @@ def generate_article_audio():
         segments_count = 1
 
         if len(text) <= MAX_CHARS:
-            # 文本较短，直接生成
-            url = "https://api.deerapi.com/v1/audio/speech"
-            payload = json.dumps({
-                "model": "tts-1",
-                "input": text,
-                "voice": "nova"
-            })
-            headers = {
-                'Authorization': f"Bearer {os.getenv('DEER_API_KEY')}",
-                'Content-Type': 'application/json'
-            }
-
-            response = requests.post(url, headers=headers, data=payload, timeout=30)
-
-            if response.status_code == 200:
-                with open(final_audio_path, 'wb') as f:
-                    f.write(response.content)
-            else:
-                return jsonify({'error': f'TTS服务错误: {response.status_code}'}), 500
+            # 文本较短，直接生成（带统一重试）
+            audio_data = _request_tts_audio(text, timeout=30)
+            with open(final_audio_path, 'wb') as f:
+                f.write(audio_data)
         else:
             # 文本较长，需要分段处理（增加40%冗余）
             base_segments = max(2, min(8, len(text) // 1800))  # 基础分段数（更小的基础单位）

@@ -14,6 +14,7 @@ from datetime import datetime
 from functools import wraps
 from flask import request, jsonify
 from dotenv import load_dotenv
+from utils.api_retry import api_retry, raise_for_status_retryable, RetryableAPIError
 
 load_dotenv()
 
@@ -220,8 +221,12 @@ def require_auth(f):
 
 # ==================== TTS 基础函数 ====================
 
-def generate_tts(text, folder):
-    """生成 TTS 音频并保存到指定文件夹"""
+@api_retry
+def _request_tts_audio(text, timeout=30):
+    """请求 TTS API，返回音频 bytes（带统一重试）。
+
+    timeout 可为秒数或 (connect, read) 元组。
+    """
     url = "https://api.deerapi.com/v1/audio/speech"
     payload = json.dumps({
         "model": "tts-1",
@@ -232,10 +237,16 @@ def generate_tts(text, folder):
         'Authorization': f"Bearer {os.getenv('DEER_API_KEY')}",
         'Content-Type': 'application/json'
     }
-    response = requests.request("POST", url, headers=headers, data=payload)
-    if response.status_code != 200:
-        raise Exception(f'TTS API错误: {response.status_code}, 响应: {response.text[:200]}')
-    audio_data = response.content
+    response = requests.post(url, headers=headers, data=payload, timeout=timeout)
+    raise_for_status_retryable(response)
+    if not response.content:
+        raise RetryableAPIError('TTS 返回空音频')
+    return response.content
+
+
+def generate_tts(text, folder):
+    """生成 TTS 音频并保存到指定文件夹"""
+    audio_data = _request_tts_audio(text, timeout=60)
     folder_path = os.path.join(MOTHER_DIR, folder)
     os.makedirs(folder_path, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -270,28 +281,12 @@ def generate_and_save_vocab_audio(article_id, word):
     if os.path.exists(audio_path):
         return audio_path
 
-    # 生成音频数据
-    url = "https://api.deerapi.com/v1/audio/speech"
-    payload = json.dumps({
-        "model": "tts-1",
-        "input": word,
-        "voice": "nova"
-    })
-    headers = {
-        'Authorization': f"Bearer {os.getenv('DEER_API_KEY')}",
-        'Content-Type': 'application/json'
-    }
-
     try:
-        response = requests.post(url, headers=headers, data=payload, timeout=10)
-        if response.status_code == 200:
-            with open(audio_path, 'wb') as f:
-                f.write(response.content)
-            print(f"Generated audio for word '{word}' in article '{article_id}'")
-            return audio_path
-        else:
-            print(f"TTS API error for word '{word}': {response.status_code}")
-            return None
+        audio_data = _request_tts_audio(word, timeout=10)
+        with open(audio_path, 'wb') as f:
+            f.write(audio_data)
+        print(f"Generated audio for word '{word}' in article '{article_id}'")
+        return audio_path
     except Exception as e:
         print(f"Error generating pronunciation for '{word}': {e}")
         return None

@@ -1,8 +1,11 @@
 from flask import Blueprint, request, jsonify, send_file
-import os, json, re, uuid, threading, shutil, requests, time
+import os, json, re, uuid, threading, shutil, requests
 from datetime import datetime
 from openai import OpenAI
 from core import LISTENING_REVIEW_DIR, is_token_valid, load_tokens, get_proxies, load_prompt, is_safe_path_segment
+from utils.api_retry import (
+    api_retry, raise_for_status_retryable, RetryableAPIError, NonRetryableAPIError
+)
 
 listening_review_bp = Blueprint('listening_review', __name__)
 
@@ -71,111 +74,94 @@ def _find_user_project(username, project_id):
     return projects, -1
 
 
-def _call_groq_transcription(audio_file_path, max_retries=3):
-    """Call Groq Whisper API with verbose_json to get timestamped segments."""
+@api_retry
+def _call_groq_transcription_once(audio_file_path):
+    """单次调用 Groq Whisper（verbose_json + segments），由 api_retry 负责重试。"""
     api_key = os.getenv('GROQ_API_KEY')
     if not api_key:
-        return None, 'GROQ_API_KEY not configured'
+        raise NonRetryableAPIError('GROQ_API_KEY not configured')
 
     url = "https://api.groq.com/openai/v1/audio/transcriptions"
     proxies = get_proxies()
+    with open(audio_file_path, 'rb') as audio_file:
+        files = {'file': (os.path.basename(audio_file_path), audio_file)}
+        data = {
+            'model': 'whisper-large-v3-turbo',
+            'response_format': 'verbose_json',
+            'timestamp_granularities[]': 'segment',
+            'temperature': '0'
+        }
+        headers = {'Authorization': f'Bearer {api_key}'}
+        response = requests.post(
+            url, headers=headers, files=files, data=data,
+            timeout=(10, 300), proxies=proxies
+        )
 
-    for attempt in range(max_retries):
-        try:
-            with open(audio_file_path, 'rb') as audio_file:
-                files = {'file': (os.path.basename(audio_file_path), audio_file)}
-                data = {
-                    'model': 'whisper-large-v3-turbo',
-                    'response_format': 'verbose_json',
-                    'timestamp_granularities[]': 'segment',
-                    'temperature': '0'
-                }
-                headers = {'Authorization': f'Bearer {api_key}'}
-                response = requests.post(url, headers=headers, files=files, data=data, timeout=(10, 300), proxies=proxies)
-
-                if response.status_code == 200:
-                    result = response.json()
-                    segments = []
-                    for i, seg in enumerate(result.get('segments', [])):
-                        segments.append({
-                            'id': i,
-                            'start': seg['start'],
-                            'end': seg['end'],
-                            'text': seg.get('text', '').strip()
-                        })
-                    duration = result.get('duration', 0)
-                    return {'segments': segments, 'duration': duration}, None
-
-                error_msg = f"Groq API error: HTTP {response.status_code}"
-                try:
-                    detail = response.json()
-                    if 'error' in detail:
-                        msg = detail['error'].get('message', detail['error']) if isinstance(detail['error'], dict) else detail['error']
-                        error_msg += f" - {msg}"
-                except:
-                    error_msg += f" - {response.text[:200]}"
-
-                if response.status_code in [400, 401, 403, 413]:
-                    return None, error_msg
-                if attempt == max_retries - 1:
-                    return None, error_msg
-
-        except requests.exceptions.Timeout:
-            if attempt == max_retries - 1:
-                return None, '请求超时'
-            time.sleep(2 ** attempt)
-        except requests.exceptions.ConnectionError as e:
-            if attempt == max_retries - 1:
-                return None, f'连接错误: {e}'
-            time.sleep(2 ** attempt)
-        except Exception as e:
-            if attempt == max_retries - 1:
-                return None, str(e)
-            time.sleep(2 ** attempt)
-
-    return None, f'转录失败，已重试 {max_retries} 次'
+    raise_for_status_retryable(response)
+    result = response.json()
+    segments = []
+    for i, seg in enumerate(result.get('segments', [])):
+        segments.append({
+            'id': i,
+            'start': seg['start'],
+            'end': seg['end'],
+            'text': seg.get('text', '').strip()
+        })
+    duration = result.get('duration', 0)
+    return {'segments': segments, 'duration': duration}
 
 
-def _polish_and_translate(segments):
-    """Call LLM via DeerAPI to polish ASR text and add Chinese translation."""
+def _call_groq_transcription(audio_file_path):
+    """Call Groq Whisper API with verbose_json to get timestamped segments."""
+    try:
+        return _call_groq_transcription_once(audio_file_path), None
+    except Exception as e:
+        return None, str(e)
+
+
+@api_retry
+def _polish_and_translate_once(segments):
+    """单次 LLM 润色+翻译；JSON 解析失败会触发重试。"""
     api_key = os.getenv('DEER_API_KEY')
     if not api_key:
-        return None, 'DEER_API_KEY not configured'
+        raise NonRetryableAPIError('DEER_API_KEY not configured')
 
     cfg = load_prompt('listening_polish_translate')
-    client = OpenAI(base_url='https://api.deerapi.com/v1', api_key=api_key)
+    # 关闭 SDK 内置重试，避免与 api_retry 叠加
+    client = OpenAI(base_url='https://api.deerapi.com/v1', api_key=api_key, max_retries=0)
 
     segments_json = json.dumps(segments, ensure_ascii=False)
     user_prompt = cfg['user_prompt'].format(segments_json=segments_json)
 
+    kwargs = {
+        'model': cfg['model'],
+        'messages': [
+            {'role': 'system', 'content': cfg['system_prompt']},
+            {'role': 'user', 'content': user_prompt}
+        ],
+        'temperature': cfg['temperature'],
+    }
+    if cfg.get('response_format'):
+        kwargs['response_format'] = {'type': cfg['response_format']}
+
+    response = client.chat.completions.create(**kwargs)
+    content = response.choices[0].message.content.strip()
+    result = json.loads(content)  # JSONDecodeError → api_retry
+
+    model_name = cfg['model']
+    if isinstance(result, dict) and 'segments' in result:
+        return result['segments']
+    if isinstance(result, list):
+        return result
+    raise RetryableAPIError(f'Unexpected {model_name} response structure')
+
+
+def _polish_and_translate(segments):
+    """Call LLM via DeerAPI to polish ASR text and add Chinese translation."""
     try:
-        kwargs = {
-            'model': cfg['model'],
-            'messages': [
-                {'role': 'system', 'content': cfg['system_prompt']},
-                {'role': 'user', 'content': user_prompt}
-            ],
-            'temperature': cfg['temperature'],
-        }
-        if cfg.get('response_format'):
-            kwargs['response_format'] = {'type': cfg['response_format']}
-
-        response = client.chat.completions.create(**kwargs)
-        content = response.choices[0].message.content.strip()
-        result = json.loads(content)
-
-        model_name = cfg['model']
-        if isinstance(result, dict) and 'segments' in result:
-            return result['segments'], None
-        elif isinstance(result, list):
-            return result, None
-        else:
-            return None, f'Unexpected {model_name} response structure'
-
-    except json.JSONDecodeError as e:
-        return None, f'{cfg["model"]} returned invalid JSON: {e}'
+        return _polish_and_translate_once(segments), None
     except Exception as e:
-        return None, f'{cfg["model"]} API error: {e}'
+        return None, str(e)
 
 
 def _download_audio_from_url(url_str, save_path):

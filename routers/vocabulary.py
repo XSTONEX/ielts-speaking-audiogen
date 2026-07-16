@@ -1,11 +1,11 @@
 from flask import Blueprint, request, jsonify, send_file, send_from_directory
-import os, json, uuid, threading, time, requests
+import os, json, uuid, threading, time
 from datetime import datetime
 from werkzeug.utils import secure_filename
 
 from core import (
     VOCABULARY_BOOK_DIR, VOCABULARY_CATEGORIES_DIR, VOCABULARY_AUDIO_DIR,
-    VOCABULARY_TASKS_DIR, VOCABULARY_CHALLENGE_DIR, generate_tts
+    VOCABULARY_TASKS_DIR, VOCABULARY_CHALLENGE_DIR, generate_tts, _request_tts_audio
 )
 
 vocabulary_bp = Blueprint('vocabulary', __name__)
@@ -156,34 +156,18 @@ def update_audio_task_status(task_id, status, error_msg=None):
             print(f"更新任务状态失败: {e}")
 
 def generate_word_audio(word, word_id, category):
-    """为单词生成音频文件"""
+    """为单词生成音频文件（TTS 调用带统一重试）"""
     try:
-        # 使用现有的TTS API生成音频
-        api_key = os.getenv('DEER_API_KEY')
-        if not api_key:
+        if not os.getenv('DEER_API_KEY'):
             return False
 
-        url = "https://api.deerapi.com/v1/audio/speech"
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json"
-        }
-        data = {
-            "model": "tts-1",
-            "input": word,
-            "voice": "nova",
-            "response_format": "mp3"
-        }
-
-        response = requests.post(url, headers=headers, json=data)
-        if response.status_code == 200:
-            # 按分类存储音频文件
-            category_audio_dir = os.path.join(VOCABULARY_AUDIO_DIR, category)
-            audio_path = os.path.join(category_audio_dir, f"{word_id}.mp3")
-            with open(audio_path, 'wb') as f:
-                f.write(response.content)
-            return True
-        return False
+        audio_data = _request_tts_audio(word, timeout=60)
+        category_audio_dir = os.path.join(VOCABULARY_AUDIO_DIR, category)
+        os.makedirs(category_audio_dir, exist_ok=True)
+        audio_path = os.path.join(category_audio_dir, f"{word_id}.mp3")
+        with open(audio_path, 'wb') as f:
+            f.write(audio_data)
+        return True
     except Exception as e:
         print(f"生成单词音频失败: {e}")
         return False

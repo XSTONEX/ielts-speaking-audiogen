@@ -11,6 +11,9 @@ from core import (
     WRITING_SMALL_MD_FILE, WRITING_IMAGES_DIR, WRITING_CHAT_DIR,
     is_token_valid, load_tokens, load_prompt
 )
+from utils.api_retry import (
+    api_retry, raise_for_status_retryable, NonRetryableAPIError, RetryableAPIError
+)
 
 writing_bp = Blueprint('writing', __name__)
 
@@ -68,6 +71,45 @@ def _parse_ai_json(content):
 
 def _has_chinese(text):
     return bool(re.search(r'[\u4e00-\u9fff]', text))
+
+
+class AIJSONParseError(RetryableAPIError):
+    """LLM 返回无法解析的 JSON；可重试，并保留原始文本。"""
+
+    def __init__(self, message, raw=None):
+        super().__init__(message)
+        self.raw = raw
+
+
+@api_retry
+def _call_llm_json(cfg, user_prompt):
+    """调用 LLM 并解析为 JSON（网络/5xx/JSON 格式异常会重试）。"""
+    api_key = os.getenv('DEER_API_KEY')
+    if not api_key:
+        raise NonRetryableAPIError('DEER_API_KEY not configured')
+
+    resp = requests.post(
+        cfg['api_url'],
+        headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
+        json={
+            'model': cfg['model'],
+            'messages': [
+                {'role': 'system', 'content': cfg['system_prompt']},
+                {'role': 'user', 'content': user_prompt}
+            ],
+            'temperature': cfg['temperature']
+        },
+        timeout=cfg.get('timeout', 30)
+    )
+    raise_for_status_retryable(resp)
+    try:
+        content = resp.json()['choices'][0]['message']['content'].strip()
+    except (KeyError, IndexError, TypeError) as e:
+        raise RetryableAPIError(f'LLM 响应结构异常: {e}') from e
+    try:
+        return _parse_ai_json(content), content
+    except json.JSONDecodeError as e:
+        raise AIJSONParseError(str(e), raw=content) from e
 
 def _parse_writing_md():
     global _writing_cache
@@ -574,28 +616,14 @@ def small_writing_correct():
     )
 
     try:
-        api_key = os.getenv('DEER_API_KEY')
-        resp = requests.post(
-            cfg['api_url'],
-            headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
-            json={
-                'model': cfg['model'],
-                'messages': [
-                    {'role': 'system', 'content': cfg['system_prompt']},
-                    {'role': 'user', 'content': user_prompt}
-                ],
-                'temperature': cfg['temperature']
-            },
-            timeout=cfg.get('timeout', 30)
-        )
-        resp.raise_for_status()
-        content = resp.json()['choices'][0]['message']['content'].strip()
-        result = _parse_ai_json(content)
+        result, _content = _call_llm_json(cfg, user_prompt)
         return jsonify(result)
     except requests.exceptions.Timeout:
         return jsonify({'error': 'AI 服务超时，请重试'}), 504
+    except AIJSONParseError as e:
+        return jsonify({'error': 'AI 返回格式异常', 'raw': e.raw}), 502
     except json.JSONDecodeError:
-        return jsonify({'error': 'AI 返回格式异常', 'raw': content}), 502
+        return jsonify({'error': 'AI 返回格式异常'}), 502
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -824,29 +852,14 @@ def writing_correct():
     )
 
     try:
-        api_key = os.getenv('DEER_API_KEY')
-        resp = requests.post(
-            cfg['api_url'],
-            headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
-            json={
-                'model': cfg['model'],
-                'messages': [
-                    {'role': 'system', 'content': cfg['system_prompt']},
-                    {'role': 'user', 'content': user_prompt}
-                ],
-                'temperature': cfg['temperature']
-            },
-            timeout=cfg.get('timeout', 30)
-        )
-        resp.raise_for_status()
-        content = resp.json()['choices'][0]['message']['content'].strip()
-        result = _parse_ai_json(content)
+        result, _content = _call_llm_json(cfg, user_prompt)
         return jsonify(result)
-        
     except requests.exceptions.Timeout:
         return jsonify({'error': 'AI 服务超时，请重试'}), 504
+    except AIJSONParseError as e:
+        return jsonify({'error': 'AI 返回格式异常', 'raw': e.raw}), 502
     except json.JSONDecodeError:
-        return jsonify({'error': 'AI 返回格式异常', 'raw': content}), 502
+        return jsonify({'error': 'AI 返回格式异常'}), 502
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -1273,9 +1286,13 @@ def _find_session_by_key(username, sentence_key):
 
 # ===================== AI 聊天辅助 =====================
 
+@api_retry
 def _call_ai_chat(messages, cfg):
-    """调用 AI 聊天接口，返回完整回复文本"""
+    """调用 AI 聊天接口，返回完整回复文本（带统一重试）"""
     api_key = os.getenv('DEER_API_KEY')
+    if not api_key:
+        raise NonRetryableAPIError('DEER_API_KEY not configured')
+
     resp = requests.post(
         cfg['api_url'],
         headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
@@ -1286,7 +1303,7 @@ def _call_ai_chat(messages, cfg):
         },
         timeout=cfg.get('timeout', 60)
     )
-    resp.raise_for_status()
+    raise_for_status_retryable(resp)
     return resp.json()['choices'][0]['message']['content'].strip()
 
 
