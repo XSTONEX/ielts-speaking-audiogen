@@ -1,8 +1,11 @@
 from flask import Blueprint, request, jsonify, send_file, send_from_directory
-import os, json, re, uuid, threading, shutil, requests, time
+import os, json, re, uuid, threading, shutil, requests
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from core import AUDIO_TRANSCRIPTION_DIR, verify_token_from_request, is_token_valid, load_tokens
+from utils.api_retry import (
+    api_retry, raise_for_status_retryable, RetryableAPIError, NonRetryableAPIError
+)
 
 asr_bp = Blueprint('asr', __name__)
 
@@ -39,99 +42,43 @@ def create_transcription_folder(transcription_id, title):
     os.makedirs(folder_path, exist_ok=True)
     return folder_path
 
-def call_transcription_api(audio_file_path, language=None, max_retries=3):
-    """调用音频转文本API，带重试机制"""
+@api_retry
+def _call_transcription_api_once(audio_file_path, language=None):
+    """单次调用音频转文本 API（由 api_retry 负责重试）。"""
     api_key = os.getenv('DEER_API_KEY')
     if not api_key:
-        return None, 'API密钥未配置'
+        raise NonRetryableAPIError('API密钥未配置')
 
     url = "https://api.deerapi.com/v1/audio/transcriptions"
+    with open(audio_file_path, 'rb') as audio_file:
+        files = {'file': audio_file}
+        data = {
+            'model': 'whisper-1',
+            'response_format': 'json',
+            'temperature': '0'
+        }
+        if language:
+            data['language'] = language
+        headers = {'Authorization': f'Bearer {api_key}'}
+        response = requests.post(
+            url, headers=headers, files=files, data=data, timeout=(10, 300)
+        )
 
-    for attempt in range(max_retries):
-        try:
-            print(f"转录API调用尝试 {attempt + 1}/{max_retries}")
+    raise_for_status_retryable(response)
+    result = response.json()
+    text = (result.get('text') or '').strip()
+    if not text:
+        raise RetryableAPIError('转录结果为空')
+    return text
 
-            # 准备请求数据
-            with open(audio_file_path, 'rb') as audio_file:
-                files = {'file': audio_file}
-                data = {
-                    'model': 'whisper-1',
-                    'response_format': 'json',
-                    'temperature': '0'
-                }
 
-                if language:
-                    data['language'] = language
-
-                headers = {
-                    'Authorization': f'Bearer {api_key}'
-                }
-
-                # 设置不同的超时时间
-                timeout = (10, 300)  # (连接超时, 读取超时)
-
-                response = requests.post(url, headers=headers, files=files, data=data, timeout=timeout)
-
-                if response.status_code == 200:
-                    result = response.json()
-                    text = result.get('text', '')
-                    if text.strip():  # 确保返回的文本不为空
-                        print(f"转录成功，尝试次数: {attempt + 1}")
-                        return text, None
-                    else:
-                        print(f"转录返回空文本，尝试 {attempt + 1} 失败")
-                        if attempt == max_retries - 1:
-                            return None, "转录结果为空"
-                        continue
-                else:
-                    error_msg = f"API请求失败: HTTP {response.status_code}"
-                    try:
-                        error_detail = response.json()
-                        if 'error' in error_detail:
-                            error_msg += f" - {error_detail['error'].get('message', error_detail['error'])}"
-                    except:
-                        error_msg += f" - {response.text[:200]}"
-
-                    print(f"API请求失败，尝试 {attempt + 1}: {error_msg}")
-
-                    # 对于某些错误码，不进行重试
-                    if response.status_code in [400, 401, 403, 413]:  # 客户端错误
-                        return None, error_msg
-
-                    if attempt == max_retries - 1:
-                        return None, error_msg
-
-        except requests.exceptions.Timeout as e:
-            error_msg = f"请求超时: {str(e)}"
-            print(f"请求超时，尝试 {attempt + 1}: {error_msg}")
-            if attempt == max_retries - 1:
-                return None, error_msg
-            # 超时后等待一段时间再重试
-            time.sleep(2 ** attempt)  # 指数退避
-
-        except requests.exceptions.ConnectionError as e:
-            error_msg = f"网络连接错误: {str(e)}"
-            print(f"网络连接错误，尝试 {attempt + 1}: {error_msg}")
-            if attempt == max_retries - 1:
-                return None, error_msg
-            # 连接错误后等待更长时间
-            time.sleep(5 + (2 ** attempt))
-
-        except requests.exceptions.RequestException as e:
-            error_msg = f"请求异常: {str(e)}"
-            print(f"请求异常，尝试 {attempt + 1}: {error_msg}")
-            if attempt == max_retries - 1:
-                return None, error_msg
-            time.sleep(2 ** attempt)
-
-        except Exception as e:
-            error_msg = f"未知错误: {str(e)}"
-            print(f"未知错误，尝试 {attempt + 1}: {error_msg}")
-            if attempt == max_retries - 1:
-                return None, error_msg
-            time.sleep(1 + attempt)
-
-    return None, f"转录失败，已重试 {max_retries} 次"
+def call_transcription_api(audio_file_path, language=None):
+    """调用音频转文本 API，带统一重试；返回 (text, error)。"""
+    try:
+        text = _call_transcription_api_once(audio_file_path, language=language)
+        return text, None
+    except Exception as e:
+        return None, str(e)
 
 
 # ==================== 音频转文本路由 ====================
