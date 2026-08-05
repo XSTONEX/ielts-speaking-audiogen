@@ -49,7 +49,7 @@ WRITING_CHAT_DIR = 'writing_correction/data/chat_history'
 LISTENING_REVIEW_DIR = 'listening_review'
 PROMPTS_DIR = os.path.join(os.path.dirname(__file__), 'prompts')
 
-# 代理配置（用于访问需要翻墙的外部 API，如 Groq）
+# 代理配置（用于访问需要翻墙的外部 API，如 Groq / DeerAPI）
 PROXY_URL = os.getenv('PROXY_URL', '').strip()
 
 
@@ -58,6 +58,17 @@ def get_proxies():
     if PROXY_URL:
         return {'http': PROXY_URL, 'https': PROXY_URL}
     return None
+
+
+def get_openai_http_client(timeout=120.0):
+    """返回带代理的 httpx.Client，供 OpenAI SDK 使用；未配置代理时返回 None。
+
+    DeerAPI 等服务在国内机房会区限制，必须经 PROXY_URL 出站。
+    """
+    if not PROXY_URL:
+        return None
+    import httpx
+    return httpx.Client(proxy=PROXY_URL, timeout=timeout)
 
 
 # ==================== Prompt 管理 ====================

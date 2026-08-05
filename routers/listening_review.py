@@ -2,7 +2,10 @@ from flask import Blueprint, request, jsonify, send_file
 import os, json, re, uuid, threading, shutil, requests, time
 from datetime import datetime
 from openai import OpenAI
-from core import LISTENING_REVIEW_DIR, is_token_valid, load_tokens, get_proxies, load_prompt, is_safe_path_segment
+from core import (
+    LISTENING_REVIEW_DIR, is_token_valid, load_tokens, get_proxies,
+    get_openai_http_client, load_prompt, is_safe_path_segment,
+)
 
 listening_review_bp = Blueprint('listening_review', __name__)
 
@@ -143,7 +146,12 @@ def _polish_and_translate(segments):
         return None, 'DEER_API_KEY not configured'
 
     cfg = load_prompt('listening_polish_translate')
-    client = OpenAI(base_url='https://api.deerapi.com/v1', api_key=api_key)
+    # 经 PROXY_URL 出站，避免 DeerAPI 区限制
+    client = OpenAI(
+        base_url='https://api.deerapi.com/v1',
+        api_key=api_key,
+        http_client=get_openai_http_client(),
+    )
 
     segments_json = json.dumps(segments, ensure_ascii=False)
     user_prompt = cfg['user_prompt'].format(segments_json=segments_json)
