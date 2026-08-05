@@ -103,9 +103,11 @@ def _post_audio_transcription(url, api_key, model, audio_file_path, proxies, max
                     'temperature': '0'
                 }
                 headers = {'Authorization': f'Bearer {api_key}'}
+                # 连接/上传/读回：tuple 的第一项也会约束 body 写出时间。
+                # 8MB+ 音频在弱网上 (10, 300) 会触发 write timeout，故放宽到 60s 连接/上传、10min 读。
                 response = requests.post(
                     url, headers=headers, files=files, data=data,
-                    timeout=(10, 300), proxies=proxies,
+                    timeout=(60, 600), proxies=proxies,
                 )
 
                 if response.status_code == 200:
