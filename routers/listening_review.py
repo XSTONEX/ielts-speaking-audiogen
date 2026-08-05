@@ -74,49 +74,51 @@ def _find_user_project(username, project_id):
     return projects, -1
 
 
-def _call_groq_transcription(audio_file_path, max_retries=3):
-    """Call Groq Whisper API with verbose_json to get timestamped segments."""
-    api_key = os.getenv('GROQ_API_KEY')
-    if not api_key:
-        return None, 'GROQ_API_KEY not configured'
+def _parse_transcription_response(result, provider_label):
+    """从 verbose_json 转录结果解析 segments + duration。"""
+    segments = []
+    for i, seg in enumerate(result.get('segments', [])):
+        segments.append({
+            'id': i,
+            'start': seg['start'],
+            'end': seg['end'],
+            'text': seg.get('text', '').strip()
+        })
+    duration = result.get('duration', 0)
+    if not segments and not (result.get('text') or '').strip():
+        return None, f'{provider_label}: empty transcription'
+    return {'segments': segments, 'duration': duration}, None
 
-    url = "https://api.groq.com/openai/v1/audio/transcriptions"
-    proxies = get_proxies()
 
+def _post_audio_transcription(url, api_key, model, audio_file_path, proxies, max_retries, provider_label):
+    """通用 OpenAI 兼容 audio/transcriptions 调用（verbose_json + segment）。"""
     for attempt in range(max_retries):
         try:
             with open(audio_file_path, 'rb') as audio_file:
                 files = {'file': (os.path.basename(audio_file_path), audio_file)}
                 data = {
-                    'model': 'whisper-large-v3-turbo',
+                    'model': model,
                     'response_format': 'verbose_json',
                     'timestamp_granularities[]': 'segment',
                     'temperature': '0'
                 }
                 headers = {'Authorization': f'Bearer {api_key}'}
-                response = requests.post(url, headers=headers, files=files, data=data, timeout=(10, 300), proxies=proxies)
+                response = requests.post(
+                    url, headers=headers, files=files, data=data,
+                    timeout=(10, 300), proxies=proxies,
+                )
 
                 if response.status_code == 200:
-                    result = response.json()
-                    segments = []
-                    for i, seg in enumerate(result.get('segments', [])):
-                        segments.append({
-                            'id': i,
-                            'start': seg['start'],
-                            'end': seg['end'],
-                            'text': seg.get('text', '').strip()
-                        })
-                    duration = result.get('duration', 0)
-                    return {'segments': segments, 'duration': duration}, None
+                    return _parse_transcription_response(response.json(), provider_label)
 
-                error_msg = f"Groq API error: HTTP {response.status_code}"
+                error_msg = f'{provider_label} API error: HTTP {response.status_code}'
                 try:
                     detail = response.json()
                     if 'error' in detail:
                         msg = detail['error'].get('message', detail['error']) if isinstance(detail['error'], dict) else detail['error']
-                        error_msg += f" - {msg}"
-                except:
-                    error_msg += f" - {response.text[:200]}"
+                        error_msg += f' - {msg}'
+                except Exception:
+                    error_msg += f' - {response.text[:200]}'
 
                 if response.status_code in [400, 401, 403, 413]:
                     return None, error_msg
@@ -139,7 +141,96 @@ def _call_groq_transcription(audio_file_path, max_retries=3):
     return None, f'转录失败，已重试 {max_retries} 次'
 
 
-def _polish_and_translate(segments):
+def _call_groq_transcription(audio_file_path, max_retries=3):
+    """Call Groq Whisper API with verbose_json to get timestamped segments."""
+    api_key = os.getenv('GROQ_API_KEY')
+    if not api_key:
+        return None, 'GROQ_API_KEY not configured'
+
+    return _post_audio_transcription(
+        url='https://api.groq.com/openai/v1/audio/transcriptions',
+        api_key=api_key,
+        model='whisper-large-v3-turbo',
+        audio_file_path=audio_file_path,
+        proxies=get_proxies(),
+        max_retries=max_retries,
+        provider_label='Groq',
+    )
+
+
+def _call_wildapi_transcription(audio_file_path, max_retries=3):
+    """Call WildAPI Whisper (whisper-1) with verbose_json segments. 国内可直连。"""
+    api_key = os.getenv('WILDAPI_API_KEY')
+    if not api_key:
+        return None, 'WILDAPI_API_KEY not configured'
+
+    base = (os.getenv('WILDAPI_BASE_URL') or 'https://api.gptsapi.net/v1').rstrip('/')
+    return _post_audio_transcription(
+        url=f'{base}/audio/transcriptions',
+        api_key=api_key,
+        model=os.getenv('LISTENING_ASR_MODEL') or 'whisper-1',
+        audio_file_path=audio_file_path,
+        proxies=None,  # WildAPI 实测国内直连可用
+        max_retries=max_retries,
+        provider_label='WildAPI',
+    )
+
+
+def _call_transcription(audio_file_path):
+    """按 LISTENING_ASR_PROVIDER 调度 ASR（默认 wildapi，可回切 groq）。"""
+    provider = (os.getenv('LISTENING_ASR_PROVIDER') or 'wildapi').strip().lower()
+    if provider == 'groq':
+        return _call_groq_transcription(audio_file_path)
+    if provider != 'wildapi':
+        return None, f'Unknown LISTENING_ASR_PROVIDER: {provider}'
+    return _call_wildapi_transcription(audio_file_path)
+
+
+def _parse_polish_result(content, model_name):
+    """解析润色 LLM 返回的 JSON（支持 {segments:[...]} 或顶层数组）。"""
+    if not content or not content.strip():
+        return None, f'{model_name} returned empty content'
+    try:
+        result = json.loads(content.strip())
+    except json.JSONDecodeError as e:
+        return None, f'{model_name} returned invalid JSON: {e}'
+
+    if isinstance(result, dict) and 'segments' in result:
+        return result['segments'], None
+    if isinstance(result, list):
+        return result, None
+    return None, f'Unexpected {model_name} response structure'
+
+
+def _polish_and_translate_with_client(client, segments, model_name, temperature, response_format):
+    """用给定 OpenAI 兼容 client 执行润色+翻译。"""
+    cfg = load_prompt('listening_polish_translate')
+    segments_json = json.dumps(segments, ensure_ascii=False)
+    user_prompt = cfg['user_prompt'].format(segments_json=segments_json)
+
+    try:
+        kwargs = {
+            'model': model_name,
+            'messages': [
+                {'role': 'system', 'content': cfg['system_prompt']},
+                {'role': 'user', 'content': user_prompt}
+            ],
+            'temperature': temperature,
+        }
+        if response_format:
+            kwargs['response_format'] = {'type': response_format}
+
+        response = client.chat.completions.create(**kwargs)
+        content = (response.choices[0].message.content or '')
+        return _parse_polish_result(content, model_name)
+    except Exception as e:
+        # JSON 错误已在 _parse_polish_result 处理；这里兜底 API 异常
+        if isinstance(e, json.JSONDecodeError):
+            return None, f'{model_name} returned invalid JSON: {e}'
+        return None, f'{model_name} API error: {e}'
+
+
+def _polish_and_translate_deerapi(segments):
     """Call LLM via DeerAPI to polish ASR text and add Chinese translation."""
     api_key = os.getenv('DEER_API_KEY')
     if not api_key:
@@ -152,38 +243,36 @@ def _polish_and_translate(segments):
         api_key=api_key,
         http_client=get_openai_http_client(),
     )
+    model_name = os.getenv('LISTENING_LLM_MODEL') or cfg['model']
+    return _polish_and_translate_with_client(
+        client, segments, model_name, cfg['temperature'], cfg.get('response_format'),
+    )
 
-    segments_json = json.dumps(segments, ensure_ascii=False)
-    user_prompt = cfg['user_prompt'].format(segments_json=segments_json)
 
-    try:
-        kwargs = {
-            'model': cfg['model'],
-            'messages': [
-                {'role': 'system', 'content': cfg['system_prompt']},
-                {'role': 'user', 'content': user_prompt}
-            ],
-            'temperature': cfg['temperature'],
-        }
-        if cfg.get('response_format'):
-            kwargs['response_format'] = {'type': cfg['response_format']}
+def _polish_and_translate_wildapi(segments):
+    """Call LLM via WildAPI (国内可直连) to polish ASR text and translate."""
+    api_key = os.getenv('WILDAPI_API_KEY')
+    if not api_key:
+        return None, 'WILDAPI_API_KEY not configured'
 
-        response = client.chat.completions.create(**kwargs)
-        content = response.choices[0].message.content.strip()
-        result = json.loads(content)
+    cfg = load_prompt('listening_polish_translate')
+    base = (os.getenv('WILDAPI_BASE_URL') or 'https://api.gptsapi.net/v1').rstrip('/')
+    client = OpenAI(base_url=base, api_key=api_key, max_retries=0)
+    # 默认 gemini-3-flash-preview（实测可用）；开通后可改 LISTENING_LLM_MODEL / YAML
+    model_name = os.getenv('LISTENING_LLM_MODEL') or cfg['model']
+    return _polish_and_translate_with_client(
+        client, segments, model_name, cfg['temperature'], cfg.get('response_format'),
+    )
 
-        model_name = cfg['model']
-        if isinstance(result, dict) and 'segments' in result:
-            return result['segments'], None
-        elif isinstance(result, list):
-            return result, None
-        else:
-            return None, f'Unexpected {model_name} response structure'
 
-    except json.JSONDecodeError as e:
-        return None, f'{cfg["model"]} returned invalid JSON: {e}'
-    except Exception as e:
-        return None, f'{cfg["model"]} API error: {e}'
+def _polish_and_translate(segments):
+    """按 LISTENING_LLM_PROVIDER 调度润色翻译（默认 wildapi，可回切 deerapi）。"""
+    provider = (os.getenv('LISTENING_LLM_PROVIDER') or 'wildapi').strip().lower()
+    if provider == 'deerapi':
+        return _polish_and_translate_deerapi(segments)
+    if provider != 'wildapi':
+        return None, f'Unknown LISTENING_LLM_PROVIDER: {provider}'
+    return _polish_and_translate_wildapi(segments)
 
 
 def _download_audio_from_url(url_str, save_path):
@@ -228,8 +317,8 @@ def _update_project_status(username, project_id, **fields):
 def _transcribe_async(project_id, audio_path, username):
     """Run transcription + LLM polish/translate in background thread."""
     try:
-        # Phase 1: ASR transcription
-        result, error = _call_groq_transcription(audio_path)
+        # Phase 1: ASR transcription（默认 WildAPI，可 LISTENING_ASR_PROVIDER=groq 回切）
+        result, error = _call_transcription(audio_path)
         if not result:
             _update_project_status(username, project_id, status='error', error=error)
             return
@@ -237,7 +326,7 @@ def _transcribe_async(project_id, audio_path, username):
         # Mark translating and save duration
         _update_project_status(username, project_id, status='translating', duration=result['duration'])
 
-        # Phase 2: LLM polish + translate
+        # Phase 2: LLM polish + translate（默认 WildAPI，可 LISTENING_LLM_PROVIDER=deerapi 回切）
         polished_segments, translate_error = _polish_and_translate(result['segments'])
         if not polished_segments:
             _update_project_status(username, project_id, status='error', error=translate_error or 'Translation failed')

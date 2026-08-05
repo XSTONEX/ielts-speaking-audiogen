@@ -1,8 +1,12 @@
 # ASR 校对翻译
 # 函数: _polish_and_translate()
 # 变量: segments_json
+#
+# 默认走 WildAPI；model 可用 LISTENING_LLM_MODEL 覆盖。
+# 实测 gemini-3-flash-preview 可用；gemini-3.5-flash-lite 当前 not implemented。
+# 若 LISTENING_LLM_PROVIDER=deerapi，可改回 gemini-2.5-flash。
 
-model: gemini-2.5-flash
+model: gemini-3-flash-preview
 temperature: 0.3
 response_format: json_object
 
