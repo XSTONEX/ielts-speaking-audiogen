@@ -313,6 +313,81 @@ class LearningPlatformTestCase(unittest.TestCase):
         self.assertIn("hideSelectionToolbar({ resumeAudio: false })", html)
         self.assertIn("markVocabAudioManualOverride", html)
 
+    def test_listening_template_includes_error_tag_bubbles(self):
+        response = self.client.get("/listening_review")
+
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn("error-bubble", html)
+        self.assertIn("error-rest-chip", html)
+        self.assertIn("连读弱读", html)
+        self.assertIn("同义替换", html)
+        self.assertIn("生词障碍", html)
+        self.assertIn("拼写错误", html)
+        self.assertIn("走神迟缓", html)
+        self.assertIn("/error_tag", html)
+        self.assertIn("bindErrorTagZoneAudio", html)
+        self.assertIn("beginErrorTagAudioPause", html)
+        self.assertNotIn("show-error-bubbles", html)
+        self.assertNotIn("hintErrorBubbles", html)
+
+    def test_listening_error_tag_toggles_and_persists(self):
+        self.seed_listening()
+
+        first = self.client.put(
+            "/api/listening_review/project/lr-1/error_tag",
+            json={"segment_id": 1, "tag": "liaison"},
+            headers=self.auth_headers(),
+        )
+        self.assertEqual(first.status_code, 200)
+        first_body = first.get_json()
+        self.assertTrue(first_body["success"])
+        self.assertEqual(first_body["tags"], ["liaison"])
+        self.assertEqual(first_body["error_tags"]["1"], ["liaison"])
+
+        second = self.client.put(
+            "/api/listening_review/project/lr-1/error_tag",
+            json={"segment_id": 1, "tag": "spelling"},
+            headers=self.auth_headers(),
+        )
+        self.assertEqual(second.get_json()["tags"], ["liaison", "spelling"])
+
+        off = self.client.put(
+            "/api/listening_review/project/lr-1/error_tag",
+            json={"segment_id": 1, "tag": "liaison"},
+            headers=self.auth_headers(),
+        )
+        self.assertEqual(off.get_json()["tags"], ["spelling"])
+
+        with open(os.path.join(self.paths["LISTENING_REVIEW_DIR"], "lr-1", "data.json"), encoding="utf-8") as f:
+            saved = json.load(f)
+        self.assertEqual(saved["error_tags"]["1"], ["spelling"])
+
+        loaded = self.client.get("/api/listening_review/project/lr-1", headers=self.auth_headers())
+        self.assertEqual(loaded.get_json()["data"]["error_tags"]["1"], ["spelling"])
+
+    def test_listening_error_tag_rejects_invalid_tag(self):
+        self.seed_listening()
+
+        response = self.client.put(
+            "/api/listening_review/project/lr-1/error_tag",
+            json={"segment_id": 1, "tag": "not-a-real-tag"},
+            headers=self.auth_headers(),
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("无效", response.get_json()["error"])
+
+    def test_listening_error_tag_requires_existing_segment(self):
+        self.seed_listening()
+
+        response = self.client.put(
+            "/api/listening_review/project/lr-1/error_tag",
+            json={"segment_id": 99, "tag": "vocab"},
+            headers=self.auth_headers(),
+        )
+        self.assertEqual(response.status_code, 404)
+        self.assertIn("句子不存在", response.get_json()["error"])
+
     def test_json_store_round_trips_with_atomic_save(self):
         from utils.json_store import load_json, save_json_atomic
 

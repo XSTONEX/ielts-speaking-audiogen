@@ -11,6 +11,8 @@ listening_review_bp = Blueprint('listening_review', __name__)
 
 ALLOWED_EXTENSIONS = {'.mp3', '.wav', '.m4a', '.flac', '.ogg', '.mp4', '.webm'}
 MAX_FILE_SIZE = 25 * 1024 * 1024  # 25MB
+# 收藏句错误分类; JSON 对象键一律转成字符串
+ERROR_TAG_KEYS = ('liaison', 'synonym', 'vocab', 'spelling', 'attention')
 
 
 # ==================== Helper Functions ====================
@@ -72,6 +74,30 @@ def _find_user_project(username, project_id):
         if p['id'] == project_id:
             return projects, i
     return projects, -1
+
+
+def _normalize_error_tags(raw):
+    """
+    把 error_tags 收成 {segment_id: [合法 tag, ...]}
+    未知 tag 丢弃; 空列表的句子不保留
+    """
+    if not isinstance(raw, dict):
+        return {}
+    out = {}
+    for key, value in raw.items():
+        if not isinstance(value, list):
+            continue
+        tags = [tag for tag in ERROR_TAG_KEYS if tag in value]
+        if tags:
+            out[str(key)] = tags
+    return out
+
+
+def _segment_exists(data, segment_id):
+    for seg in data.get('segments') or []:
+        if seg.get('id') == segment_id or str(seg.get('id')) == str(segment_id):
+            return True
+    return False
 
 
 def _parse_transcription_response(result, provider_label):
@@ -346,7 +372,8 @@ def _transcribe_async(project_id, audio_path, username):
             'segments': result['segments'],
             'starred_segments': [],
             'vocab_annotations': [],
-            'notes': []
+            'notes': [],
+            'error_tags': {},
         })
         _update_project_status(username, project_id, status='completed')
         print(f"Listening review done: {project_id}")
@@ -705,6 +732,58 @@ def toggle_star(project_id):
     _save_project_data(project_id, data)
 
     return jsonify({'success': True, 'starred_segments': starred})
+
+
+@listening_review_bp.route('/api/listening_review/project/<project_id>/error_tag', methods=['PUT'])
+def toggle_error_tag(project_id):
+    """
+    切换某句的一个错误分类
+    取消收藏不删分类, 再次收藏仍能看到
+    """
+    username = _get_auth_username()
+    if not username:
+        return jsonify({'error': '未登录或token无效'}), 401
+
+    projects, idx = _find_user_project(username, project_id)
+    if idx == -1:
+        return jsonify({'error': '项目不存在'}), 404
+
+    body = request.get_json(silent=True) or {}
+    segment_id = body.get('segment_id')
+    tag = body.get('tag')
+    if segment_id is None or not tag:
+        return jsonify({'error': '缺少 segment_id 或 tag'}), 400
+    if tag not in ERROR_TAG_KEYS:
+        return jsonify({'error': '无效的错误分类'}), 400
+
+    data = _load_project_data(project_id)
+    if not data:
+        return jsonify({'error': '项目数据不存在'}), 404
+    if not _segment_exists(data, segment_id):
+        return jsonify({'error': '句子不存在'}), 404
+
+    error_tags = _normalize_error_tags(data.get('error_tags', {}))
+    key = str(segment_id)
+    current = set(error_tags.get(key, []))
+    if tag in current:
+        current.remove(tag)
+    else:
+        current.add(tag)
+    ordered = [item for item in ERROR_TAG_KEYS if item in current]
+    if ordered:
+        error_tags[key] = ordered
+    else:
+        error_tags.pop(key, None)
+
+    data['error_tags'] = error_tags
+    _save_project_data(project_id, data)
+
+    return jsonify({
+        'success': True,
+        'error_tags': error_tags,
+        'segment_id': segment_id,
+        'tags': ordered,
+    })
 
 
 @listening_review_bp.route('/api/listening_review/project/<project_id>/vocab', methods=['PUT'])

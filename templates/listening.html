@@ -44,11 +44,160 @@
     body { font-family: 'PT Serif', 'Crimson Text', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif; }
 
     /* Lyrics dynamic states */
+    .lyrics-line { position: relative; overflow: visible; }
     .lyrics-line .line-text { color: #64748b; transition: color .3s, font-weight .3s; }
     .lyrics-line.active { background: rgba(239,246,255,.85); border-left: 3px solid #3b82f6; }
     .lyrics-line.active .line-text { color: #0f172a; font-weight: 600; }
     .lyrics-line.starred:not(.active) { background: linear-gradient(90deg, #fef9c3, transparent 60%); }
     .lyrics-line.active.starred { background: linear-gradient(90deg, #fef9c3 0%, rgba(239,246,255,.85) 40%); border-left: 3px solid #3b82f6; }
+    .lyrics-line.starred { padding-right: 5.75rem; }
+
+    /* 收藏句右侧错误分类: 右侧原点 + 放射状弹出 */
+    .error-tag-zone {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 88px;
+      z-index: 24;
+      pointer-events: auto;
+    }
+    .lyrics-line.starred .error-tag-zone { display: block; }
+    .lyrics-line.starred .error-tag-zone:hover {
+      width: 210px;
+      top: -108px;
+      bottom: -108px;
+      z-index: 40;
+    }
+    .lyrics-line.starred { z-index: 1; }
+    .lyrics-line.starred:hover { z-index: 6; }
+    .lyrics-line.starred::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 12px;
+      bottom: 12px;
+      width: 2px;
+      border-radius: 2px 0 0 2px;
+      background: #94a3b8;
+      opacity: .28;
+      pointer-events: none;
+      transition: opacity .2s;
+    }
+    .lyrics-line.starred:hover::after { opacity: .48; }
+
+    .error-tag-rest {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+      pointer-events: none;
+      transition: opacity .16s ease, transform .16s ease;
+    }
+    .error-tag-rest:empty { display: none; }
+    .error-rest-chip {
+      --bubble: 100 116 139;
+      font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 999px;
+      border: 1px solid rgb(var(--bubble) / .22);
+      background: rgb(var(--bubble) / .12);
+      color: rgb(var(--bubble));
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .02em;
+      line-height: 22px;
+      white-space: nowrap;
+    }
+    .lyrics-line.starred .error-tag-zone:hover .error-tag-rest {
+      opacity: 0;
+      transform: translateY(-50%) scale(.92);
+      pointer-events: none;
+    }
+
+    .error-bubbles {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      width: 0;
+      height: 0;
+      pointer-events: none;
+    }
+    .lyrics-line.starred .error-tag-zone:hover .error-bubbles { pointer-events: auto; }
+
+    .error-bubble {
+      --bubble: 100 116 139;
+      --dx: 0px;
+      --dy: 0px;
+      appearance: none;
+      position: absolute;
+      right: 0;
+      top: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+      height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      border: 1px solid rgb(var(--bubble) / .28);
+      background:
+        radial-gradient(120% 80% at 30% 18%, rgb(255 255 255 / .9), transparent 50%),
+        rgb(255 255 255 / .88);
+      color: rgb(var(--bubble));
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .01em;
+      line-height: 1;
+      white-space: nowrap;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgb(15 23 42 / .06), inset 0 1px 0 rgb(255 255 255 / .8);
+      opacity: 0;
+      transform: translate(50%, -50%) scale(.2);
+      filter: blur(1px);
+      transition:
+        opacity .24s ease,
+        transform .4s cubic-bezier(.22,1.4,.36,1),
+        filter .22s ease,
+        background .18s ease,
+        color .18s ease,
+        box-shadow .18s ease,
+        border-color .18s ease;
+      transition-delay: calc((4 - var(--i, 0)) * 24ms);
+      pointer-events: none;
+    }
+    .lyrics-line.starred .error-tag-zone:hover .error-bubble {
+      opacity: 1;
+      transform: translate(calc(50% + var(--dx)), calc(-50% + var(--dy))) scale(1);
+      filter: blur(0);
+      pointer-events: auto;
+      transition-delay: calc(var(--i, 0) * 42ms);
+    }
+    .lyrics-line.starred .error-tag-zone:hover .error-bubble:hover {
+      transform: translate(calc(50% + var(--dx)), calc(-50% + var(--dy))) scale(1.06);
+      box-shadow: 0 6px 14px rgb(15 23 42 / .1), inset 0 1px 0 rgb(255 255 255 / .9);
+    }
+    .error-bubble.selected {
+      background:
+        radial-gradient(120% 80% at 28% 14%, rgb(255 255 255 / .35), transparent 48%),
+        rgb(var(--bubble) / .9);
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 5px 12px rgb(15 23 42 / .1);
+    }
+    .error-bubble[data-tag="liaison"],
+    .error-rest-chip[data-tag="liaison"] { --bubble: 94 128 134; }
+    .error-bubble[data-tag="synonym"],
+    .error-rest-chip[data-tag="synonym"] { --bubble: 118 116 150; }
+    .error-bubble[data-tag="vocab"],
+    .error-rest-chip[data-tag="vocab"] { --bubble: 90 120 162; }
+    .error-bubble[data-tag="spelling"],
+    .error-rest-chip[data-tag="spelling"] { --bubble: 168 136 92; }
+    .error-bubble[data-tag="attention"],
+    .error-rest-chip[data-tag="attention"] { --bubble: 160 118 124; }
 
     /* Annotated word */
     .annotated-word { position: relative; background: rgba(191,219,254,.45); text-decoration: underline solid #60a5fa; text-decoration-thickness: 1.5px; text-underline-offset: 2px; cursor: help; border-radius: 3px; padding: 1px 2px; transition: background .15s; }
@@ -316,6 +465,14 @@ const state = {
   vocabAudioWasPlaying: false,
   vocabAudioManualOverride: false
 };
+
+const ERROR_TAGS = [
+  { id: 'liaison', label: '连读弱读' },
+  { id: 'synonym', label: '同义替换' },
+  { id: 'vocab', label: '生词障碍' },
+  { id: 'spelling', label: '拼写错误' },
+  { id: 'attention', label: '走神迟缓' }
+];
 
 const audioEl = document.getElementById('audioEl');
 
@@ -665,13 +822,83 @@ function renderLyrics() {
       <div class="${cls}" data-seg-id="${seg.id}" data-start="${seg.start}" data-end="${seg.end}">
         <span class="w-14 flex-shrink-0 text-slate-400 font-mono text-xs pt-0.5 text-right select-none">${formatTime(seg.start)}</span>
         <button class="star-btn flex-shrink-0 bg-transparent border-none cursor-pointer text-base p-0 leading-none mt-0.5 transition-all ${isStarred ? 'text-amber-400 opacity-100' : 'text-slate-300 opacity-0 group-hover:opacity-100 hover:text-amber-400'}" data-seg-id="${seg.id}">${isStarred ? '\u2605' : '\u2606'}</button>
-        <div class="flex-1">
+        <div class="flex-1 min-w-0 pr-2">
           <span class="line-text text-[15px] leading-relaxed select-text cursor-text" data-seg-id="${seg.id}">${textHtml}</span>
           ${translationHtml}
         </div>
+        ${renderErrorTagZone(seg.id)}
       </div>`;
   }).join('');
+
+  bindErrorTagZoneAudio();
 }
+
+function getSegmentErrorTags(segId) {
+  const all = (state.currentData && state.currentData.error_tags) || {};
+  return all[String(segId)] || all[segId] || [];
+}
+
+function fanOffset(index, total) {
+  const spread = 136 * Math.PI / 180;
+  const angle = -spread / 2 + (spread / (total - 1)) * index;
+  const radius = 92;
+  return {
+    dx: Math.round(-Math.cos(angle) * radius),
+    dy: Math.round(Math.sin(angle) * radius)
+  };
+}
+
+function errorTagLabel(id) {
+  const found = ERROR_TAGS.find(tag => tag.id === id);
+  return found ? found.label : id;
+}
+
+function renderRestChips(tagIds) {
+  return tagIds.map(id => `<span class="error-rest-chip" data-tag="${id}">${errorTagLabel(id)}</span>`).join('');
+}
+
+function renderErrorTagZone(segId) {
+  const selected = getSegmentErrorTags(segId);
+  const bubbles = ERROR_TAGS.map((tag, i) => {
+    const on = selected.includes(tag.id) ? ' selected' : '';
+    const { dx, dy } = fanOffset(i, ERROR_TAGS.length);
+    return `<button type="button" class="error-bubble${on}" data-tag="${tag.id}" data-seg-id="${segId}" style="--i:${i};--dx:${dx}px;--dy:${dy}px" title="${tag.label}">${tag.label}</button>`;
+  }).join('');
+  return `<div class="error-tag-zone" data-seg-id="${segId}"><div class="error-tag-rest">${renderRestChips(selected)}</div><div class="error-bubbles">${bubbles}</div></div>`;
+}
+
+function bindErrorTagZoneAudio() {
+  document.querySelectorAll('.error-tag-zone').forEach(zone => {
+    zone.addEventListener('mouseenter', beginErrorTagAudioPause);
+    zone.addEventListener('mouseleave', endErrorTagAudioPause);
+  });
+}
+
+function beginErrorTagAudioPause() {
+  beginVocabAudioPause();
+}
+
+function endErrorTagAudioPause() {
+  const vpop = document.getElementById('vocabPopover');
+  const npop = document.getElementById('notePopover');
+  const toolbar = document.getElementById('selectionToolbar');
+  if (vpop && !vpop.classList.contains('hidden')) return;
+  if (npop && !npop.classList.contains('hidden')) return;
+  if (toolbar && !toolbar.classList.contains('hidden')) return;
+  endVocabAudioPause();
+}
+
+function syncErrorTagUi(lineEl, segId) {
+  if (!lineEl) return;
+  const tags = getSegmentErrorTags(segId);
+  lineEl.querySelectorAll('.error-bubble').forEach(btn => {
+    btn.classList.toggle('selected', tags.includes(btn.dataset.tag));
+  });
+  const rest = lineEl.querySelector('.error-tag-rest');
+  if (rest) rest.innerHTML = renderRestChips(tags);
+}
+
+
 
 // Render a segment's text with overlap-safe vocab underlines + note highlights.
 // Both annotation types can coexist on the same characters; we split the text at
@@ -720,6 +947,18 @@ lyricsContainer.addEventListener('click', (e) => {
   if (starBtn) {
     e.stopPropagation();
     toggleStar(parseInt(starBtn.dataset.segId));
+    return;
+  }
+
+  const errorBubble = e.target.closest('.error-bubble');
+  if (errorBubble) {
+    e.stopPropagation();
+    toggleErrorTag(parseInt(errorBubble.dataset.segId), errorBubble.dataset.tag);
+    return;
+  }
+
+  if (e.target.closest('.error-tag-zone')) {
+    e.stopPropagation();
     return;
   }
 
@@ -1355,6 +1594,18 @@ async function toggleStar(segId) {
     btn.classList.toggle('opacity-100', isStarred);
     btn.classList.toggle('text-slate-300', !isStarred);
   }
+}
+
+async function toggleErrorTag(segId, tag) {
+  if (!state.currentProject || !state.currentData) return;
+  const r = await API.put(`/api/listening_review/project/${state.currentProject.id}/error_tag`, {
+    segment_id: segId,
+    tag
+  });
+  if (!r.success) { showToast(r.error || '分类失败'); return; }
+  state.currentData.error_tags = r.error_tags || {};
+  const lineEl = document.querySelector(`.lyrics-line[data-seg-id="${segId}"]`);
+  syncErrorTagUi(lineEl, segId);
 }
 
 // ===================================================================

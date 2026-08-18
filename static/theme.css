@@ -668,6 +668,33 @@ html[data-theme="dark"] body.page-listening .lyrics-line.active.starred {
   background: linear-gradient(90deg, rgba(245, 158, 11, 0.2) 0%, rgba(55, 120, 255, 0.18) 40%);
 }
 
+html[data-theme="dark"] body.page-listening .error-bubble {
+  background:
+    radial-gradient(120% 80% at 30% 18%, rgb(255 255 255 / .1), transparent 50%),
+    rgb(15 23 42 / .78);
+  color: rgb(186 198 214);
+  border-color: rgb(var(--bubble) / .38);
+  box-shadow: 0 6px 14px rgb(0 0 0 / .22), inset 0 1px 0 rgb(255 255 255 / .08);
+}
+
+html[data-theme="dark"] body.page-listening .error-bubble.selected {
+  color: #f8fafc;
+  background:
+    radial-gradient(120% 80% at 28% 14%, rgb(255 255 255 / .14), transparent 48%),
+    rgb(var(--bubble) / .78);
+  border-color: transparent;
+}
+
+html[data-theme="dark"] body.page-listening .error-rest-chip {
+  background: rgb(var(--bubble) / .2);
+  color: rgb(186 198 214);
+  border-color: rgb(var(--bubble) / .32);
+}
+
+html[data-theme="dark"] body.page-listening .lyrics-line.starred::after {
+  background: #64748b;
+}
+
 html[data-theme="dark"] body.page-listening #topBar,
 html[data-theme="dark"] body.page-listening #playerBar {
   background: rgba(10, 18, 32, 0.82) !important;
