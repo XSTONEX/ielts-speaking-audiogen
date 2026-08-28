@@ -65,9 +65,9 @@
     }
     .lyrics-line.starred .error-tag-zone { display: block; }
     .lyrics-line.starred .error-tag-zone:hover {
-      width: 210px;
-      top: -108px;
-      bottom: -108px;
+      width: 230px;
+      top: -128px;
+      bottom: -128px;
       z-index: 40;
     }
     .lyrics-line.starred { z-index: 1; }
@@ -166,7 +166,7 @@
         color .18s ease,
         box-shadow .18s ease,
         border-color .18s ease;
-      transition-delay: calc((4 - var(--i, 0)) * 24ms);
+      transition-delay: calc((6 - var(--i, 0)) * 22ms);
       pointer-events: none;
     }
     .lyrics-line.starred .error-tag-zone:hover .error-bubble {
@@ -174,7 +174,7 @@
       transform: translate(calc(50% + var(--dx)), calc(-50% + var(--dy))) scale(1);
       filter: blur(0);
       pointer-events: auto;
-      transition-delay: calc(var(--i, 0) * 42ms);
+      transition-delay: calc(var(--i, 0) * 36ms);
     }
     .lyrics-line.starred .error-tag-zone:hover .error-bubble:hover {
       transform: translate(calc(50% + var(--dx)), calc(-50% + var(--dy))) scale(1.06);
@@ -188,6 +188,8 @@
       border-color: transparent;
       box-shadow: 0 5px 12px rgb(15 23 42 / .1);
     }
+    .error-bubble[data-tag="preview"],
+    .error-rest-chip[data-tag="preview"] { --bubble: 108 132 122; }
     .error-bubble[data-tag="liaison"],
     .error-rest-chip[data-tag="liaison"] { --bubble: 94 128 134; }
     .error-bubble[data-tag="synonym"],
@@ -196,6 +198,8 @@
     .error-rest-chip[data-tag="vocab"] { --bubble: 90 120 162; }
     .error-bubble[data-tag="spelling"],
     .error-rest-chip[data-tag="spelling"] { --bubble: 168 136 92; }
+    .error-bubble[data-tag="number"],
+    .error-rest-chip[data-tag="number"] { --bubble: 140 122 108; }
     .error-bubble[data-tag="attention"],
     .error-rest-chip[data-tag="attention"] { --bubble: 160 118 124; }
 
@@ -467,10 +471,12 @@ const state = {
 };
 
 const ERROR_TAGS = [
+  { id: 'preview', label: '读题预判' },
   { id: 'liaison', label: '连读弱读' },
   { id: 'synonym', label: '同义替换' },
   { id: 'vocab', label: '生词障碍' },
   { id: 'spelling', label: '拼写错误' },
+  { id: 'number', label: '数字错误' },
   { id: 'attention', label: '走神迟缓' }
 ];
 
@@ -839,9 +845,9 @@ function getSegmentErrorTags(segId) {
 }
 
 function fanOffset(index, total) {
-  const spread = 136 * Math.PI / 180;
+  const spread = 168 * Math.PI / 180;
   const angle = -spread / 2 + (spread / (total - 1)) * index;
-  const radius = 92;
+  const radius = 108;
   return {
     dx: Math.round(-Math.cos(angle) * radius),
     dy: Math.round(Math.sin(angle) * radius)

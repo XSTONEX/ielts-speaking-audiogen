@@ -12,7 +12,7 @@ listening_review_bp = Blueprint('listening_review', __name__)
 ALLOWED_EXTENSIONS = {'.mp3', '.wav', '.m4a', '.flac', '.ogg', '.mp4', '.webm'}
 MAX_FILE_SIZE = 25 * 1024 * 1024  # 25MB
 # 收藏句错误分类; JSON 对象键一律转成字符串
-ERROR_TAG_KEYS = ('liaison', 'synonym', 'vocab', 'spelling', 'attention')
+ERROR_TAG_KEYS = ('preview', 'liaison', 'synonym', 'vocab', 'spelling', 'number', 'attention')
 
 
 # ==================== Helper Functions ====================
