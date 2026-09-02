@@ -50,7 +50,7 @@
     .lyrics-line.active .line-text { color: #0f172a; font-weight: 600; }
     .lyrics-line.starred:not(.active) { background: linear-gradient(90deg, #fef9c3, transparent 60%); }
     .lyrics-line.active.starred { background: linear-gradient(90deg, #fef9c3 0%, rgba(239,246,255,.85) 40%); border-left: 3px solid #3b82f6; }
-    .lyrics-line.starred { padding-right: 5.75rem; }
+    .lyrics-line.starred { padding-right: 6.75rem; }
 
     /* 收藏句右侧错误分类: 右侧原点 + 放射状弹出 */
     .error-tag-zone {
@@ -59,7 +59,7 @@
       right: 0;
       top: 0;
       bottom: 0;
-      width: 88px;
+      width: 108px;
       z-index: 24;
       pointer-events: auto;
     }
@@ -166,7 +166,7 @@
         color .18s ease,
         box-shadow .18s ease,
         border-color .18s ease;
-      transition-delay: calc((6 - var(--i, 0)) * 22ms);
+      transition-delay: calc((4 - var(--i, 0)) * 22ms);
       pointer-events: none;
     }
     .lyrics-line.starred .error-tag-zone:hover .error-bubble {
@@ -188,20 +188,16 @@
       border-color: transparent;
       box-shadow: 0 5px 12px rgb(15 23 42 / .1);
     }
-    .error-bubble[data-tag="preview"],
-    .error-rest-chip[data-tag="preview"] { --bubble: 108 132 122; }
-    .error-bubble[data-tag="liaison"],
-    .error-rest-chip[data-tag="liaison"] { --bubble: 94 128 134; }
-    .error-bubble[data-tag="synonym"],
-    .error-rest-chip[data-tag="synonym"] { --bubble: 118 116 150; }
+    .error-bubble[data-tag="locate"],
+    .error-rest-chip[data-tag="locate"] { --bubble: 108 132 122; }
     .error-bubble[data-tag="vocab"],
     .error-rest-chip[data-tag="vocab"] { --bubble: 90 120 162; }
+    .error-bubble[data-tag="phonetic"],
+    .error-rest-chip[data-tag="phonetic"] { --bubble: 94 128 134; }
     .error-bubble[data-tag="spelling"],
     .error-rest-chip[data-tag="spelling"] { --bubble: 168 136 92; }
-    .error-bubble[data-tag="number"],
-    .error-rest-chip[data-tag="number"] { --bubble: 140 122 108; }
-    .error-bubble[data-tag="attention"],
-    .error-rest-chip[data-tag="attention"] { --bubble: 160 118 124; }
+    .error-bubble[data-tag="distractor"],
+    .error-rest-chip[data-tag="distractor"] { --bubble: 160 118 124; }
 
     /* Annotated word */
     .annotated-word { position: relative; background: rgba(191,219,254,.45); text-decoration: underline solid #60a5fa; text-decoration-thickness: 1.5px; text-underline-offset: 2px; cursor: help; border-radius: 3px; padding: 1px 2px; transition: background .15s; }
@@ -471,13 +467,11 @@ const state = {
 };
 
 const ERROR_TAGS = [
-  { id: 'preview', label: '读题预判' },
-  { id: 'liaison', label: '连读弱读' },
-  { id: 'synonym', label: '同义替换' },
-  { id: 'vocab', label: '生词障碍' },
-  { id: 'spelling', label: '拼写错误' },
-  { id: 'number', label: '数字错误' },
-  { id: 'attention', label: '走神迟缓' }
+  { id: 'locate',     label: 'A 定位跟丢', hint: '不知道答案在哪句，音频过去了才反应' },
+  { id: 'vocab',      label: 'B 生词障碍', hint: '听到了声音但不认识这个词' },
+  { id: 'phonetic',   label: 'C 辨音失误', hint: '认识但听错：连读弱读、相似音、数字字母听混' },
+  { id: 'spelling',   label: 'D 拼写失误', hint: '听懂了但拼错、超字数、单复数、格式错' },
+  { id: 'distractor', label: 'E 干扰误选', hint: '选择题被干扰项带走，或说话人改口后没改' }
 ];
 
 const audioEl = document.getElementById('audioEl');
@@ -868,7 +862,8 @@ function renderErrorTagZone(segId) {
   const bubbles = ERROR_TAGS.map((tag, i) => {
     const on = selected.includes(tag.id) ? ' selected' : '';
     const { dx, dy } = fanOffset(i, ERROR_TAGS.length);
-    return `<button type="button" class="error-bubble${on}" data-tag="${tag.id}" data-seg-id="${segId}" style="--i:${i};--dx:${dx}px;--dy:${dy}px" title="${tag.label}">${tag.label}</button>`;
+    const title = tag.hint ? `${tag.label} — ${tag.hint}` : tag.label;
+    return `<button type="button" class="error-bubble${on}" data-tag="${tag.id}" data-seg-id="${segId}" style="--i:${i};--dx:${dx}px;--dy:${dy}px" title="${title}">${tag.label}</button>`;
   }).join('');
   return `<div class="error-tag-zone" data-seg-id="${segId}"><div class="error-tag-rest">${renderRestChips(selected)}</div><div class="error-bubbles">${bubbles}</div></div>`;
 }

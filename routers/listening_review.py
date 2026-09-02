@@ -11,8 +11,16 @@ listening_review_bp = Blueprint('listening_review', __name__)
 
 ALLOWED_EXTENSIONS = {'.mp3', '.wav', '.m4a', '.flac', '.ogg', '.mp4', '.webm'}
 MAX_FILE_SIZE = 25 * 1024 * 1024  # 25MB
-# 收藏句错误分类; JSON 对象键一律转成字符串
-ERROR_TAG_KEYS = ('preview', 'liaison', 'synonym', 'vocab', 'spelling', 'number', 'attention')
+# 收藏句错误分类 A–E; JSON 对象键一律转成字符串
+ERROR_TAG_KEYS = ('locate', 'vocab', 'phonetic', 'spelling', 'distractor')
+# 旧 id 并入 A–E; 同义替换默认 A(定位), 数字错误默认 C(辨音)
+LEGACY_ERROR_TAG_MAP = {
+    'preview': 'locate',
+    'attention': 'locate',
+    'synonym': 'locate',
+    'liaison': 'phonetic',
+    'number': 'phonetic',
+}
 
 
 # ==================== Helper Functions ====================
@@ -76,10 +84,21 @@ def _find_user_project(username, project_id):
     return projects, -1
 
 
+def _canonical_error_tag(tag):
+    """
+    新分类原样返回; 旧分类按对照表并入; 未知返回 None
+    """
+    if not isinstance(tag, str):
+        return None
+    if tag in ERROR_TAG_KEYS:
+        return tag
+    return LEGACY_ERROR_TAG_MAP.get(tag)
+
+
 def _normalize_error_tags(raw):
     """
     把 error_tags 收成 {segment_id: [合法 tag, ...]}
-    未知 tag 丢弃; 空列表的句子不保留
+    旧分类按对照表并入; 未知 tag 丢弃; 空列表的句子不保留
     """
     if not isinstance(raw, dict):
         return {}
@@ -87,10 +106,29 @@ def _normalize_error_tags(raw):
     for key, value in raw.items():
         if not isinstance(value, list):
             continue
-        tags = [tag for tag in ERROR_TAG_KEYS if tag in value]
-        if tags:
-            out[str(key)] = tags
+        present = set()
+        for tag in value:
+            mapped = _canonical_error_tag(tag)
+            if mapped:
+                present.add(mapped)
+        ordered = [tag for tag in ERROR_TAG_KEYS if tag in present]
+        if ordered:
+            out[str(key)] = ordered
     return out
+
+
+def _persist_migrated_error_tags(project_id, data):
+    """
+    读到旧分类时当场改写并落盘, 避免下次再看到旧 id
+    """
+    if not isinstance(data, dict):
+        return data
+    raw = data.get('error_tags', {})
+    migrated = _normalize_error_tags(raw)
+    if migrated != (raw if isinstance(raw, dict) else {}):
+        data['error_tags'] = migrated
+        _save_project_data(project_id, data)
+    return data
 
 
 def _segment_exists(data, segment_id):
@@ -612,6 +650,8 @@ def get_project(project_id):
 
     project = projects[idx]
     data = _load_project_data(project_id)
+    if data is not None:
+        data = _persist_migrated_error_tags(project_id, data)
 
     return jsonify({
         'success': True,
@@ -750,10 +790,10 @@ def toggle_error_tag(project_id):
 
     body = request.get_json(silent=True) or {}
     segment_id = body.get('segment_id')
-    tag = body.get('tag')
-    if segment_id is None or not tag:
+    tag = _canonical_error_tag(body.get('tag'))
+    if segment_id is None or not body.get('tag'):
         return jsonify({'error': '缺少 segment_id 或 tag'}), 400
-    if tag not in ERROR_TAG_KEYS:
+    if not tag:
         return jsonify({'error': '无效的错误分类'}), 400
 
     data = _load_project_data(project_id)

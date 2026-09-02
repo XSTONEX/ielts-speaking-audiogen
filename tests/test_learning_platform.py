@@ -320,13 +320,16 @@ class LearningPlatformTestCase(unittest.TestCase):
         html = response.get_data(as_text=True)
         self.assertIn("error-bubble", html)
         self.assertIn("error-rest-chip", html)
-        self.assertIn("读题预判", html)
-        self.assertIn("连读弱读", html)
-        self.assertIn("同义替换", html)
-        self.assertIn("生词障碍", html)
-        self.assertIn("拼写错误", html)
-        self.assertIn("数字错误", html)
-        self.assertIn("走神迟缓", html)
+        self.assertIn("A 定位跟丢", html)
+        self.assertIn("B 生词障碍", html)
+        self.assertIn("C 辨音失误", html)
+        self.assertIn("D 拼写失误", html)
+        self.assertIn("E 干扰误选", html)
+        self.assertNotIn("读题预判", html)
+        self.assertNotIn("走神迟缓", html)
+        self.assertNotIn("id: 'preview'", html)
+        self.assertNotIn("id: 'liaison'", html)
+        self.assertNotIn("id: 'attention'", html)
         self.assertIn("/error_tag", html)
         self.assertIn("bindErrorTagZoneAudio", html)
         self.assertIn("beginErrorTagAudioPause", html)
@@ -338,25 +341,25 @@ class LearningPlatformTestCase(unittest.TestCase):
 
         first = self.client.put(
             "/api/listening_review/project/lr-1/error_tag",
-            json={"segment_id": 1, "tag": "liaison"},
+            json={"segment_id": 1, "tag": "phonetic"},
             headers=self.auth_headers(),
         )
         self.assertEqual(first.status_code, 200)
         first_body = first.get_json()
         self.assertTrue(first_body["success"])
-        self.assertEqual(first_body["tags"], ["liaison"])
-        self.assertEqual(first_body["error_tags"]["1"], ["liaison"])
+        self.assertEqual(first_body["tags"], ["phonetic"])
+        self.assertEqual(first_body["error_tags"]["1"], ["phonetic"])
 
         second = self.client.put(
             "/api/listening_review/project/lr-1/error_tag",
             json={"segment_id": 1, "tag": "spelling"},
             headers=self.auth_headers(),
         )
-        self.assertEqual(second.get_json()["tags"], ["liaison", "spelling"])
+        self.assertEqual(second.get_json()["tags"], ["phonetic", "spelling"])
 
         off = self.client.put(
             "/api/listening_review/project/lr-1/error_tag",
-            json={"segment_id": 1, "tag": "liaison"},
+            json={"segment_id": 1, "tag": "phonetic"},
             headers=self.auth_headers(),
         )
         self.assertEqual(off.get_json()["tags"], ["spelling"])
@@ -389,6 +392,35 @@ class LearningPlatformTestCase(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 404)
         self.assertIn("句子不存在", response.get_json()["error"])
+
+    def test_listening_error_tags_migrate_legacy_ids_on_get(self):
+        self.seed_listening()
+        path = os.path.join(self.paths["LISTENING_REVIEW_DIR"], "lr-1", "data.json")
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        data["error_tags"] = {
+            "1": ["preview", "attention", "synonym", "liaison", "number", "vocab", "spelling"]
+        }
+        self.write_json(path, data)
+
+        loaded = self.client.get("/api/listening_review/project/lr-1", headers=self.auth_headers())
+        tags = loaded.get_json()["data"]["error_tags"]["1"]
+        self.assertEqual(tags, ["locate", "vocab", "phonetic", "spelling"])
+
+        with open(path, encoding="utf-8") as f:
+            saved = json.load(f)
+        self.assertEqual(saved["error_tags"]["1"], ["locate", "vocab", "phonetic", "spelling"])
+
+    def test_listening_error_tag_accepts_legacy_id(self):
+        self.seed_listening()
+
+        response = self.client.put(
+            "/api/listening_review/project/lr-1/error_tag",
+            json={"segment_id": 1, "tag": "liaison"},
+            headers=self.auth_headers(),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["tags"], ["phonetic"])
 
     def test_json_store_round_trips_with_atomic_save(self):
         from utils.json_store import load_json, save_json_atomic
