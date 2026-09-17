@@ -1111,7 +1111,7 @@ html[data-theme="dark"] .wp-hl-toolbar { --wp-accent: #8a95ff; }
 
   <!-- ==================== Small Essay Views ==================== -->
   <div id="smallChartTypesView" style="display:none;">
-    <button class="back-btn" onclick="backToEntry()">&larr; 返回写作首页</button>
+    <button class="back-btn nav-back" onclick="goBack()">&larr; 返回</button>
     <h2 style="font-size:18px; margin-bottom:4px;">小作文仿写</h2>
     <p style="font-size:13px; color:var(--text3); margin-bottom:16px;">选择图表类型开始练习</p>
     <div id="chartTypeGrid" class="chart-type-grid"></div>
@@ -1119,14 +1119,14 @@ html[data-theme="dark"] .wp-hl-toolbar { --wp-accent: #8a95ff; }
 
   <div id="smallExampleListView" style="display:none;">
     <div class="breadcrumb" id="smallExListBreadcrumb"></div>
-    <button class="back-btn" onclick="backToChartTypes()">&larr; 返回图表类型</button>
+    <button class="back-btn nav-back" onclick="goBack()">&larr; 返回</button>
     <h2 id="smallExListTitle" style="font-size:18px; margin-bottom:4px;"></h2>
     <div id="smallExampleList" class="sub-list"></div>
   </div>
 
   <div id="smallLearnView" style="display:none;">
     <div class="breadcrumb" id="smallLearnBreadcrumb"></div>
-    <button class="back-btn" onclick="backToExampleList()">&larr; 返回题目列表</button>
+    <button class="back-btn nav-back" onclick="goBack()">&larr; 返回</button>
     <div class="question-area">
       <div id="smallLearnQuestionText" class="question-text"></div>
       <div id="smallLearnChartSubtypeBadge" class="chart-subtype-badge"></div>
@@ -1143,7 +1143,7 @@ html[data-theme="dark"] .wp-hl-toolbar { --wp-accent: #8a95ff; }
 
   <div id="smallPracticeView" style="display:none;">
     <div class="breadcrumb" id="smallPracticeBreadcrumb"></div>
-    <button class="back-btn" onclick="backToExampleList()">&larr; 返回题目列表</button>
+    <button class="back-btn nav-back" onclick="goBack()">&larr; 返回</button>
     <div class="question-area">
       <div id="smallPracticeQuestionText" class="question-text"></div>
       <div id="smallPracticeChartSubtypeBadge" class="chart-subtype-badge"></div>
@@ -1162,7 +1162,7 @@ html[data-theme="dark"] .wp-hl-toolbar { --wp-accent: #8a95ff; }
   <div id="directoryView" style="display:none;">
     <div id="catGrid" class="cat-grid"></div>
     <div id="subSection" style="display:none;">
-      <button class="back-btn" onclick="showCategories()">&#8592; 返回分类</button>
+      <button class="back-btn nav-back" onclick="goBack()">&larr; 返回</button>
       <h2 id="catTitle" style="font-size:18px; margin-bottom:14px;"></h2>
       <div id="subList" class="sub-list"></div>
     </div>
@@ -1170,7 +1170,7 @@ html[data-theme="dark"] .wp-hl-toolbar { --wp-accent: #8a95ff; }
 
   <div id="learningView" style="display:none;">
     <div class="breadcrumb" id="learnBreadcrumb"></div>
-    <button class="back-btn" onclick="backToDirectory()">&#8592; 返回目录</button>
+    <button class="back-btn nav-back" onclick="goBack()">&larr; 返回</button>
     <h2 class="learn-title" id="learnTitle"></h2>
 
     <div class="card" style="margin-bottom:16px;">
@@ -1189,7 +1189,7 @@ html[data-theme="dark"] .wp-hl-toolbar { --wp-accent: #8a95ff; }
 
   <div id="practiceView" style="display:none;">
     <div class="breadcrumb" id="pracBreadcrumb"></div>
-    <button class="back-btn" onclick="backToDirectory()">&#8592; 返回目录</button>
+    <button class="back-btn nav-back" onclick="goBack()">&larr; 返回</button>
     <div class="practice-header">
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
         <span style="font-size:12px; color:var(--text3); text-transform:uppercase; letter-spacing:.5px;">当前例题</span>
@@ -1209,7 +1209,7 @@ html[data-theme="dark"] .wp-hl-toolbar { --wp-accent: #8a95ff; }
 
   <!-- ==================== 模板写作 Views ==================== -->
   <div id="tplBigTypesView" style="display:none;">
-    <button class="back-btn" onclick="backToEntry()">&larr; 返回写作首页</button>
+    <button class="back-btn nav-back" onclick="goBack()">&larr; 返回</button>
     <h2 style="font-size:18px; margin-bottom:4px;">大作文 · 模板写作</h2>
     <p class="tpl-hint">先看模板骨架和范文怎么填，再逐段自己填一遍。</p>
     <div id="tplBigTypeGrid" class="tpl-type-grid"></div>
@@ -1219,21 +1219,21 @@ html[data-theme="dark"] .wp-hl-toolbar { --wp-accent: #8a95ff; }
 
   <div id="tplBigSamplesView" style="display:none;">
     <div class="breadcrumb" id="tplBigSamplesCrumb"></div>
-    <button class="back-btn" onclick="Tpl.enterBig()">&larr; 返回题型</button>
+    <button class="back-btn nav-back" onclick="goBack()">&larr; 返回</button>
     <div id="tplBigSamplesHead"></div>
     <div id="tplBigSamplesGrid" class="tpl-type-grid"></div>
   </div>
 
   <div id="tplSmallExamplesView" style="display:none;">
     <div class="breadcrumb" id="tplSmallExCrumb"></div>
-    <button class="back-btn" onclick="Tpl.backToSections()">&larr; 返回段落</button>
+    <button class="back-btn nav-back" onclick="goBack()">&larr; 返回</button>
     <div id="tplSmallExHead"></div>
     <div id="tplSmallExGrid" class="tpl-type-grid"></div>
   </div>
 
   <div id="tplBigLearnView" style="display:none;">
     <div class="breadcrumb" id="tplBigLearnCrumb"></div>
-    <button class="back-btn" onclick="Tpl.backToSamples()">&larr; 返回范文列表</button>
+    <button class="back-btn nav-back" onclick="goBack()">&larr; 返回</button>
     <div id="tplBigLearnHead"></div>
     <div class="tpl-toolbar" id="tplBigLearnToolbar"></div>
     <div id="tplBigLearnBody"></div>
@@ -1241,12 +1241,12 @@ html[data-theme="dark"] .wp-hl-toolbar { --wp-accent: #8a95ff; }
 
   <div id="tplBigPracticeView" style="display:none;">
     <div class="breadcrumb" id="tplBigPracCrumb"></div>
-    <button class="back-btn" onclick="Tpl.backToSamples()">&larr; 返回范文列表</button>
+    <button class="back-btn nav-back" onclick="goBack()">&larr; 返回</button>
     <div id="tplBigPracBody"></div>
   </div>
 
   <div id="tplSmallChartsView" style="display:none;">
-    <button class="back-btn" onclick="backToEntry()">&larr; 返回写作首页</button>
+    <button class="back-btn nav-back" onclick="goBack()">&larr; 返回</button>
     <h2 style="font-size:18px; margin-bottom:4px;">小作文 · 模板写作</h2>
     <p class="tpl-hint">选图表类型，再选要练的段落。</p>
     <div id="tplSmallChartGrid" class="tpl-type-grid"></div>
@@ -1254,7 +1254,7 @@ html[data-theme="dark"] .wp-hl-toolbar { --wp-accent: #8a95ff; }
 
   <div id="tplSmallSectionsView" style="display:none;">
     <div class="breadcrumb" id="tplSmallSecCrumb"></div>
-    <button class="back-btn" onclick="Tpl.enterSmall()">&larr; 返回图表类型</button>
+    <button class="back-btn nav-back" onclick="goBack()">&larr; 返回</button>
     <h2 id="tplSmallSecTitle" style="font-size:18px; margin-bottom:4px;"></h2>
     <p class="tpl-hint">每一段都有自己的句型库，先学后练。</p>
     <div id="tplSmallSecGrid" class="tpl-type-grid"></div>
@@ -1264,20 +1264,20 @@ html[data-theme="dark"] .wp-hl-toolbar { --wp-accent: #8a95ff; }
 
   <div id="tplSmallLearnView" style="display:none;">
     <div class="breadcrumb" id="tplSmallLearnCrumb"></div>
-    <button class="back-btn" onclick="Tpl.backToPracticeList()">&larr; 返回例题列表</button>
+    <button class="back-btn nav-back" onclick="goBack()">&larr; 返回</button>
     <div id="tplSmallLearnHead"></div>
     <div id="tplSmallLearnBody"></div>
   </div>
 
   <div id="tplSmallPracticeView" style="display:none;">
     <div class="breadcrumb" id="tplSmallPracCrumb"></div>
-    <button class="back-btn" onclick="Tpl.backToPracticeList()">&larr; 返回例题列表</button>
+    <button class="back-btn nav-back" onclick="goBack()">&larr; 返回</button>
     <div id="tplSmallPracBody"></div>
   </div>
 
   <div id="tplRefView" style="display:none;">
     <div class="breadcrumb" id="tplRefCrumb"></div>
-    <button class="back-btn" onclick="Tpl.backFromRef()">&larr; 返回</button>
+    <button class="back-btn nav-back" onclick="goBack()">&larr; 返回</button>
     <h2 id="tplRefTitle" style="font-size:18px; margin-bottom:12px;"></h2>
     <div id="tplRefBody"></div>
   </div>
@@ -1443,15 +1443,74 @@ const ALL_VIEWS = ['entryView','directoryView','learningView','practiceView',
                    'tplSmallChartsView','tplSmallSectionsView','tplSmallExamplesView',
                    'tplSmallLearnView','tplSmallPracticeView','tplRefView'];
 
+/* ==================== 页面导航栈 ====================
+   原来每个返回按钮都写死目的地，所以"从学习页进实战、再返回"会跳回列表，
+   老思维链更是从实战直接回到分类网格，跨了两级。
+   这里记录真实的访问路径，返回就是回到上一个页面。
+   与浏览器历史一比一挂钩：按钮只调 history.back()，恢复统一在 popstate 里做。 */
+var Nav = {
+  stack: [],        // 每项 {restore, label}：怎么回到那一页、那一页叫什么
+  current: null,
+  replaying: false,
+
+  // 进入某一页时登记"怎么重进这一页"，并把上一页压栈
+  enter(restore, label) {
+    const entry = { restore, label: label || '' };
+    if (this.replaying) { this.current = entry; return; }
+    if (this.current) {
+      this.stack.push(this.current);
+      try { history.pushState({ navDepth: this.stack.length }, ''); } catch (e) {}
+    }
+    this.current = entry;
+  },
+
+  // 回到上一页。只被 popstate 调用，自己不动 history，避免和浏览器打架
+  back() {
+    const prev = this.stack.pop();
+    if (!prev) return false;
+    this.replaying = true;
+    try { prev.restore(); } finally { this.replaying = false; }
+    this.current = prev;
+    updateBackLabel();
+    return true;
+  },
+
+  reset() { this.stack = []; this.current = null; },
+  prevLabel() {
+    const top = this.stack[this.stack.length - 1];
+    return top ? top.label : '';
+  }
+};
+
+// 返回按钮：交给浏览器历史，popstate 里统一恢复，这样两边永远一致
+function goBack() {
+  if (Nav.stack.length) history.back();
+  else backToEntry();
+}
+
+// 按钮文案跟着上一页走，不再写死"返回目录"
+function updateBackLabel() {
+  const label = Nav.prevLabel();
+  document.querySelectorAll('.nav-back').forEach(btn => {
+    btn.textContent = label ? `\u2190 返回${label}` : '\u2190 返回写作首页';
+  });
+}
+
+window.addEventListener('popstate', () => {
+  if (!Nav.back() && Nav.current) backToEntry();
+});
+
 function switchView(view) {
   ALL_VIEWS.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
   const el = document.getElementById(view);
   if (el) el.style.display = '';
   // Update nav buttons
   document.querySelectorAll('.nav-btn[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === 'entry' && view === 'entryView'));
+  updateBackLabel();
 }
 
 function backToEntry() {
+  Nav.reset();
   state.activeModule = null;
   resetSmallState();
   switchView('entryView');
@@ -1460,13 +1519,17 @@ function backToEntry() {
 
 /* ==================== Entry Functions ==================== */
 function enterBigChain() {
+  Nav.enter(() => enterBigChain(), '分类');
   state.activeModule = 'big_chain';
   document.getElementById('pageTitle').textContent = '写作思维链';
   loadCategories();
+  document.getElementById('catGrid').style.display = '';
+  document.getElementById('subSection').style.display = 'none';
   switchView('directoryView');
 }
 
 function enterSmallFangxie() {
+  Nav.enter(() => enterSmallFangxie(), '图表类型');
   state.activeModule = 'small_fangxie';
   document.getElementById('pageTitle').textContent = '小作文仿写';
   loadChartTypes();
@@ -1495,6 +1558,7 @@ function renderChartTypes() {
 
 /* ==================== Small Essay: Example List ==================== */
 async function enterChartType(typeIdx) {
+  Nav.enter(() => enterChartType(typeIdx), '题目列表');
   state.small.currentTypeIdx = typeIdx;
   resetSmallState();
   const data = await API.get(`/api/writing/small/chart_type/${typeIdx}`);
@@ -1550,6 +1614,7 @@ function renderSmallBreadcrumb(prefix, suffix) {
 }
 
 async function enterSmallLearning(typeIdx, exIdx) {
+  Nav.enter(() => enterSmallLearning(typeIdx, exIdx), '学习');
   resetSmallState();
   state.small.currentTypeIdx = typeIdx;
   state.small.currentExampleIdx = exIdx;
@@ -1564,6 +1629,7 @@ async function enterSmallLearning(typeIdx, exIdx) {
 }
 
 async function enterSmallPractice(typeIdx, exIdx) {
+  Nav.enter(() => enterSmallPractice(typeIdx, exIdx), '实战');
   resetSmallState();
   state.small.currentTypeIdx = typeIdx;
   state.small.currentExampleIdx = exIdx;
@@ -2116,6 +2182,8 @@ function renderCategories() {
 function showCategories() { renderCategories(); }
 
 async function selectCategory(idx) {
+  Nav.enter(() => selectCategory(idx), '子分类');
+  switchView('directoryView');
   state.currentCat = idx;
   const cat = state.categories[idx];
   document.getElementById('catGrid').style.display = 'none';
@@ -2140,6 +2208,7 @@ async function selectCategory(idx) {
 }
 
 async function enterLearning(catIdx, subIdx) {
+  Nav.enter(() => enterLearning(catIdx, subIdx), '学习');
   state.currentCat = catIdx; state.currentSub = subIdx;
   const data = await API.get(`/api/writing/subcategory/${catIdx}/${subIdx}`);
   state.subData = data;
@@ -2189,6 +2258,7 @@ function toggleExample(header) { header.classList.toggle('open'); header.nextEle
 function copyText(text, e) { e.stopPropagation(); navigator.clipboard.writeText(text); const el = e.target; el.textContent = '✓'; setTimeout(() => el.innerHTML = '&#x2398;', 1000); }
 
 async function enterPractice(catIdx, subIdx) {
+  Nav.enter(() => enterPractice(catIdx, subIdx), '实战');
   state.currentCat = catIdx; state.currentSub = subIdx;
   state.currentExIdx = 0; state.activeSentIdx = -1; state.sentResults = {};
   const data = await API.get(`/api/writing/subcategory/${catIdx}/${subIdx}`);
@@ -3770,6 +3840,7 @@ var Tpl = {
 
   /* ==================== 大作文：题型列表 ==================== */
   async enterBig() {
+    Nav.enter(() => Tpl.enterBig(), '题型');
     state.activeModule = 'tpl_big';
     document.getElementById('pageTitle').textContent = '大作文 · 模板写作';
     switchView('tplBigTypesView');
@@ -3805,6 +3876,7 @@ var Tpl = {
 
   /* ==================== 大作文：学习（模板 + 范文对照） ==================== */
   async openType(typeId) {
+    Nav.enter(() => Tpl.openType(typeId), '范文列表');
     switchView('tplBigSamplesView');
     document.getElementById('tplBigSamplesGrid').innerHTML = '<div class="tpl-hint">加载中…</div>';
     const data = await API.get(`/api/writing/template/big/${typeId}`);
@@ -3851,12 +3923,14 @@ var Tpl = {
   },
 
   openLearnFor(si, vi) {
+    Nav.enter(() => Tpl.openLearnFor(si, vi), '模板与范文');
     this.s.sampleIdx = Number(si); this.s.versionIdx = Number(vi);
     this.syncVariantToSample();
     switchView('tplBigLearnView');
     this.renderBigLearn();
   },
   openPracticeFor(si, vi) {
+    Nav.enter(() => Tpl.openPracticeFor(si, vi), '实战');
     this.s.sampleIdx = Number(si); this.s.versionIdx = Number(vi);
     this.syncVariantToSample();
     this.startBigPractice();
@@ -4236,6 +4310,7 @@ var Tpl = {
 
   /* ==================== 小作文 ==================== */
   async enterSmall() {
+    Nav.enter(() => Tpl.enterSmall(), '图表类型');
     state.activeModule = 'tpl_small';
     document.getElementById('pageTitle').textContent = '小作文 · 模板写作';
     switchView('tplSmallChartsView');
@@ -4261,6 +4336,7 @@ var Tpl = {
   },
 
   async openChart(chartId) {
+    Nav.enter(() => Tpl.openChart(chartId), '段落');
     switchView('tplSmallSectionsView');
     document.getElementById('tplSmallSecGrid').innerHTML = '<div class="tpl-hint">加载中…</div>';
     const data = await API.get(`/api/writing/template/small/${chartId}`);
@@ -4301,6 +4377,7 @@ var Tpl = {
   // 某个段落下的例题列表：每道例题一张卡，各自独立记进度
   async openSection(sectionId) {
     if (!this.s.chartData) { this.enterSmall(); return; }
+    Nav.enter(() => Tpl.openSection(sectionId), '例题列表');
     this.s.sectionId = sectionId;
     const c = this.s.chartData;
     switchView('tplSmallExamplesView');
@@ -4393,6 +4470,7 @@ var Tpl = {
 
   // exampleIdx 传 -1 表示只看句型库，不挂例题
   openSmallLearn(exampleIdx) {
+    Nav.enter(() => Tpl.openSmallLearn(exampleIdx), Number(exampleIdx) < 0 ? '句型库' : '学习');
     const c = this.s.chartData, sec = this.findSection(this.s.sectionId);
     this.s.exampleIdx = Number(exampleIdx);
     const ex = this.s.examples[this.s.exampleIdx];
@@ -4445,6 +4523,7 @@ var Tpl = {
   },
 
   openSmallPractice(exampleIdx) {
+    Nav.enter(() => Tpl.openSmallPractice(exampleIdx), '实战');
     this.s.exampleIdx = Number(exampleIdx);
     if (!this.s.examples[this.s.exampleIdx]) { alert('这一段暂时没有可练的例题'); return; }
     switchView('tplSmallPracticeView');
@@ -4568,6 +4647,7 @@ var Tpl = {
 
   /* ==================== 参考资料 ==================== */
   async openRef(refId, backView) {
+    Nav.enter(() => Tpl.openRef(refId, backView), '参考资料');
     this.s.refFrom = backView;
     switchView('tplRefView');
     document.getElementById('tplRefBody').innerHTML = '<div class="tpl-hint">加载中…</div>';
