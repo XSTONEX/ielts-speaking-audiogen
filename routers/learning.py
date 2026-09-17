@@ -71,9 +71,18 @@ def _all_vocab_words():
     return words
 
 
+def _writing_title(record):
+    """三栈写作记录的字段名不同，统一取一个能认出来的标题。"""
+    if record.get("writing_type") == "template":
+        parts = [p for p in (record.get("type_name"), record.get("section_name")) if p]
+        return " · ".join(parts) if parts else "模板写作"
+    return record.get("subcategory") or record.get("example_name") or "写作练习"
+
+
 def _load_writing_records(username):
     records = []
-    for suffix, label in (("practice", "task2"), ("small_practice", "task1")):
+    for suffix, label in (("practice", "task2"), ("small_practice", "task1"),
+                          ("template_practice", "template")):
         for record in load_json(_writing_path(username, suffix), []):
             if isinstance(record, dict):
                 records.append({**record, "writing_type": label})
@@ -101,8 +110,8 @@ def _recent_activity(vocab_words, writing_records, listening_projects):
         activities.append(
             {
                 "type": "writing",
-                "title": record.get("subcategory") or record.get("example_name") or "写作练习",
-                "description": record.get("target_chinese", ""),
+                "title": _writing_title(record),
+                "description": record.get("target_chinese") or record.get("question", ""),
                 "timestamp": record.get("timestamp", ""),
                 "url": "/writing_practice",
             }
@@ -134,8 +143,9 @@ def _writing_review_items(records):
                 "id": record.get("id"),
                 "source": "writing",
                 "priority": "high" if score < 5.5 else "medium",
-                "title": record.get("target_chinese", "写作句子复习"),
-                "description": (record.get("feedback") or {}).get("feedback_summary", ""),
+                "title": record.get("target_chinese") or _writing_title(record),
+                "description": ((record.get("feedback") or {}).get("feedback_summary", "")
+                                or record.get("question", "")),
                 "score": score,
                 "url": "/writing_practice",
                 "created_at": record.get("timestamp", ""),
@@ -400,15 +410,17 @@ def export_writing():
     records = _load_writing_records(request.username)
     lines = ["# Writing Practice Export", ""]
     for record in sorted(records, key=lambda item: item.get("timestamp", ""), reverse=True):
-        title = record.get("subcategory") or record.get("example_name") or record.get("category") or "Practice"
+        title = (record.get("subcategory") or record.get("example_name")
+                 or record.get("section_name") or record.get("category")
+                 or record.get("type_name") or "Practice")
         lines.extend(
             [
                 f"## {title}",
                 "",
                 f"- Time: {record.get('timestamp', '')}",
                 f"- Score: {record.get('score', '')}",
-                f"- Target: {record.get('target_chinese', '')}",
-                f"- User: {record.get('user_translation', '')}",
+                f"- Target: {record.get('target_chinese', '') or record.get('question', '')}",
+                f"- User: {record.get('user_translation', '') or record.get('user_text', '')}",
                 f"- Native: {record.get('native_version', '')}",
                 "",
             ]

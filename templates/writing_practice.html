@@ -942,6 +942,124 @@ html[data-theme="dark"] .wp-hl-toolbar { --wp-accent: #8a95ff; }
   .ai-chat-window { width: calc(100vw - 16px); height: 70vh; left: 8px !important; right: 8px !important; }
   .ai-float-btn { right: 16px; bottom: 72px; padding: 10px 16px; font-size: 12px; }
 }
+
+/* ==================== 模板写作 ==================== */
+.tpl-hint { font-size:13px; color:var(--text3); margin-bottom:16px; }
+.tpl-type-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px; margin-bottom:22px; }
+.tpl-type-card { background:var(--card); border:1.5px solid var(--border); border-radius:var(--radius); padding:16px 18px; cursor:pointer; transition:all .18s; position:relative; overflow:hidden; z-index:0; }
+.tpl-type-card::after { content:''; position:absolute; inset:0; border-radius:inherit; background:linear-gradient(90deg,var(--progress-bg-start) 0%,var(--progress-bg-end) 100%); z-index:-1; transition:clip-path .4s ease; clip-path:var(--prog-clip, inset(0 100% 0 0)); }
+.tpl-type-card:hover { border-color:var(--accent); transform:translateY(-2px); box-shadow:var(--shadow-lg); }
+.tpl-type-name { font-size:16px; font-weight:700; margin-bottom:4px; }
+.tpl-card-sub { font-size:12.5px; color:var(--text2); line-height:1.6; margin-bottom:6px;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.tpl-card-prog { display:flex; align-items:center; gap:8px; margin-top:10px; }
+.tpl-card-prog .bar { flex:1; height:5px; border-radius:999px; background:var(--border); overflow:hidden; }
+.tpl-card-prog .bar i { display:block; height:100%; border-radius:999px; background:linear-gradient(90deg,var(--accent),#0ea5e9); transition:width .4s ease; }
+.tpl-card-prog .num { font-size:11px; color:var(--text3); white-space:nowrap; }
+.tpl-card-prog.full .bar i { background:var(--green); }
+.tpl-card-prog.full .num { color:var(--green); font-weight:600; }
+.tpl-card-actions { display:flex; gap:8px; margin-top:12px; }
+.tpl-card-actions .mode-btn { flex:1; }
+.tpl-type-feature { font-size:12px; color:var(--text3); line-height:1.5; min-height:32px; }
+.tpl-type-meta { font-size:11px; color:var(--text3); margin-top:8px; display:flex; gap:8px; flex-wrap:wrap; }
+.tpl-badge { display:inline-block; padding:1px 7px; border-radius:999px; background:var(--accent-light); color:var(--accent); font-size:11px; font-weight:600; }
+.tpl-badge.warn { background:#fef3c7; color:#b45309; }
+.tpl-badge.done { background:var(--green-light); color:var(--green); }
+.tpl-ref-list { display:flex; flex-wrap:wrap; gap:8px; }
+.tpl-ref-chip { padding:6px 12px; border:1.5px solid var(--border); border-radius:999px; background:var(--card); font-size:12px; color:var(--text2); cursor:pointer; transition:all .15s; }
+.tpl-ref-chip:hover { border-color:var(--accent); color:var(--accent); }
+
+.tpl-toolbar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:14px; }
+/* 题目要醒目：字号、字重都比正文高一档 */
+.tpl-question { font-size:16.5px; font-weight:700; line-height:1.6; color:var(--text); }
+.tpl-prac-head { display:flex; gap:14px; align-items:flex-start; }
+.tpl-prac-head .q { flex:1; min-width:0; }
+.tpl-thumb { flex:0 0 auto; width:170px; max-height:118px; object-fit:contain; border-radius:8px; border:1.5px solid var(--border); background:#fff; cursor:zoom-in; transition:border-color .15s; }
+.tpl-thumb:hover { border-color:var(--accent); }
+.tpl-section-card { background:var(--card); border:1.5px solid var(--border); border-radius:var(--radius); padding:16px 18px; margin-bottom:14px; }
+.tpl-section-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+.tpl-section-name { font-size:14px; font-weight:700; }
+.tpl-section-note { font-size:12px; color:#b45309; background:#fffbeb; border-left:3px solid #f59e0b; padding:6px 10px; border-radius:0 6px 6px 0; margin-bottom:10px; line-height:1.6; }
+.tpl-cmp { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.tpl-cmp-col-title { font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; }
+.tpl-row { padding:7px 0; border-bottom:1px dashed var(--border); }
+.tpl-row:last-child { border-bottom:none; }
+.tpl-sent { font-size:13.5px; line-height:1.75; color:var(--text); }
+.tpl-sent.empty { color:var(--text3); font-style:italic; }
+.tpl-slot { display:inline; padding:1px 6px; margin:0 1px; border-radius:5px; background:var(--accent-light); color:var(--accent); font-weight:600; font-size:12.5px; }
+.tpl-fill { background:#dcfce7; color:#166534; border-radius:5px; padding:1px 4px; font-weight:600; }
+.tpl-pairs { margin-top:6px; display:flex; flex-direction:column; gap:3px; }
+.tpl-pair { font-size:12px; color:var(--text2); line-height:1.6; }
+.tpl-pair b { color:var(--accent); font-weight:600; }
+
+.tpl-step-bar { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+.tpl-step { padding:6px 12px; border:1.5px solid var(--border); border-radius:8px; background:var(--card); font-size:12.5px; color:var(--text2); cursor:pointer; transition:all .15s; }
+.tpl-step:hover { border-color:var(--accent); color:var(--accent); }
+.tpl-step.active { border-color:var(--accent); background:var(--accent); color:#fff; }
+.tpl-step.done { border-color:var(--green); color:var(--green); }
+.tpl-step.active.done { background:var(--green); border-color:var(--green); color:#fff; }
+.tpl-preview { background:#f8fafc; border:1.5px dashed var(--border); border-radius:10px; padding:14px 16px; font-size:14px; line-height:1.9; color:var(--text); white-space:pre-wrap; }
+.tpl-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:12px; }
+.tpl-btn { padding:8px 18px; border-radius:8px; border:1.5px solid var(--accent); background:var(--accent); color:#fff; font-size:13px; font-weight:600; cursor:pointer; transition:all .15s; }
+.tpl-btn:hover { filter:brightness(1.08); }
+.tpl-btn:disabled { opacity:.55; cursor:not-allowed; }
+.tpl-btn.ghost { background:var(--card); color:var(--text2); border-color:var(--border); }
+.tpl-btn.ghost:hover { border-color:var(--accent); color:var(--accent); filter:none; }
+.tpl-result { margin-top:14px; }
+.tpl-score { display:inline-flex; align-items:baseline; gap:6px; font-size:26px; font-weight:800; color:var(--accent); }
+.tpl-score span { font-size:12px; font-weight:600; color:var(--text3); }
+.tpl-fb-block { margin-top:12px; }
+.tpl-fb-title { font-size:12px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; }
+.tpl-slot-fb { border-left:3px solid var(--border); padding:6px 0 6px 10px; margin-bottom:6px; font-size:13px; line-height:1.7; }
+.tpl-slot-fb b { color:var(--text); }
+.tpl-corr { font-size:13px; line-height:1.8; padding:6px 0; border-bottom:1px dashed var(--border); }
+.tpl-corr:last-child { border-bottom:none; }
+.tpl-corr .bad { color:#b91c1c; text-decoration:line-through; }
+.tpl-corr .good { color:#166534; font-weight:600; }
+.tpl-corr .why { color:var(--text3); font-size:12px; }
+.tpl-group { margin-bottom:16px; }
+.tpl-group-label { font-size:13px; font-weight:700; color:var(--text); margin-bottom:8px; padding-left:8px; border-left:3px solid var(--accent); }
+.tpl-pattern { padding:8px 10px; border-radius:8px; transition:background .15s; cursor:pointer; }
+.tpl-pattern:hover { background:var(--accent-light); }
+.tpl-pattern-cn { font-size:12.5px; color:var(--text3); margin-bottom:2px; }
+.tpl-pattern-en { font-size:13.5px; color:var(--text); line-height:1.7; }
+.tpl-note { font-size:12px; color:var(--text3); line-height:1.7; background:#f8fafc; border-radius:6px; padding:8px 10px; margin-bottom:8px; }
+.tpl-textarea { width:100%; min-height:92px; padding:12px 14px; border:1.5px solid var(--border); border-radius:10px; font-size:14px; line-height:1.85; font-family:inherit; color:var(--text); resize:vertical; background:var(--card); }
+.tpl-textarea:focus { outline:none; border-color:var(--accent); }
+/* 实战：左侧句子列表 + 右侧答题区 */
+.tpl-prac-grid { display:grid; grid-template-columns:290px 1fr; gap:14px; align-items:start; }
+/* 列表跟着视口高度收缩，让题干+步骤+答题区尽量落在一屏内 */
+.tpl-sent-list { display:flex; flex-direction:column; gap:6px; max-height:calc(100vh - 430px); min-height:220px; overflow-y:auto; padding-right:2px; }
+.tpl-sent-item { padding:9px 11px; background:var(--card); border:1.5px solid var(--border); border-radius:10px; cursor:pointer; transition:all .15s; }
+.tpl-sent-item:hover { border-color:var(--accent); }
+.tpl-sent-item.active { border-color:var(--accent); background:var(--accent-light); }
+.tpl-sent-item.done { border-left:4px solid var(--green); }
+.tpl-sent-no { font-size:10.5px; color:var(--text3); margin-bottom:3px; display:flex; justify-content:space-between; align-items:center; }
+.tpl-sent-score { color:var(--green); font-weight:700; }
+.tpl-sent-cn { font-size:12.5px; line-height:1.55; color:var(--text); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.tpl-editor { background:var(--card); border:1.5px solid var(--border); border-radius:var(--radius); padding:14px 16px; }
+.tpl-editor-label { font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; }
+.tpl-editor-tpl { background:#f8fafc; border-radius:8px; padding:8px 11px; margin-bottom:10px; font-size:12.5px; line-height:1.8; }
+.tpl-editor-tpl .tpl-editor-label { display:block; margin-bottom:4px; }
+.tpl-editor-cn { font-size:15.5px; line-height:1.7; color:var(--text); font-weight:600; margin-bottom:9px; }
+.tpl-tag-row { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:4px; }
+.tpl-imgslot { flex:0 0 auto; width:170px; }
+.tpl-imgdrop { width:170px; min-height:96px; border:2px dashed var(--border); border-radius:8px; background:#f8fafc;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; cursor:pointer;
+  font-size:12px; color:var(--text3); text-align:center; padding:8px; transition:all .15s; }
+.tpl-imgdrop:hover, .tpl-imgdrop.dragover { border-color:var(--accent); background:var(--accent-light); color:var(--accent); }
+.tpl-imgslot .tpl-reupload { display:block; width:100%; margin-top:4px; padding:2px 0; border:none; background:none;
+  font-size:11px; color:var(--text3); cursor:pointer; }
+.tpl-imgslot .tpl-reupload:hover { color:var(--accent); }
+.tpl-chart-img { display:block; max-width:100%; max-height:260px; object-fit:contain; margin-top:10px; border-radius:10px; border:1.5px solid var(--border); cursor:zoom-in; }
+@media (max-width: 900px) {
+  .tpl-cmp, .tpl-prac-grid { grid-template-columns:1fr; }
+  .tpl-prac-head { flex-direction:column; }
+  .tpl-thumb { width:100%; max-height:180px; }
+  .tpl-sent-list { max-height:none; flex-direction:row; overflow-x:auto; }
+  .tpl-sent-item { min-width:200px; }
+}
+
 </style>
 <link rel="stylesheet" href="/static/theme.css">
 <script src="/static/theme.js" defer></script>
@@ -972,11 +1090,19 @@ html[data-theme="dark"] .wp-hl-toolbar { --wp-accent: #8a95ff; }
           <span class="entry-card-label">小作文仿写</span>
           <span class="entry-card-arrow">&rarr;</span>
         </div>
+        <div class="entry-card active" onclick="Tpl.enterSmall()">
+          <span class="entry-card-label">模板写作</span>
+          <span class="entry-card-arrow">&rarr;</span>
+        </div>
       </div>
       <div class="entry-column">
         <div class="entry-column-title">大作文</div>
         <div class="entry-card active" onclick="enterBigChain()">
           <span class="entry-card-label">写作思维链</span>
+          <span class="entry-card-arrow">&rarr;</span>
+        </div>
+        <div class="entry-card active" onclick="Tpl.enterBig()">
+          <span class="entry-card-label">模板写作</span>
           <span class="entry-card-arrow">&rarr;</span>
         </div>
       </div>
@@ -1080,6 +1206,81 @@ html[data-theme="dark"] .wp-hl-toolbar { --wp-accent: #8a95ff; }
       <div id="editorPanel" class="editor-panel"></div>
     </div>
   </div>
+
+  <!-- ==================== 模板写作 Views ==================== -->
+  <div id="tplBigTypesView" style="display:none;">
+    <button class="back-btn" onclick="backToEntry()">&larr; 返回写作首页</button>
+    <h2 style="font-size:18px; margin-bottom:4px;">大作文 · 模板写作</h2>
+    <p class="tpl-hint">先看模板骨架和范文怎么填，再逐段自己填一遍。</p>
+    <div id="tplBigTypeGrid" class="tpl-type-grid"></div>
+    <div class="card-title" style="margin-bottom:8px;">总结构与句型库</div>
+    <div id="tplBigRefList" class="tpl-ref-list"></div>
+  </div>
+
+  <div id="tplBigSamplesView" style="display:none;">
+    <div class="breadcrumb" id="tplBigSamplesCrumb"></div>
+    <button class="back-btn" onclick="Tpl.enterBig()">&larr; 返回题型</button>
+    <div id="tplBigSamplesHead"></div>
+    <div id="tplBigSamplesGrid" class="tpl-type-grid"></div>
+  </div>
+
+  <div id="tplSmallExamplesView" style="display:none;">
+    <div class="breadcrumb" id="tplSmallExCrumb"></div>
+    <button class="back-btn" onclick="Tpl.backToSections()">&larr; 返回段落</button>
+    <div id="tplSmallExHead"></div>
+    <div id="tplSmallExGrid" class="tpl-type-grid"></div>
+  </div>
+
+  <div id="tplBigLearnView" style="display:none;">
+    <div class="breadcrumb" id="tplBigLearnCrumb"></div>
+    <button class="back-btn" onclick="Tpl.backToSamples()">&larr; 返回范文列表</button>
+    <div id="tplBigLearnHead"></div>
+    <div class="tpl-toolbar" id="tplBigLearnToolbar"></div>
+    <div id="tplBigLearnBody"></div>
+  </div>
+
+  <div id="tplBigPracticeView" style="display:none;">
+    <div class="breadcrumb" id="tplBigPracCrumb"></div>
+    <button class="back-btn" onclick="Tpl.backToSamples()">&larr; 返回范文列表</button>
+    <div id="tplBigPracBody"></div>
+  </div>
+
+  <div id="tplSmallChartsView" style="display:none;">
+    <button class="back-btn" onclick="backToEntry()">&larr; 返回写作首页</button>
+    <h2 style="font-size:18px; margin-bottom:4px;">小作文 · 模板写作</h2>
+    <p class="tpl-hint">选图表类型，再选要练的段落。</p>
+    <div id="tplSmallChartGrid" class="tpl-type-grid"></div>
+  </div>
+
+  <div id="tplSmallSectionsView" style="display:none;">
+    <div class="breadcrumb" id="tplSmallSecCrumb"></div>
+    <button class="back-btn" onclick="Tpl.enterSmall()">&larr; 返回图表类型</button>
+    <h2 id="tplSmallSecTitle" style="font-size:18px; margin-bottom:4px;"></h2>
+    <p class="tpl-hint">每一段都有自己的句型库，先学后练。</p>
+    <div id="tplSmallSecGrid" class="tpl-type-grid"></div>
+    <div class="card-title" style="margin-bottom:8px;">参考资料</div>
+    <div id="tplSmallRefList" class="tpl-ref-list"></div>
+  </div>
+
+  <div id="tplSmallLearnView" style="display:none;">
+    <div class="breadcrumb" id="tplSmallLearnCrumb"></div>
+    <button class="back-btn" onclick="Tpl.backToPracticeList()">&larr; 返回例题列表</button>
+    <div id="tplSmallLearnHead"></div>
+    <div id="tplSmallLearnBody"></div>
+  </div>
+
+  <div id="tplSmallPracticeView" style="display:none;">
+    <div class="breadcrumb" id="tplSmallPracCrumb"></div>
+    <button class="back-btn" onclick="Tpl.backToPracticeList()">&larr; 返回例题列表</button>
+    <div id="tplSmallPracBody"></div>
+  </div>
+
+  <div id="tplRefView" style="display:none;">
+    <div class="breadcrumb" id="tplRefCrumb"></div>
+    <button class="back-btn" onclick="Tpl.backFromRef()">&larr; 返回</button>
+    <h2 id="tplRefTitle" style="font-size:18px; margin-bottom:12px;"></h2>
+    <div id="tplRefBody"></div>
+  </div>
 </div>
 </div>
 
@@ -1092,10 +1293,12 @@ html[data-theme="dark"] .wp-hl-toolbar { --wp-accent: #8a95ff; }
   <div class="review-overlay-tabs">
     <button class="review-overlay-tab active" data-tab="small" onclick="switchReviewTab('small')">小作文</button>
     <button class="review-overlay-tab" data-tab="big" onclick="switchReviewTab('big')">大作文</button>
+    <button class="review-overlay-tab" data-tab="tpl" onclick="switchReviewTab('tpl')">模板</button>
   </div>
   <div class="review-overlay-body" id="reviewBody">
     <div id="reviewSmallContent"></div>
     <div id="reviewBigContent" style="display:none;"></div>
+    <div id="reviewTplContent" style="display:none;"></div>
   </div>
 </div>
 <button class="review-fab" onclick="toggleReview()">&#128221; 复习</button>
@@ -1235,7 +1438,10 @@ function resetSmallState() {
 
 /* ==================== View Switching ==================== */
 const ALL_VIEWS = ['entryView','directoryView','learningView','practiceView',
-                   'smallChartTypesView','smallExampleListView','smallLearnView','smallPracticeView'];
+                   'smallChartTypesView','smallExampleListView','smallLearnView','smallPracticeView',
+                   'tplBigTypesView','tplBigSamplesView','tplBigLearnView','tplBigPracticeView',
+                   'tplSmallChartsView','tplSmallSectionsView','tplSmallExamplesView',
+                   'tplSmallLearnView','tplSmallPracticeView','tplRefView'];
 
 function switchView(view) {
   ALL_VIEWS.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
@@ -2343,10 +2549,12 @@ function switchReviewTab(tab) {
   document.querySelectorAll('.review-overlay-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.getElementById('reviewSmallContent').style.display = tab === 'small' ? '' : 'none';
   document.getElementById('reviewBigContent').style.display = tab === 'big' ? '' : 'none';
+  document.getElementById('reviewTplContent').style.display = tab === 'tpl' ? '' : 'none';
   loadReviewContent();
 }
 
 async function loadReviewContent() {
+  if (state.drawerTab === 'tpl') { Tpl.renderReview(); return; }
   if (state.drawerTab === 'small') {
     const container = document.getElementById('reviewSmallContent');
     container.innerHTML = '<div class="loading-overlay"><span class="spinner"></span> 加载中…</div>';
@@ -2719,7 +2927,7 @@ function onSentenceDragEnd(event) {
 
 function updateDraggableState() {
   const isDrag = state.aiChat.open;
-  document.querySelectorAll('.sentence-pair[data-drag-info]').forEach(el => {
+  document.querySelectorAll('.sentence-pair[data-drag-info], .tpl-sent[data-drag-info], .tpl-pattern[data-drag-info], .tpl-row[data-drag-info]').forEach(el => {
     if (isDrag) el.setAttribute('draggable', 'true');
     else el.removeAttribute('draggable');
   });
@@ -3484,6 +3692,952 @@ var Notepad = {
   }
 };
 
+
+/* ==================== 模板写作模块 ====================
+   语料来自飞书「九分学长 写作大+小模板」，由 script/import_writing_templates.py 导入。
+   大作文：题型 → 学习（模板骨架与范文逐句对照）→ 实战（看中文写英文，写的就是套模板的范文原句）。
+   小作文：图表 → 段落 → 学习（句型库 + 仿写例题对照）→ 实战（同样是看中文写英文）。
+   批改沿用思维链/仿写那套逐句评分口径。
+   注意：内联 onclick 只能访问 var 声明的全局变量，这里不能改成 const。 */
+var Tpl = {
+  s: {
+    bigTypes: [], bigRefs: [], typeData: null,
+    variantIdx: 0, sampleIdx: 0, versionIdx: 0, otherTypes: {},
+    charts: [], chartData: null, sectionId: null,
+    examples: [], exampleIdx: 0,
+    prac: null, progress: {}, refFrom: null
+  },
+
+  /* ---------- 工具 ---------- */
+  esc(t) {
+    return String(t == null ? '' : t)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  },
+  // 保留方括号：Highlights 会用 textContent 重建 innerHTML，括号留着才不会丢信息
+  tplText(t) {
+    return this.esc(t).replace(/\[([^\[\]]+)\]/g, (m, k) => `<span class="tpl-slot">[${k}]</span>`);
+  },
+  sampleText(t) {
+    return this.esc(t).replace(/\[([^\[\]]*)\]/g, (m, v) => `<mark class="tpl-fill">${v}</mark>`);
+  },
+  plain(t) { return String(t || '').replace(/[\[\]]/g, ''); },
+  // data-drag-info 始终写上，draggable 由 updateDraggableState 随 AI 助手开关切换
+  dragAttrs(zh, en, detail) {
+    const info = JSON.stringify({ zh: zh || '', en: en || '', tags: [], module: 'template', detail: detail || '' })
+      .replace(/'/g, '&#39;');
+    return `${state.aiChat.open ? 'draggable="true" ' : ''}data-drag-info='${info}'` +
+      ` ondragstart="onSentenceDragStart(event)" ondragend="onSentenceDragEnd(event)"`;
+  },
+  /* ---------- 进度 ----------
+     progress[题型或图表][题目id].sections[段落key].sentences{句序}
+     卡片按「已练句数 / 总句数」算百分比，背景渐变用 --prog-clip 裁出来。 */
+  pct(done, total) { return total > 0 ? Math.min(100, Math.round(done / total * 100)) : 0; },
+  progStyle(pct) { return `--prog-clip: inset(0 ${100 - pct}% 0 0);`; },
+  // 「细节段一/二」在进度里是 detail / detail2，按前缀归到同一个模板段落
+  sectionKeys(secs, sid) {
+    const re = new RegExp(`^${sid}\\d*$`);
+    return Object.keys(secs || {}).filter(k => re.test(k));
+  },
+  doneCount(typeId, questionId, sid) {
+    const q = (this.s.progress[typeId] || {})[questionId];
+    if (!q) return 0;
+    const secs = q.sections || {};
+    const keys = sid ? this.sectionKeys(secs, sid) : Object.keys(secs);
+    return keys.reduce((a, k) => a + Object.keys((secs[k] || {}).sentences || {}).length, 0);
+  },
+  // 不指定题目时，把该题型/图表下所有题目的已练句数加起来
+  doneTotal(typeId, sid) {
+    const node = this.s.progress[typeId] || {};
+    return Object.keys(node).reduce((a, qid) => a + this.doneCount(typeId, qid, sid), 0);
+  },
+  progBar(done, total) {
+    const pct = this.pct(done, total);
+    return `<div class="tpl-card-prog${pct >= 100 ? ' full' : ''}">
+      <div class="bar"><i style="width:${pct}%"></i></div>
+      <span class="num">${done}/${total} 句${pct >= 100 ? ' ✓' : ''}</span></div>`;
+  },
+
+  async loadProgress() {
+    try { this.s.progress = await API.get('/api/writing/template/progress') || {}; }
+    catch (e) { this.s.progress = {}; }
+  },
+  fail(container, data) {
+    const msg = (data && data.error) ? data.error : '加载失败，请稍后重试';
+    const el = document.getElementById(container);
+    if (el) el.innerHTML = `<div class="card" style="color:#b91c1c;">${this.esc(msg)}</div>`;
+  },
+
+  /* ==================== 大作文：题型列表 ==================== */
+  async enterBig() {
+    state.activeModule = 'tpl_big';
+    document.getElementById('pageTitle').textContent = '大作文 · 模板写作';
+    switchView('tplBigTypesView');
+    document.getElementById('tplBigTypeGrid').innerHTML = '<div class="tpl-hint">加载中…</div>';
+    const data = await API.get('/api/writing/template/big');
+    if (!data || data.error) { this.fail('tplBigTypeGrid', data); return; }
+    this.s.bigTypes = data.types || [];
+    this.s.bigRefs = data.references || [];
+    await this.loadProgress();
+    this.renderBigTypes();
+  },
+
+  renderBigTypes() {
+    document.getElementById('tplBigTypeGrid').innerHTML = this.s.bigTypes.map(t => {
+      const done = this.doneTotal(t.id);
+      const total = t.total_sentences || 0;
+      return `<div class="tpl-type-card" style="${this.progStyle(this.pct(done, total))}"
+                   onclick="Tpl.openType('${t.id}')">
+        <div class="tpl-type-name">${this.esc(t.name)}
+          ${t.derived ? '<span class="tpl-badge warn">骨架由范文反推</span>' : ''}</div>
+        <div class="tpl-type-feature">${this.esc(t.feature || '')}</div>
+        <div class="tpl-type-meta">
+          <span>${t.section_count} 段 · ${t.slot_count} 槽位</span>
+          <span>范文 ${t.units.length} 篇</span>
+        </div>
+        ${this.progBar(done, total)}
+      </div>`;
+    }).join('');
+    document.getElementById('tplBigRefList').innerHTML = this.s.bigRefs.map(r =>
+      `<div class="tpl-ref-chip" onclick="Tpl.openRef('${r.id}','tplBigTypesView')">${this.esc(r.name)}</div>`
+    ).join('') || '<div class="tpl-hint">暂无</div>';
+  },
+
+  /* ==================== 大作文：学习（模板 + 范文对照） ==================== */
+  async openType(typeId) {
+    switchView('tplBigSamplesView');
+    document.getElementById('tplBigSamplesGrid').innerHTML = '<div class="tpl-hint">加载中…</div>';
+    const data = await API.get(`/api/writing/template/big/${typeId}`);
+    if (!data || data.error) { this.fail('tplBigSamplesGrid', data); return; }
+    this.s.typeData = data;
+    this.s.variantIdx = 0; this.s.sampleIdx = 0; this.s.versionIdx = 0;
+    document.getElementById('pageTitle').textContent = `${data.name} · 模板写作`;
+    await this.loadProgress();
+    this.renderBigSamples();
+  },
+
+  // 一个题型下的范文，每「题 × 版本」一张卡，各自独立记进度
+  renderBigSamples() {
+    const d = this.s.typeData;
+    const meta = this.s.bigTypes.find(t => t.id === d.id) || { units: [], total_sentences: 0 };
+    document.getElementById('tplBigSamplesCrumb').innerHTML =
+      `<span onclick="Tpl.enterBig()">模板写作</span><span class="sep">/</span><span class="current">${this.esc(d.name)}</span>`;
+    const done = this.doneTotal(d.id);
+    document.getElementById('tplBigSamplesHead').innerHTML = `
+      <h2 style="font-size:18px;margin-bottom:4px;">${this.esc(d.name)}</h2>
+      <p class="tpl-hint">${this.esc(d.feature || '')}
+        ${d.derived ? ' · 骨架由范文反推' : ''}</p>
+      <div class="tpl-section-card" style="padding:12px 16px;margin-bottom:14px;">
+        <div class="tpl-card-prog${this.pct(done, meta.total_sentences) >= 100 ? ' full' : ''}">
+          <span class="num" style="font-size:12px;">本题型整体进度</span>
+          <div class="bar"><i style="width:${this.pct(done, meta.total_sentences)}%"></i></div>
+          <span class="num">${done}/${meta.total_sentences} 句</span>
+        </div>
+      </div>`;
+    document.getElementById('tplBigSamplesGrid').innerHTML = (meta.units || []).map(u => {
+      const uDone = this.doneCount(d.id, u.question_id);
+      const cross = u.template_type_name && u.template_type_name !== d.name;
+      return `<div class="tpl-type-card" style="${this.progStyle(this.pct(uDone, u.total))}">
+        <div class="tpl-type-name">范文题 ${u.sample_index + 1} · ${this.esc(u.version_name)}
+          ${cross ? `<span class="tpl-badge warn">套「${this.esc(u.template_type_name)}」</span>` : ''}</div>
+        <div class="tpl-card-sub">${this.esc(u.question)}</div>
+        ${this.progBar(uDone, u.total)}
+        <div class="tpl-card-actions">
+          <button class="mode-btn learn" onclick="Tpl.openLearnFor(${u.sample_index},${u.version_index})">学习</button>
+          <button class="mode-btn practice" onclick="Tpl.openPracticeFor(${u.sample_index},${u.version_index})">实战</button>
+        </div>
+      </div>`;
+    }).join('') || '<div class="tpl-hint">该题型还没有范文。</div>';
+  },
+
+  openLearnFor(si, vi) {
+    this.s.sampleIdx = Number(si); this.s.versionIdx = Number(vi);
+    this.syncVariantToSample();
+    switchView('tplBigLearnView');
+    this.renderBigLearn();
+  },
+  openPracticeFor(si, vi) {
+    this.s.sampleIdx = Number(si); this.s.versionIdx = Number(vi);
+    this.syncVariantToSample();
+    this.startBigPractice();
+  },
+  backToSamples() {
+    if (!this.s.typeData) { this.enterBig(); return; }
+    switchView('tplBigSamplesView');
+    this.renderBigSamples();
+  },
+
+  variant() {
+    const d = this.s.typeData;
+    return (d && d.variants && d.variants[this.s.variantIdx]) || { name: '', sections: [] };
+  },
+  sampleVersion() {
+    const d = this.s.typeData;
+    const q = d && d.samples && d.samples[this.s.sampleIdx];
+    if (!q) return null;
+    const v = q.versions[this.s.versionIdx] || q.versions[0];
+    return v ? { question: q.question, version: v } : null;
+  },
+
+  // 范文套用的模板可能不是当前题型（飞书里有放错分区的题），按需加载那个题型
+  async ensureType(typeId) {
+    if (!typeId || typeId === this.s.typeData.id) return null;
+    // 失败也要落一个占位，否则 renderBigLearn 会一直重试重绘
+    if (!Object.prototype.hasOwnProperty.call(this.s.otherTypes, typeId)) {
+      this.s.otherTypes[typeId] = null;
+      const d = await API.get(`/api/writing/template/big/${typeId}`);
+      this.s.otherTypes[typeId] = (d && !d.error) ? d : null;
+    }
+    return this.s.otherTypes[typeId];
+  },
+
+  // 范文写的是哪套结构，就把结构下拉切到哪套，避免拿另一套骨架去对照
+  syncVariantToSample() {
+    const sv = this.sampleVersion();
+    const d = this.s.typeData;
+    if (!sv || !d) return;
+    if (sv.version.template_type_id && sv.version.template_type_id !== d.id) return;
+    const vi = sv.version.template_variant_index;
+    if (typeof vi === 'number' && d.variants[vi]) this.s.variantIdx = vi;
+  },
+
+  setVariant(i) { this.s.variantIdx = Number(i); this.renderBigLearn(); },
+
+  renderBigLearn() {
+    const d = this.s.typeData;
+    document.getElementById('tplBigLearnCrumb').innerHTML =
+      `<span onclick="Tpl.enterBig()">模板写作</span><span class="sep">/</span>` +
+      `<span onclick="Tpl.backToSamples()">${this.esc(d.name)}</span><span class="sep">/</span>` +
+      `<span class="current">范文题 ${this.s.sampleIdx + 1} · ${this.esc((this.sampleVersion() || {version:{name:''}}).version.name)}</span>`;
+    document.getElementById('tplBigLearnHead').innerHTML = `
+      <h2 style="font-size:18px;margin-bottom:4px;">${this.esc(d.name)}模板</h2>
+      <p class="tpl-hint">${this.esc(d.feature || '')}
+        ${d.derived ? ' · 飞书没有该题型的官方模板，此骨架由范文反推，仅供参考' : ''}</p>`;
+
+    const parts = [];
+    if (d.variants.length > 1) {
+      parts.push(d.variants.map((v, i) =>
+        `<button class="tpl-step${i === this.s.variantIdx ? ' active' : ''}" onclick="Tpl.setVariant(${i})">${this.esc(v.name || '默认结构')}</button>`).join(''));
+    }
+    if (d.samples && d.samples.length) {
+      parts.push(`<button class="tpl-btn" onclick="Tpl.startBigPractice()">拿这道题练 &rarr;</button>`);
+    }
+    document.getElementById('tplBigLearnToolbar').innerHTML = parts.join('');
+
+    const sv = this.sampleVersion();
+    const paraBySection = {};
+    if (sv) (sv.version.paragraphs || []).forEach(p => { if (p.section_id) paraBySection[p.section_id] = p; });
+    const mismatch = sv && sv.version.template_type_id && sv.version.template_type_id !== d.id;
+
+    let html = '';
+    if (sv) {
+      html += `<div class="card" style="margin-bottom:14px;">
+        <div class="tpl-fb-title">范文题目</div>
+        <div class="tpl-question">${this.esc(sv.question)}</div>
+        ${mismatch ? `<div class="tpl-section-note" style="margin-top:10px;">这篇范文实际套用的是「${this.esc(sv.version.template_type_name)}」模板，下面按该模板对照。</div>` : ''}
+      </div>`;
+    }
+
+    let sections = this.variant().sections;
+    if (mismatch) {
+      const tid = sv.version.template_type_id;
+      if (Object.prototype.hasOwnProperty.call(this.s.otherTypes, tid)) {
+        const other = this.s.otherTypes[tid];
+        if (other) {
+          const vi = sv.version.template_variant_index || 0;
+          sections = (other.variants[vi] || other.variants[0] || { sections: [] }).sections;
+        }
+      } else {
+        this.ensureType(tid).then(() => this.renderBigLearn());
+      }
+    }
+
+    // 高亮按 key 存取：骨架列要带段落来源题型，范文列要带题号和版本，
+    // 否则切换范文题后会把旧坐标画到另一句上
+    const secTypeId = mismatch ? sv.version.template_type_id : d.id;
+    const tplKey = `tpl|big|${d.id}|t${secTypeId}`;
+    const smpKey = `tpl|big|${d.id}|s${this.s.sampleIdx}v${this.s.versionIdx}`;
+    html += sections.map(sec => {
+      const para = paraBySection[sec.id];
+      const rows = (para && para.sentences && para.sentences.length)
+        ? para.sentences
+        : sec.sentences.map((st, i) => ({ tpl_index: i, tpl_text: st.text, sample_text: '', pairs: [] }));
+      const left = rows.map((r, ri) => r.tpl_text
+        ? `<div class="tpl-row"><div class="tpl-sent" data-hl-key="${tplKey}|${sec.id}|${ri}|tpl" ${this.dragAttrs('', this.plain(r.tpl_text), d.name + ' / ' + sec.name)}>${this.tplText(r.tpl_text)}</div></div>`
+        : `<div class="tpl-row"><div class="tpl-sent empty">（范文在此处多写了一句）</div></div>`).join('');
+      const right = rows.map((r, ri) => r.sample_text
+        ? `<div class="tpl-row"><div class="tpl-sent" data-hl-key="${smpKey}|${sec.id}|${ri}|sample" ${this.dragAttrs(r.chinese || '', this.plain(r.sample_text), d.name + ' / ' + sec.name)}>${this.sampleText(r.sample_text)}</div>
+             ${r.chinese ? `<div class="tpl-pattern-cn" style="margin-top:4px;">${this.esc(r.chinese)}</div>` : ''}
+             ${(r.pairs || []).length ? `<div class="tpl-pairs">${r.pairs.map(pr => `<div class="tpl-pair"><b>${this.esc(pr.key)}</b> → ${this.esc(pr.value)}</div>`).join('')}</div>` : ''}
+           </div>`
+        : `<div class="tpl-row"><div class="tpl-sent empty">（范文这一句省略了）</div></div>`).join('');
+      return `<div class="tpl-section-card">
+        <div class="tpl-section-head"><div class="tpl-section-name">${this.esc(sec.name)}</div>
+          <span class="tpl-badge">${sec.slot_count} 个槽位</span></div>
+        ${sec.note ? `<div class="tpl-section-note">${this.esc(sec.note)}</div>` : ''}
+        <div class="tpl-cmp">
+          <div><div class="tpl-cmp-col-title">模板骨架</div>${left}</div>
+          <div><div class="tpl-cmp-col-title">${sv ? '范文怎么填' : '暂无范文'}</div>${sv ? right : '<div class="tpl-sent empty">该题型没有范文</div>'}</div>
+        </div>
+      </div>`;
+    }).join('');
+    document.getElementById('tplBigLearnBody').innerHTML = html;
+    Highlights.loadAndApply('tplBigLearnBody', `tpl|big|${d.id}|`);
+  },
+
+  /* ==================== 实战：看中文写英文 ====================
+     大小作文共用同一套逐句练习界面，区别只在 steps 怎么来。 */
+
+  startBigPractice() {
+    const d = this.s.typeData, sv = this.sampleVersion();
+    if (!sv) { alert('该题型还没有范文，暂时无法实战'); return; }
+    const steps = (sv.version.paragraphs || []).map(p => ({
+      id: p.section_id || 'x',
+      name: p.section_name || '未标注段落',
+      sentences: (p.sentences || [])
+        .filter(r => r.sample_text)
+        .map((r, i) => ({
+          index: i,
+          chinese: r.chinese || '',
+          english: r.sample_plain || this.plain(r.sample_text),
+          template: r.tpl_text || '',
+        })),
+    })).filter(st => st.sentences.length);
+
+    this.s.prac = {
+      token: `t${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      task: 'task2',
+      typeId: d.id,
+      typeName: sv.version.template_type_name || d.name,
+      variant: sv.version.variant || '',
+      questionId: `sample${this.s.sampleIdx}v${this.s.versionIdx}`,
+      question: sv.question,
+      exampleName: `${d.name}范文 ${this.s.sampleIdx + 1} · ${sv.version.name}`,
+      imagePath: '',
+      steps, stepIdx: 0, activeIdx: 0,
+      results: {}, drafts: {}, busy: false,
+    };
+    document.getElementById('pageTitle').textContent = `${d.name} · 实战`;
+    switchView('tplBigPracticeView');
+    this.renderPractice();
+  },
+
+  backToLearn() { switchView('tplBigLearnView'); this.renderBigLearn(); },
+  backToPracticeList() {
+    if (this.s.prac && this.s.prac.task === 'task1') this.backToExamples();
+    else this.backToSamples();
+  },
+
+  practiceRoot() {
+    return this.s.prac && this.s.prac.task === 'task1' ? 'tplSmallPracBody' : 'tplBigPracBody';
+  },
+  // 只在当前实战视图里找节点，避免命中另一个隐藏视图中的同名 id
+  $(id) {
+    const root = document.getElementById(this.practiceRoot());
+    return root ? root.querySelector(`#${id}`) : null;
+  },
+  curStep() { return this.s.prac.steps[this.s.prac.stepIdx] || { sentences: [] }; },
+  curSentence() { return this.curStep().sentences[this.s.prac.activeIdx] || null; },
+  cellKey(stepId, idx) { return `${stepId}#${idx}`; },
+
+  savedScore(stepId, idx) {
+    const p = this.s.prac;
+    const node = ((this.s.progress[p.typeId] || {})[p.questionId] || {}).sections || {};
+    const sec = node[stepId];
+    const sent = sec && sec.sentences && sec.sentences[String(idx)];
+    return sent ? sent.best_score : '';
+  },
+
+  renderPractice() {
+    const p = this.s.prac;
+    const crumbId = p.task === 'task1' ? 'tplSmallPracCrumb' : 'tplBigPracCrumb';
+    if (p.task === 'task1') {
+      const c = this.s.chartData;
+      document.getElementById(crumbId).innerHTML =
+        `<span onclick="Tpl.enterSmall()">模板写作</span><span class="sep">/</span>` +
+        `<span onclick="Tpl.backToSections()">${this.esc(c.name)}</span><span class="sep">/</span>` +
+        `<span class="current">${this.esc(this.curStep().name || '')} 实战</span>`;
+    } else {
+      document.getElementById(crumbId).innerHTML =
+        `<span onclick="Tpl.enterBig()">模板写作</span><span class="sep">/</span>` +
+        `<span onclick="Tpl.backToLearn()">${this.esc(this.s.typeData.name)}</span><span class="sep">/</span>` +
+        `<span class="current">实战</span>`;
+    }
+    document.getElementById(this.practiceRoot()).innerHTML = this.practiceHtml();
+    this.renderEditor();
+  },
+
+  practiceHtml() {
+    const p = this.s.prac;
+    const steps = p.steps.map((st, i) => {
+      const done = st.sentences.every((_, si) => p.results[this.cellKey(st.id, si)] || this.savedScore(st.id, si));
+      return `<button class="tpl-step${i === p.stepIdx ? ' active' : ''}${done ? ' done' : ''}" onclick="Tpl.gotoStep(${i})">${this.esc(st.name)}${done ? ' ✓' : ''}</button>`;
+    }).join('');
+    const list = this.curStep().sentences.map((sent, i) => {
+      const res = p.results[this.cellKey(this.curStep().id, i)];
+      const score = (res && res.score) || this.savedScore(this.curStep().id, i);
+      return `<div class="tpl-sent-item${i === p.activeIdx ? ' active' : ''}${score ? ' done' : ''}" onclick="Tpl.pickSentence(${i})">
+        <div class="tpl-sent-no">第 ${i + 1} 句${score ? `<span class="tpl-sent-score">${this.esc(score)}</span>` : ''}</div>
+        <div class="tpl-sent-cn">${this.esc(sent.chinese || sent.english)}</div>
+      </div>`;
+    }).join('');
+    return `
+      <div class="card" style="margin-bottom:8px;padding:13px 16px;">
+        <div class="tpl-prac-head">
+          <div class="q">
+            <div class="tpl-fb-title">${this.esc(p.exampleName || '题目')}</div>
+            <div class="tpl-question">${this.esc(p.question)}</div>
+          </div>
+          ${this.imageSlot(p.imagePath, this.practiceExample())}
+        </div>
+      </div>
+      <div class="tpl-step-bar">${steps}</div>
+      <div class="tpl-prac-grid">
+        <div class="tpl-sent-list">${list}</div>
+        <div id="tplEditor" class="tpl-editor"></div>
+      </div>`;
+  },
+
+  gotoStep(i) {
+    if (this.s.prac.busy) return;
+    this.s.prac.stepIdx = Number(i);
+    this.s.prac.activeIdx = 0;
+    this.renderPractice();
+  },
+  pickSentence(i) {
+    if (this.s.prac.busy) return;
+    this.s.prac.activeIdx = Number(i);
+    this.renderPractice();
+  },
+
+  renderEditor() {
+    const p = this.s.prac, step = this.curStep(), sent = this.curSentence();
+    const box = this.$('tplEditor');
+    if (!box) return;
+    if (!sent) { box.innerHTML = '<div class="tpl-hint">这一段没有可练的句子。</div>'; return; }
+    const key = this.cellKey(step.id, p.activeIdx);
+    const res = p.results[key];
+    const draft = p.drafts[key] || '';
+    box.innerHTML = `
+      ${sent.template ? `<div class="tpl-editor-tpl"><span class="tpl-editor-label">模板骨架</span>${this.tplText(sent.template)}</div>` : ''}
+      <div class="tpl-editor-label">目标中文（第 ${p.activeIdx + 1} / ${step.sentences.length} 句）</div>
+      <div class="tpl-editor-cn">${this.esc(sent.chinese || '（这句没有中文提示，可直接参考下方原句）')}</div>
+      <textarea class="tpl-textarea" id="tplAnswer" placeholder="写出对应的英文…（Ctrl/⌘ + Enter 提交）"
+        oninput="Tpl.onDraft(this.value)" onkeydown="Tpl.onAnswerKey(event)">${this.esc(draft)}</textarea>
+      <div class="tpl-actions">
+        <button class="tpl-btn" id="tplSubmitBtn" onclick="Tpl.submitSentence()">提交批改</button>
+        <button class="tpl-btn ghost" onclick="Tpl.peekAnswer()">看原句</button>
+        ${p.activeIdx < step.sentences.length - 1
+          ? `<button class="tpl-btn ghost" onclick="Tpl.pickSentence(${p.activeIdx + 1})">下一句 &rarr;</button>` : ''}
+      </div>
+      <div id="tplPeek"></div>
+      <div id="tplResultArea">${res ? this.resultHtml(res) : ''}</div>`;
+    const ta = this.$('tplAnswer');
+    if (ta && !res) ta.focus();
+  },
+
+  onDraft(v) {
+    const p = this.s.prac;
+    p.drafts[this.cellKey(this.curStep().id, p.activeIdx)] = v;
+  },
+  onAnswerKey(e) {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); this.submitSentence(); }
+  },
+  peekAnswer() {
+    const box = this.$('tplPeek');
+    if (box.innerHTML) { box.innerHTML = ''; return; }
+    const sent = this.curSentence();
+    box.innerHTML = `<div class="tpl-fb-block"><div class="tpl-fb-title">范文原句</div>
+      <div class="tpl-preview">${this.esc(sent.english)}</div></div>`;
+  },
+
+  async submitSentence() {
+    const p = this.s.prac, step = this.curStep(), sent = this.curSentence();
+    if (!sent || p.busy) return;
+    const key = this.cellKey(step.id, p.activeIdx);
+    const answer = (p.drafts[key] || '').trim();
+    if (!answer) { alert('先写出你的英文再提交'); return; }
+    const btn = this.$('tplSubmitBtn');
+    const token = p.token;
+    const fromStep = p.stepIdx, fromIdx = p.activeIdx;
+    p.busy = true;
+    if (btn) { btn.disabled = true; btn.textContent = '批改中…'; }
+    const payload = {
+      task: p.task, type_id: p.typeId, type_name: p.typeName, variant: p.variant,
+      section_id: step.id, section_name: step.name,
+      question_id: p.questionId, question: p.question,
+      example_name: p.exampleName, sentence_index: p.activeIdx,
+      template_text: sent.template || '',
+      target_chinese: sent.chinese || '',
+      reference: sent.english || '',
+      user_translation: answer,
+    };
+    try {
+      const res = await API.post('/api/writing/template/correct', payload);
+      if (this.s.prac !== p || p.token !== token) return;  // 批改期间用户已经切走
+      if (res && res.error) { alert('批改失败：' + res.error); return; }
+      res._payload = payload;
+      res._saved = 'pending';
+      p.results[key] = res;
+      // 结果回来时用户可能已经翻到别的句子，那就只存不渲染，回到该句时自然会显示
+      if (p.stepIdx !== fromStep || p.activeIdx !== fromIdx) return;
+      const area = this.$('tplResultArea');
+      if (area) area.innerHTML = this.resultHtml(res);
+    } catch (e) {
+      alert('批改失败：' + e.message);
+    } finally {
+      p.busy = false;
+      if (btn) { btn.disabled = false; btn.textContent = '提交批改'; }
+    }
+  },
+
+  resultHtml(res) {
+    const corr = (res.grammar_corrections || []).filter(c => c && (c.original || c.corrected)).map(c =>
+      `<div class="tpl-corr"><span class="bad">${this.esc(c.original)}</span> → <span class="good">${this.esc(c.corrected)}</span><br><span class="why">${this.esc(c.reason)}</span></div>`).join('');
+    const vocabArr = Array.isArray(res.vocabulary_upgrade) ? res.vocabulary_upgrade : [];
+    const vocab = vocabArr.map(v =>
+      `<div class="tpl-corr">${this.esc(v.original)} → <span class="good">${this.esc(v.replacement)}</span><br><span class="why">${this.esc(v.reason)}</span></div>`).join('');
+    const vocabText = typeof res.vocabulary_upgrade === 'string' ? res.vocabulary_upgrade : '';
+    if (res._saved === 'saving') {
+      var savedBar = '<div class="tpl-hint" style="margin-top:10px;">保存中…</div>';
+    }
+    savedBar = savedBar || (res._saved === 'pending'
+      ? `<div class="tpl-actions"><span class="tpl-hint" style="margin:0;">要把这句记进复习中心吗？</span>
+           <button class="tpl-btn" onclick="Tpl.saveResult(true)">录入复习中心</button>
+           <button class="tpl-btn ghost" onclick="Tpl.saveResult(false)">不录入</button></div>`
+      : `<div class="tpl-hint" style="margin-top:10px;">${res._saved === true ? '已录入复习中心' : '已记录，未进复习中心'}</div>`);
+    return `<div class="tpl-result">
+      <div class="tpl-score">${this.esc(res.score || '-')}<span>本句预估分</span></div>
+      <div style="font-size:13.5px;line-height:1.8;margin-top:8px;">${this.esc(res.feedback_summary || '')}</div>
+      ${corr ? `<div class="tpl-fb-block"><div class="tpl-fb-title">语法与拼写</div>${corr}</div>` : ''}
+      ${vocab ? `<div class="tpl-fb-block"><div class="tpl-fb-title">词汇升级</div>${vocab}</div>` : ''}
+      ${vocabText ? `<div class="tpl-fb-block"><div class="tpl-fb-title">词汇升级</div><div class="tpl-corr">${this.esc(vocabText)}</div></div>` : ''}
+      ${res.native_version ? `<div class="tpl-fb-block"><div class="tpl-fb-title">标准答案与优化版</div><div class="tpl-preview">${this.esc(res.native_version)}</div></div>` : ''}
+      ${savedBar}
+    </div>`;
+  },
+
+  async saveResult(toReview) {
+    const p = this.s.prac;
+    const key = this.cellKey(this.curStep().id, p.activeIdx);
+    const res = p.results[key];
+    if (!res || res._saved !== 'pending') return;
+    res._saved = 'saving';   // 先占位，避免连点两次存成两条
+    const body = Object.assign({}, res._payload, {
+      score: res.score || '', feedback: res, native_version: res.native_version || '',
+      save_to_review: !!toReview,
+    });
+    const r = await API.post('/api/writing/template/save_practice', body);
+    if (r && r.error) { res._saved = 'pending'; alert('保存失败：' + r.error); return; }
+    res._saved = !!toReview;
+    await this.loadProgress();
+    this.renderPractice();
+  },
+
+  /* ==================== 小作文 ==================== */
+  async enterSmall() {
+    state.activeModule = 'tpl_small';
+    document.getElementById('pageTitle').textContent = '小作文 · 模板写作';
+    switchView('tplSmallChartsView');
+    document.getElementById('tplSmallChartGrid').innerHTML = '<div class="tpl-hint">加载中…</div>';
+    const data = await API.get('/api/writing/template/small');
+    if (!data || data.error) { this.fail('tplSmallChartGrid', data); return; }
+    this.s.charts = data.charts || [];
+    await this.loadProgress();
+    const icons = { data: '📊', process: '🔄', map: '🗺️' };
+    document.getElementById('tplSmallChartGrid').innerHTML = this.s.charts.map(c => {
+      const done = this.doneTotal(c.id);
+      return `<div class="tpl-type-card" style="${this.progStyle(this.pct(done, c.total_sentences))}"
+                   onclick="Tpl.openChart('${c.id}')">
+        <div class="tpl-type-name">${icons[c.id] || '📝'} ${this.esc(c.name)}</div>
+        <div class="tpl-type-feature">${c.sections.map(x => this.esc(x.name)).join(' · ')}</div>
+        <div class="tpl-type-meta">
+          <span>${c.example_count} 道例题</span>
+          <span>${c.sections.reduce((a, x) => a + x.pattern_count, 0)} 个句型</span>
+        </div>
+        ${this.progBar(done, c.total_sentences)}
+      </div>`;
+    }).join('');
+  },
+
+  async openChart(chartId) {
+    switchView('tplSmallSectionsView');
+    document.getElementById('tplSmallSecGrid').innerHTML = '<div class="tpl-hint">加载中…</div>';
+    const data = await API.get(`/api/writing/template/small/${chartId}`);
+    if (!data || data.error) { this.fail('tplSmallSecGrid', data); return; }
+    this.s.chartData = data;
+    document.getElementById('pageTitle').textContent = `${data.name} · 模板写作`;
+    await this.loadProgress();
+    this.renderSections();
+  },
+
+  renderSections() {
+    const data = this.s.chartData;
+    const meta = this.s.charts.find(c => c.id === data.id) || { sections: [], total_sentences: 0 };
+    const statOf = id => meta.sections.find(x => x.id === id) || { example_count: 0, total_sentences: 0 };
+    const done = this.doneTotal(data.id);
+    document.getElementById('tplSmallSecCrumb').innerHTML =
+      `<span onclick="Tpl.enterSmall()">模板写作</span><span class="sep">/</span><span class="current">${this.esc(data.name)}</span>`;
+    document.getElementById('tplSmallSecTitle').innerHTML =
+      `${this.esc(data.name)}
+       <span class="tpl-hint" style="margin:0;font-size:12px;font-weight:400;">
+         整体 ${done}/${meta.total_sentences} 句</span>`;
+    document.getElementById('tplSmallSecGrid').innerHTML = (data.sections || []).map(sec => {
+      const st = statOf(sec.id);
+      const sDone = this.doneTotal(data.id, sec.id);
+      return `<div class="tpl-type-card" style="${this.progStyle(this.pct(sDone, st.total_sentences))}"
+                   onclick="Tpl.openSection('${sec.id}')">
+        <div class="tpl-type-name">${this.esc(sec.name)}</div>
+        <div class="tpl-type-feature">${sec.groups.length} 组 · ${sec.pattern_count} 个句型</div>
+        <div class="tpl-type-meta"><span>${st.example_count} 道例题</span></div>
+        ${this.progBar(sDone, st.total_sentences)}
+      </div>`;
+    }).join('');
+    document.getElementById('tplSmallRefList').innerHTML = (data.references || []).map(r =>
+      `<div class="tpl-ref-chip" onclick="Tpl.openRef('${r.id}','tplSmallSectionsView')">${this.esc(r.name)}</div>`
+    ).join('') || '<div class="tpl-hint">暂无</div>';
+  },
+
+  // 某个段落下的例题列表：每道例题一张卡，各自独立记进度
+  async openSection(sectionId) {
+    if (!this.s.chartData) { this.enterSmall(); return; }
+    this.s.sectionId = sectionId;
+    const c = this.s.chartData;
+    switchView('tplSmallExamplesView');
+    document.getElementById('tplSmallExGrid').innerHTML = '<div class="tpl-hint">加载中…</div>';
+    const res = await API.get(`/api/writing/template/small/${c.id}/examples?section=${sectionId}`);
+    if (!res || res.error) { this.fail('tplSmallExGrid', res); return; }
+    this.s.examples = res.examples || [];
+    await this.loadProgress();
+    this.renderExamples();
+  },
+
+  renderExamples() {
+    const c = this.s.chartData, sid = this.s.sectionId;
+    const sec = this.findSection(sid) || { name: '', groups: [], pattern_count: 0 };
+    const meta = this.s.charts.find(x => x.id === c.id) || { sections: [] };
+    const st = meta.sections.find(x => x.id === sid) || { total_sentences: 0 };
+    const sDone = this.doneTotal(c.id, sid);
+    document.getElementById('tplSmallExCrumb').innerHTML =
+      `<span onclick="Tpl.enterSmall()">模板写作</span><span class="sep">/</span>` +
+      `<span onclick="Tpl.backToSections()">${this.esc(c.name)}</span><span class="sep">/</span>` +
+      `<span class="current">${this.esc(sec.name)}</span>`;
+    document.getElementById('tplSmallExHead').innerHTML = `
+      <h2 style="font-size:18px;margin-bottom:4px;">${this.esc(c.name)} · ${this.esc(sec.name)}</h2>
+      <p class="tpl-hint">挑一道例题，先看这一段的写法，再看中文写英文。</p>
+      <div class="tpl-section-card" style="padding:12px 16px;margin-bottom:14px;">
+        <div class="tpl-card-prog${this.pct(sDone, st.total_sentences) >= 100 ? ' full' : ''}">
+          <span class="num" style="font-size:12px;">本段整体进度</span>
+          <div class="bar"><i style="width:${this.pct(sDone, st.total_sentences)}%"></i></div>
+          <span class="num">${sDone}/${st.total_sentences} 句</span>
+        </div>
+        <div style="margin-top:10px;">
+          <button class="mode-btn learn" onclick="Tpl.openLibrary('${sid}')">只看句型库（${sec.pattern_count} 个句型）</button>
+        </div>
+      </div>`;
+    document.getElementById('tplSmallExGrid').innerHTML = this.s.examples.map((ex, i) => {
+      const eDone = this.doneCount(c.id, ex.id, sid);
+      return `<div class="tpl-type-card" style="${this.progStyle(this.pct(eDone, ex.total_sentences))}">
+        <div class="tpl-type-name">${this.esc(ex.name)}</div>
+        <div class="tpl-type-meta" style="margin-top:0;">
+          <span class="tpl-badge">${this.esc(ex.chart_type)}</span>
+          ${ex.chart_subtype ? `<span class="tpl-badge">${this.esc(ex.chart_subtype)}</span>` : ''}
+          ${ex.image_path ? '<span class="tpl-badge">有图</span>' : ''}
+        </div>
+        <div class="tpl-card-sub" style="margin-top:8px;">${this.esc(ex.question)}</div>
+        ${this.progBar(eDone, ex.total_sentences)}
+        <div class="tpl-card-actions">
+          <button class="mode-btn learn" onclick="Tpl.openSmallLearn(${i})">学习</button>
+          <button class="mode-btn practice" onclick="Tpl.openSmallPractice(${i})">实战</button>
+        </div>
+      </div>`;
+    }).join('') || '<div class="tpl-hint">这一段还没有可练的例题。</div>';
+  },
+
+  backToSections() {
+    if (!this.s.chartData) { this.enterSmall(); return; }
+    switchView('tplSmallSectionsView');
+    this.renderSections();
+  },
+  backToExamples() {
+    if (!this.s.chartData || !this.s.sectionId) { this.backToSections(); return; }
+    switchView('tplSmallExamplesView');
+    this.renderExamples();
+  },
+  findSection(id) { return (this.s.chartData.sections || []).find(x => x.id === id); },
+  // 按文档原文顺序渲染一个分组
+  groupBody(g, gi, keyPrefix, dragDetail) {
+    const items = (g.items && g.items.length)
+      ? g.items
+      : (g.notes || []).map(t => ({ type: 'note', text: t }))
+          .concat((g.patterns || []).map((p, i) => ({ type: 'pattern', index: i })));
+    return items.map(it => {
+      if (it.type === 'note') return `<div class="tpl-note">${this.esc(it.text)}</div>`;
+      const pt = (g.patterns || [])[it.index];
+      if (!pt) return '';
+      return `<div class="tpl-pattern" ${this.dragAttrs(pt.chinese, this.plain(pt.text), dragDetail)}>
+        ${pt.chinese ? `<div class="tpl-pattern-cn" data-hl-key="${keyPrefix}${gi}_${it.index}|cn">${this.esc(pt.chinese)}</div>` : ''}
+        <div class="tpl-pattern-en" data-hl-key="${keyPrefix}${gi}_${it.index}|en">${this.tplText(pt.text)}</div>
+      </div>`;
+    }).join('');
+  },
+
+  groupsHtml(sec) {
+    const c = this.s.chartData;
+    return (sec.groups || []).map((g, gi) => `
+      <div class="tpl-group">
+        ${(g.patterns || []).length ? `<div class="tpl-group-label">${this.esc(g.label)}</div>` : ''}
+        ${this.groupBody(g, gi, `tpl|small|${c.id}|${sec.id}|`, c.name + ' / ' + sec.name)}
+      </div>`).join('');
+  },
+
+  // exampleIdx 传 -1 表示只看句型库，不挂例题
+  openSmallLearn(exampleIdx) {
+    const c = this.s.chartData, sec = this.findSection(this.s.sectionId);
+    this.s.exampleIdx = Number(exampleIdx);
+    const ex = this.s.examples[this.s.exampleIdx];
+    switchView('tplSmallLearnView');
+    document.getElementById('tplSmallLearnCrumb').innerHTML =
+      `<span onclick="Tpl.enterSmall()">模板写作</span><span class="sep">/</span>` +
+      `<span onclick="Tpl.backToSections()">${this.esc(c.name)}</span><span class="sep">/</span>` +
+      `<span onclick="Tpl.backToExamples()">${this.esc(sec.name)}</span><span class="sep">/</span>` +
+      `<span class="current">${this.esc(ex ? ex.name : '句型库')}</span>`;
+    document.getElementById('tplSmallLearnHead').innerHTML = `
+      <h2 style="font-size:18px;margin-bottom:4px;">${this.esc(c.name)} · ${this.esc(sec.name)}</h2>
+      <p class="tpl-hint">左边是句型库，右边是这道例题里这一段的写法。
+        ${ex ? `<button class="tpl-btn" style="padding:4px 12px;" onclick="Tpl.openSmallPractice(${this.s.exampleIdx})">去实战 &rarr;</button>` : ''}</p>`;
+    this.renderSmallLearnBody();
+  },
+
+  openLibrary(sectionId) {
+    this.s.sectionId = sectionId;
+    this.openSmallLearn(-1);
+  },
+
+  renderSmallLearnBody() {
+    const c = this.s.chartData, sec = this.findSection(this.s.sectionId);
+    const ex = this.s.examples[this.s.exampleIdx];
+    const exSecs = ex ? ex.sections.filter(x => x.id === sec.id) : [];
+    const right = ex ? `
+      <div class="tpl-prac-head" style="margin-bottom:10px;">
+        <div class="q">
+          <div class="tpl-fb-title">${this.esc(ex.name)}</div>
+          <div class="tpl-question">${this.esc(ex.question)}</div>
+        </div>
+        ${this.imageSlot(ex.image_path, ex)}
+      </div>
+      ${exSecs.map((es, k) => `
+        ${exSecs.length > 1 ? `<div class="tpl-group-label" style="margin-top:12px;">${this.esc(es.name)}</div>` : ''}
+        ${(es.sentences || []).map((x, i) => `
+          <div class="tpl-row" ${this.dragAttrs(x.chinese, x.english, c.name + ' / ' + es.name)}>
+            ${(x.tags || []).length ? `<div class="tpl-tag-row">${x.tags.map(t => `<span class="tpl-badge">${this.esc(t)}</span>`).join('')}</div>` : ''}
+            <div class="tpl-pattern-cn" data-hl-key="tpl|ex|${ex.id}|${sec.id}|${k}_${i}|cn">${this.esc(x.chinese)}</div>
+            <div class="tpl-sent" data-hl-key="tpl|ex|${ex.id}|${sec.id}|${k}_${i}|en">${this.esc(x.english)}</div>
+          </div>`).join('')}`).join('')}`
+      : '<div class="tpl-sent empty">当前只看句型库，没有挂例题。</div>';
+    document.getElementById('tplSmallLearnBody').innerHTML = `
+      <div class="tpl-cmp">
+        <div class="tpl-section-card"><div class="tpl-cmp-col-title">句型库</div>${this.groupsHtml(sec)}</div>
+        <div class="tpl-section-card"><div class="tpl-cmp-col-title">例题里这一段怎么写</div>${right}</div>
+      </div>`;
+    Highlights.loadAndApply('tplSmallLearnBody', `tpl|small|${c.id}|${sec.id}|`);
+    if (ex) Highlights.loadAndApply('tplSmallLearnBody', `tpl|ex|${ex.id}|${sec.id}|`);
+  },
+
+  openSmallPractice(exampleIdx) {
+    this.s.exampleIdx = Number(exampleIdx);
+    if (!this.s.examples[this.s.exampleIdx]) { alert('这一段暂时没有可练的例题'); return; }
+    switchView('tplSmallPracticeView');
+    this.buildSmallPractice();
+  },
+
+  buildSmallPractice() {
+    const c = this.s.chartData, sec = this.findSection(this.s.sectionId);
+    const ex = this.s.examples[this.s.exampleIdx];
+    // 一道例题里可能有「细节段一」「细节段二」两段，各自成为一个步骤
+    const exSecs = ex.sections.filter(x => x.id === sec.id);
+    this.s.prac = {
+      token: `t${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      task: 'task1',
+      typeId: c.id,
+      typeName: `${c.name} · ${sec.name}`,
+      variant: '',
+      questionId: ex.id || ex.name,
+      question: ex.question,
+      exampleName: ex.name,
+      imagePath: ex.image_path || '',
+      steps: exSecs.map((es, k) => ({
+        id: es.key || (k === 0 ? sec.id : `${sec.id}${k + 1}`),
+        name: es.name || sec.name,
+        sentences: (es.sentences || []).map((x, i) => ({
+          index: i, chinese: x.chinese, english: x.english, template: '', tags: x.tags || [],
+        })),
+      })).filter(st => st.sentences.length),
+      stepIdx: 0, activeIdx: 0, results: {}, drafts: {}, busy: false,
+    };
+    document.getElementById('pageTitle').textContent = `${c.name} · 实战`;
+    this.renderPractice();
+  },
+
+  /* ---------- 题图 ----------
+     仿写语料里只有一小部分例题上传过图，这里给模板模块也留一个上传口，
+     用的还是仿写那套接口（按语料数组下标定位例题）。 */
+  // 只有小作文实战才有题图；大作文没有图，不能误用残留的小作文例题
+  practiceExample() {
+    const p = this.s.prac;
+    if (!p || p.task !== 'task1') return null;
+    return this.s.examples.find(x => x.id === p.questionId)
+      || this.s.examples[this.s.exampleIdx] || null;
+  },
+  curExample() { return this._imgEx || null; },
+
+  imageSlot(path, ex) {
+    this._imgEx = ex || null;
+    if (path) {
+      return `<div class="tpl-imgslot">
+        <img class="tpl-thumb" src="${this.esc(path)}" alt="题目图表（点击放大）" title="点击放大" onclick="openLightbox(this.src)">
+        ${ex ? '<button class="tpl-reupload" onclick="Tpl.pickImage()">换一张图</button>' : ''}
+      </div>`;
+    }
+    if (!ex) return '';
+    return `<div class="tpl-imgslot">
+      <div class="tpl-imgdrop" id="tplImgDrop" onclick="Tpl.pickImage()"
+           ondragover="Tpl.imgDrag(event,true)" ondragleave="Tpl.imgDrag(event,false)" ondrop="Tpl.imgDrop(event)">
+        <span>＋ 上传题图</span><span>点击或拖拽图片</span>
+      </div></div>`;
+  },
+
+  imgDrag(e, on) {
+    e.preventDefault();
+    const z = document.getElementById('tplImgDrop');
+    if (z) z.classList.toggle('dragover', !!on);
+  },
+  imgDrop(e) {
+    e.preventDefault();
+    this.imgDrag(e, false);
+    if (e.dataTransfer.files.length) this.uploadImage(e.dataTransfer.files[0]);
+  },
+  pickImage() {
+    if (!this._imgInput) {
+      this._imgInput = document.createElement('input');
+      this._imgInput.type = 'file';
+      this._imgInput.accept = 'image/*';
+      this._imgInput.style.display = 'none';
+      document.body.appendChild(this._imgInput);
+      this._imgInput.onchange = () => {
+        if (this._imgInput.files.length) this.uploadImage(this._imgInput.files[0]);
+        this._imgInput.value = '';
+      };
+    }
+    this._imgInput.click();
+  },
+
+  async uploadImage(file) {
+    const ex = this.curExample();
+    if (!ex) { alert('没有找到对应的例题'); return; }
+    const drop = document.getElementById('tplImgDrop');
+    if (drop) drop.innerHTML = '<span>上传中…</span>';
+    const fd = new FormData();
+    fd.append('image', file);
+    fd.append('type_idx', ex.type_idx);
+    fd.append('example_idx', ex.example_idx);
+    try {
+      const resp = await fetch('/api/writing/small/upload_image', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || '') },
+        body: fd,
+      });
+      const data = await resp.json();
+      if (!data.success) { alert(data.error || '上传失败'); this.refreshAfterUpload(); return; }
+      ex.image_path = data.image_url;
+      if (this.s.prac) this.s.prac.imagePath = data.image_url;
+      this.refreshAfterUpload();
+    } catch (err) {
+      alert('上传失败，请重试');
+      this.refreshAfterUpload();
+    }
+  },
+
+  refreshAfterUpload() {
+    const view = [...document.querySelectorAll('[id$=View]')].find(e => e.style.display !== 'none');
+    const id = view && view.id;
+    if (id === 'tplSmallPracticeView') this.renderPractice();
+    else if (id === 'tplSmallLearnView') this.renderSmallLearnBody();
+    else if (id === 'tplSmallExamplesView') this.renderExamples();
+  },
+
+  /* ==================== 参考资料 ==================== */
+  async openRef(refId, backView) {
+    this.s.refFrom = backView;
+    switchView('tplRefView');
+    document.getElementById('tplRefBody').innerHTML = '<div class="tpl-hint">加载中…</div>';
+    const r = await API.get(`/api/writing/template/reference/${refId}`);
+    if (!r || r.error) { this.fail('tplRefBody', r); return; }
+    document.getElementById('tplRefTitle').textContent = r.name;
+    document.getElementById('tplRefCrumb').innerHTML =
+      `<span onclick="Tpl.backFromRef()">返回</span><span class="sep">/</span><span class="current">${this.esc(r.name)}</span>`;
+    document.getElementById('tplRefBody').innerHTML = `<div class="tpl-section-card">
+      ${r.url ? `<div class="tpl-hint">原文：<a href="${this.esc(r.url)}" target="_blank" rel="noopener">飞书文档</a></div>` : ''}
+      ${(r.groups || []).map((g, gi) => `
+        <div class="tpl-group">
+          <div class="tpl-group-label">${this.esc(g.label)}</div>
+          ${this.groupBody(g, gi, `tpl|ref|${refId}|`, r.name)}
+        </div>`).join('')}
+    </div>`;
+    Highlights.loadAndApply('tplRefBody', `tpl|ref|${refId}|`);
+  },
+
+  backFromRef() { switchView(this.s.refFrom || 'tplBigTypesView'); },
+
+  /* ==================== 复习中心 ==================== */
+  async renderReview() {
+    const box = document.getElementById('reviewTplContent');
+    box.innerHTML = '<div class="tpl-hint">加载中…</div>';
+    const data = await API.get('/api/writing/template/practice_history');
+    if (!data || data.error) { this.fail('reviewTplContent', data); return; }
+    const types = Object.keys(data);
+    if (!types.length) { box.innerHTML = '<div class="tpl-hint">还没有录入复习中心的模板练习。</div>'; return; }
+    box.innerHTML = types.map(tn => {
+      const t = data[tn];
+      return `<div class="tpl-section-card">
+        <div class="tpl-section-head">
+          <div class="tpl-section-name">${this.esc(tn)}
+            <span class="tpl-badge">${t.task === 'task1' ? '小作文' : '大作文'}</span></div>
+          <span class="tpl-hint" style="margin:0;">${t.count} 次 · 均分 ${t.avg_score || '-'}</span>
+        </div>
+        ${Object.keys(t.questions).map(qn => {
+          const q = t.questions[qn];
+          return `<div style="margin-bottom:10px;">
+            <div style="font-size:13px;font-weight:600;margin-bottom:6px;">${this.esc(qn.slice(0, 90))}${qn.length > 90 ? '…' : ''}
+              <span class="tpl-hint" style="margin:0;font-weight:400;">${q.count} 次 · 均分 ${q.avg_score || '-'}</span></div>
+            ${Object.keys(q.sections).map(sn => {
+              const sec = q.sections[sn];
+              return `<div class="tpl-slot-fb"><b>${this.esc(sn)}</b>
+                <span class="tpl-hint" style="margin:0;">均分 ${sec.avg_score || '-'}</span>
+                ${sec.records.map(r => `<div class="tpl-pair" style="margin-top:6px;">
+                  <div>${this.esc((r.timestamp || '').slice(0, 16).replace('T', ' '))} · ${this.esc(r.score || '-')} 分
+                    <button class="mode-btn" style="padding:1px 8px;margin-left:6px;" onclick="Tpl.deleteRecord('${r.id}')">删除</button></div>
+                  ${r.target_chinese ? `<div style="margin-top:4px;color:var(--text3);">${this.esc(r.target_chinese)}</div>` : ''}
+                  <div style="margin-top:4px;color:var(--text2);">${this.esc(r.user_translation || '')}</div>
+                  ${(r.feedback && r.feedback.feedback_summary) ? `<div style="margin-top:4px;color:var(--text3);">${this.esc(r.feedback.feedback_summary)}</div>` : ''}
+                </div>`).join('')}
+              </div>`;
+            }).join('')}
+          </div>`;
+        }).join('')}
+      </div>`;
+    }).join('');
+  },
+
+  async deleteRecord(id) {
+    if (!confirm('确定删除这条练习记录？')) return;
+    const r = await API.post(`/api/writing/template/delete_practice/${id}`, {});
+    if (r && r.error) { alert('删除失败：' + r.error); return; }
+    await this.loadProgress();
+    this.renderReview();
+  }
+};
+
 (async function init() {
   const tk = localStorage.getItem('authToken');
   if (!tk) { window.location.href = '/login'; return; }
@@ -3497,6 +4651,7 @@ var Notepad = {
   setupAIDropzone();
   Highlights.init();
   Notepad.init();
+  Tpl.loadProgress();
 })();
 </script>
 </body>

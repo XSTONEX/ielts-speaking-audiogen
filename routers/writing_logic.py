@@ -8,7 +8,7 @@ from datetime import datetime
 from flask import Blueprint, request, jsonify, send_file, send_from_directory
 from core import (
     WRITING_CORRECTION_DIR, WRITING_DATA_DIR, WRITING_MD_FILE,
-    WRITING_SMALL_MD_FILE, WRITING_IMAGES_DIR, WRITING_CHAT_DIR,
+    WRITING_SMALL_MD_FILE, WRITING_IMAGES_DIR, WRITING_CHAT_DIR, WRITING_TEMPLATE_FILE,
     is_token_valid, load_tokens, load_prompt
 )
 
@@ -1451,3 +1451,458 @@ def writing_chat_delete(session_id):
     if os.path.exists(p):
         os.remove(p)
     return jsonify({'success': True})
+
+
+# ===================== 模板写作模块 =====================
+# 语料由 script/import_writing_templates.py 从飞书知识库导出，结构见该脚本注释。
+# 大作文：题型 → 变体 → 段落 → 句子（含 [槽位]）+ 对齐好的范文。
+# 小作文：图表 → 段落 → 分组 → 句型。
+# 练习单位统一是「一段」，记录落在 {user}_template_practice.json。
+
+_template_cache = None
+
+
+def _load_template_corpus():
+    """读取模板语料 JSON，进程内缓存。"""
+    global _template_cache
+    if _template_cache is None:
+        if not os.path.exists(WRITING_TEMPLATE_FILE):
+            raise FileNotFoundError(
+                f'模板语料不存在：{WRITING_TEMPLATE_FILE}，'
+                f'请先运行 python script/import_writing_templates.py'
+            )
+        with open(WRITING_TEMPLATE_FILE, 'r', encoding='utf-8') as f:
+            _template_cache = json.load(f)
+    return _template_cache
+
+
+def _template_sections(type_obj):
+    """展开某题型全部变体下的段落，附带变体名。"""
+    out = []
+    for variant in type_obj.get('variants', []):
+        for sec in variant.get('sections', []):
+            out.append({**sec, 'variant': variant.get('name', '')})
+    return out
+
+
+def _find_big_type(type_id):
+    return next((t for t in _load_template_corpus()['big']['types'] if t['id'] == type_id), None)
+
+
+def _find_small_chart(chart_id):
+    return next((c for c in _load_template_corpus()['small']['charts'] if c['id'] == chart_id), None)
+
+
+def _big_practice_units(type_obj):
+    """一个题型下可练的单元：每个「范文题 × 版本」算一个，带句数，供前端算进度。"""
+    units = []
+    for qi, q in enumerate(type_obj.get('samples', [])):
+        for vi, v in enumerate(q.get('versions', [])):
+            total = sum(len([r for r in (p.get('sentences') or []) if r.get('sample_text')])
+                        for p in v.get('paragraphs', []))
+            if not total:
+                continue
+            units.append({
+                'question_id': f'sample{qi}v{vi}',
+                'sample_index': qi, 'version_index': vi,
+                'version_name': v.get('name', ''),
+                'question': q.get('question', ''),
+                'template_type_name': v.get('template_type_name', ''),
+                'total': total,
+            })
+    return units
+
+
+@writing_bp.route('/api/writing/template/big', methods=['GET'])
+def template_big_list():
+    """大作文题型列表 + 总结构等参考资料目录。"""
+    try:
+        corpus = _load_template_corpus()
+    except FileNotFoundError as e:
+        return jsonify({'error': str(e)}), 503
+    types = []
+    for t in corpus['big']['types']:
+        sections = _template_sections(t)
+        units = _big_practice_units(t)
+        types.append({
+            'id': t['id'], 'name': t['name'], 'feature': t.get('feature', ''),
+            'derived': t.get('derived', False),
+            'variant_count': len(t.get('variants', [])),
+            'section_count': len(sections),
+            'slot_count': sum(s.get('slot_count', 0) for s in sections),
+            'sample_count': len(t.get('samples', [])),
+            'version_count': sum(len(q.get('versions', [])) for q in t.get('samples', [])),
+            'units': units,
+            'total_sentences': sum(u['total'] for u in units),
+        })
+    refs = [{'id': r['id'], 'name': r['name'], 'kind': r.get('kind', ''), 'url': r.get('url', '')}
+            for r in corpus['big'].get('references', [])]
+    return jsonify({'types': types, 'references': refs,
+                    'generated_at': corpus.get('generated_at', '')})
+
+
+@writing_bp.route('/api/writing/template/big/<type_id>', methods=['GET'])
+def template_big_detail(type_id):
+    """某个大作文题型的完整模板与范文。"""
+    try:
+        t = _find_big_type(type_id)
+    except FileNotFoundError as e:
+        return jsonify({'error': str(e)}), 503
+    if t is None:
+        return jsonify({'error': '题型不存在'}), 404
+    return jsonify(t)
+
+
+@writing_bp.route('/api/writing/template/reference/<ref_id>', methods=['GET'])
+def template_reference_detail(ref_id):
+    """总结构 / 句型库 / 表达模块等参考资料原文。"""
+    try:
+        corpus = _load_template_corpus()
+    except FileNotFoundError as e:
+        return jsonify({'error': str(e)}), 503
+    pool = list(corpus['big'].get('references', []))
+    for chart in corpus['small']['charts']:
+        pool.extend(chart.get('references', []))
+    ref = next((r for r in pool if r['id'] == ref_id), None)
+    if ref is None:
+        return jsonify({'error': '资料不存在'}), 404
+    return jsonify(ref)
+
+
+@writing_bp.route('/api/writing/template/small', methods=['GET'])
+def template_small_list():
+    """小作文图表类型列表，含各段落的句型数量。"""
+    try:
+        corpus = _load_template_corpus()
+    except FileNotFoundError as e:
+        return jsonify({'error': str(e)}), 503
+    charts = []
+    for c in corpus['small']['charts']:
+        stats = _small_example_stats(c['id'])
+        sections = []
+        for sec in c.get('sections', []):
+            st = stats.get(sec['id'], {'examples': 0, 'sentences': 0})
+            sections.append({'id': sec['id'], 'name': sec['name'],
+                             'group_count': len(sec.get('groups', [])),
+                             'pattern_count': sec.get('pattern_count', 0),
+                             'example_count': st['examples'],
+                             'total_sentences': st['sentences']})
+        charts.append({
+            'id': c['id'], 'name': c['name'], 'sections': sections,
+            'example_count': len({e for st in stats.values() for e in st.get('ids', ())}),
+            'total_sentences': sum(x['total_sentences'] for x in sections),
+            'references': [{'id': r['id'], 'name': r['name'], 'kind': r.get('kind', '')}
+                           for r in c.get('references', [])],
+        })
+    return jsonify({'charts': charts, 'generated_at': corpus.get('generated_at', '')})
+
+
+@writing_bp.route('/api/writing/template/small/<chart_id>', methods=['GET'])
+def template_small_detail(chart_id):
+    """某个图表类型的全部段落句型库与参考资料。"""
+    try:
+        c = _find_small_chart(chart_id)
+    except FileNotFoundError as e:
+        return jsonify({'error': str(e)}), 503
+    if c is None:
+        return jsonify({'error': '图表类型不存在'}), 404
+    return jsonify(c)
+
+
+# ---------- 练习记录 ----------
+
+def _template_practice_path(username):
+    return os.path.join(WRITING_DATA_DIR, f'{username}_template_practice.json')
+
+
+def _load_template_practice(username):
+    p = _template_practice_path(username)
+    if os.path.exists(p):
+        with open(p, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    return []
+
+
+def _save_template_practice(username, data):
+    os.makedirs(WRITING_DATA_DIR, exist_ok=True)
+    with open(_template_practice_path(username), 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+# 模板里的图表分类比仿写语料粗，这里做一次归并
+SMALL_CHART_FAMILY = {
+    'data': ['折线图', '柱状图', '饼图', '表格', '混合'],
+    'process': ['流程图'],
+    'map': ['地图题'],
+}
+# 仿写语料的段落名与模板段落的对应关系
+SMALL_SECTION_ALIAS = {
+    'rewrite': ['改写段'],
+    'overview': ['概括段', '概述段'],
+    'detail': ['细节段一', '细节段二', '细节段三', '细节段'],
+}
+
+
+def _template_section_of(section_name):
+    for sid, names in SMALL_SECTION_ALIAS.items():
+        if section_name in names:
+            return sid
+    return ''
+
+
+def _small_example_stats(chart_id):
+    """统计某图表类型下，每个模板段落有多少道例题、多少句可练。"""
+    families = SMALL_CHART_FAMILY.get(chart_id) or []
+    out = {}
+    for ct in _parse_small_writing_md().get('chart_types', []):
+        if ct['name'] not in families:
+            continue
+        for ex in ct.get('examples', []):
+            for sec in ex.get('sections', []):
+                sid = _template_section_of(sec['name'])
+                n = len(sec.get('sentences') or [])
+                if not sid or not n:
+                    continue
+                node = out.setdefault(sid, {'examples': 0, 'sentences': 0, 'ids': set()})
+                node['sentences'] += n
+                if ex.get('id') not in node['ids']:
+                    node['ids'].add(ex.get('id'))
+                    node['examples'] += 1
+    return out
+
+
+@writing_bp.route('/api/writing/template/small/<chart_id>/examples', methods=['GET'])
+def template_small_examples(chart_id):
+    """某图表类型可用的例题，取自小作文仿写语料，按模板段落重新归类。
+
+    可选 query 参数 section 只返回含该段落的例题。
+    """
+    families = SMALL_CHART_FAMILY.get(chart_id)
+    if families is None:
+        return jsonify({'error': '图表类型不存在'}), 404
+    want = request.args.get('section', '')
+
+    data = _parse_small_writing_md()
+    out = []
+    for ti, ct in enumerate(data.get('chart_types', [])):
+        if ct['name'] not in families:
+            continue
+        for ei, ex in enumerate(ct.get('examples', [])):
+            sections = []
+            for sec in ex.get('sections', []):
+                sid = _template_section_of(sec['name'])
+                if not sid or (want and sid != want):
+                    continue
+                sentences = [{
+                    'index': i,
+                    'english': sent.get('original', ''),
+                    'chinese': sent.get('translation', ''),
+                    'tags': sent.get('tags', []),
+                } for i, sent in enumerate(sec.get('sentences', []))]
+                if sentences:
+                    seen = sum(1 for x in sections if x['id'] == sid)
+                    sections.append({'id': sid,
+                                     'key': sid if seen == 0 else f'{sid}{seen + 1}',
+                                     'name': sec['name'],
+                                     'annotation': sec.get('annotation', ''),
+                                     'sentences': sentences})
+            if sections:
+                out.append({
+                    'id': ex.get('id', ''), 'name': ex.get('name', ''),
+                    # 题图上传接口按仿写语料的数组下标定位，这里一并带出去
+                    'type_idx': ti, 'example_idx': ei,
+                    'total_sentences': sum(len(x['sentences']) for x in sections),
+                    'section_ids': [x['key'] for x in sections],
+                    'chart_type': ct['name'], 'chart_subtype': ex.get('chart_subtype', ''),
+                    'question': ex.get('question', ''), 'image_path': ex.get('image_path', ''),
+                    'sections': sections,
+                })
+    return jsonify({'chart_id': chart_id, 'examples': out})
+
+
+@writing_bp.route('/api/writing/template/correct', methods=['POST'])
+def template_correct():
+    """模板写作逐句批改：看中文写英文，与思维链/仿写同一套评分口径。
+
+    沿用既有的 writing_correct / writing_small_correct prompt，
+    只是在题目栏里补上这句在模板里的位置，让考官知道学生在套哪一句。
+    """
+    username = _highlights_user()
+    if username is None:
+        return jsonify({'error': '未登录'}), 401
+
+    data = request.json or {}
+    translation = (data.get('user_translation') or '').strip()
+    if not translation:
+        return jsonify({'error': '翻译内容不能为空'}), 400
+
+    task = data.get('task', 'task2')
+    question = (data.get('question') or '').strip() or '（未提供题目）'
+    section_name = (data.get('section_name') or '').strip()
+    template_text = (data.get('template_text') or '').strip()
+    if section_name or template_text:
+        question += f'\n\n本句在模板中的位置：{section_name or "未标注"}'
+        if template_text:
+            question += f'\n对应的模板骨架：{template_text}'
+
+    cfg = load_prompt('writing_small_correct' if task == 'task1' else 'writing_correct')
+    user_prompt = cfg['user_prompt'].format(
+        question=question,
+        target=(data.get('target_chinese') or '').strip() or '（无中文提示）',
+        reference=(data.get('reference') or '').strip() or '（无参考答案）',
+        translation=translation,
+    )
+
+    content = ''
+    try:
+        api_key = os.getenv('DEER_API_KEY')
+        resp = requests.post(
+            cfg['api_url'],
+            headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
+            json={
+                'model': cfg['model'],
+                'messages': [
+                    {'role': 'system', 'content': cfg['system_prompt']},
+                    {'role': 'user', 'content': user_prompt},
+                ],
+                'temperature': cfg['temperature'],
+            },
+            timeout=cfg.get('timeout', 45),
+        )
+        resp.raise_for_status()
+        content = resp.json()['choices'][0]['message']['content'].strip()
+        return jsonify(_parse_ai_json(content))
+    except requests.exceptions.Timeout:
+        return jsonify({'error': 'AI 服务超时，请重试'}), 504
+    except json.JSONDecodeError:
+        return jsonify({'error': 'AI 返回格式异常', 'raw': content}), 502
+    except Exception as e:
+        logging.exception('模板写作批改失败')
+        return jsonify({'error': str(e)}), 500
+
+
+@writing_bp.route('/api/writing/template/save_practice', methods=['POST'])
+def template_save_practice():
+    username = _highlights_user()
+    if username is None:
+        return jsonify({'error': '未登录'}), 401
+    data = request.json or {}
+    records = _load_template_practice(username)
+    record = {
+        'id': str(uuid.uuid4()),
+        'timestamp': datetime.now().isoformat(),
+        'task': data.get('task', 'task2'),
+        'type_id': data.get('type_id', ''),
+        'type_name': data.get('type_name', ''),
+        'variant': data.get('variant', ''),
+        'section_id': data.get('section_id', ''),
+        'section_name': data.get('section_name', ''),
+        'question_id': data.get('question_id', ''),
+        'question': data.get('question', ''),
+        'example_name': data.get('example_name', ''),
+        'sentence_index': data.get('sentence_index', 0),
+        'template_text': data.get('template_text', ''),
+        'reference': data.get('reference', ''),
+        'target_chinese': data.get('target_chinese', ''),
+        'user_translation': data.get('user_translation', ''),
+        'score': data.get('score', ''),
+        'feedback': data.get('feedback', {}),
+        'native_version': data.get('native_version', ''),
+        'in_review': bool(data.get('save_to_review', False)),
+    }
+    records.insert(0, record)
+    _save_template_practice(username, records)
+    return jsonify({'success': True, 'id': record['id']})
+
+
+@writing_bp.route('/api/writing/template/delete_practice/<record_id>', methods=['POST'])
+def template_delete_practice(record_id):
+    username = _highlights_user()
+    if username is None:
+        return jsonify({'error': '未登录'}), 401
+    records = _load_template_practice(username)
+    remaining = [r for r in records if r.get('id') != record_id]
+    if len(remaining) == len(records):
+        return jsonify({'error': '记录不存在'}), 404
+    _save_template_practice(username, remaining)
+    return jsonify({'success': True})
+
+
+def _avg_score(values):
+    nums = []
+    for v in values:
+        try:
+            nums.append(float(v))
+        except (TypeError, ValueError):
+            pass
+    return round(sum(nums) / len(nums), 1) if nums else 0
+
+
+@writing_bp.route('/api/writing/template/practice_history', methods=['GET'])
+def template_practice_history():
+    """复习中心用：题型 → 题目 → 段落 三层折叠。"""
+    username = _highlights_user()
+    if username is None:
+        return jsonify({'error': '未登录'}), 401
+    records = [r for r in _load_template_practice(username) if r.get('in_review', True)]
+    task_filter = request.args.get('task', '')
+    if task_filter:
+        records = [r for r in records if r.get('task') == task_filter]
+
+    grouped = {}
+    for r in records:
+        type_name = r.get('type_name') or '未分类'
+        question = (r.get('question') or '').strip() or '自由练习'
+        section = r.get('section_name') or '未标注段落'
+        type_node = grouped.setdefault(type_name, {
+            'task': r.get('task', 'task2'), 'avg_score': 0, 'count': 0, 'questions': {}})
+        q_node = type_node['questions'].setdefault(question, {
+            'avg_score': 0, 'count': 0, 'sections': {}})
+        s_node = q_node['sections'].setdefault(section, {
+            'avg_score': 0, 'count': 0, 'records': []})
+        s_node['records'].append(r)
+
+    for type_name, type_node in grouped.items():
+        type_scores = []
+        for q_node in type_node['questions'].values():
+            q_scores = []
+            for s_node in q_node['sections'].values():
+                scores = [rec.get('score', '') for rec in s_node['records']]
+                s_node['avg_score'] = _avg_score(scores)
+                s_node['count'] = len(s_node['records'])
+                q_scores.extend(scores)
+            q_node['avg_score'] = _avg_score(q_scores)
+            q_node['count'] = len(q_scores)
+            type_scores.extend(q_scores)
+        type_node['avg_score'] = _avg_score(type_scores)
+        type_node['count'] = len(type_scores)
+    return jsonify(grouped)
+
+
+@writing_bp.route('/api/writing/template/progress', methods=['GET'])
+def template_progress():
+    """练习进度：按 题型 → 题目 → 已完成段落 汇总，用于页面打勾。"""
+    username = _highlights_user()
+    if username is None:
+        return jsonify({'error': '未登录'}), 401
+    progress = {}
+    for r in _load_template_practice(username):
+        type_id = r.get('type_id') or 'unknown'
+        question_id = r.get('question_id') or 'custom'
+        section_id = r.get('section_id') or ''
+        node = progress.setdefault(type_id, {})
+        q_node = node.setdefault(question_id, {'sections': {}, 'count': 0})
+        q_node['count'] += 1
+        sec = q_node['sections'].setdefault(section_id, {'count': 0, 'best_score': '',
+                                                          'sentences': {}})
+        sec['count'] += 1
+        sent = sec['sentences'].setdefault(str(r.get('sentence_index', 0)),
+                                           {'count': 0, 'best_score': ''})
+        sent['count'] += 1
+        for node in (sec, sent):
+            try:
+                if float(r.get('score') or 0) > float(node['best_score'] or 0):
+                    node['best_score'] = r.get('score', '')
+            except (TypeError, ValueError):
+                pass
+    return jsonify(progress)
