@@ -3,7 +3,7 @@
 
 model: gemini-3.8-flash
 temperature: 0.5
-timeout: 60
+timeout: 40   # 单次上限；失败会再重试一次，总预算约 80 秒
 
 system_prompt: |
   你是一位资深的雅思写作考官导师。学生正在回顾系统给他的批改建议，并向你发起了深度追问。

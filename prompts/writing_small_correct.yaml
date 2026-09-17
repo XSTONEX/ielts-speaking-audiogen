@@ -4,7 +4,7 @@
 
 model: gemini-3.8-flash
 temperature: 0.3
-timeout: 60
+timeout: 40   # 单次上限；失败会再重试一次，总预算约 80 秒
 
 system_prompt: |
   你现在是一位现任的雅思官方写作考官。学生正在进行雅思 Task 1（小作文）的句子级或段落级仿写练习。

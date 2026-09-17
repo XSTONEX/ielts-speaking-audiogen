@@ -7,6 +7,7 @@ import json
 import secrets
 import hashlib
 import shutil
+import logging
 import threading
 import time
 import requests
@@ -150,6 +151,7 @@ def call_writing_llm(cfg, messages):
         except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as exc:
             last_error = exc
         if attempt + 1 < WRITING_LLM_ATTEMPTS:
+            logging.warning('写作模型调用失败，准备重试：%s', last_error)
             time.sleep(WRITING_LLM_RETRY_WAIT)
 
     raise last_error

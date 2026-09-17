@@ -3,7 +3,7 @@
 
 model: gemini-3.8-flash
 temperature: 0.6
-timeout: 60
+timeout: 40   # 单次上限；失败会再重试一次，总预算约 80 秒
 
 system_prompt: |
   你是一位精通雅思写作（Task 1）的专业名师。你的教学风格是：极度精简、一针见血、拒绝废话、直击 7.0+ 提分核心。
