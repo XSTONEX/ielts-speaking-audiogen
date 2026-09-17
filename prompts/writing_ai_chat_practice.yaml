@@ -1,9 +1,8 @@
 # 实战批改追问助手 - AI 聊天 Prompt
 # 路由: /api/writing/ai_chat (mode=practice)
 
-model: gemini-3.1-flash-lite
+model: gemini-3.8-flash
 temperature: 0.5
-api_url: https://api.deerapi.com/v1/chat/completions
 timeout: 60
 
 system_prompt: |

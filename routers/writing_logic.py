@@ -9,7 +9,7 @@ from flask import Blueprint, request, jsonify, send_file, send_from_directory
 from core import (
     WRITING_CORRECTION_DIR, WRITING_DATA_DIR, WRITING_MD_FILE,
     WRITING_SMALL_MD_FILE, WRITING_IMAGES_DIR, WRITING_CHAT_DIR, WRITING_TEMPLATE_FILE,
-    is_token_valid, load_tokens, load_prompt, resolve_writing_llm
+    is_token_valid, load_tokens, load_prompt, call_writing_llm
 )
 
 writing_bp = Blueprint('writing', __name__)
@@ -574,22 +574,10 @@ def small_writing_correct():
     )
 
     try:
-        url, api_key, model, _provider = resolve_writing_llm(cfg)
-        resp = requests.post(
-            url,
-            headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
-            json={
-                'model': model,
-                'messages': [
-                    {'role': 'system', 'content': cfg['system_prompt']},
-                    {'role': 'user', 'content': user_prompt}
-                ],
-                'temperature': cfg['temperature']
-            },
-            timeout=cfg.get('timeout', 30)
-        )
-        resp.raise_for_status()
-        content = resp.json()['choices'][0]['message']['content'].strip()
+        content = call_writing_llm(cfg, [
+            {'role': 'system', 'content': cfg['system_prompt']},
+            {'role': 'user', 'content': user_prompt},
+        ])
         result = _parse_ai_json(content)
         return jsonify(result)
     except requests.exceptions.Timeout:
@@ -824,22 +812,10 @@ def writing_correct():
     )
 
     try:
-        url, api_key, model, _provider = resolve_writing_llm(cfg)
-        resp = requests.post(
-            url,
-            headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
-            json={
-                'model': model,
-                'messages': [
-                    {'role': 'system', 'content': cfg['system_prompt']},
-                    {'role': 'user', 'content': user_prompt}
-                ],
-                'temperature': cfg['temperature']
-            },
-            timeout=cfg.get('timeout', 30)
-        )
-        resp.raise_for_status()
-        content = resp.json()['choices'][0]['message']['content'].strip()
+        content = call_writing_llm(cfg, [
+            {'role': 'system', 'content': cfg['system_prompt']},
+            {'role': 'user', 'content': user_prompt},
+        ])
         result = _parse_ai_json(content)
         return jsonify(result)
         
@@ -1275,19 +1251,7 @@ def _find_session_by_key(username, sentence_key):
 
 def _call_ai_chat(messages, cfg):
     """调用 AI 聊天接口，返回完整回复文本"""
-    url, api_key, model, _provider = resolve_writing_llm(cfg)
-    resp = requests.post(
-        url,
-        headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
-        json={
-            'model': model,
-            'messages': messages,
-            'temperature': cfg.get('temperature', 0.6)
-        },
-        timeout=cfg.get('timeout', 60)
-    )
-    resp.raise_for_status()
-    return resp.json()['choices'][0]['message']['content'].strip()
+    return call_writing_llm(cfg, messages)
 
 
 # ===================== AI 聊天 API 路由 =====================
@@ -1755,22 +1719,10 @@ def template_correct():
 
     content = ''
     try:
-        url, api_key, model, _provider = resolve_writing_llm(cfg)
-        resp = requests.post(
-            url,
-            headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
-            json={
-                'model': model,
-                'messages': [
-                    {'role': 'system', 'content': cfg['system_prompt']},
-                    {'role': 'user', 'content': user_prompt},
-                ],
-                'temperature': cfg['temperature'],
-            },
-            timeout=cfg.get('timeout', 45),
-        )
-        resp.raise_for_status()
-        content = resp.json()['choices'][0]['message']['content'].strip()
+        content = call_writing_llm(cfg, [
+            {'role': 'system', 'content': cfg['system_prompt']},
+            {'role': 'user', 'content': user_prompt},
+        ])
         return jsonify(_parse_ai_json(content))
     except requests.exceptions.Timeout:
         return jsonify({'error': 'AI 服务超时，请重试'}), 504

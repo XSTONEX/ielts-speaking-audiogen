@@ -8,6 +8,7 @@ import secrets
 import hashlib
 import shutil
 import threading
+import time
 import requests
 import yaml
 from datetime import datetime
@@ -83,28 +84,75 @@ def load_prompt(name):
 
 # ==================== 写作模块的出站 LLM ====================
 
-# DeerAPI 对国内机房直接返回 403（Your region is prohibited from using this service），
-# 生产服务器上只有 WildAPI 通，因此默认走 WildAPI；
-# 想回切 DeerAPI（例如在能直连的本机调试）设 WRITING_LLM_PROVIDER=deerapi。
+# 写作统一走 WildAPI 中转的 Gemini 原生接口。
+# gemini-3.8-flash 不支持 OpenAI 兼容的 /v1/chat/completions
+# （WildAPI 直接返回 "does not support this API (call_methods must include chat)"），
+# 只能用 /v1beta/models/<model>:generateContent，请求体和鉴权头都不一样。
 WILDAPI_DEFAULT_BASE = 'https://api.gptsapi.net/v1'
-# WildAPI 没有 gemini-3.1-flash-lite，映射到它提供的同档模型
-WILDAPI_MODEL_ALIASES = {
-    'gemini-3.1-flash-lite': 'gemini-3-flash-preview',
-}
+# 中转偶发 ReadTimeout，实测约一成，重试一次基本能救回来
+WRITING_LLM_ATTEMPTS = 2
+WRITING_LLM_RETRY_WAIT = 1
 
 
-def resolve_writing_llm(cfg):
-    """按 WRITING_LLM_PROVIDER 解析出站地址、密钥和模型。
-
-    返回 (url, api_key, model, provider_label)。
-    """
-    provider = (os.getenv('WRITING_LLM_PROVIDER') or 'wildapi').strip().lower()
-    model = cfg.get('model') or 'gpt-4o-mini'
-    if provider == 'deerapi':
-        return cfg.get('api_url'), os.getenv('DEER_API_KEY'), model, 'DeerAPI'
+def _gemini_endpoint(model):
     base = (os.getenv('WILDAPI_BASE_URL') or WILDAPI_DEFAULT_BASE).rstrip('/')
-    return (f'{base}/chat/completions', os.getenv('WILDAPI_API_KEY'),
-            WILDAPI_MODEL_ALIASES.get(model, model), 'WildAPI')
+    root = base[:-3].rstrip('/') if base.endswith('/v1') else base
+    return f'{root}/v1beta/models/{model}:generateContent'
+
+
+def call_writing_llm(cfg, messages):
+    """调用写作模型并返回回复文本。
+
+    messages 沿用 OpenAI 的 [{'role','content'}] 写法，这里转成 Gemini 的
+    systemInstruction + contents（assistant 在 Gemini 里叫 model）。
+
+    thinkingBudget 置 0：gemini-3.8-flash 默认每次要额外思考几百个 token，
+    关掉后延迟从中位 10 秒降到 6 秒、长尾也收窄，批改质量没有可见差别，
+    还省下思考 token 的费用。
+    """
+    model = cfg.get('model') or 'gemini-3.8-flash'
+    system = '\n\n'.join(m['content'] for m in messages
+                          if m.get('role') == 'system' and m.get('content'))
+    contents = [{'role': 'model' if m['role'] == 'assistant' else 'user',
+                 'parts': [{'text': m['content']}]}
+                for m in messages if m.get('role') in ('user', 'assistant') and m.get('content')]
+    body = {
+        'contents': contents,
+        'generationConfig': {
+            'temperature': cfg.get('temperature', 0.3),
+            'thinkingConfig': {'thinkingBudget': 0},
+        },
+    }
+    if system:
+        body['systemInstruction'] = {'parts': [{'text': system}]}
+
+    url = _gemini_endpoint(model)
+    headers = {'x-goog-api-key': os.getenv('WILDAPI_API_KEY'), 'Content-Type': 'application/json'}
+    timeout = cfg.get('timeout', 60)
+    last_error = None
+
+    for attempt in range(WRITING_LLM_ATTEMPTS):
+        try:
+            resp = requests.post(url, headers=headers, json=body, timeout=timeout)
+            resp.raise_for_status()
+            candidate = (resp.json().get('candidates') or [{}])[0]
+            parts = (candidate.get('content') or {}).get('parts') or []
+            text = ''.join(part.get('text', '') for part in parts).strip()
+            if text:
+                return text
+            last_error = RuntimeError(
+                f"模型未返回内容（finishReason={candidate.get('finishReason')}）")
+        except requests.exceptions.HTTPError as exc:
+            # 4xx 是请求本身的问题，重试没有意义
+            if exc.response is not None and 400 <= exc.response.status_code < 500:
+                raise
+            last_error = exc
+        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as exc:
+            last_error = exc
+        if attempt + 1 < WRITING_LLM_ATTEMPTS:
+            time.sleep(WRITING_LLM_RETRY_WAIT)
+
+    raise last_error
 
 
 # ==================== 路径安全 ====================

@@ -2,10 +2,9 @@
 # 路由: /api/writing/correct
 # 变量: question, target, reference, translation
 
-model: gpt-4o-mini
+model: gemini-3.8-flash
 temperature: 0.3
-api_url: https://api.deerapi.com/v1/chat/completions
-timeout: 30
+timeout: 60
 
 system_prompt: |
   你是一位专业的雅思写作考官。你的点评客观、直接、切中要害，不带任何主观情绪色彩。

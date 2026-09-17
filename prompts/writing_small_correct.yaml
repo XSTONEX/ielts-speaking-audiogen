@@ -2,10 +2,9 @@
 # 路由: /api/writing/small/correct
 # 变量: question, target, reference, translation
 
-model: gpt-4o-mini
+model: gemini-3.8-flash
 temperature: 0.3
-api_url: https://api.deerapi.com/v1/chat/completions
-timeout: 30
+timeout: 60
 
 system_prompt: |
   你现在是一位现任的雅思官方写作考官。学生正在进行雅思 Task 1（小作文）的句子级或段落级仿写练习。
