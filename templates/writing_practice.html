@@ -33,6 +33,10 @@
 <style>
 :root {
   --serif: 'PT Serif', 'Crimson Text', ui-serif, Georgia, serif;
+  /* 正文阅读用：拉丁走衬线，中文走苹方/雅黑。
+     原来的 --serif 里没有任何中文字体，中文一路回退到系统宋体，又细又糊。 */
+  --read: 'PT Serif', 'Crimson Text', 'PingFang SC', 'Hiragino Sans GB',
+          'Microsoft YaHei', Georgia, serif;
   --bg: #f8fafc;
   --card: #fff;
   --border: #e2e8f0;
@@ -950,7 +954,7 @@ html[data-theme="dark"] .wp-hl-toolbar { --wp-accent: #8a95ff; }
 .tpl-type-card::after { content:''; position:absolute; inset:0; border-radius:inherit; background:linear-gradient(90deg,var(--progress-bg-start) 0%,var(--progress-bg-end) 100%); z-index:-1; transition:clip-path .4s ease; clip-path:var(--prog-clip, inset(0 100% 0 0)); }
 .tpl-type-card:hover { border-color:var(--accent); transform:translateY(-2px); box-shadow:var(--shadow-lg); }
 .tpl-type-name { font-size:16px; font-weight:700; margin-bottom:4px; }
-.tpl-card-sub { font-size:12.5px; color:var(--text2); line-height:1.6; margin-bottom:6px;
+.tpl-card-sub { font-family:var(--read); font-size:13.5px; color:var(--text2); line-height:1.65; margin-bottom:6px;
   display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 .tpl-card-prog { display:flex; align-items:center; gap:8px; margin-top:10px; }
 .tpl-card-prog .bar { flex:1; height:5px; border-radius:999px; background:var(--border); overflow:hidden; }
@@ -971,7 +975,7 @@ html[data-theme="dark"] .wp-hl-toolbar { --wp-accent: #8a95ff; }
 
 .tpl-toolbar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:14px; }
 /* 题目要醒目：字号、字重都比正文高一档 */
-.tpl-question { font-size:16.5px; font-weight:700; line-height:1.6; color:var(--text); }
+.tpl-question { font-family:var(--read); font-size:17.5px; font-weight:700; line-height:1.65; color:var(--text); }
 .tpl-prac-head { display:flex; gap:14px; align-items:flex-start; }
 .tpl-prac-head .q { flex:1; min-width:0; }
 .tpl-thumb { flex:0 0 auto; width:170px; max-height:118px; object-fit:contain; border-radius:8px; border:1.5px solid var(--border); background:#fff; cursor:zoom-in; transition:border-color .15s; }
@@ -979,17 +983,18 @@ html[data-theme="dark"] .wp-hl-toolbar { --wp-accent: #8a95ff; }
 .tpl-section-card { background:var(--card); border:1.5px solid var(--border); border-radius:var(--radius); padding:16px 18px; margin-bottom:14px; }
 .tpl-section-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
 .tpl-section-name { font-size:14px; font-weight:700; }
-.tpl-section-note { font-size:12px; color:#b45309; background:#fffbeb; border-left:3px solid #f59e0b; padding:6px 10px; border-radius:0 6px 6px 0; margin-bottom:10px; line-height:1.6; }
+.tpl-section-note { font-family:var(--read); font-size:13px; color:#b45309; background:#fffbeb; border-left:3px solid #f59e0b; padding:6px 10px; border-radius:0 6px 6px 0; margin-bottom:10px; line-height:1.6; }
 .tpl-cmp { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
 .tpl-cmp-col-title { font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; }
 .tpl-row { padding:7px 0; border-bottom:1px dashed var(--border); }
 .tpl-row:last-child { border-bottom:none; }
-.tpl-sent { font-size:13.5px; line-height:1.75; color:var(--text); }
+.tpl-sent { font-family:var(--read); font-size:16px; line-height:1.72; color:var(--text); }
 .tpl-sent.empty { color:var(--text3); font-style:italic; }
-.tpl-slot { display:inline; padding:1px 6px; margin:0 1px; border-radius:5px; background:var(--accent-light); color:var(--accent); font-weight:600; font-size:12.5px; }
-.tpl-fill { background:#dcfce7; color:#166534; border-radius:5px; padding:1px 4px; font-weight:600; }
+/* 内边距收紧：原来 6px 的左右留白会让紧跟其后的逗号句号看着像多打了一个空格 */
+.tpl-slot { display:inline; padding:1px 3px; margin:0; border-radius:4px; background:var(--accent-light); color:var(--accent); font-weight:600; font-size:0.94em; }
+.tpl-fill { background:#dcfce7; color:#166534; border-radius:4px; padding:1px 3px; font-weight:600; }
 .tpl-pairs { margin-top:6px; display:flex; flex-direction:column; gap:3px; }
-.tpl-pair { font-size:12px; color:var(--text2); line-height:1.6; }
+.tpl-pair { font-family:var(--read); font-size:13.5px; color:var(--text2); line-height:1.65; }
 .tpl-pair b { color:var(--accent); font-weight:600; }
 
 .tpl-step-bar { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
@@ -998,7 +1003,7 @@ html[data-theme="dark"] .wp-hl-toolbar { --wp-accent: #8a95ff; }
 .tpl-step.active { border-color:var(--accent); background:var(--accent); color:#fff; }
 .tpl-step.done { border-color:var(--green); color:var(--green); }
 .tpl-step.active.done { background:var(--green); border-color:var(--green); color:#fff; }
-.tpl-preview { background:#f8fafc; border:1.5px dashed var(--border); border-radius:10px; padding:14px 16px; font-size:14px; line-height:1.9; color:var(--text); white-space:pre-wrap; }
+.tpl-preview { background:#f8fafc; border:1.5px dashed var(--border); border-radius:10px; padding:14px 16px; font-family:var(--read); font-size:15.5px; line-height:1.8; color:var(--text); white-space:pre-wrap; }
 .tpl-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:12px; }
 .tpl-btn { padding:8px 18px; border-radius:8px; border:1.5px solid var(--accent); background:var(--accent); color:#fff; font-size:13px; font-weight:600; cursor:pointer; transition:all .15s; }
 .tpl-btn:hover { filter:brightness(1.08); }
@@ -1010,21 +1015,21 @@ html[data-theme="dark"] .wp-hl-toolbar { --wp-accent: #8a95ff; }
 .tpl-score span { font-size:12px; font-weight:600; color:var(--text3); }
 .tpl-fb-block { margin-top:12px; }
 .tpl-fb-title { font-size:12px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; }
-.tpl-slot-fb { border-left:3px solid var(--border); padding:6px 0 6px 10px; margin-bottom:6px; font-size:13px; line-height:1.7; }
+.tpl-slot-fb { border-left:3px solid var(--border); padding:7px 0 7px 11px; margin-bottom:6px; font-family:var(--read); font-size:14.5px; line-height:1.7; }
 .tpl-slot-fb b { color:var(--text); }
-.tpl-corr { font-size:13px; line-height:1.8; padding:6px 0; border-bottom:1px dashed var(--border); }
+.tpl-corr { font-family:var(--read); font-size:14.5px; line-height:1.75; padding:7px 0; border-bottom:1px dashed var(--border); }
 .tpl-corr:last-child { border-bottom:none; }
 .tpl-corr .bad { color:#b91c1c; text-decoration:line-through; }
 .tpl-corr .good { color:#166534; font-weight:600; }
-.tpl-corr .why { color:var(--text3); font-size:12px; }
+.tpl-corr .why { color:var(--text2); font-size:13px; }
 .tpl-group { margin-bottom:16px; }
-.tpl-group-label { font-size:13px; font-weight:700; color:var(--text); margin-bottom:8px; padding-left:8px; border-left:3px solid var(--accent); }
+.tpl-group-label { font-size:14px; font-weight:700; color:var(--text); margin-bottom:8px; padding-left:8px; border-left:3px solid var(--accent); }
 .tpl-pattern { padding:8px 10px; border-radius:8px; transition:background .15s; cursor:pointer; }
 .tpl-pattern:hover { background:var(--accent-light); }
-.tpl-pattern-cn { font-size:12.5px; color:var(--text3); margin-bottom:2px; }
-.tpl-pattern-en { font-size:13.5px; color:var(--text); line-height:1.7; }
-.tpl-note { font-size:12px; color:var(--text3); line-height:1.7; background:#f8fafc; border-radius:6px; padding:8px 10px; margin-bottom:8px; }
-.tpl-textarea { width:100%; min-height:92px; padding:12px 14px; border:1.5px solid var(--border); border-radius:10px; font-size:14px; line-height:1.85; font-family:inherit; color:var(--text); resize:vertical; background:var(--card); }
+.tpl-pattern-cn { font-family:var(--read); font-size:14px; color:var(--text2); line-height:1.65; margin-bottom:3px; }
+.tpl-pattern-en { font-family:var(--read); font-size:16px; color:var(--text); line-height:1.72; }
+.tpl-note { font-family:var(--read); font-size:13px; color:var(--text2); line-height:1.7; background:#f8fafc; border-radius:6px; padding:8px 10px; margin-bottom:8px; }
+.tpl-textarea { width:100%; min-height:92px; padding:12px 14px; border:1.5px solid var(--border); border-radius:10px; font-size:16px; line-height:1.8; font-family:var(--read); color:var(--text); resize:vertical; background:var(--card); }
 .tpl-textarea:focus { outline:none; border-color:var(--accent); }
 /* 实战：左侧句子列表 + 右侧答题区 */
 .tpl-prac-grid { display:grid; grid-template-columns:290px 1fr; gap:14px; align-items:start; }
@@ -1036,12 +1041,12 @@ html[data-theme="dark"] .wp-hl-toolbar { --wp-accent: #8a95ff; }
 .tpl-sent-item.done { border-left:4px solid var(--green); }
 .tpl-sent-no { font-size:10.5px; color:var(--text3); margin-bottom:3px; display:flex; justify-content:space-between; align-items:center; }
 .tpl-sent-score { color:var(--green); font-weight:700; }
-.tpl-sent-cn { font-size:12.5px; line-height:1.55; color:var(--text); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.tpl-sent-cn { font-family:var(--read); font-size:13.5px; line-height:1.6; color:var(--text); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 .tpl-editor { background:var(--card); border:1.5px solid var(--border); border-radius:var(--radius); padding:14px 16px; }
 .tpl-editor-label { font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; }
-.tpl-editor-tpl { background:#f8fafc; border-radius:8px; padding:8px 11px; margin-bottom:10px; font-size:12.5px; line-height:1.8; }
+.tpl-editor-tpl { background:#f8fafc; border-radius:8px; padding:9px 12px; margin-bottom:10px; font-family:var(--read); font-size:14.5px; line-height:1.75; }
 .tpl-editor-tpl .tpl-editor-label { display:block; margin-bottom:4px; }
-.tpl-editor-cn { font-size:15.5px; line-height:1.7; color:var(--text); font-weight:600; margin-bottom:9px; }
+.tpl-editor-cn { font-family:var(--read); font-size:17px; line-height:1.68; color:var(--text); font-weight:600; margin-bottom:10px; }
 .tpl-tag-row { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:4px; }
 .tpl-imgslot { flex:0 0 auto; width:170px; }
 .tpl-imgdrop { width:170px; min-height:96px; border:2px dashed var(--border); border-radius:8px; background:#f8fafc;
