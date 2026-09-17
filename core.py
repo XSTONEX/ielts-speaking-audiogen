@@ -81,6 +81,32 @@ def load_prompt(name):
         return yaml.safe_load(f)
 
 
+# ==================== 写作模块的出站 LLM ====================
+
+# DeerAPI 对国内机房直接返回 403（Your region is prohibited from using this service），
+# 生产服务器上只有 WildAPI 通，因此默认走 WildAPI；
+# 想回切 DeerAPI（例如在能直连的本机调试）设 WRITING_LLM_PROVIDER=deerapi。
+WILDAPI_DEFAULT_BASE = 'https://api.gptsapi.net/v1'
+# WildAPI 没有 gemini-3.1-flash-lite，映射到它提供的同档模型
+WILDAPI_MODEL_ALIASES = {
+    'gemini-3.1-flash-lite': 'gemini-3-flash-preview',
+}
+
+
+def resolve_writing_llm(cfg):
+    """按 WRITING_LLM_PROVIDER 解析出站地址、密钥和模型。
+
+    返回 (url, api_key, model, provider_label)。
+    """
+    provider = (os.getenv('WRITING_LLM_PROVIDER') or 'wildapi').strip().lower()
+    model = cfg.get('model') or 'gpt-4o-mini'
+    if provider == 'deerapi':
+        return cfg.get('api_url'), os.getenv('DEER_API_KEY'), model, 'DeerAPI'
+    base = (os.getenv('WILDAPI_BASE_URL') or WILDAPI_DEFAULT_BASE).rstrip('/')
+    return (f'{base}/chat/completions', os.getenv('WILDAPI_API_KEY'),
+            WILDAPI_MODEL_ALIASES.get(model, model), 'WildAPI')
+
+
 # ==================== 路径安全 ====================
 
 def is_safe_path_segment(name):

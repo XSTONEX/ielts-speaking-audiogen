@@ -9,7 +9,7 @@ from flask import Blueprint, request, jsonify, send_file, send_from_directory
 from core import (
     WRITING_CORRECTION_DIR, WRITING_DATA_DIR, WRITING_MD_FILE,
     WRITING_SMALL_MD_FILE, WRITING_IMAGES_DIR, WRITING_CHAT_DIR, WRITING_TEMPLATE_FILE,
-    is_token_valid, load_tokens, load_prompt
+    is_token_valid, load_tokens, load_prompt, resolve_writing_llm
 )
 
 writing_bp = Blueprint('writing', __name__)
@@ -574,12 +574,12 @@ def small_writing_correct():
     )
 
     try:
-        api_key = os.getenv('DEER_API_KEY')
+        url, api_key, model, _provider = resolve_writing_llm(cfg)
         resp = requests.post(
-            cfg['api_url'],
+            url,
             headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
             json={
-                'model': cfg['model'],
+                'model': model,
                 'messages': [
                     {'role': 'system', 'content': cfg['system_prompt']},
                     {'role': 'user', 'content': user_prompt}
@@ -824,12 +824,12 @@ def writing_correct():
     )
 
     try:
-        api_key = os.getenv('DEER_API_KEY')
+        url, api_key, model, _provider = resolve_writing_llm(cfg)
         resp = requests.post(
-            cfg['api_url'],
+            url,
             headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
             json={
-                'model': cfg['model'],
+                'model': model,
                 'messages': [
                     {'role': 'system', 'content': cfg['system_prompt']},
                     {'role': 'user', 'content': user_prompt}
@@ -1275,12 +1275,12 @@ def _find_session_by_key(username, sentence_key):
 
 def _call_ai_chat(messages, cfg):
     """调用 AI 聊天接口，返回完整回复文本"""
-    api_key = os.getenv('DEER_API_KEY')
+    url, api_key, model, _provider = resolve_writing_llm(cfg)
     resp = requests.post(
-        cfg['api_url'],
+        url,
         headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
         json={
-            'model': cfg['model'],
+            'model': model,
             'messages': messages,
             'temperature': cfg.get('temperature', 0.6)
         },
@@ -1755,12 +1755,12 @@ def template_correct():
 
     content = ''
     try:
-        api_key = os.getenv('DEER_API_KEY')
+        url, api_key, model, _provider = resolve_writing_llm(cfg)
         resp = requests.post(
-            cfg['api_url'],
+            url,
             headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
             json={
-                'model': cfg['model'],
+                'model': model,
                 'messages': [
                     {'role': 'system', 'content': cfg['system_prompt']},
                     {'role': 'user', 'content': user_prompt},
