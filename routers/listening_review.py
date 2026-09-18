@@ -1,10 +1,11 @@
 from flask import Blueprint, request, jsonify, send_file
 import os, json, re, uuid, threading, shutil, requests, time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from openai import OpenAI
 from core import (
     LISTENING_REVIEW_DIR, is_token_valid, load_tokens, get_proxies,
-    get_openai_http_client, load_prompt, is_safe_path_segment,
+    get_openai_http_client, load_prompt, is_safe_path_segment, call_gemini_llm,
 )
 
 listening_review_bp = Blueprint('listening_review', __name__)
@@ -252,12 +253,21 @@ def _call_transcription(audio_file_path):
     return _call_wildapi_transcription(audio_file_path)
 
 
+def _strip_code_fence(content):
+    """剥掉模型偶尔自作主张套上的 ```json 围栏。"""
+    text = content.strip()
+    if not text.startswith('```'):
+        return text
+    text = re.sub(r'^```[a-zA-Z]*\s*', '', text)
+    return re.sub(r'\s*```$', '', text).strip()
+
+
 def _parse_polish_result(content, model_name):
     """解析润色 LLM 返回的 JSON（支持 {segments:[...]} 或顶层数组）。"""
     if not content or not content.strip():
         return None, f'{model_name} returned empty content'
     try:
-        result = json.loads(content.strip())
+        result = json.loads(_strip_code_fence(content))
     except json.JSONDecodeError as e:
         return None, f'{model_name} returned invalid JSON: {e}'
 
@@ -309,36 +319,80 @@ def _polish_and_translate_deerapi(segments):
         api_key=api_key,
         http_client=get_openai_http_client(),
     )
-    model_name = os.getenv('LISTENING_LLM_MODEL') or cfg['model']
+    # YAML 里的 model 是 Gemini 原生模型名，OpenAI 兼容口用不了，回切时请指定 LISTENING_LLM_MODEL
+    model_name = os.getenv('LISTENING_LLM_MODEL') or 'gemini-2.5-flash'
     return _polish_and_translate_with_client(
         client, segments, model_name, cfg['temperature'], cfg.get('response_format'),
     )
 
 
 def _polish_and_translate_wildapi(segments):
-    """Call LLM via WildAPI (国内可直连) to polish ASR text and translate."""
-    api_key = os.getenv('WILDAPI_API_KEY')
-    if not api_key:
+    """Call Gemini via WildAPI (国内可直连) to polish ASR text and translate.
+
+    走 Gemini 原生 generateContent 而非 OpenAI 兼容接口：gemini-3.8-flash 在
+    WildAPI 上不支持 /v1/chat/completions（同 core.call_gemini_llm 的注释）。
+    """
+    if not os.getenv('WILDAPI_API_KEY'):
         return None, 'WILDAPI_API_KEY not configured'
 
     cfg = load_prompt('listening_polish_translate')
-    base = (os.getenv('WILDAPI_BASE_URL') or 'https://api.gptsapi.net/v1').rstrip('/')
-    client = OpenAI(base_url=base, api_key=api_key, max_retries=0)
-    # 默认 gemini-3-flash-preview（实测可用）；开通后可改 LISTENING_LLM_MODEL / YAML
     model_name = os.getenv('LISTENING_LLM_MODEL') or cfg['model']
-    return _polish_and_translate_with_client(
-        client, segments, model_name, cfg['temperature'], cfg.get('response_format'),
-    )
+    segments_json = json.dumps(segments, ensure_ascii=False)
+    try:
+        content = call_gemini_llm({**cfg, 'model': model_name}, [
+            {'role': 'system', 'content': cfg['system_prompt']},
+            {'role': 'user', 'content': cfg['user_prompt'].format(segments_json=segments_json)},
+        ])
+    except Exception as e:
+        return None, f'{model_name} API error: {e}'
+    return _parse_polish_result(content, model_name)
 
 
-def _polish_and_translate(segments):
-    """按 LISTENING_LLM_PROVIDER 调度润色翻译（默认 wildapi，可回切 deerapi）。"""
+def _polish_one_batch(segments):
+    """按 LISTENING_LLM_PROVIDER 调度单批润色翻译（默认 wildapi，可回切 deerapi）。"""
     provider = (os.getenv('LISTENING_LLM_PROVIDER') or 'wildapi').strip().lower()
     if provider == 'deerapi':
         return _polish_and_translate_deerapi(segments)
     if provider != 'wildapi':
         return None, f'Unknown LISTENING_LLM_PROVIDER: {provider}'
     return _polish_and_translate_wildapi(segments)
+
+
+def _polish_and_translate(segments):
+    """分批润色翻译，再按 id 合并。
+
+    WildAPI 前面是 Cloudflare，单次请求跑满约 60 秒就会被掐断（504，或者更难看的
+    半截 body 导致 utf-8 解码失败）。一段 6 分半的音频整篇一次出就要 38 秒，10 分钟
+    的必炸，所以这里按 batch_size 切开，让每次请求都远离那条红线；批之间并发几路，
+    总耗时反而比原来整篇一次出更短。
+    """
+    if not segments:
+        return [], None
+
+    cfg = load_prompt('listening_polish_translate')
+    batch_size = max(1, int(cfg.get('batch_size') or 40))
+    batches = [segments[i:i + batch_size] for i in range(0, len(segments), batch_size)]
+    if len(batches) == 1:
+        return _polish_one_batch(batches[0])
+
+    workers = min(len(batches), max(1, int(cfg.get('batch_concurrency') or 3)))
+    merged, errors = [], []
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        for result, error in pool.map(_polish_one_batch, batches):
+            if error:
+                errors.append(error)
+            elif result:
+                merged.extend(result)
+
+    if errors:
+        # 任一批失败就整体失败：缺一段的稿子不如不给，用户点重试即可
+        return None, f'{len(errors)}/{len(batches)} 批润色失败: {errors[0]}'
+
+    got = {s.get('id') for s in merged}
+    missing = [s['id'] for s in segments if s['id'] not in got]
+    if missing:
+        return None, f'润色结果缺 {len(missing)} 句（首个缺失 id={missing[0]}）'
+    return merged, None
 
 
 def _download_audio_from_url(url_str, save_path):
@@ -386,7 +440,8 @@ def _transcribe_async(project_id, audio_path, username):
         # Phase 1: ASR transcription（默认 WildAPI，可 LISTENING_ASR_PROVIDER=groq 回切）
         result, error = _call_transcription(audio_path)
         if not result:
-            _update_project_status(username, project_id, status='error', error=error)
+            _update_project_status(username, project_id, status='error',
+                                   error=error, error_phase='transcribe')
             return
 
         # Mark translating and save duration
@@ -395,7 +450,10 @@ def _transcribe_async(project_id, audio_path, username):
         # Phase 2: LLM polish + translate（默认 WildAPI，可 LISTENING_LLM_PROVIDER=deerapi 回切）
         polished_segments, translate_error = _polish_and_translate(result['segments'])
         if not polished_segments:
-            _update_project_status(username, project_id, status='error', error=translate_error or 'Translation failed')
+            # 转录本身已经成功，别再让前端笼统报成 transcription failed
+            _update_project_status(username, project_id, status='error',
+                                   error=translate_error or 'Translation failed',
+                                   error_phase='polish')
             return
 
         # Merge polished text/translation into original segments (preserve start/end from Whisper)
@@ -413,12 +471,12 @@ def _transcribe_async(project_id, audio_path, username):
             'notes': [],
             'error_tags': {},
         })
-        _update_project_status(username, project_id, status='completed')
+        _update_project_status(username, project_id, status='completed', error_phase=None)
         print(f"Listening review done: {project_id}")
 
     except Exception as e:
         print(f"Listening review failed: {e}")
-        _update_project_status(username, project_id, status='error', error=str(e))
+        _update_project_status(username, project_id, status='error', error=str(e), error_phase='unknown')
 
 
 # ==================== Routes ====================

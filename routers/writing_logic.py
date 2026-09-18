@@ -9,7 +9,7 @@ from flask import Blueprint, request, jsonify, send_file, send_from_directory
 from core import (
     WRITING_CORRECTION_DIR, WRITING_DATA_DIR, WRITING_MD_FILE,
     WRITING_SMALL_MD_FILE, WRITING_IMAGES_DIR, WRITING_CHAT_DIR, WRITING_TEMPLATE_FILE,
-    is_token_valid, load_tokens, load_prompt, call_writing_llm
+    is_token_valid, load_tokens, load_prompt, call_gemini_llm
 )
 
 writing_bp = Blueprint('writing', __name__)
@@ -574,7 +574,7 @@ def small_writing_correct():
     )
 
     try:
-        content = call_writing_llm(cfg, [
+        content = call_gemini_llm(cfg, [
             {'role': 'system', 'content': cfg['system_prompt']},
             {'role': 'user', 'content': user_prompt},
         ])
@@ -812,7 +812,7 @@ def writing_correct():
     )
 
     try:
-        content = call_writing_llm(cfg, [
+        content = call_gemini_llm(cfg, [
             {'role': 'system', 'content': cfg['system_prompt']},
             {'role': 'user', 'content': user_prompt},
         ])
@@ -1251,7 +1251,7 @@ def _find_session_by_key(username, sentence_key):
 
 def _call_ai_chat(messages, cfg):
     """调用 AI 聊天接口，返回完整回复文本"""
-    return call_writing_llm(cfg, messages)
+    return call_gemini_llm(cfg, messages)
 
 
 # ===================== AI 聊天 API 路由 =====================
@@ -1719,7 +1719,7 @@ def template_correct():
 
     content = ''
     try:
-        content = call_writing_llm(cfg, [
+        content = call_gemini_llm(cfg, [
             {'role': 'system', 'content': cfg['system_prompt']},
             {'role': 'user', 'content': user_prompt},
         ])

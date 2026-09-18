@@ -2,13 +2,21 @@
 # 函数: _polish_and_translate()
 # 变量: segments_json
 #
-# 默认走 WildAPI；model 可用 LISTENING_LLM_MODEL 覆盖。
-# 实测 gemini-3-flash-preview 可用；gemini-3.5-flash-lite 当前 not implemented。
-# 若 LISTENING_LLM_PROVIDER=deerapi，可改回 gemini-2.5-flash。
+# 默认走 WildAPI 中转的 Gemini 原生接口（core.call_gemini_llm）；
+# gemini-3.8-flash 不支持 OpenAI 兼容的 chat/completions，model 名只对原生接口有效。
+# model 可用 LISTENING_LLM_MODEL 覆盖；若 LISTENING_LLM_PROVIDER=deerapi 回切到
+# OpenAI 兼容口，必须同时把 LISTENING_LLM_MODEL 指成该口能用的模型（如 gemini-2.5-flash）。
 
-model: gemini-3-flash-preview
+model: gemini-3.8-flash
 temperature: 0.3
 response_format: json_object
+max_output_tokens: 65536
+# WildAPI 前面的 Cloudflare 约 60 秒就掐断连接，所以整篇字幕分批送，每批约 20 秒出完；
+# 40 句 ≈ 3 分钟音频，实测单批 18~20 秒，离红线有足够余量。
+batch_size: 40
+batch_concurrency: 3
+# 略高于 Cloudflare 的切断点：真被掐时让对端的 504 先回来，而不是我们自己先超时
+timeout: 90
 
 system_prompt: |
   你是一个专业的英语母语校对专家和资深的中英翻译，特别精通雅思（IELTS）等英语语言考试的听力材料解析。

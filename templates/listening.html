@@ -745,7 +745,10 @@ async function openProject(id) {
   if (!proj) return;
   if (proj.status === 'processing') { showToast('Still transcribing, please wait...'); return; }
   if (proj.status === 'translating') { showToast('Translating, please wait...'); return; }
-  if (proj.status === 'error') { showToast('Transcription failed: ' + (proj.error || 'Unknown error')); return; }
+  if (proj.status === 'error') {
+    const phase = { transcribe: 'Transcription failed: ', polish: 'Polish/translate failed: ' }[proj.error_phase] || 'Processing failed: ';
+    showToast(phase + (proj.error || 'Unknown error')); return;
+  }
 
   const r = await API.get('/api/listening_review/project/' + id);
   if (r.error) { showToast(r.error); return; }
