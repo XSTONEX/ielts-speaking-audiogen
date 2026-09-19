@@ -1020,7 +1020,8 @@ html[data-theme="dark"] body.page-vocabulary .word-action-btn {
 }
 
 html[data-theme="dark"] body.page-vocabulary .favorite-btn {
-  color: #475569 !important;
+  /* 原 #475569 压在卡片底色 #101b2d 上只有 2.28，未收藏的星标几乎看不见 */
+  color: var(--text-muted) !important;
 }
 
 html[data-theme="dark"] body.page-vocabulary .favorite-btn:hover {
