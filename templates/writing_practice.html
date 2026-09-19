@@ -519,7 +519,8 @@ textarea, input { font-family: var(--serif); }
 .np-fab {
   position: fixed; right: 24px; bottom: 136px; padding: 12px 20px;
   border-radius: 50px; border: none; cursor: pointer; z-index: 1100;
-  background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+  /* 原 #0d9488/#14b8a6 配白字仅 3.74/2.49；加深后为 5.47/7.58 */
+  background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
   box-shadow: 0 8px 24px rgba(13,148,136,0.35); color: #fff; font-size: 14px; font-weight: 600;
   transition: transform 0.2s, box-shadow 0.2s;
 }
@@ -643,7 +644,8 @@ html[data-theme="dark"] .np-editor mark.np-hl { color: #1e293b; }
 .ai-float-btn {
   position: fixed; right: 24px; bottom: 80px; padding: 12px 20px;
   border-radius: 50px; border: none; cursor: pointer; z-index: 1100;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  /* 两个色标配白字原为 4.47 / 4.23，均未达 AA；加深后为 6.29 / 5.7 */
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
   box-shadow: 0 8px 24px rgba(99, 102, 241, 0.35); color: #ffffff; font-size: 14px; font-weight: 600;
   transition: transform 0.2s, box-shadow 0.2s;
 }

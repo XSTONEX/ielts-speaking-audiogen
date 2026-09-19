@@ -39,12 +39,14 @@
     .container { max-width: 1600px; margin: 0 auto; background:#fff; min-height: 100vh; display: flex; flex-direction: column; }
     
     /* Header */
-    .header { display:flex; justify-content:space-between; align-items:center; padding: 20px 32px; border-bottom:1px solid #f1f5f9; background: #fafbfc; }
+    .header { display:flex; justify-content:space-between; align-items:center; padding: 20px 32px; border-bottom:1px solid var(--border-default); /* 原写死 #fafbfc，暗色下页眉仍是亮底，
+       而 theme.css 已把 .header .title 改成近白色，标题对比度只剩 1.07 */
+    background: var(--bg-muted); }
     .header .title { font-weight:600; color:#111827; font-size: 24px; }
     .header .actions { display: flex; gap: 12px; align-items: center; }
     .btn { padding: 10px 20px; border:none; border-radius:12px; cursor:pointer; background:#f8fafc; color:#374151; font-weight:500; transition: all 0.2s; border: 1px solid #e2e8f0; font-size: 14px; }
     .btn:hover { background:#e2e8f0; transform: translateY(-1px); }
-    .btn.primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#fff; border: none; }
+    .btn.primary { background: linear-gradient(135deg, #4f46e5 0%, #764ba2 100%); color:#fff; border: none; }
     .btn.primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(102, 126, 234, 0.25); }
     .btn.export { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color:#fff; border: none; }
     .btn.export:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(16, 185, 129, 0.25); }
@@ -59,14 +61,14 @@
     /* Category Tabs */
     .cat-tabs { display:flex; gap:4px; justify-content:center; margin: 20px 16px 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 16px; }
     .cat-tabs button { padding:10px 18px; border-radius:12px; border:none; background:#f8fafc; cursor:pointer; font-weight:500; color:#6b7280; transition: all 0.2s; font-size: 14px; }
-    .cat-tabs button.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#fff; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
+    .cat-tabs button.active { background: linear-gradient(135deg, #4f46e5 0%, #764ba2 100%); color:#fff; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
     .cat-tabs button:hover:not(.active) { background:#e2e8f0; }
     
     /* Article List */
     .article-list { flex: 1; overflow-y: auto; padding: 0 16px 16px; }
     .article-item { border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin-bottom: 12px; background: #fff; cursor: pointer; transition: all 0.2s; }
     .article-item:hover { border-color: #c7d2fe; background: #f5f7ff; transform: translateY(-1px); }
-    .article-item.active { border-color: #667eea; background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%); }
+    .article-item.active { border-color: #4f46e5; background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%); }
     .article-title { font-weight: 600; color: #111827; font-size: 15px; margin-bottom: 6px; }
     .article-meta { color: #6b7280; font-size: 12px; display: flex; justify-content: space-between; }
     .article-stats { color: #10b981; font-weight: 500; }
@@ -77,7 +79,7 @@
     .vocab-subtitle { color: #6b7280; font-size: 14px; }
     .vocab-controls { display: flex; gap: 12px; margin-top: 16px; }
     .search-box { flex: 1; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 10px; background: #f8fafc; font-size: 14px; font-family: 'PT Serif', 'Crimson Text', ui-serif, 'Times New Roman', 'Georgia', serif; }
-    .search-box:focus { outline: none; border-color: #667eea; background: #fff; }
+    .search-box:focus { outline: none; border-color: #4f46e5; background: #fff; }
     
     /* Vocabulary List */
     .vocab-list { flex: 1; overflow-y: auto; padding: 16px 24px; }
@@ -88,7 +90,7 @@
     .vocab-meaning { color: #6b7280; font-size: 13px; line-height: 1.4; word-break: break-word; }
     .vocab-actions { flex-shrink: 0; display: flex; align-items: center; }
     .jump-btn { width: 32px; height: 32px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; color: #475569; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; font-size: 14px; }
-    .jump-btn:hover { background: #eef2f7; border-color: #cbd5e1; transform: translateY(-1px); color: #667eea; }
+    .jump-btn:hover { background: #eef2f7; border-color: #cbd5e1; transform: translateY(-1px); color: #4f46e5; }
     .jump-btn:active { transform: translateY(0); }
     
     /* Empty States */
@@ -124,7 +126,7 @@
     .category-filter-buttons { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
     .category-filter-btn { padding: 8px 16px; border: 2px solid #e5e7eb; border-radius: 20px; background: #fff; color: #6b7280; cursor: pointer; transition: all 0.2s; font-size: 14px; font-weight: 500; }
     .category-filter-btn:hover { border-color: #d1d5db; background: #f9fafb; }
-    .category-filter-btn.active { border-color: #667eea; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; }
+    .category-filter-btn.active { border-color: #4f46e5; background: linear-gradient(135deg, #4f46e5 0%, #764ba2 100%); color: #fff; }
     .article-selection { border: 1px solid #e5e7eb; border-radius: 12px; max-height: 300px; overflow-y: auto; }
     .article-category { margin-bottom: 16px; }
     .article-category:last-child { margin-bottom: 0; }
@@ -150,18 +152,18 @@
 
     /* Challenge Game Modal */
     .challenge-game { width: 600px; }
-    .challenge-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #f1f5f9; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; }
+    .challenge-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #f1f5f9; background: linear-gradient(135deg, #4f46e5 0%, #764ba2 100%); color: #fff; }
     .challenge-info h3 { margin: 0; font-size: 18px; }
     .challenge-progress { font-size: 14px; opacity: 0.9; margin-top: 4px; }
     .challenge-timer { font-size: 20px; font-weight: 600; background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 20px; }
     .challenge-question-container { padding: 40px 24px; text-align: center; background: #fafbfc; }
     .challenge-question { font-size: 24px; font-weight: 600; color: #111827; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 12px; }
-    .challenge-word { color: #667eea; }
-    .challenge-audio-btn { background: #667eea; color: #fff; border: none; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
+    .challenge-word { color: #4f46e5; }
+    .challenge-audio-btn { background: #4f46e5; color: #fff; border: none; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
     .challenge-audio-btn:hover { background: #5a67d8; transform: scale(1.1); }
     .challenge-options { padding: 0 24px 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .challenge-option { padding: 16px; border: 2px solid #e5e7eb; border-radius: 12px; background: #fff; cursor: pointer; transition: all 0.2s; text-align: center; font-weight: 500; }
-    .challenge-option:hover { border-color: #667eea; background: #f5f7ff; }
+    .challenge-option:hover { border-color: #4f46e5; background: #f5f7ff; }
     .challenge-option.correct { border-color: #10b981; background: #ecfdf5; color: #065f46; }
     .challenge-option.incorrect { border-color: #ef4444; background: #fef2f2; color: #991b1b; }
     .challenge-controls { display: flex; gap: 12px; justify-content: center; padding: 16px 24px; border-top: 1px solid #f1f5f9; }
@@ -169,7 +171,7 @@
     /* Challenge Result Modal */
     .challenge-result { width: 600px; }
     .result-summary { text-align: center; margin-bottom: 24px; }
-    .result-score { font-size: 48px; font-weight: 600; color: #667eea; margin-bottom: 8px; }
+    .result-score { font-size: 48px; font-weight: 600; color: #4f46e5; margin-bottom: 8px; }
     .result-accuracy { font-size: 18px; color: #6b7280; margin-bottom: 16px; }
     .result-details { display: flex; justify-content: space-around; padding: 16px; background: #f8fafc; border-radius: 12px; }
     .result-detail { text-align: center; }
@@ -185,7 +187,7 @@
     .challenge-history { width: 800px; }
     .history-tabs { display: flex; border-bottom: 1px solid #e5e7eb; margin-bottom: 24px; }
     .tab-btn { padding: 12px 24px; border: none; background: none; cursor: pointer; color: #6b7280; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.2s; }
-    .tab-btn.active { color: #667eea; border-bottom-color: #667eea; }
+    .tab-btn.active { color: #4f46e5; border-bottom-color: #4f46e5; }
     .tab-btn:hover:not(.active) { color: #374151; }
     .history-content { min-height: 300px; }
     .history-item { padding: 16px; border: 1px solid #e5e7eb; border-radius: 12px; margin-bottom: 12px; }
@@ -1660,7 +1662,7 @@
       
       content.innerHTML = `
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
-          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; text-align: center;">
+          <div style="background: linear-gradient(135deg, #4f46e5 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; text-align: center;">
             <div style="font-size: 24px; font-weight: 600;">${totalChallenges}</div>
             <div style="opacity: 0.9;">总挑战次数</div>
           </div>
