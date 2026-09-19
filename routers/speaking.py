@@ -103,11 +103,25 @@ def list_folders():
     folder_names = [f['name'] for f in folders]
     return jsonify({'folders': folder_names})
 
+# 音频文件名里带生成时间戳，内容一旦写入就不会再变，可以放心长缓存。
+# 默认的 Cache-Control: no-cache 会让浏览器每次播放前都回源校验一次，
+# 手机网络下这一个往返就是每句话开头的卡顿；缓存被淘汰时更是整段重下。
+AUDIO_CACHE_SECONDS = 31536000  # 1 年
+
+
 @speaking_bp.route('/audio/<folder>/<filename>')
 def serve_audio(folder, filename):
     if not is_safe_path_segment(folder):
         return jsonify({'error': 'Invalid folder name'}), 400
-    return send_from_directory(os.path.join(MOTHER_DIR, folder), filename)
+    resp = send_from_directory(
+        os.path.join(MOTHER_DIR, folder), filename,
+        max_age=AUDIO_CACHE_SECONDS, conditional=True,
+    )
+    resp.headers['Cache-Control'] = f'public, max-age={AUDIO_CACHE_SECONDS}, immutable'
+    # Werkzeug 会响应 206，却不主动声明 Accept-Ranges；
+    # 部分移动端播放器据此判断能否边下边播，缺了它就会先整段下载再出声。
+    resp.headers.setdefault('Accept-Ranges', 'bytes')
+    return resp
 
 @speaking_bp.route('/text/<folder>/<filename>')
 def get_text(folder, filename):
