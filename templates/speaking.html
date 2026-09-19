@@ -126,9 +126,6 @@ body.page-speaking select { font-family: inherit; }
 
 /* ---------- 全局导航（app-shell.js 注入，这里按新视觉重描一遍） ---------- */
 body.page-speaking .app-shell-nav {
-  gap: 20px;
-  padding: 0 20px;
-  height: 56px;
   background: var(--sp-surface);
   border-bottom: 1px solid var(--sp-line);
   box-shadow: none;
@@ -166,6 +163,36 @@ body.page-speaking .app-shell-logout {
 }
 body.page-speaking .app-shell-logout:hover { border-color: var(--sp-accent); color: var(--sp-accent); }
 
+/* 窄屏导航的新构件 —— 结构在 app-shell.js / theme.css，这里只换成本页的暖色 */
+body.page-speaking .app-shell-mark { background: var(--sp-accent-soft); color: var(--sp-accent-strong); }
+html[data-theme="dark"] body.page-speaking .app-shell-mark { color: #86D6C4; }
+body.page-speaking .app-shell-current { color: var(--sp-ink); }
+body.page-speaking .app-shell-current__name { font-weight: 500; }
+body.page-speaking .app-shell-nav.is-panel-open .app-shell-current { background: var(--sp-sunken); }
+body.page-speaking .app-shell-current__caret { color: var(--sp-ink-4); }
+body.page-speaking .app-shell-theme { color: var(--sp-ink-2); }
+body.page-speaking .app-shell-theme:hover { background: var(--sp-sunken); color: var(--sp-ink); }
+body.page-speaking .app-shell-avatar { border-color: var(--sp-line); background: var(--sp-sunken); color: var(--sp-ink-2); }
+body.page-speaking .app-shell-scrim { background: rgba(28, 27, 24, 0.44); }
+body.page-speaking .app-shell-panel {
+  background: var(--sp-surface);
+  border-color: var(--sp-line);
+  box-shadow: var(--sp-shadow-lg);
+}
+body.page-speaking .app-shell-tile { background: var(--sp-raised); color: var(--sp-ink); }
+html[data-theme="dark"] body.page-speaking .app-shell-tile { background: var(--sp-sunken); }
+body.page-speaking .app-shell-tile__icon { color: var(--sp-ink-3); }
+body.page-speaking .app-shell-tile.is-active { background: var(--sp-accent-soft); color: var(--sp-accent-strong); }
+html[data-theme="dark"] body.page-speaking .app-shell-tile.is-active { color: #86D6C4; }
+body.page-speaking .app-shell-tile.is-active .app-shell-tile__icon { color: inherit; }
+body.page-speaking .app-shell-tile__dot { background: var(--sp-accent); }
+body.page-speaking .app-shell-panel__sep { background: var(--sp-line); }
+body.page-speaking .app-shell-panel__avatar { background: var(--sp-sunken); color: var(--sp-ink-2); }
+body.page-speaking .app-shell-panel__name { color: var(--sp-ink); }
+body.page-speaking .app-shell-panel__account { color: var(--sp-ink-4); }
+body.page-speaking .app-shell-logout--panel { border-color: var(--sp-danger-line); color: var(--sp-danger); }
+body.page-speaking .app-shell-logout--panel:hover { border-color: var(--sp-danger); color: var(--sp-danger); }
+
 /* ---------- 排版骨架 ---------- */
 .sp-main {
   max-width: 1080px;
@@ -197,13 +224,9 @@ body.page-speaking.has-player .sp-main { padding-bottom: 116px; }
 .sp-grow { flex-grow: 1; min-width: 0; }
 .sp-truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-.sp-page-head {
-  display: flex;
-  align-items: flex-end;
-  gap: 16px;
-  margin-bottom: 18px;
-}
-.sp-head-actions { display: flex; align-items: center; gap: 8px; }
+.sp-page-head { display: flex; flex-direction: column; gap: 4px; margin-bottom: 18px; }
+.sp-page-head__row { display: flex; align-items: center; gap: 12px; }
+.sp-head-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 
 /* ---------- 控件 ---------- */
 .sp-btn {
@@ -727,10 +750,7 @@ body.page-speaking.on-topic .sp-fab { display: none; }
   .sp-main { padding: 16px 16px 32px; }
   body.page-speaking.has-player .sp-main { padding-bottom: 132px; }
   .sp-h1 { font-size: 25px; }
-  /* 窄屏上标题那行挤不下「管理」，让操作键换到下一行整排对齐 */
-  .sp-page-head { align-items: flex-start; flex-wrap: wrap; gap: 10px 12px; }
-  .sp-page-head .sp-grow { flex-basis: 100%; }
-  .sp-head-actions { margin-left: auto; }
+
   .sp-recent-grid { grid-template-columns: minmax(0, 1fr); }
   .sp-composer__controls { flex-direction: column; align-items: stretch; }
   .sp-seg { width: 100%; }
@@ -801,16 +821,15 @@ body.page-speaking.on-topic .sp-fab { display: none; }
 
   <!-- ==================== 音频库 ==================== -->
   <section id="viewLibrary" class="sp-view">
-    <div class="sp-page-head">
-      <div class="sp-grow">
-        <h1 class="sp-h1">口语音频库</h1>
-        <p class="sp-sub" id="libStats">读取中…</p>
+    <header class="sp-page-head">
+      <div class="sp-page-head__row">
+        <h1 class="sp-h1 sp-grow">口语音频库</h1>
+        <div class="sp-head-actions">
+          <button type="button" class="sp-btn sp-btn--sm" id="manageToggle">管理</button>
+        </div>
       </div>
-      <div class="sp-head-actions">
-        <button type="button" class="sp-icon-btn" id="themeToggle" aria-label="切换深浅色"></button>
-        <button type="button" class="sp-btn sp-btn--sm" id="manageToggle">管理</button>
-      </div>
-    </div>
+      <p class="sp-sub" id="libStats">读取中…</p>
+    </header>
 
     <div id="slotLibrary"></div>
 
@@ -1845,15 +1864,6 @@ body.page-speaking.on-topic .sp-fab { display: none; }
     this.textContent = state.manage ? '退出管理' : '管理';
     toast(state.manage ? '管理模式已开，进入话题后可以删除' : '已退出管理模式');
   });
-  $('themeToggle').addEventListener('click', function () {
-    var next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-    if (window.IELTSTheme) window.IELTSTheme.setPreference(next);
-    paintThemeToggle();
-  });
-  function paintThemeToggle() {
-    $('themeToggle').innerHTML = document.documentElement.dataset.theme === 'dark' ? ICON.sun : ICON.moon;
-  }
-
   $('partSeg').addEventListener('click', function (event) {
     var btn = event.target.closest('[data-part]');
     if (!btn) return;
@@ -1951,7 +1961,6 @@ body.page-speaking.on-topic .sp-fab { display: none; }
 
   verifyToken().then(function (valid) {
     if (!valid) { window.location.href = '/login'; return; }
-    paintThemeToggle();
     updateWordCount();
     onTopicFieldChange();
     placeComposer();
@@ -1964,7 +1973,6 @@ body.page-speaking.on-topic .sp-fab { display: none; }
     });
   });
 
-  document.addEventListener('themechange', paintThemeToggle);
 })();
 </script>
 </body>
