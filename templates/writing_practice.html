@@ -102,7 +102,7 @@ textarea, input { font-family: var(--serif); }
 .nav-btns { display: flex; gap: 8px; }
 .nav-btn { padding: 7px 16px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--card); font-size: 13px; color: var(--text2); transition: all .15s; }
 .nav-btn:hover { border-color: var(--accent); color: var(--accent); }
-.nav-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.nav-btn.active { background: var(--accent); color: var(--accent-contrast, #fff); border-color: var(--accent); }
 .back-btn { display: inline-flex; align-items: center; gap: 4px; padding: 6px 14px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--card); font-size: 13px; color: var(--text2); transition: all .15s; margin-bottom: 16px; }
 .back-btn:hover { border-color: var(--accent); color: var(--accent); }
 
@@ -614,6 +614,9 @@ textarea, input { font-family: var(--serif); }
   padding: 0.12em 0.1em; margin: 0 -0.1em; border-radius: 0; color: inherit;
   -webkit-box-decoration-break: clone; box-decoration-break: clone;
 }
+/* 荧光底色在明暗两套主题下都是亮色，所以文字色必须钉死为深色，
+   不能继承 --text —— 暗色主题下 --text 是近白色，高亮的字会彻底看不见（对比度 1.2）。 */
+.np-hl-yellow, .np-hl-green, .np-hl-pink, .np-hl-blue { color: #1e293b; }
 .np-hl-yellow { background: #fde047; }
 .np-hl-green { background: #86efac; }
 .np-hl-pink { background: #f9a8d4; }
