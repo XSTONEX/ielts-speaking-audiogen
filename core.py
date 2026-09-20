@@ -462,3 +462,134 @@ def generate_vocab_audio_async(article_id, word):
 def generate_challenge_vocab_audio(challenge_id, word):
     """为挑战生成词汇音频（使用challenge_id作为文章ID）"""
     return generate_and_save_vocab_audio(f"challenge_{challenge_id}", word)
+
+
+# ==================== MP3 时长（零依赖 + 磁盘缓存） ====================
+# 话题列表要显示「6 条 · 4:18」，pydub 解码整段太慢（每页要解几百个文件），
+# 这里只读 MP3 的第一个帧头：OpenAI TTS 出的是 CBR，按码率反推即可 O(1) 拿到时长；
+# 万一遇到 VBR（Xing/Info 头），就用头里的帧数算，两种情况都不用解码音频。
+
+_MP3_BITRATES = {
+    # (version_id, layer) -> 码率表，单位 kbps，索引 0 与 15 无效
+    (3, 1): [0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, 0],
+    (3, 2): [0, 32, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384, 0],
+    (3, 3): [0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 0],
+    (2, 1): [0, 32, 48, 56, 64, 80, 96, 112, 128, 144, 160, 176, 192, 224, 256, 0],
+    (2, 2): [0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, 0],
+}
+_MP3_BITRATES[(2, 3)] = _MP3_BITRATES[(2, 2)]
+_MP3_SAMPLE_RATES = {3: [44100, 48000, 32000], 2: [22050, 24000, 16000], 0: [11025, 12000, 8000]}
+_MP3_SAMPLES_PER_FRAME = {(3, 1): 384, (3, 2): 1152, (3, 3): 1152,
+                          (2, 1): 384, (2, 2): 1152, (2, 3): 576,
+                          (0, 1): 384, (0, 2): 1152, (0, 3): 576}
+
+
+def _mp3_duration_seconds(path):
+    """读 MP3 首帧头估算时长（秒）。解析不出来返回 0。"""
+    try:
+        size = os.path.getsize(path)
+        with open(path, 'rb') as f:
+            head = f.read(4096)
+            if not head:
+                return 0.0
+            offset = 0
+            # 跳过 ID3v2 标签
+            if head[:3] == b'ID3' and len(head) >= 10:
+                tag_size = ((head[6] & 0x7F) << 21 | (head[7] & 0x7F) << 14 |
+                            (head[8] & 0x7F) << 7 | (head[9] & 0x7F))
+                offset = 10 + tag_size
+                f.seek(offset)
+                head = f.read(4096)
+                if not head:
+                    return 0.0
+            # 找同步字
+            sync = -1
+            for i in range(len(head) - 4):
+                if head[i] == 0xFF and (head[i + 1] & 0xE0) == 0xE0:
+                    sync = i
+                    break
+            if sync < 0:
+                return 0.0
+            b1, b2 = head[sync + 1], head[sync + 2]
+            version_id = (b1 >> 3) & 0x03          # 3=MPEG1, 2=MPEG2, 0=MPEG2.5
+            layer_bits = (b1 >> 1) & 0x03          # 1=LayerIII, 2=LayerII, 3=LayerI
+            if version_id == 1 or layer_bits == 0:
+                return 0.0
+            layer = 4 - layer_bits
+            bitrates = _MP3_BITRATES.get((3 if version_id == 3 else 2, layer))
+            rates = _MP3_SAMPLE_RATES.get(version_id)
+            if not bitrates or not rates:
+                return 0.0
+            bitrate = bitrates[(b2 >> 4) & 0x0F] * 1000
+            rate_index = (b2 >> 2) & 0x03
+            if bitrate <= 0 or rate_index == 3:
+                return 0.0
+            sample_rate = rates[rate_index]
+            spf = _MP3_SAMPLES_PER_FRAME.get((version_id, layer), 1152)
+
+            # VBR：Xing / Info 头就在首帧的边信息之后
+            frame_start = offset + sync
+            tail = head[sync:sync + 200]
+            for tag in (b'Xing', b'Info'):
+                pos = tail.find(tag)
+                if pos >= 0 and len(tail) >= pos + 12:
+                    flags = int.from_bytes(tail[pos + 4:pos + 8], 'big')
+                    if flags & 0x01:
+                        frames = int.from_bytes(tail[pos + 8:pos + 12], 'big')
+                        if frames > 0:
+                            return round(frames * spf / sample_rate, 2)
+            # CBR：按码率反推
+            audio_bytes = size - frame_start
+            if audio_bytes <= 0:
+                return 0.0
+            return round(audio_bytes * 8 / bitrate, 2)
+    except Exception:
+        return 0.0
+
+
+_DURATION_CACHE_FILE = os.path.join(MOTHER_DIR, '.durations.json')
+_duration_cache = None
+_duration_cache_lock = threading.Lock()
+
+
+def _load_duration_cache():
+    global _duration_cache
+    if _duration_cache is None:
+        try:
+            with open(_DURATION_CACHE_FILE, 'r', encoding='utf-8') as f:
+                _duration_cache = json.load(f)
+        except Exception:
+            _duration_cache = {}
+    return _duration_cache
+
+
+def get_audio_duration(folder, filename):
+    """取单个音频时长（秒），按「文件大小」判断缓存是否还有效。"""
+    path = os.path.join(MOTHER_DIR, folder, filename)
+    key = f'{folder}/{filename}'
+    with _duration_cache_lock:
+        cache = _load_duration_cache()
+        entry = cache.get(key)
+        try:
+            size = os.path.getsize(path)
+        except OSError:
+            return 0.0
+        if isinstance(entry, list) and len(entry) == 2 and entry[0] == size:
+            return entry[1]
+        duration = _mp3_duration_seconds(path)
+        cache[key] = [size, duration]
+        return duration
+
+
+def flush_duration_cache():
+    """把新算出来的时长落盘。写临时文件再替换，避免半截文件。"""
+    with _duration_cache_lock:
+        if _duration_cache is None:
+            return
+        try:
+            tmp = _DURATION_CACHE_FILE + '.tmp'
+            with open(tmp, 'w', encoding='utf-8') as f:
+                json.dump(_duration_cache, f)
+            os.replace(tmp, _DURATION_CACHE_FILE)
+        except Exception:
+            pass

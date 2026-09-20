@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
     <script>
         (function () {
@@ -21,321 +21,1959 @@
         })();
     </script>
     <meta charset="UTF-8">
-    <title>Audio TTS Generator - Speaking</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- 内容复制自原 index.html 保持功能不变 -->
-    
-    <!-- Favicon -->
+    <title>口语音频库 · IELTS Lab</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="/static/android-chrome-192x192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="/static/android-chrome-512x512.png">
-    
-    <link href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Crimson+Text:wght@400;600&display=swap" rel="stylesheet">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+SC:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="/static/theme.css?v=20260919">
     <style>
-        body {
-            font-family: 'PT Serif', 'Crimson Text', ui-serif, 'Times New Roman', 'Georgia', serif;
-            background: linear-gradient(135deg, #e0e7ff 0%, #f4f6fa 100%);
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-        }
-        .container {
-            max-width: 700px;
-            margin: 40px auto;
-            background: #fff;
-            border-radius: 18px;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-            padding: 36px 28px 32px 28px;
-            position: relative;
-        }
-        h2 {
-            color: #3b4a6b;
-            letter-spacing: 1px;
-            margin-bottom: 18px;
-            text-align: center;
-        }
-        label {
-            display: block;
-            margin-top: 22px;
-            font-weight: 600;
-            color: #4a5a7a;
-            letter-spacing: 0.5px;
-        }
-        input[type="text"], textarea {
-            width: 100%;
-            padding: 12px 14px;
-            margin-top: 10px;
-            border-radius: 8px;
-            border: 1.5px solid #d1d5db;
-            background: #f8fafc;
-            font-size: 16px;
-            transition: border 0.2s, box-shadow 0.2s;
-            box-sizing: border-box;
-            outline: none;
-            font-family: 'PT Serif', 'Crimson Text', ui-serif, 'Times New Roman', 'Georgia', serif;
-        }
-        input[type="text"]:focus, textarea:focus {
-            border: 1.5px solid #4a90e2;
-            box-shadow: 0 0 0 2px #e0e7ff;
-            background: #fff;
-        }
-        textarea {
-            resize: vertical;
-            min-height: 80px;
-            max-height: 200px;
-        }
-        .actions {
-            margin-top: 22px;
-            display: flex;
-            gap: 18px;
-            justify-content: flex-start;
-        }
-        button {
-            padding: 12px 28px;
-            border: none;
-            border-radius: 8px;
-            background: linear-gradient(90deg, #4a90e2 60%, #6a82fb 100%);
-            color: #fff;
-            font-size: 17px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.08);
-            transition: background 0.2s, transform 0.1s;
-        }
-        button:hover {
-            background: linear-gradient(90deg, #357ab8 60%, #4a90e2 100%);
-            transform: translateY(-2px) scale(1.03);
-        }
-        button[style*="background:#e94e77"] {
-            background: linear-gradient(90deg, #e94e77 60%, #f77062 100%) !important;
-        }
-        button[style*="background:#e94e77"]:hover {
-            background: linear-gradient(90deg, #d72660 60%, #e94e77 100%) !important;
-        }
-        .audio-list {
-            margin-top: 44px;
-        }
-        .audio-list h3 {
-            color: #3b4a6b;
-            margin-bottom: 18px;
-            font-size: 22px;
-            border-bottom: 1.5px solid #e0e7ff;
-            padding-bottom: 6px;
-        }
-        .audio-folder {
-            background: #f4f8ff;
-            border-radius: 10px;
-            margin-bottom: 22px;
-            padding: 16px 18px 10px 18px;
-            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.04);
-        }
-        .audio-folder strong {
-            color: #4a90e2;
-            font-size: 17px;
-            letter-spacing: 0.5px;
-        }
-        .audio-file {
-            margin-left: 0;
-            margin-top: 10px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 7px 0;
-            border-bottom: 1px solid #e0e7ff;
-        }
-        .audio-file:last-child { border-bottom: none; }
-        audio { outline: none; height: 32px; }
-        .audio-file span { color: #6b7280; font-size: 15px; word-break: break-all; }
-        .folder-header { cursor: pointer; user-select: none; display: flex; align-items: center; font-size: 17px; font-weight: 600; color: #4a90e2; margin-bottom: 6px; }
-        .folder-header .arrow { display: inline-block; margin-right: 8px; transition: transform 0.2s; }
-        .folder-header.collapsed .arrow { transform: rotate(-90deg); }
-        .audio-file .view-text-btn { background: #f4f8ff; color: #4a90e2; border: 1px solid #4a90e2; border-radius: 5px; padding: 3px 10px; margin-left: 8px; font-size: 14px; cursor: pointer; transition: background 0.2s, color 0.2s; }
-        .audio-file .view-text-btn:hover { background: #4a90e2; color: #fff; }
-        #textModal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; right: 0; bottom: 0; background: rgba(60,70,90,0.25); align-items: center; justify-content: center; }
-        #textModal .modal-content { background: #fff; border-radius: 10px; padding: 28px 24px; max-width: 90vw; max-height: 70vh; overflow-y: auto; box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18); position: relative; }
-        #textModal .close-btn { position: absolute; right: 18px; top: 12px; font-size: 22px; color: #888; cursor: pointer; }
-        #textModal pre { white-space: pre-wrap; font-size: 16px; color: #333; margin: 0; }
-        .loading-spinner { display: inline-block; width: 22px; height: 22px; border: 3px solid #4a90e2; border-top: 3px solid #fff; border-radius: 50%; animation: spin 0.8s linear infinite; margin-left: 12px; vertical-align: middle; }
-        @keyframes spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }
-        .audio-text-content { background: #f8fafc; border: 1px solid #e0e7ff; border-radius: 7px; margin: 8px 0 0 0; padding: 12px 14px; font-size: 15px; color: #333; display: none; white-space: pre-wrap; box-shadow: 0 2px 8px rgba(74, 144, 226, 0.04); transition: max-height 0.2s; }
-        .audio-text-content.active { display: block; }
-        .audio-question { background: #e3f0ff; border-left: 5px solid #4a90e2; border-radius: 7px; margin: 0 0 8px 0; padding: 10px 14px; color: #225; font-size: 15px; font-weight: 500; box-shadow: 0 1px 4px rgba(74, 144, 226, 0.07); }
-        @media (max-width: 768px) { .container { margin: 20px auto; padding: 24px 20px; } h2 { font-size: 24px; } .actions { gap: 12px; flex-wrap: wrap; justify-content: center; } button { padding: 10px 20px; font-size: 15px; min-width: 100px; } .audio-list h3 { font-size: 20px; } .folder-header { font-size: 16px; } .audio-file .view-text-btn { padding: 2px 8px; font-size: 13px; margin-left: 6px; } .audio-file span { font-size: 14px; } }
-        @media (max-width: 600px) { .container { margin: 15px auto; padding: 20px 16px; } h2 { font-size: 22px; } .actions { gap: 10px; flex-direction: column; align-items: stretch; } button { padding: 10px 16px; font-size: 14px; min-width: auto; width: 100%; } .audio-list h3 { font-size: 18px; } .folder-header { font-size: 15px; } .audio-file { flex-direction: column; align-items: stretch; gap: 8px; } .audio-file > div { flex-wrap: wrap; gap: 8px; } .audio-file .view-text-btn { padding: 2px 6px; font-size: 12px; margin-left: 0; flex-shrink: 0; } .audio-file span { font-size: 13px; word-break: break-word; } audio { width: 100%; min-width: 200px; } }
-        @media (max-width: 480px) { .container { margin: 10px auto; padding: 16px 12px; } h2 { font-size: 20px; } label { font-size: 14px; margin-top: 18px; } input[type="text"], textarea { padding: 10px 12px; font-size: 15px; } .actions { gap: 8px; margin-top: 18px; } button { padding: 8px 12px; font-size: 13px; } .audio-list { margin-top: 32px; } .audio-list h3 { font-size: 16px; } .folder-header { font-size: 14px; } .audio-folder { padding: 12px 14px 8px 14px; margin-bottom: 16px; } .audio-file .view-text-btn { padding: 1px 5px; font-size: 11px; } .audio-question { padding: 8px 12px; font-size: 14px; } .audio-text-content { padding: 10px 12px; font-size: 14px; } }
-        
-        @keyframes gentle-glow {
-          0% { 
-            box-shadow: 0 8px 32px rgba(245, 158, 11, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
-          }
-          50% { 
-            box-shadow: 0 12px 40px rgba(245, 158, 11, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.4);
-            transform: translateY(-2px) scale(1.03);
-          }
-          100% { 
-            box-shadow: 0 8px 32px rgba(245, 158, 11, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px) scale(1.02);
-          }
-        }
+/* ============================================================
+   口语音频库 —— 页面自有的一套视觉语言（暖纸底 + 单一墨绿主色）。
+   所有变量都挂在 body.page-speaking 上，不影响其它页面；
+   若以后要推广到全站，把这一段搬进 theme.css 的变量层即可。
+   ============================================================ */
+body.page-speaking {
+  --sp-paper: #F6F3EC;
+  --sp-surface: #FFFFFF;
+  --sp-sunken: #EFEBE2;
+  --sp-raised: #FBFAF6;
+  --sp-line: #E2DCCF;
+  --sp-line-strong: #CFC7B4;
+  --sp-ink: #1C1B18;
+  --sp-ink-2: #55514A;
+  --sp-ink-3: #6F6A5E;
+  --sp-ink-4: #86806F;
+  --sp-accent: #15645A;
+  --sp-accent-strong: #0F4E46;
+  --sp-accent-soft: #DDEBE7;
+  --sp-accent-on: #FFFFFF;
+  --sp-accent-ring: rgba(21, 100, 90, 0.14);
+  --sp-accent-wash: #F4F8F6;
+  --sp-clay-soft: #F9EFE8;
+  --sp-clay-line: #EDD9CB;
+  --sp-clay-ink: #8C3E1F;
+  --sp-clay-body: #3A2C22;
+  --sp-neutral-soft: #E6E3DA;
+  --sp-neutral-ink: #4A463D;
+  --sp-danger: #93211A;
+  --sp-danger-line: #E5CAC6;
+  --sp-shadow-sm: 0 1px 2px rgba(28, 27, 24, 0.07);
+  --sp-shadow-lg: 0 18px 44px -20px rgba(28, 27, 24, 0.45);
+  --sp-serif: 'Newsreader', Georgia, 'Times New Roman', serif;
+  --sp-sans: 'IBM Plex Sans', 'IBM Plex Sans SC', system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  margin: 0;
+  background: var(--sp-paper) !important;
+  color: var(--sp-ink);
+  font-family: var(--sp-sans);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+html[data-theme="dark"] body.page-speaking {
+  --sp-paper: #131311;
+  --sp-surface: #1C1B18;
+  --sp-sunken: #262520;
+  --sp-raised: #1C1B18;
+  --sp-line: #33322C;
+  --sp-line-strong: #3F3E36;
+  --sp-ink: #F2EFE7;
+  --sp-ink-2: #C5BFB0;
+  --sp-ink-3: #A9A294;
+  --sp-ink-4: #7E7869;
+  --sp-accent: #5FBFAE;
+  --sp-accent-strong: #86D6C4;
+  --sp-accent-soft: #1E3A35;
+  /* 浅青底上白字只有 2.2 的对比度，深色主题的实心按钮必须换成深色字 */
+  --sp-accent-on: #10241F;
+  --sp-accent-ring: rgba(95, 191, 174, 0.22);
+  --sp-accent-wash: #18211F;
+  --sp-clay-soft: #2B2019;
+  --sp-clay-line: #3E2E22;
+  --sp-clay-ink: #E5A97C;
+  --sp-clay-body: #DCC9B8;
+  --sp-neutral-soft: #2C2B25;
+  --sp-neutral-ink: #C5BFB0;
+  --sp-danger: #E8776A;
+  --sp-danger-line: #4A2B27;
+  --sp-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --sp-shadow-lg: 0 18px 44px -18px rgba(0, 0, 0, 0.75);
+  background: var(--sp-paper) !important;
+}
+
+/* theme.css 给 html 上了深色页面底色（偏蓝），内容不满一屏时会从 body 边上透出来。
+   :has() 让这一页的画布底色跟着自己的暖色走，min-height 是老浏览器的兜底。 */
+html:has(body.page-speaking) { background: #F6F3EC; }
+html[data-theme="dark"]:has(body.page-speaking) { background: #131311; }
+body.page-speaking { min-height: 100vh; }
+
+body.page-speaking * { box-sizing: border-box; }
+/* UA 的 [hidden]{display:none} 特异度只有 (0,1,0)，会被 .sp-section{display:flex}
+   这类规则盖掉，导致 hidden 的元素照样显示。统一兜一条。 */
+body.page-speaking [hidden] { display: none !important; }
+.sp-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+body.page-speaking button,
+body.page-speaking input,
+body.page-speaking textarea,
+body.page-speaking select { font-family: inherit; }
+
+/* ---------- 全局导航（app-shell.js 注入，这里按新视觉重描一遍） ---------- */
+body.page-speaking .app-shell-nav {
+  background: var(--sp-surface);
+  border-bottom: 1px solid var(--sp-line);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+html[data-theme="dark"] body.page-speaking .app-shell-nav { background: var(--sp-surface); }
+body.page-speaking .app-shell-brand {
+  font-family: var(--sp-serif);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--sp-ink);
+}
+body.page-speaking .app-shell-link {
+  font-size: 13.5px;
+  font-weight: 400;
+  color: var(--sp-ink-2);
+  padding: 6px 11px;
+  border-radius: 7px;
+}
+body.page-speaking .app-shell-link:hover { background: var(--sp-sunken); color: var(--sp-ink); }
+body.page-speaking .app-shell-link.is-active {
+  background: var(--sp-accent-soft);
+  color: var(--sp-accent-strong);
+  font-weight: 500;
+}
+html[data-theme="dark"] body.page-speaking .app-shell-link.is-active { color: var(--sp-accent); }
+body.page-speaking .app-shell-user { color: var(--sp-ink-2); }
+body.page-speaking .app-shell-logout {
+  border: 1px solid var(--sp-line);
+  background: var(--sp-surface);
+  color: var(--sp-ink-2);
+  border-radius: 8px;
+  font-weight: 400;
+  font-size: 12.5px;
+}
+body.page-speaking .app-shell-logout:hover { border-color: var(--sp-accent); color: var(--sp-accent); }
+
+/* 窄屏导航的新构件 —— 结构在 app-shell.js / theme.css，这里只换成本页的暖色 */
+body.page-speaking .app-shell-mark { background: var(--sp-accent-soft); color: var(--sp-accent-strong); }
+html[data-theme="dark"] body.page-speaking .app-shell-mark { color: #86D6C4; }
+body.page-speaking .app-shell-current { color: var(--sp-ink); }
+body.page-speaking .app-shell-current__name { font-weight: 500; }
+body.page-speaking .app-shell-nav.is-panel-open .app-shell-current { background: var(--sp-sunken); }
+body.page-speaking .app-shell-current__caret { color: var(--sp-ink-4); }
+body.page-speaking .app-shell-theme { color: var(--sp-ink-2); }
+body.page-speaking .app-shell-theme:hover { background: var(--sp-sunken); color: var(--sp-ink); }
+body.page-speaking .app-shell-avatar { border-color: var(--sp-line); background: var(--sp-sunken); color: var(--sp-ink-2); }
+body.page-speaking .app-shell-scrim { background: rgba(28, 27, 24, 0.44); }
+body.page-speaking .app-shell-panel {
+  background: var(--sp-surface);
+  border-color: var(--sp-line);
+  box-shadow: var(--sp-shadow-lg);
+}
+body.page-speaking .app-shell-tile { background: var(--sp-raised); color: var(--sp-ink); }
+html[data-theme="dark"] body.page-speaking .app-shell-tile { background: var(--sp-sunken); }
+body.page-speaking .app-shell-tile__icon { color: var(--sp-ink-3); }
+body.page-speaking .app-shell-tile.is-active { background: var(--sp-accent-soft); color: var(--sp-accent-strong); }
+html[data-theme="dark"] body.page-speaking .app-shell-tile.is-active { color: #86D6C4; }
+body.page-speaking .app-shell-tile.is-active .app-shell-tile__icon { color: inherit; }
+body.page-speaking .app-shell-tile__dot { background: var(--sp-accent); }
+body.page-speaking .app-shell-panel__sep { background: var(--sp-line); }
+body.page-speaking .app-shell-panel__avatar { background: var(--sp-sunken); color: var(--sp-ink-2); }
+body.page-speaking .app-shell-panel__name { color: var(--sp-ink); }
+body.page-speaking .app-shell-panel__account { color: var(--sp-ink-4); }
+body.page-speaking .app-shell-logout--panel { border-color: var(--sp-danger-line); color: var(--sp-danger); }
+body.page-speaking .app-shell-logout--panel:hover { border-color: var(--sp-danger); color: var(--sp-danger); }
+
+/* ---------- 排版骨架 ---------- */
+.sp-main {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 24px 24px 40px;
+}
+body.page-speaking.has-player .sp-main { padding-bottom: 116px; }
+.sp-view[hidden] { display: none; }
+
+.sp-h1 {
+  margin: 0;
+  font-family: var(--sp-serif);
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 1.15;
+  color: var(--sp-ink);
+}
+.sp-sub { margin: 4px 0 0; font-size: 13px; color: var(--sp-ink-3); }
+.sp-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--sp-ink-3);
+}
+.sp-num { font-variant-numeric: tabular-nums; }
+.sp-en { font-family: var(--sp-serif); }
+.sp-row { display: flex; align-items: center; gap: 10px; }
+.sp-grow { flex-grow: 1; min-width: 0; }
+.sp-truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.sp-page-head { display: flex; flex-direction: column; gap: 4px; margin-bottom: 18px; }
+.sp-page-head__row { display: flex; align-items: center; gap: 12px; }
+.sp-head-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+/* ---------- 控件 ---------- */
+.sp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--sp-line-strong);
+  border-radius: 8px;
+  background: var(--sp-surface);
+  color: var(--sp-ink);
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color .15s ease, background .15s ease;
+}
+.sp-btn:hover { border-color: var(--sp-ink-4); }
+.sp-btn:disabled { opacity: .5; cursor: default; }
+.sp-btn--primary {
+  border-color: var(--sp-accent);
+  background: var(--sp-accent);
+  color: var(--sp-accent-on);
+  font-weight: 500;
+}
+.sp-btn--primary:hover { background: var(--sp-accent-strong); border-color: var(--sp-accent-strong); }
+html[data-theme="dark"] .sp-btn--primary:hover { color: var(--sp-accent-on); }
+.sp-btn--ghost { border-color: transparent; background: transparent; color: var(--sp-ink-2); }
+.sp-btn--ghost:hover { border-color: var(--sp-line); background: var(--sp-surface); }
+.sp-btn--danger { border-color: var(--sp-danger-line); color: var(--sp-danger); }
+.sp-btn--danger:hover { border-color: var(--sp-danger); }
+.sp-btn--danger-solid {
+  border-color: var(--sp-danger);
+  background: var(--sp-danger);
+  color: #FFFFFF;
+  font-weight: 500;
+}
+html[data-theme="dark"] .sp-btn--danger-solid { color: #2A0F0C; }
+.sp-btn--sm { height: 32px; padding: 0 11px; font-size: 12.5px; }
+.sp-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border: 1px solid var(--sp-line);
+  border-radius: 8px;
+  background: var(--sp-surface);
+  color: var(--sp-ink-2);
+  cursor: pointer;
+}
+.sp-icon-btn:hover { color: var(--sp-ink); border-color: var(--sp-line-strong); }
+.sp-icon-btn--plain { border-color: transparent; background: transparent; }
+.sp-icon-btn--plain:hover { background: var(--sp-sunken); border-color: transparent; }
+.sp-icon-btn--danger { border-color: var(--sp-danger-line); color: var(--sp-danger); }
+
+.sp-input,
+.sp-textarea {
+  width: 100%;
+  border: 1px solid var(--sp-line-strong);
+  border-radius: 8px;
+  background: var(--sp-surface);
+  color: var(--sp-ink);
+  font-size: 14px;
+}
+.sp-input { height: 40px; padding: 0 12px; }
+.sp-textarea {
+  padding: 12px 13px;
+  font-family: var(--sp-serif);
+  font-size: 16px;
+  line-height: 1.65;
+  resize: vertical;
+  min-height: 62px;
+}
+/* theme.css 的深色输入框规则特异度很高（带 5 个 :not()），只能用 !important 压过去 */
+html[data-theme="dark"] body.page-speaking .sp-input,
+html[data-theme="dark"] body.page-speaking .sp-textarea {
+  background: var(--sp-raised) !important;
+  color: var(--sp-ink) !important;
+  border-color: var(--sp-line-strong) !important;
+}
+body.page-speaking .sp-input:focus,
+body.page-speaking .sp-textarea:focus {
+  outline: none;
+  border-color: var(--sp-accent) !important;
+  box-shadow: 0 0 0 3px var(--sp-accent-ring) !important;
+}
+body.page-speaking .sp-input::placeholder,
+body.page-speaking .sp-textarea::placeholder { color: var(--sp-ink-4); }
+
+.sp-seg {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  background: var(--sp-sunken);
+  border-radius: 9px;
+}
+.sp-seg button {
+  height: 32px;
+  padding: 0 13px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--sp-ink-2);
+  font-size: 13px;
+  cursor: pointer;
+}
+.sp-seg button.is-active {
+  background: var(--sp-surface);
+  color: var(--sp-ink);
+  font-weight: 500;
+  box-shadow: var(--sp-shadow-sm);
+}
+html[data-theme="dark"] .sp-seg button.is-active { background: #3B3A32; box-shadow: none; }
+
+.sp-chip {
+  height: 30px;
+  padding: 0 13px;
+  border: 1px solid var(--sp-line);
+  border-radius: 999px;
+  background: var(--sp-surface);
+  color: var(--sp-ink-2);
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.sp-chip:hover { border-color: var(--sp-line-strong); }
+.sp-chip.is-active {
+  background: var(--sp-ink);
+  border-color: var(--sp-ink);
+  color: var(--sp-paper);
+}
+
+.sp-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 21px;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+.sp-badge--p1 { background: var(--sp-accent-soft); color: var(--sp-accent-strong); }
+html[data-theme="dark"] .sp-badge--p1 { color: #86D6C4; }
+.sp-badge--p2 { background: var(--sp-clay-soft); color: var(--sp-clay-ink); }
+.sp-badge--p3,
+.sp-badge--other { background: var(--sp-neutral-soft); color: var(--sp-neutral-ink); }
+
+.sp-card {
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-line);
+  border-radius: 12px;
+}
+.sp-section { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+
+/* ---------- 搜索 / 筛选 ---------- */
+.sp-searchbar { display: flex; align-items: center; gap: 10px; margin-top: 18px; }
+.sp-search {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 44px;
+  padding: 0 13px;
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-line);
+  border-radius: 10px;
+}
+.sp-search:focus-within { border-color: var(--sp-accent); box-shadow: 0 0 0 3px var(--sp-accent-ring); }
+.sp-search svg { color: var(--sp-ink-4); flex-shrink: 0; }
+body.page-speaking .sp-search input {
+  flex-grow: 1;
+  min-width: 0;
+  border: none !important;
+  outline: none;
+  background: transparent !important;
+  color: var(--sp-ink) !important;
+  font-size: 14.5px;
+  box-shadow: none !important;
+}
+body.page-speaking .sp-sort {
+  height: 44px;
+  padding: 0 32px 0 12px;
+  border: 1px solid var(--sp-line);
+  border-radius: 10px;
+  background: var(--sp-surface) url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 16 16' fill='none' stroke='%2386806F' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 6 8 10.5 12.5 6'/%3E%3C/svg%3E") no-repeat right 11px center;
+  color: var(--sp-ink);
+  font-size: 13.5px;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+.sp-chips { display: flex; align-items: center; gap: 8px; margin-top: 12px; overflow-x: auto; scrollbar-width: none; }
+.sp-chips::-webkit-scrollbar { display: none; }
+
+/* ---------- 最近使用 ---------- */
+.sp-recent-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.sp-recent {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 14px;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+.sp-recent:hover { border-color: var(--sp-line-strong); }
+.sp-recent__name {
+  font-family: var(--sp-serif);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--sp-ink);
+  line-height: 1.25;
+}
+
+/* ---------- 话题列表 ---------- */
+.sp-list { overflow: hidden; }
+.sp-list__row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--sp-line);
+  cursor: pointer;
+  background: none;
+  width: 100%;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+}
+.sp-list__row:last-child { border-bottom: none; }
+.sp-list__row:hover { background: var(--sp-raised); }
+html[data-theme="dark"] .sp-list__row:hover { background: var(--sp-sunken); }
+.sp-list__name { font-size: 15px; font-weight: 500; color: var(--sp-ink); }
+.sp-list__sub { font-size: 12.5px; color: var(--sp-ink-3); margin-top: 2px; }
+.sp-list__meta { font-size: 12.5px; color: var(--sp-ink-3); white-space: nowrap; }
+.sp-empty { padding: 28px 16px; text-align: center; color: var(--sp-ink-3); font-size: 13.5px; }
+
+/* ---------- 生成卡片 / 底部抽屉 ---------- */
+.sp-composer {
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-line);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 18px;
+}
+.sp-composer[hidden] { display: none; }
+.sp-composer__controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.sp-composer__foot { flex-wrap: wrap; gap: 8px 14px; }
+.sp-topicfield { position: relative; flex-grow: 1; min-width: 190px; max-width: 330px; }
+.sp-composer__sheet-head { display: none; }
+.sp-hint { font-size: 12.5px; color: var(--sp-ink-4); }
+.sp-hint b { color: var(--sp-ink); font-weight: 500; }
+.sp-check { display: flex; align-items: flex-start; gap: 9px; font-size: 13px; line-height: 1.5; color: var(--sp-ink-2); }
+.sp-check input { width: 17px; height: 17px; margin: 1px 0 0; accent-color: var(--sp-accent); flex-shrink: 0; }
+
+.sp-suggest {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 30;
+  border: 1px solid var(--sp-line);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--sp-surface);
+  box-shadow: var(--sp-shadow-lg);
+  max-height: 208px;
+  overflow-y: auto;
+}
+.sp-suggest button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 9px 12px;
+  border: none;
+  border-top: 1px solid var(--sp-line);
+  background: var(--sp-surface);
+  color: var(--sp-ink);
+  font-size: 13.5px;
+  text-align: left;
+  cursor: pointer;
+}
+.sp-suggest button:first-child { border-top: none; }
+.sp-suggest button:hover { background: var(--sp-accent-wash); }
+.sp-suggest .sp-suggest__new { color: var(--sp-accent); }
+
+.sp-question {
+  background: var(--sp-clay-soft);
+  border: 1px solid var(--sp-clay-line);
+  border-radius: 12px;
+  padding: 13px 15px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.sp-question__label { font-size: 11.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sp-clay-ink); }
+.sp-question__text { margin: 5px 0 0; font-family: var(--sp-serif); font-size: 16px; line-height: 1.55; color: var(--sp-clay-body); white-space: pre-line; }
+
+.sp-queue { border: 1px solid var(--sp-line); border-radius: 11px; overflow: hidden; }
+.sp-queue__head { display: flex; align-items: center; gap: 10px; padding: 10px 13px; border-bottom: 1px solid var(--sp-line); background: var(--sp-raised); }
+html[data-theme="dark"] .sp-queue__head { background: var(--sp-sunken); }
+.sp-queue__row { display: flex; align-items: center; gap: 11px; padding: 10px 13px; border-top: 1px solid var(--sp-line); }
+.sp-queue__row:first-of-type { border-top: none; }
+.sp-spinner {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border: 2px solid var(--sp-line-strong);
+  border-top-color: var(--sp-accent);
+  border-radius: 50%;
+  animation: sp-spin .8s linear infinite;
+}
+@keyframes sp-spin { to { transform: rotate(360deg); } }
+.sp-done {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--sp-accent-soft);
+  color: var(--sp-accent-strong);
+}
+html[data-theme="dark"] .sp-done { color: #86D6C4; }
+
+/* ---------- 话题详情 ---------- */
+.sp-topic-head { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
+.sp-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 10px 0 6px;
+  border: none;
+  background: transparent;
+  color: var(--sp-ink-2);
+  font-size: 13.5px;
+  cursor: pointer;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+.sp-back:hover { background: var(--sp-sunken); }
+.sp-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 14px 0; }
+
+.sp-clip { border-bottom: 1px solid var(--sp-line); }
+.sp-clip:last-child { border-bottom: none; }
+.sp-clip.is-current { background: var(--sp-accent-wash); }
+.sp-clip.is-linked { background: var(--sp-clay-soft); transition: background 1.2s ease; }
+.sp-clip__row { display: flex; align-items: center; gap: 13px; padding: 12px 16px; }
+.sp-clip__index { width: 22px; flex-shrink: 0; font-family: var(--sp-serif); font-size: 15px; color: var(--sp-ink-4); }
+.sp-clip.is-current .sp-clip__index { color: var(--sp-accent); }
+.sp-play {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--sp-line);
+  border-radius: 999px;
+  background: var(--sp-surface);
+  color: var(--sp-ink);
+  cursor: pointer;
+}
+.sp-play:hover { border-color: var(--sp-accent); color: var(--sp-accent); }
+.sp-play.is-playing {
+  background: var(--sp-accent);
+  border-color: var(--sp-accent);
+  color: var(--sp-accent-on);
+}
+.sp-clip__title { font-family: var(--sp-serif); font-size: 15.5px; color: var(--sp-ink); }
+.sp-clip__meta { font-size: 12px; color: var(--sp-ink-3); margin-top: 2px; }
+.sp-clip__q {
+  margin: 0 16px 0 70px;
+  padding: 8px 12px;
+  background: var(--sp-accent-wash);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--sp-ink-2);
+}
+.sp-clip__body { padding: 0 16px 14px 70px; }
+.sp-clip__text {
+  margin: 0 0 10px;
+  font-family: var(--sp-serif);
+  font-size: 16px;
+  line-height: 1.75;
+  color: var(--sp-ink);
+  white-space: pre-wrap;
+}
+
+/* ---------- 播放条 ---------- */
+.sp-player {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1250;
+  background: var(--sp-surface);
+  border-top: 1px solid var(--sp-line);
+  padding: 12px 24px calc(12px + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.sp-player[hidden] { display: none; }
+.sp-player__title { font-size: 13.5px; font-weight: 500; color: var(--sp-ink); }
+.sp-player__sub { font-size: 12px; color: var(--sp-ink-3); margin-top: 1px; }
+.sp-player__time { font-size: 12.5px; color: var(--sp-ink-3); }
+.sp-seek {
+  flex-grow: 1;
+  min-width: 60px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+/* 两个都得显式 block：track 是 flex 子项会被 blockify，fill 不是，
+   留成 inline 的话宽度直接被忽略，进度条永远是空的。 */
+.sp-seek__track {
+  display: block;
+  width: 100%;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--sp-neutral-soft);
+  overflow: hidden;
+}
+.sp-seek__fill {
+  display: block;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--sp-accent);
+  width: 0;
+  /* timeupdate 一秒只来四次，补一段线性过渡才不会一跳一跳 */
+  transition: width .2s linear;
+}
+.sp-seek:hover .sp-seek__track { background: var(--sp-line-strong); }
+.sp-play--lg {
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: var(--sp-accent);
+  color: var(--sp-accent-on);
+}
+.sp-play--lg:hover { background: var(--sp-accent-strong); color: var(--sp-accent-on); border-color: transparent; }
+
+/* ---------- 浮动按钮 / 遮罩 / 弹窗 ---------- */
+.sp-fab {
+  display: none;
+  position: fixed;
+  right: 16px;
+  bottom: calc(20px + env(safe-area-inset-bottom));
+  z-index: 1240;
+  height: 52px;
+  padding: 0 20px;
+  align-items: center;
+  gap: 9px;
+  border: none;
+  border-radius: 999px;
+  background: var(--sp-accent);
+  color: var(--sp-accent-on);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 14px 30px -12px rgba(21, 100, 90, 0.75);
+}
+body.page-speaking.has-player .sp-fab { bottom: calc(104px + env(safe-area-inset-bottom)); }
+body.page-speaking.on-topic .sp-fab { display: none; }
+
+.sp-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  background: rgba(28, 27, 24, 0.48);
+}
+.sp-backdrop[hidden] { display: none; }
+
+.sp-dialog {
+  position: fixed;
+  z-index: 1400;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(420px, calc(100vw - 40px));
+  padding: 20px;
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-line);
+  border-radius: 16px;
+  box-shadow: var(--sp-shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.sp-dialog[hidden] { display: none; }
+.sp-dialog h2 { margin: 0; font-family: var(--sp-serif); font-size: 20px; font-weight: 500; color: var(--sp-ink); }
+.sp-dialog p { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--sp-ink-2); }
+.sp-dialog__warn { color: var(--sp-danger) !important; font-size: 12.5px !important; }
+.sp-dialog__actions { display: flex; gap: 10px; margin-top: 2px; }
+.sp-dialog__actions .sp-btn { flex-grow: 1; height: 44px; }
+
+/* ---------- 手机 ---------- */
+@media (max-width: 820px) {
+  .sp-main { padding: 16px 16px 32px; }
+  body.page-speaking.has-player .sp-main { padding-bottom: 132px; }
+  .sp-h1 { font-size: 25px; }
+
+  .sp-recent-grid { grid-template-columns: minmax(0, 1fr); }
+  .sp-composer__controls { flex-direction: column; align-items: stretch; }
+  .sp-seg { width: 100%; }
+  .sp-seg button { flex-grow: 1; height: 38px; }
+  .sp-topicfield { max-width: none; }
+  #generateBtn { width: 100%; height: 50px; }
+  #kbdHint { display: none; }
+  .sp-fab { display: inline-flex; }
+
+  /* 生成面板在手机上是底部抽屉 */
+  .sp-composer {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1350;
+    margin: 0;
+    max-height: 88vh;
+    overflow-y: auto;
+    border: none;
+    border-radius: 18px 18px 0 0;
+    padding: 10px 16px calc(20px + env(safe-area-inset-bottom));
+    box-shadow: var(--sp-shadow-lg);
+    transform: translateY(110%);
+    transition: transform .24s ease;
+  }
+  .sp-composer.is-open { transform: none; }
+  .sp-composer__sheet-head { display: flex; flex-direction: column; gap: 10px; }
+  .sp-grabber { width: 38px; height: 4px; align-self: center; border-radius: 999px; background: var(--sp-line-strong); }
+
+  .sp-clip__q, .sp-clip__body { margin-left: 0; padding-left: 16px; }
+  .sp-clip__index { display: none; }
+  .sp-player { padding: 10px 14px calc(14px + env(safe-area-inset-bottom)); flex-wrap: wrap; gap: 8px; }
+  .sp-player__seekline { order: -1; width: 100%; display: flex; align-items: center; gap: 10px; }
+  /* 换行的 flex 容器是按 flex-basis 分行的，先分行后收缩。标题的基准宽度
+     一大，倍速和关闭就被挤到第三行去了，所以这里给它一个很小的基准。 */
+  .sp-player > .sp-grow { max-width: none; flex: 1 1 56px; }
+  .sp-play, .sp-icon-btn { min-width: 44px; min-height: 44px; }
+  .sp-play--lg { width: 48px; height: 48px; }
+  .sp-btn { height: 44px; }
+  .sp-btn--sm { height: 36px; }
+  .sp-list__row { padding: 12px 14px; min-height: 60px; }
+  .sp-search { height: 46px; }
+  body.page-speaking .sp-sort { height: 46px; }
+}
+@media (min-width: 821px) {
+  /* 桌面上进度条要夹在标题和倍速之间，但它在 DOM 里必须排在最前
+     （手机上整行进度条要落到第一行），所以用 order 把顺序摆回设计稿。 */
+  .sp-player__seekline { display: contents; }
+  .sp-player #prevBtn, .sp-player #toggleBtn, .sp-player #nextBtn { order: 0; }
+  .sp-player > .sp-grow { order: 1; }
+  .sp-player #curTime { order: 2; }
+  .sp-player #seekBar { order: 3; }
+  .sp-player #durTime { order: 4; }
+  .sp-player #rateBtn { order: 5; }
+  .sp-player #closePlayer { order: 6; }
+}
     </style>
-    <link rel="stylesheet" href="/static/theme.css">
-    <script src="/static/theme.js" defer></script>
-  <script src="/static/api-client.js" defer></script>
-  <script src="/static/auth.js" defer></script>
-  <script src="/static/ui-feedback.js" defer></script>
-  <script src="/static/app-shell.js" defer></script>
+    <script src="/static/theme.js?v=20260919" defer></script>
+    <script src="/static/api-client.js?v=20260919" defer></script>
+    <script src="/static/auth.js?v=20260919" defer></script>
+    <script src="/static/ui-feedback.js?v=20260919" defer></script>
+    <script src="/static/app-shell.js?v=20260919" defer></script>
 </head>
 <body class="theme-page page-speaking">
-<div class="container">
-    <div class="actions" style="justify-content:center; margin-top:0; margin-bottom:12px;">
-        <button onclick="location.href='/'" style="background:#6b7280;color:#fff;">返回模块选择</button>
+
+<main class="sp-main">
+
+  <!-- ==================== 音频库 ==================== -->
+  <section id="viewLibrary" class="sp-view">
+    <header class="sp-page-head">
+      <div class="sp-page-head__row">
+        <h1 class="sp-h1 sp-grow">口语音频库</h1>
+        <div class="sp-head-actions">
+          <button type="button" class="sp-btn sp-btn--sm" id="manageToggle">管理</button>
+        </div>
+      </div>
+      <p class="sp-sub" id="libStats">读取中…</p>
+    </header>
+
+    <div id="slotLibrary"></div>
+
+    <div class="sp-searchbar">
+      <div class="sp-search">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="7" cy="7" r="4.5"></circle><path d="M10.5 10.5 14 14"></path></svg>
+        <input type="search" id="searchInput" placeholder="搜话题名，或搜音频里的英文原文…" aria-label="搜索话题或音频原文">
+      </div>
+      <select class="sp-sort" id="sortSelect" aria-label="排序方式">
+        <option value="recent">最近使用</option>
+        <option value="name">话题名</option>
+        <option value="count">音频最多</option>
+      </select>
     </div>
-    <h2>Audio TTS Generator</h2>
-    <label for="text">Enter English Text:</label>
-    <textarea id="text" rows="4" placeholder="Type your English text here..."></textarea>
-    <label for="folder">Audio Folder Name:</label>
-    <input type="text" id="folder" list="folderList" placeholder="e.g. Lesson_7" oninput="onFolderInput()">
-    <datalist id="folderList"></datalist>
-    <div id="part2-question-wrap" style="display:none;margin-top:12px;">
-        <label for="part2-question" style="color:#ad8b00;">PART2 问题（只需填写一次）:</label>
-        <textarea id="part2-question" rows="6" placeholder="请输入该话题的问题" style="width:100%;padding:10px 12px;border-radius:7px;border:1.5px solid #ffe58f;background:#fffbe6;font-size:15px;min-height:60px;resize:vertical;"></textarea>
+
+    <div class="sp-chips" id="partChips"></div>
+
+    <section class="sp-section" id="recentSection" hidden>
+      <h2 class="sp-label">最近使用</h2>
+      <div class="sp-recent-grid" id="recentGrid"></div>
+    </section>
+
+    <section class="sp-section">
+      <div class="sp-row">
+        <h2 class="sp-label sp-grow" id="topicsLabel">全部话题</h2>
+        <span class="sp-hint" id="topicsCount"></span>
+      </div>
+      <div class="sp-card sp-list" id="topicList"></div>
+    </section>
+
+    <section class="sp-section" id="hitsSection" hidden>
+      <h2 class="sp-label" id="hitsLabel">原文命中</h2>
+      <div class="sp-card sp-list" id="hitsList"></div>
+    </section>
+  </section>
+
+  <!-- ==================== 话题详情 ==================== -->
+  <section id="viewTopic" class="sp-view" hidden>
+    <button type="button" class="sp-back" data-action="back">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3.5 5.5 8l4.5 4.5"></path></svg>
+      音频库
+    </button>
+    <div id="topicHead"></div>
+    <div id="topicQuestion"></div>
+    <div class="sp-toolbar" id="topicToolbar"></div>
+    <div id="slotTopic"></div>
+    <div class="sp-card sp-list" id="clipList"></div>
+  </section>
+
+</main>
+
+<!-- ==================== 生成面板（桌面内嵌卡片 / 手机底部抽屉） ==================== -->
+<section class="sp-composer" id="composer" aria-label="新建音频">
+  <div class="sp-composer__sheet-head">
+    <div class="sp-grabber"></div>
+    <div class="sp-row">
+      <h2 class="sp-h1 sp-grow" style="font-size:20px;">新建音频</h2>
+      <button type="button" class="sp-icon-btn sp-icon-btn--plain" data-action="close-composer" aria-label="关闭">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"></path></svg>
+      </button>
     </div>
-    <div class="actions">
-        <button id="submitBtn" onclick="submitText()">Submit</button>
-        <button onclick="resetForm()" style="background:#e94e77;">Reset</button>
-        <button id="manageBtn" onclick="toggleManageMode()" style="background:#fbbf24;color:#333;">管理</button>
+  </div>
+
+  <div class="sp-row" id="composerHead">
+    <span class="sp-label sp-grow">新建音频</span>
+    <span class="sp-hint">tts-1 · nova</span>
+  </div>
+
+  <label for="textInput" class="sp-sr">英文文本</label>
+  <textarea id="textInput" class="sp-textarea" rows="2" placeholder="粘贴要生成音频的英文段落…"></textarea>
+
+  <div class="sp-composer__controls">
+    <div class="sp-seg" id="partSeg" role="group" aria-label="选择 Part">
+      <button type="button" data-part="P1">Part 1</button>
+      <button type="button" data-part="P2" class="is-active">Part 2</button>
+      <button type="button" data-part="P3">Part 3</button>
+      <button type="button" data-part="other">其他</button>
     </div>
-    <div class="audio-list" id="audioList"></div>
-    <!-- 不再需要弹窗 -->
+    <div class="sp-topicfield">
+      <label for="topicInput" class="sp-sr">话题名称</label>
+      <input type="text" id="topicInput" class="sp-input" placeholder="话题名称，例如 Hometown" autocomplete="off">
+      <div class="sp-suggest" id="topicSuggest" hidden></div>
     </div>
-    <script>
-    // 以下脚本与原 index.html 相同，保持所有功能
-    let categoryState = {}; let folderState = {}; let openTextKey = null; let isLoading = false; let manageMode = false; let lastPlayingAudio = null; let currentToken = null;
-    function onFolderInput(){ const folder = document.getElementById('folder').value.trim(); const part2Wrap = document.getElementById('part2-question-wrap'); if(/^P2\b/i.test(folder)){ fetch('/list_folders').then(r=>r.json()).then(data=>{ const exists=(data.folders||[]).includes(folder); if(!exists){ part2Wrap.style.display=''; return; } fetch(`/has_part2_question?folder=${encodeURIComponent(folder)}`).then(r=>r.json()).then(d=>{ if(d.exists){ part2Wrap.style.display='none'; document.getElementById('part2-question').value=''; }else{ part2Wrap.style.display=''; } }); }); } else { part2Wrap.style.display='none'; document.getElementById('part2-question').value=''; }}
-    function resetForm(){ document.getElementById('text').value=''; document.getElementById('folder').value=''; document.getElementById('part2-question').value=''; document.getElementById('part2-question-wrap').style.display='none'; }
-    function setLoading(loading){ isLoading=loading; const submitBtn=document.getElementById('submitBtn'); let spinner=document.getElementById('loadingSpinner'); if(loading){ if(!spinner){ spinner=document.createElement('span'); spinner.id='loadingSpinner'; spinner.className='loading-spinner'; submitBtn.parentNode.insertBefore(spinner, submitBtn.nextSibling);} submitBtn.disabled=true; } else { if(spinner) spinner.remove(); submitBtn.disabled=false; } document.getElementById('manageBtn').disabled=loading; }
-    function submitText(){ const text=document.getElementById('text').value.trim(); const folder=document.getElementById('folder').value.trim(); const part2Question=document.getElementById('part2-question').value.trim(); const part2Wrap=document.getElementById('part2-question-wrap'); if(!text||!folder){ alert('Please enter both text and folder name.'); return; } let body={text, folder}; if(/^P2\b/i.test(folder) && part2Wrap.style.display!=='none'){ if(!part2Question){ alert('PART2 话题请填写问题'); return; } body.question=part2Question; } setLoading(true); fetch('/generate_audio',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)}).then(r=>r.json()).then(data=>{ setLoading(false); if(data.error) alert(data.error); else { alert('Audio generated!'); loadAudioList(); loadFolderList(); resetForm(); } }).catch(()=>setLoading(false)); }
-    function toggleManageMode(){ manageMode=!manageMode; document.getElementById('manageBtn').textContent = manageMode ? '退出管理' : '管理'; loadAudioList(); }
-    function loadAudioList(){ fetch('/list_audio').then(r=>r.json()).then(data=>{ let html='<h3>Audio Files</h3>'; const categories=[{key:'Part1',label:'Part1'},{key:'Part2',label:'Part2'},{key:'Part3',label:'Part3'},{key:'其他',label:'其他'}]; categories.forEach(cat=>{ const foldersArr=data[cat.key]||[]; const topicCount=foldersArr.length; let audioCount=0; foldersArr.forEach(folderObj=>{ audioCount += (folderObj.files||[]).length; }); const isCatOpen=categoryState[cat.key]||false; html += `<div class="audio-folder"><div class="folder-header${isCatOpen?'':' collapsed'}" onclick="toggleCategory('${cat.key}')"><span class="arrow" style="transform:${isCatOpen?'rotate(0deg)':'rotate(-90deg)'}">&#9654;</span><span>${cat.label} <span style='color:#888;font-size:15px;font-weight:400;'>( ${topicCount}个话题, ${audioCount}个音频 )</span></span></div><div class="folder-files" id="cat-${cat.key}" style="display:${isCatOpen?'block':'none'};">`;
-        foldersArr.forEach(folderObj=>{ const folder=folderObj.folder; const files=folderObj.files; const isOpen=folderState[folder]||false; if(cat.key==='Part2'){ html += `<div class="audio-folder" style="background:#f8fafc;margin-bottom:12px;"><div class="folder-header${isOpen?'':' collapsed'}" onclick="toggleFolder('${folder}')"><span class="arrow" style="transform:${isOpen?'rotate(0deg)':'rotate(-90deg)'}">&#9654;</span><span>${folder}</span>${manageMode?`<button onclick=\"event.stopPropagation();editPart2Question('${folder}', '${folderObj.question ? folderObj.question.replace(/'/g, "\\'") : ''}')\" style=\"margin-left:16px;background:#fbbf24;color:#333;padding:3px 12px;font-size:14px;border-radius:5px;\">编辑问题</button>`:''}${manageMode?`<button onclick=\"event.stopPropagation();deleteFolder('${folder}')\" style=\"margin-left:8px;background:#e94e77;color:#fff;padding:3px 10px;font-size:14px;border-radius:5px;\">删除文件夹</button>`:''}</div>`; if(isOpen){ html += `<div style='margin:10px 0 10px 8px;padding:8px 12px;background:#fffbe6;border-radius:6px;border:1px solid #ffe58f;color:#ad8b00;'><b>问题：</b> <span id='part2-question-${folder}' style='white-space:pre-line;'>${folderObj.question ? folderObj.question : '<span style=\'color:#bbb\'>（未填写）</span>'}</span></div>`; } html += `<div class="folder-files" id="files-${folder}" style="display:${isOpen?'block':'none'};">`; files.forEach(fileObj=>{ const file=fileObj.name; const textKey=`${folder}__${file}`; html += `<div class=\"audio-file\" style=\"flex-direction:column;align-items:stretch;\"><div style=\"display:flex;align-items:center;\"><audio controls preload=\"none\" src=\"/audio/${folder}/${file}\"></audio><span style=\"margin-left:12px;\">${file}</span><button class=\"view-text-btn\" onclick=\"event.stopPropagation();toggleText('${folder}','${file}')\">${openTextKey===textKey?'收起文本':'查看文本'}</button>${manageMode?`<button onclick=\"event.stopPropagation();deleteAudio('${folder}','${file}')\" style=\"margin-left:8px;background:#e94e77;color:#fff;padding:3px 10px;font-size:14px;border-radius:5px;\">删除音频</button>`:''}</div><div class=\"audio-text-content${openTextKey===textKey?' active':''}\" id=\"text-${textKey}\"></div></div>`; }); html += `</div></div>`; } else { html += `<div class=\"audio-folder\" style=\"background:#f8fafc;margin-bottom:12px;\"><div class=\"folder-header${isOpen?'':' collapsed'}\" onclick=\"toggleFolder('${folder}')\"><span class=\"arrow\" style=\"transform:${isOpen?'rotate(0deg)':'rotate(-90deg)'}\">&#9654;</span><span>${folder}</span>${manageMode?`<button onclick=\"event.stopPropagation();deleteFolder('${folder}')\" style=\"margin-left:16px;background:#e94e77;color:#fff;padding:3px 12px;font-size:14px;border-radius:5px;\">删除文件夹</button>`:''}</div><div class=\"folder-files\" id=\"files-${folder}\" style=\"display:${isOpen?'block':'none'};\">`; files.forEach(fileObj=>{ const file=fileObj.name; const textKey=`${folder}__${file}`; let questionHtml=''; if(cat.key==='Part1'||cat.key==='Part3'){ questionHtml = fileObj.question ? `<div class='audio-question'>${fileObj.question}</div>` : ''; } html += `<div class=\"audio-file\" style=\"flex-direction:column;align-items:stretch;\">${questionHtml}<div style=\"display:flex;align-items:center;\"><audio controls preload=\"none\" src=\"/audio/${folder}/${file}\"></audio><span style=\"margin-left:12px;\">${file}</span><button class=\"view-text-btn\" onclick=\"event.stopPropagation();toggleText('${folder}','${file}')\">${openTextKey===textKey?'收起文本':'查看文本'}</button>${manageMode?`<button onclick=\"event.stopPropagation();deleteAudio('${folder}','${file}')\" style=\"margin-left:8px;background:#e94e77;color:#fff;padding:3px 10px;font-size:14px;border-radius:5px;\">删除音频</button>`:''}</div><div class=\"audio-text-content${openTextKey===textKey?' active':''}\" id=\"text-${textKey}\"></div></div>`; }); html += `</div></div>`; }
-        }); html += `</div></div>`; }); document.getElementById('audioList').innerHTML=html; setupAudioExclusivePlay(); if(openTextKey){ const [folder,file]=openTextKey.split('__'); fetchText(folder,file); } }); }
-    function toggleCategory(catKey){ categoryState[catKey]=!categoryState[catKey]; loadAudioList(); }
-    function toggleFolder(folder){ folderState[folder]=!folderState[folder]; loadAudioList(); }
-    function toggleText(folder,file){ const textKey=`${folder}__${file}`; if(openTextKey===textKey){ openTextKey=null; loadAudioList(); } else { openTextKey=textKey; loadAudioList(); } }
-    function fetchText(folder,file){ const textKey=`${folder}__${file}`; const textDiv=document.getElementById('text-'+textKey); if(!textDiv) return; textDiv.textContent='加载中...'; fetch(`/text/${folder}/${file}`).then(r=>r.json()).then(data=>{ textDiv.textContent = data.error ? 'Text not found.' : data.text; }); }
-    function deleteFolder(folder){ if(!confirm(`确定要删除整个文件夹“${folder}”及其所有音频吗？`)) return; setLoading(true); fetch('/delete_folder',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({folder})}).then(r=>r.json()).then(data=>{ setLoading(false); if(data.success){ alert('文件夹已删除'); loadAudioList(); } else { alert(data.error||'删除失败'); } }).catch(()=>setLoading(false)); }
-    function deleteAudio(folder,file){ if(!confirm(`确定要删除音频“${file}”及其文本吗？`)) return; setLoading(true); fetch('/delete_audio',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({folder, filename:file})}).then(r=>r.json()).then(data=>{ setLoading(false); if(data.success){ alert('音频已删除'); loadAudioList(); } else { alert(data.error||'删除失败'); } }).catch(()=>setLoading(false)); }
-    function editPart2Question(folder, oldQuestion){ const newQ = prompt('请输入该话题的问题：', oldQuestion||''); if(newQ===null) return; fetch('/set_part2_question',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({folder, question:newQ})}).then(r=>r.json()).then(data=>{ if(data.success){ alert('问题已保存'); loadAudioList(); } else { alert(data.error||'保存失败'); } }); }
-    function checkStoredToken(){ const tk=localStorage.getItem('authToken'); if(!tk) return Promise.resolve(false); return fetch('/verify_token',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({token:tk})}).then(r=>r.json()).then(d=>{ if(d.valid){ currentToken=tk; return true; } localStorage.removeItem('authToken'); return false; }).catch(()=>{ localStorage.removeItem('authToken'); return false; }); }
-    window.onload = function(){ checkStoredToken().then(valid=>{ if(valid){ loadFolderList(); loadAudioList(); setTimeout(checkURLHash, 1000); } else { window.location.href='/login'; } }); }
-    
-    // 检查URL hash并处理跳转
-    function checkURLHash() {
-      const hash = window.location.hash;
-      if (hash) {
-        const params = new URLSearchParams(hash.substring(1));
-        const folder = params.get('folder');
-        const file = params.get('file');
-        
-        if (folder && file) {
-          // 跳转到具体音频文件
-          jumpToSpecificAudio(folder, file);
-        } else if (folder) {
-          // 跳转到文件夹
-          jumpToFolder(folder);
-        }
+    <span class="sp-hint" id="folderHint"></span>
+    <span class="sp-grow"></span>
+    <button type="button" class="sp-btn sp-btn--primary" id="generateBtn">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M8 3v10M3 8h10"></path></svg>
+      生成音频
+    </button>
+  </div>
+
+  <div id="part2Wrap" hidden>
+    <label for="part2Question" class="sp-label" style="color:var(--sp-clay-ink);">题卡问题（只需填一次）</label>
+    <textarea id="part2Question" class="sp-textarea" rows="3" placeholder="输入这个 Part 2 话题的题卡问题" style="margin-top:6px;min-height:84px;font-size:15px;"></textarea>
+  </div>
+  <div class="sp-question" id="part2Known" hidden></div>
+
+  <div class="sp-row sp-composer__foot">
+    <span class="sp-hint sp-num" id="wordCount">0 词</span>
+    <span class="sp-hint" id="partHint"></span>
+    <span class="sp-grow"></span>
+    <span class="sp-hint" id="kbdHint">⌘/Ctrl + Enter 生成</span>
+    <label class="sp-check"><input type="checkbox" id="stayCheck" checked><span>生成后留在这个话题</span></label>
+  </div>
+
+  <div class="sp-queue" id="queueBox" hidden></div>
+</section>
+
+<button type="button" class="sp-fab" id="composerFab">
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 3v10M3 8h10"></path></svg>
+  生成音频
+</button>
+
+<div class="sp-backdrop" id="sheetBackdrop" hidden></div>
+
+<!-- ==================== 播放条 ==================== -->
+<div class="sp-player" id="playerBar" hidden>
+  <div class="sp-player__seekline">
+    <span class="sp-player__time sp-num" id="curTime">0:00</span>
+    <button type="button" class="sp-seek" id="seekBar" aria-label="跳转播放进度">
+      <span class="sp-seek__track"><span class="sp-seek__fill" id="seekFill"></span></span>
+    </button>
+    <span class="sp-player__time sp-num" id="durTime">0:00</span>
+  </div>
+  <button type="button" class="sp-icon-btn sp-icon-btn--plain" id="prevBtn" aria-label="上一条">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M4 3h1.7v10H4zM12.5 3v10L6.3 8z"></path></svg>
+  </button>
+  <button type="button" class="sp-play sp-play--lg" id="toggleBtn" aria-label="播放或暂停"></button>
+  <button type="button" class="sp-icon-btn sp-icon-btn--plain" id="nextBtn" aria-label="下一条">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M10.3 3H12v10h-1.7zM3.5 3v10l6.2-5z"></path></svg>
+  </button>
+  <div class="sp-grow" style="max-width:280px;">
+    <div class="sp-player__title sp-truncate" id="playerTitle"></div>
+    <div class="sp-player__sub sp-truncate" id="playerSub"></div>
+  </div>
+  <button type="button" class="sp-btn sp-btn--sm sp-num" id="rateBtn">1.0×</button>
+  <button type="button" class="sp-icon-btn sp-icon-btn--plain" id="closePlayer" aria-label="关闭播放器">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"></path></svg>
+  </button>
+</div>
+<audio id="audioEl" preload="none"></audio>
+
+<!-- ==================== 通用弹窗 ==================== -->
+<div class="sp-backdrop" id="dialogBackdrop" hidden></div>
+<div class="sp-dialog" id="dialog" role="dialog" aria-modal="true" hidden></div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ==================== 小工具 ====================
+  var $ = function (id) { return document.getElementById(id); };
+  var ICON = {
+    play: '<svg width="12" height="14" viewBox="0 0 12 14" fill="currentColor" aria-hidden="true"><path d="M1 1.5v11l10-5.5z"></path></svg>',
+    pause: '<svg width="12" height="14" viewBox="0 0 12 14" fill="currentColor" aria-hidden="true"><path d="M1.5 1.5h3v11h-3zM7.5 1.5h3v11h-3z"></path></svg>',
+    chevron: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5"></path></svg>',
+    down: '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 6 8 10.5 12.5 6"></path></svg>',
+    up: '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 10 8 5.5 12.5 10"></path></svg>',
+    plus: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M8 3v10M3 8h10"></path></svg>',
+    trash: '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 4h11M6 4V2.5h4V4M4 4l.7 9.5h6.6L12 4"></path></svg>',
+    check: '<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5 6.5 12 13 4.5"></path></svg>',
+    moon: '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M13.5 9.5A6 6 0 0 1 6.5 2.5a6 6 0 1 0 7 7z"></path></svg>',
+    sun: '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="3.2"></circle><path d="M8 1.5v1.6M8 12.9v1.6M1.5 8h1.6M12.9 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M12.6 3.4l-1.1 1.1M4.5 11.5l-1.1 1.1"></path></svg>'
+  };
+
+  function esc(value) {
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  function toast(message, type) {
+    if (window.IELTSUI && window.IELTSUI.toast) window.IELTSUI.toast(message, type);
+  }
+  function fmtTime(seconds) {
+    if (!seconds || !isFinite(seconds)) return '0:00';
+    var total = Math.round(seconds);
+    return Math.floor(total / 60) + ':' + String(total % 60).padStart(2, '0');
+  }
+  function fmtLong(seconds) {
+    if (!seconds) return '0 分';
+    var mins = Math.round(seconds / 60);
+    if (mins < 60) return mins + ' 分';
+    return Math.floor(mins / 60) + ' 小时 ' + (mins % 60) + ' 分';
+  }
+  function fmtAgo(epochSeconds) {
+    if (!epochSeconds) return '';
+    var days = Math.floor((Date.now() / 1000 - epochSeconds) / 86400);
+    if (days <= 0) return '今天';
+    if (days === 1) return '昨天';
+    if (days < 30) return days + ' 天前';
+    if (days < 365) return Math.floor(days / 30) + ' 个月前';
+    return Math.floor(days / 365) + ' 年前';
+  }
+  function fmtDate(epochSeconds) {
+    if (!epochSeconds) return '';
+    var d = new Date(epochSeconds * 1000);
+    return (d.getMonth() + 1) + ' 月 ' + d.getDate() + ' 日';
+  }
+  function debounce(fn, wait) {
+    var timer = null;
+    return function () {
+      var args = arguments, self = this;
+      clearTimeout(timer);
+      timer = setTimeout(function () { fn.apply(self, args); }, wait);
+    };
+  }
+  function partOf(folder) {
+    if (/^P1/.test(folder)) return 'Part1';
+    if (/^P2/.test(folder)) return 'Part2';
+    if (/^P3/.test(folder)) return 'Part3';
+    return '其他';
+  }
+  var PART_BADGE = { Part1: ['p1', 'P1'], Part2: ['p2', 'P2'], Part3: ['p3', 'P3'], '其他': ['other', '其他'] };
+  function badge(part, long) {
+    var info = PART_BADGE[part] || PART_BADGE['其他'];
+    var text = long && part !== '其他' ? part.toUpperCase().replace('PART', 'PART ') : info[1];
+    return '<span class="sp-badge sp-badge--' + info[0] + '">' + esc(text) + '</span>';
+  }
+  function isMobile() { return window.matchMedia('(max-width: 820px)').matches; }
+
+  // ==================== 状态 ====================
+  var state = {
+    topics: [],
+    view: 'library',
+    topicKey: null,
+    query: '',
+    partFilter: 'all',
+    sort: 'recent',
+    manage: false,
+    expanded: null,
+    textCache: {},
+    queue: [],
+    composerOpen: false,
+    suggestOpen: false,
+    busy: false,
+    player: { folder: null, file: null, list: [], index: -1, rate: 1, playing: false }
+  };
+
+  var audio = $('audioEl');
+
+  function topicByKey(key) {
+    for (var i = 0; i < state.topics.length; i++) {
+      if (state.topics[i].folder === key) return state.topics[i];
+    }
+    return null;
+  }
+
+  // ==================== 数据 ====================
+  function loadTopics() {
+    return fetch('/list_audio').then(function (r) { return r.json(); }).then(function (data) {
+      var topics = [];
+      ['Part1', 'Part2', 'Part3', '其他'].forEach(function (part) {
+        (data[part] || []).forEach(function (item) {
+          topics.push({
+            folder: item.folder,
+            part: part,
+            question: item.question || null,
+            files: item.files || [],
+            duration: item.duration || 0,
+            latest: item.latest || item.ctime || 0,
+            ctime: item.ctime || 0
+          });
+        });
+      });
+      state.topics = topics;
+      return topics;
+    });
+  }
+
+  // ==================== 渲染：音频库 ====================
+  function visibleTopics() {
+    var query = state.query.trim().toLowerCase();
+    var list = state.topics.filter(function (t) {
+      if (state.partFilter !== 'all' && t.part !== state.partFilter) return false;
+      if (!query) return true;
+      return t.folder.toLowerCase().indexOf(query) >= 0 ||
+             (t.question || '').toLowerCase().indexOf(query) >= 0;
+    });
+    if (state.sort === 'name') {
+      list.sort(function (a, b) { return a.folder.localeCompare(b.folder, 'zh'); });
+    } else if (state.sort === 'count') {
+      list.sort(function (a, b) { return b.files.length - a.files.length; });
+    } else {
+      list.sort(function (a, b) { return b.latest - a.latest; });
+    }
+    return list;
+  }
+
+  function renderStats() {
+    var clips = 0, seconds = 0;
+    state.topics.forEach(function (t) { clips += t.files.length; seconds += t.duration; });
+    $('libStats').textContent = state.topics.length + ' 个话题 · ' + clips + ' 条音频 · 共 ' + fmtLong(seconds);
+  }
+
+  function renderChips() {
+    var counts = { all: state.topics.length, Part1: 0, Part2: 0, Part3: 0, '其他': 0 };
+    state.topics.forEach(function (t) { counts[t.part] += 1; });
+    var defs = [['all', '全部'], ['Part1', 'Part 1'], ['Part2', 'Part 2'], ['Part3', 'Part 3'], ['其他', '其他']];
+    $('partChips').innerHTML = defs.map(function (d) {
+      return '<button type="button" class="sp-chip' + (state.partFilter === d[0] ? ' is-active' : '') +
+        '" data-action="filter" data-part="' + esc(d[0]) + '">' + esc(d[1]) + ' · ' + counts[d[0]] + '</button>';
+    }).join('');
+  }
+
+  function renderRecent() {
+    var searching = !!state.query.trim();
+    var section = $('recentSection');
+    if (searching) { section.hidden = true; return; }
+    var recent = state.topics.slice().sort(function (a, b) { return b.latest - a.latest; }).slice(0, 3);
+    if (!recent.length) { section.hidden = true; return; }
+    section.hidden = false;
+    $('recentGrid').innerHTML = recent.map(function (t) {
+      return '<div class="sp-card sp-recent" data-action="open-topic" data-folder="' + esc(t.folder) + '" role="button" tabindex="0">' +
+        '<div class="sp-row">' + badge(t.part, true) + '<span class="sp-grow"></span>' +
+        '<span class="sp-hint">' + esc(fmtAgo(t.latest)) + '</span></div>' +
+        '<div class="sp-recent__name sp-truncate">' + esc(displayName(t)) + '</div>' +
+        '<div class="sp-row"><span class="sp-hint sp-num">' + t.files.length + ' 条 · ' + fmtTime(t.duration) + '</span>' +
+        '<span class="sp-grow"></span>' +
+        '<button type="button" class="sp-btn sp-btn--sm" data-action="play-topic" data-folder="' + esc(t.folder) + '">' +
+        ICON.play + ' 连播</button></div>' +
+        '</div>';
+    }).join('');
+  }
+
+  function displayName(topic) {
+    return topic.folder.replace(/^P[123]\s*-\s*/, '').trim() || topic.folder;
+  }
+
+  function renderTopicList() {
+    var list = visibleTopics();
+    $('topicsLabel').textContent = state.query.trim() ? '话题名命中' : '全部话题';
+    $('topicsCount').textContent = list.length + ' 个话题';
+    if (!list.length) {
+      $('topicList').innerHTML = '<div class="sp-empty">' +
+        (state.query.trim() ? '没有话题名匹配「' + esc(state.query.trim()) + '」' : '还没有音频，先在上面生成一条吧') + '</div>';
+      return;
+    }
+    $('topicList').innerHTML = list.map(function (t) {
+      var sub = t.part === 'Part2' && t.question
+        ? t.question
+        : t.files.length + ' 条音频 · 最早 ' + fmtDate(t.ctime);
+      return '<button type="button" class="sp-list__row" data-action="open-topic" data-folder="' + esc(t.folder) + '">' +
+        '<span class="sp-badge sp-badge--' + PART_BADGE[t.part][0] + '" style="width:54px;">' + esc(PART_BADGE[t.part][1]) + '</span>' +
+        '<span class="sp-grow"><span class="sp-list__name sp-truncate" style="display:block;">' + esc(displayName(t)) + '</span>' +
+        '<span class="sp-list__sub sp-truncate" style="display:block;">' + esc(sub) + '</span></span>' +
+        '<span class="sp-list__meta sp-num">' + t.files.length + ' 条 · ' + fmtTime(t.duration) + '</span>' +
+        '<span class="sp-icon-btn" data-action="play-topic" data-folder="' + esc(t.folder) + '" role="button" tabindex="0" aria-label="连播 ' + esc(displayName(t)) + '">' + ICON.play + '</span>' +
+        '<span style="color:var(--sp-ink-4);display:inline-flex;">' + ICON.chevron + '</span>' +
+        '</button>';
+    }).join('');
+  }
+
+  var runTextSearch = debounce(function (query) {
+    if (query.length < 2) { $('hitsSection').hidden = true; return; }
+    fetch('/search_audio?q=' + encodeURIComponent(query)).then(function (r) { return r.json(); }).then(function (data) {
+      if (data.query !== state.query.trim()) return;
+      var results = data.results || [];
+      $('hitsSection').hidden = false;
+      $('hitsLabel').textContent = '原文命中 · ' + results.length + (data.truncated ? '+' : '') + ' 条';
+      if (!results.length) {
+        $('hitsList').innerHTML = '<div class="sp-empty">没有音频的原文包含「' + esc(query) + '」</div>';
+        return;
       }
+      $('hitsList').innerHTML = results.map(function (hit) {
+        return '<button type="button" class="sp-list__row" data-action="open-clip" data-folder="' + esc(hit.folder) +
+          '" data-file="' + esc(hit.filename) + '">' +
+          '<span class="sp-badge sp-badge--' + PART_BADGE[partOf(hit.folder)][0] + '" style="width:54px;">' +
+          esc(PART_BADGE[partOf(hit.folder)][1]) + '</span>' +
+          '<span class="sp-grow"><span class="sp-list__name sp-truncate" style="display:block;">' + esc(hit.folder) + '</span>' +
+          '<span class="sp-list__sub sp-en" style="display:block;">' + esc(hit.snippet) + '</span></span>' +
+          '<span style="color:var(--sp-ink-4);display:inline-flex;">' + ICON.chevron + '</span></button>';
+      }).join('');
+    }).catch(function () { $('hitsSection').hidden = true; });
+  }, 300);
+
+  function renderLibrary() {
+    renderStats();
+    renderChips();
+    renderRecent();
+    renderTopicList();
+  }
+
+  // ==================== 渲染：话题详情 ====================
+  function renderTopic() {
+    var topic = topicByKey(state.topicKey);
+    if (!topic) { showLibrary(); return; }
+    var current = state.player;
+
+    $('topicHead').innerHTML =
+      '<div class="sp-topic-head"><div class="sp-grow">' +
+      badge(topic.part, true) +
+      '<h1 class="sp-h1" style="margin-top:7px;">' + esc(displayName(topic)) + '</h1>' +
+      '<p class="sp-sub sp-num">' + topic.files.length + ' 条音频 · ' + fmtTime(topic.duration) +
+      ' · 最近生成 ' + esc(fmtAgo(topic.latest)) + '</p>' +
+      '</div></div>';
+
+    if (topic.part === 'Part2') {
+      $('topicQuestion').innerHTML =
+        '<section class="sp-question"><div class="sp-grow">' +
+        '<span class="sp-question__label">题卡问题</span>' +
+        '<p class="sp-question__text">' + (topic.question ? esc(topic.question) : '<span style="color:var(--sp-ink-4);">还没填</span>') + '</p>' +
+        '</div><button type="button" class="sp-btn sp-btn--sm" data-action="edit-question">' +
+        (topic.question ? '编辑' : '填写') + '</button></section>';
+    } else {
+      $('topicQuestion').innerHTML = '';
     }
-    
-    // 跳转到具体音频文件
-    function jumpToSpecificAudio(folder, file) {
-      // 首先确定分类
-      let category = 'Part1';
-      if (folder.startsWith('P2')) category = 'Part2';
-      else if (folder.startsWith('P3')) category = 'Part3';
-      else if (!folder.startsWith('P1')) category = '其他';
-      
-      // 展开分类
-      categoryState[category] = true;
-      
-      // 展开文件夹
-      folderState[folder] = true;
-      
-      // 重新加载音频列表
-      loadAudioList();
-      
-      // 延迟高亮具体音频
-      setTimeout(() => {
-        const audioElements = document.querySelectorAll('.audio-file');
-        audioElements.forEach(audioEl => {
-          const audioName = audioEl.querySelector('span')?.textContent;
-          if (audioName && audioName.includes(file.replace('.mp3', ''))) {
-            // 毛玻璃高亮效果
-            audioEl.style.background = 'rgba(254, 243, 199, 0.8)';
-            audioEl.style.backdropFilter = 'blur(10px)';
-            audioEl.style.borderRadius = '12px';
-            audioEl.style.boxShadow = '0 8px 32px rgba(245, 158, 11, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3)';
-            audioEl.style.transform = 'translateY(-2px) scale(1.02)';
-            audioEl.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
-            
-            // 添加柔和的脉冲效果
-            audioEl.style.animation = 'gentle-glow 3s ease-in-out';
-            
-            // 滚动到视图中心
-            audioEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            
-            // 5秒后移除高亮效果
-            setTimeout(() => {
-              audioEl.style.animation = '';
-              audioEl.style.transform = '';
-              audioEl.style.backdropFilter = '';
-              audioEl.style.background = '';
-              audioEl.style.boxShadow = '';
-            }, 5000);
-          }
+
+    var playingHere = current.folder === topic.folder && current.playing;
+    $('topicToolbar').innerHTML =
+      '<button type="button" class="sp-btn sp-btn--primary" data-action="play-topic" data-folder="' + esc(topic.folder) + '">' +
+      (playingHere ? ICON.pause : ICON.play) + (playingHere ? ' 暂停' : ' 连续播放 ' + topic.files.length + ' 条') + '</button>' +
+      '<button type="button" class="sp-btn" data-action="add-here">' + ICON.plus + ' 添加音频到这个话题</button>' +
+      '<button type="button" class="sp-btn sp-btn--ghost" data-action="toggle-manage">' + ICON.trash +
+      (state.manage ? ' 退出管理' : ' 管理') + '</button>' +
+      '<span class="sp-grow"></span>' +
+      '<a class="sp-hint" href="/combined" style="color:var(--sp-ink-3);">合集播放页 →</a>';
+
+    var rows = topic.files.map(function (file, index) {
+      var key = topic.folder + '__' + file.name;
+      var isCurrent = current.folder === topic.folder && current.file === file.name;
+      var isExpanded = state.expanded === key;
+      var showQuestion = (topic.part === 'Part1' || topic.part === 'Part3') && file.question;
+      var html = '<div class="sp-clip' + (isCurrent ? ' is-current' : '') + '" data-clip="' + esc(key) + '">';
+      if (showQuestion) {
+        html += '<div class="sp-clip__q">' + esc(file.question) + '</div>';
+      }
+      html += '<div class="sp-clip__row">' +
+        '<span class="sp-clip__index sp-num">' + String(index + 1).padStart(2, '0') + '</span>' +
+        '<button type="button" class="sp-play' + (isCurrent && current.playing ? ' is-playing' : '') +
+        '" data-action="play-clip" data-folder="' + esc(topic.folder) + '" data-file="' + esc(file.name) +
+        '" aria-label="播放第 ' + (index + 1) + ' 条">' + (isCurrent && current.playing ? ICON.pause : ICON.play) + '</button>' +
+        '<span class="sp-grow"><span class="sp-clip__title sp-truncate" style="display:block;">' +
+        esc(file.preview || file.question || file.name) + '</span>' +
+        '<span class="sp-clip__meta sp-num" style="display:block;">' + fmtTime(file.duration) + ' · ' + esc(fmtDate(file.ctime)) +
+        (isCurrent && current.playing ? ' · 正在播放' : '') + '</span></span>';
+      if (state.manage) {
+        html += '<button type="button" class="sp-icon-btn sp-icon-btn--danger" data-action="delete-clip" data-folder="' +
+          esc(topic.folder) + '" data-file="' + esc(file.name) + '" aria-label="删除第 ' + (index + 1) + ' 条音频">' + ICON.trash + '</button>';
+      }
+      html += '<button type="button" class="sp-icon-btn sp-icon-btn--plain" data-action="toggle-text" data-key="' + esc(key) +
+        '" aria-label="' + (isExpanded ? '收起全文' : '展开全文') + '">' + (isExpanded ? ICON.up : ICON.down) + '</button>' +
+        '</div>';
+      if (isExpanded) {
+        var text = state.textCache[key];
+        html += '<div class="sp-clip__body">' +
+          '<p class="sp-clip__text">' + (text === undefined ? '加载中…' : esc(text)) + '</p>' +
+          '<div class="sp-row">' +
+          '<button type="button" class="sp-btn sp-btn--sm" data-action="copy-text" data-key="' + esc(key) + '">复制原文</button>' +
+          '<a class="sp-btn sp-btn--sm" href="/audio/' + encodeURIComponent(topic.folder) + '/' + encodeURIComponent(file.name) +
+          '" download style="text-decoration:none;">下载 MP3</a>' +
+          '</div></div>';
+      }
+      html += '</div>';
+      return html;
+    });
+
+    $('clipList').innerHTML = rows.length ? rows.join('') : '<div class="sp-empty">这个话题下还没有音频</div>';
+
+    if (state.manage) {
+      $('clipList').insertAdjacentHTML('afterend', '');
+    }
+    renderTopicDangerZone(topic);
+  }
+
+  function renderTopicDangerZone(topic) {
+    var existing = $('topicDanger');
+    if (existing) existing.remove();
+    if (!state.manage) return;
+    var box = document.createElement('div');
+    box.id = 'topicDanger';
+    box.style.marginTop = '14px';
+    box.innerHTML = '<button type="button" class="sp-btn sp-btn--danger" style="width:100%;" data-action="delete-folder">' +
+      ICON.trash + ' 删除整个话题（' + topic.files.length + ' 条音频）</button>';
+    $('viewTopic').appendChild(box);
+  }
+
+  // ==================== 视图切换 ====================
+  function showLibrary(skipHash) {
+    state.view = 'library';
+    state.topicKey = null;
+    state.expanded = null;
+    $('viewLibrary').hidden = false;
+    $('viewTopic').hidden = true;
+    document.body.classList.remove('on-topic');
+    var danger = $('topicDanger');
+    if (danger) danger.remove();
+    renderLibrary();
+    placeComposer();
+    if (!skipHash && location.hash) history.replaceState(null, '', location.pathname);
+    window.scrollTo(0, 0);
+  }
+
+  function showTopic(folder, file, skipHash) {
+    var topic = topicByKey(folder);
+    if (!topic) { toast('找不到话题：' + folder, 'error'); return; }
+    state.view = 'topic';
+    state.topicKey = folder;
+    state.expanded = null;
+    $('viewLibrary').hidden = true;
+    $('viewTopic').hidden = false;
+    document.body.classList.add('on-topic');
+    renderTopic();
+    placeComposer();
+    if (!skipHash) {
+      var hash = '#folder=' + encodeURIComponent(folder) + (file ? '&file=' + encodeURIComponent(file) : '');
+      if (location.hash !== hash) history.pushState(null, '', hash);
+    }
+    window.scrollTo(0, 0);
+    if (file) {
+      setTimeout(function () {
+        var node = $('clipList').querySelector('[data-clip="' + (window.CSS && CSS.escape ? CSS.escape(folder + '__' + file) : folder + '__' + file) + '"]');
+        if (!node) return;
+        node.classList.add('is-linked');
+        node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(function () { node.classList.remove('is-linked'); }, 3000);
+      }, 60);
+    }
+  }
+
+  // ==================== 生成面板 ====================
+  var composer = $('composer');
+
+  function currentPart() {
+    var active = $('partSeg').querySelector('.is-active');
+    return active ? active.dataset.part : 'P2';
+  }
+  function setPart(part) {
+    Array.prototype.forEach.call($('partSeg').children, function (btn) {
+      btn.classList.toggle('is-active', btn.dataset.part === part);
+    });
+    onTopicFieldChange();
+  }
+  // 挑中已有话题时记住它的真实文件夹名：库里有「P1 -  Shoes」这种双空格的历史命名，
+  // 按 Part + 名字重新拼会拼出一个新文件夹。
+  var pinnedFolder = null;
+
+  function composedFolder() {
+    if (pinnedFolder) return pinnedFolder;
+    var name = $('topicInput').value.trim();
+    if (!name) return '';
+    var part = currentPart();
+    if (part === 'other') return name;
+    return part + ' - ' + name;
+  }
+
+  function placeComposer() {
+    var mobile = isMobile();
+    if (mobile) {
+      if (composer.parentNode !== document.body) document.body.appendChild(composer);
+      composer.hidden = false;
+      composer.classList.toggle('is-open', state.composerOpen);
+      $('sheetBackdrop').hidden = !state.composerOpen;
+      $('composerHead').hidden = true;
+    } else {
+      composer.classList.remove('is-open');
+      $('sheetBackdrop').hidden = true;
+      $('composerHead').hidden = false;
+      var slot = state.view === 'topic' ? $('slotTopic') : $('slotLibrary');
+      if (composer.parentNode !== slot) slot.appendChild(composer);
+      composer.hidden = state.view === 'topic' && !state.composerOpen;
+    }
+  }
+
+  function openComposer(folder) {
+    state.composerOpen = true;
+    if (folder) {
+      pinnedFolder = folder;
+      var topic = topicByKey(folder);
+      setPart(topic ? (topic.part === '其他' ? 'other' : topic.part.replace('Part', 'P')) : 'other');
+      $('topicInput').value = topic ? displayName(topic) : folder;
+    }
+    placeComposer();
+    onTopicFieldChange();
+    setTimeout(function () { $('textInput').focus(); }, 60);
+  }
+
+  function closeComposer() {
+    state.composerOpen = false;
+    placeComposer();
+  }
+
+  function updateWordCount() {
+    var text = $('textInput').value.trim();
+    var words = text ? text.split(/\s+/).length : 0;
+    // OpenAI tts-1 在 nova 音色下大约每分钟 165 词，够做一个「大概多长」的预期
+    $('wordCount').textContent = words + ' 词 · 约 ' + fmtTime(words / 165 * 60);
+  }
+
+  function renderSuggest() {
+    var box = $('topicSuggest');
+    if (!state.suggestOpen) { box.hidden = true; return; }
+    var typed = $('topicInput').value.trim().toLowerCase();
+    var part = currentPart();
+    var matches = state.topics.filter(function (t) {
+      if (part !== 'other' && t.part !== part.replace('P', 'Part')) return false;
+      if (part === 'other' && t.part !== '其他') return false;
+      return !typed || t.folder.toLowerCase().indexOf(typed) >= 0;
+    }).slice(0, 6);
+    var folder = composedFolder();
+    var exists = matches.some(function (t) { return t.folder === folder; });
+    var html = matches.map(function (t) {
+      return '<button type="button" data-action="pick-topic" data-folder="' + esc(t.folder) + '">' +
+        '<span class="sp-grow sp-truncate">' + esc(displayName(t)) + '</span>' +
+        '<span class="sp-hint sp-num">' + t.files.length + ' 条</span></button>';
+    }).join('');
+    if (typed && !exists) {
+      html += '<button type="button" class="sp-suggest__new" data-action="new-topic">' + ICON.plus +
+        '<span class="sp-truncate">新建话题「' + esc(folder) + '」</span></button>';
+    }
+    box.innerHTML = html;
+    box.hidden = !html;
+  }
+
+  var checkPart2 = debounce(function (folder) {
+    if (!/^P2/.test(folder)) { $('part2Wrap').hidden = true; $('part2Known').hidden = true; return; }
+    fetch('/has_part2_question?folder=' + encodeURIComponent(folder))
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (composedFolder() !== folder) return;
+        var topic = topicByKey(folder);
+        if (data.exists) {
+          $('part2Wrap').hidden = true;
+          $('part2Known').hidden = false;
+          $('part2Known').innerHTML = '<div class="sp-grow" style="min-width:0;">' +
+            '<span class="sp-question__label">题卡问题 · 已填写</span>' +
+            '<p class="sp-question__text sp-truncate" style="font-size:13px;">' +
+            esc(topic && topic.question ? topic.question : '（已存在）') + '</p></div>';
+        } else {
+          $('part2Wrap').hidden = false;
+          $('part2Known').hidden = true;
+        }
+      }).catch(function () { $('part2Wrap').hidden = false; $('part2Known').hidden = true; });
+  }, 250);
+
+  function onTopicFieldChange() {
+    var folder = composedFolder();
+    $('folderHint').innerHTML = folder
+      ? '将存入 <b>' + esc(folder) + '</b>'
+      : '选一个 Part，再填话题名';
+    var topic = topicByKey(folder);
+    $('partHint').textContent = (currentPart() === 'P1' || currentPart() === 'P3')
+      ? '首行可以写问题，会和答案一起存进文本'
+      : (topic ? '这个话题已有 ' + topic.files.length + ' 条' : '');
+    if (folder) checkPart2(folder); else { $('part2Wrap').hidden = true; $('part2Known').hidden = true; }
+    renderSuggest();
+  }
+
+  function renderQueue() {
+    var box = $('queueBox');
+    if (!state.queue.length) { box.hidden = true; return; }
+    box.hidden = false;
+    var folder = state.queue[0].folder;
+    box.innerHTML = '<div class="sp-queue__head"><span class="sp-label sp-grow">本次生成 · ' + esc(folder) + '</span>' +
+      '<button type="button" class="sp-hint" data-action="open-topic" data-folder="' + esc(folder) +
+      '" style="border:none;background:none;color:var(--sp-accent);cursor:pointer;">查看话题</button></div>' +
+      state.queue.map(function (item) {
+        if (item.status === 'pending') {
+          return '<div class="sp-queue__row"><span class="sp-spinner"></span>' +
+            '<span class="sp-grow sp-truncate sp-en" style="color:var(--sp-ink-3);">' + esc(item.text) + '</span>' +
+            '<span class="sp-hint">生成中</span></div>';
+        }
+        if (item.status === 'error') {
+          return '<div class="sp-queue__row"><span class="sp-hint" style="color:var(--sp-danger);">失败</span>' +
+            '<span class="sp-grow sp-truncate sp-en">' + esc(item.text) + '</span></div>';
+        }
+        return '<div class="sp-queue__row"><span class="sp-done">' + ICON.check + '</span>' +
+          '<button type="button" class="sp-play" style="width:32px;height:32px;" data-action="play-clip" data-folder="' +
+          esc(item.folder) + '" data-file="' + esc(item.file) + '" aria-label="播放这一条">' + ICON.play + '</button>' +
+          '<span class="sp-grow sp-truncate sp-en">' + esc(item.text) + '</span>' +
+          '<span class="sp-hint sp-num">' + fmtTime(item.duration) + '</span></div>';
+      }).join('');
+  }
+
+  function generate() {
+    if (state.busy) return;
+    var text = $('textInput').value.trim();
+    var folder = composedFolder();
+    if (!text) { toast('先粘贴要生成的英文', 'error'); $('textInput').focus(); return; }
+    if (!folder) { toast('先填话题名', 'error'); $('topicInput').focus(); return; }
+    var body = { text: text, folder: folder };
+    if (/^P2/.test(folder) && !$('part2Wrap').hidden) {
+      var question = $('part2Question').value.trim();
+      if (!question) { toast('Part 2 话题请先填题卡问题', 'error'); $('part2Question').focus(); return; }
+      body.question = question;
+    }
+
+    var item = { folder: folder, text: text, status: 'pending', duration: 0 };
+    state.queue.unshift(item);
+    renderQueue();
+    state.busy = true;
+    window.IELTSUI && window.IELTSUI.setBusy($('generateBtn'), true, '生成中…');
+
+    fetch('/generate_audio', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    }).then(function (r) { return r.json(); }).then(function (data) {
+      if (data.error) throw new Error(data.error);
+      item.status = 'done';
+      item.file = data.filename;
+      item.folder = data.folder;
+      $('part2Question').value = '';
+      if ($('stayCheck').checked) {
+        $('textInput').value = '';
+        pinnedFolder = data.folder;
+        updateWordCount();
+        $('textInput').focus();
+      } else {
+        resetComposer();
+      }
+      return loadTopics().then(function () {
+        var topic = topicByKey(item.folder);
+        if (topic) {
+          topic.files.forEach(function (f) { if (f.name === item.file) item.duration = f.duration; });
+        }
+        renderQueue();
+        if (state.view === 'topic' && state.topicKey === item.folder) renderTopic();
+        else renderLibrary();
+        onTopicFieldChange();
+        toast('已生成 · ' + fmtTime(item.duration), 'success');
+      });
+    }).catch(function (error) {
+      item.status = 'error';
+      renderQueue();
+      toast(error.message || '生成失败', 'error');
+    }).then(function () {
+      state.busy = false;
+      window.IELTSUI && window.IELTSUI.setBusy($('generateBtn'), false);
+      renderQueue();
+    });
+  }
+
+  function resetComposer() {
+    $('textInput').value = '';
+    $('part2Question').value = '';
+    pinnedFolder = null;
+    updateWordCount();
+    onTopicFieldChange();
+  }
+
+  // ==================== 播放器 ====================
+  function playlistFor(folder) {
+    var topic = topicByKey(folder);
+    return topic ? topic.files.map(function (f) { return f.name; }) : [];
+  }
+
+  function playClip(folder, file) {
+    var player = state.player;
+    if (player.folder === folder && player.file === file) {
+      if (audio.paused) audio.play(); else audio.pause();
+      return;
+    }
+    player.folder = folder;
+    player.file = file;
+    player.list = playlistFor(folder);
+    player.index = player.list.indexOf(file);
+    $('seekFill').style.transition = 'none';
+    $('seekFill').style.width = '0%';
+    $('curTime').textContent = '0:00';
+    $('durTime').textContent = '0:00';
+    setTimeout(function () { $('seekFill').style.transition = ''; }, 50);
+    audio.src = '/audio/' + encodeURIComponent(folder) + '/' + encodeURIComponent(file);
+    audio.playbackRate = player.rate;
+    audio.play().catch(function () { /* 用户还没交互过时浏览器会拒绝，忽略即可 */ });
+    renderPlayer();
+  }
+
+  function playTopic(folder) {
+    var player = state.player;
+    if (player.folder === folder && player.playing) { audio.pause(); return; }
+    var list = playlistFor(folder);
+    if (!list.length) { toast('这个话题下还没有音频', 'error'); return; }
+    if (player.folder === folder && player.file) { audio.play(); return; }
+    playClip(folder, list[0]);
+  }
+
+  function step(delta) {
+    var player = state.player;
+    if (!player.list.length) return;
+    var next = player.index + delta;
+    if (next < 0 || next >= player.list.length) return;
+    playClip(player.folder, player.list[next]);
+  }
+
+  function renderPlayer() {
+    var player = state.player;
+    var bar = $('playerBar');
+    if (!player.file) {
+      bar.hidden = true;
+      document.body.classList.remove('has-player');
+      return;
+    }
+    bar.hidden = false;
+    document.body.classList.add('has-player');
+    $('toggleBtn').innerHTML = player.playing ? ICON.pause : ICON.play;
+    $('toggleBtn').setAttribute('aria-label', player.playing ? '暂停' : '播放');
+    var topic = topicByKey(player.folder);
+    $('playerTitle').textContent = String(player.index + 1).padStart(2, '0') + ' · ' +
+      (topic ? displayName(topic) : player.folder);
+    $('playerSub').textContent = (topic ? topic.part.replace('Part', 'Part ') : '') +
+      ' · ' + (player.index + 1) + ' / ' + player.list.length;
+    $('prevBtn').disabled = player.index <= 0;
+    $('nextBtn').disabled = player.index >= player.list.length - 1;
+    $('rateBtn').textContent = player.rate.toFixed(2).replace(/0$/, '') + '×';
+  }
+
+  audio.addEventListener('play', function () { state.player.playing = true; renderPlayer(); refreshClipStates(); });
+  audio.addEventListener('pause', function () { state.player.playing = false; renderPlayer(); refreshClipStates(); });
+  audio.addEventListener('ended', function () { step(1); });
+  audio.addEventListener('loadedmetadata', function () { $('durTime').textContent = fmtTime(audio.duration); });
+  audio.addEventListener('timeupdate', function () {
+    if (seeking) return;
+    $('curTime').textContent = fmtTime(audio.currentTime);
+    $('seekFill').style.width = (audio.duration ? audio.currentTime / audio.duration * 100 : 0) + '%';
+  });
+  audio.addEventListener('error', function () {
+    if (audio.src) toast('这条音频加载失败', 'error');
+  });
+
+  function refreshClipStates() {
+    if (state.view === 'topic') renderTopic();
+    else renderRecent();
+  }
+
+  // ==================== 弹窗 ====================
+  function closeDialog() {
+    $('dialog').hidden = true;
+    $('dialogBackdrop').hidden = true;
+    $('dialog').innerHTML = '';
+  }
+
+  function confirmDialog(options) {
+    var dialog = $('dialog');
+    dialog.innerHTML =
+      '<h2>' + esc(options.title) + '</h2>' +
+      (options.body ? '<p>' + options.body + '</p>' : '') +
+      (options.warn ? '<p class="sp-dialog__warn">' + esc(options.warn) + '</p>' : '') +
+      '<div class="sp-dialog__actions">' +
+      '<button type="button" class="sp-btn" data-dialog="cancel">取消</button>' +
+      '<button type="button" class="sp-btn ' + (options.danger ? 'sp-btn--danger-solid' : 'sp-btn--primary') +
+      '" data-dialog="ok">' + esc(options.confirmText || '确定') + '</button>' +
+      '</div>';
+    dialog.hidden = false;
+    $('dialogBackdrop').hidden = false;
+    dialog.querySelector('[data-dialog="cancel"]').onclick = closeDialog;
+    dialog.querySelector('[data-dialog="ok"]').onclick = function () { closeDialog(); options.onConfirm(); };
+  }
+
+  function questionDialog(topic) {
+    var dialog = $('dialog');
+    dialog.innerHTML =
+      '<h2>' + (topic.question ? '编辑题卡问题' : '填写题卡问题') + '</h2>' +
+      '<p>' + esc(topic.folder) + '</p>' +
+      '<textarea class="sp-textarea" id="dialogQuestion" rows="5" style="min-height:120px;font-size:15px;"></textarea>' +
+      '<div class="sp-dialog__actions">' +
+      '<button type="button" class="sp-btn" data-dialog="cancel">取消</button>' +
+      '<button type="button" class="sp-btn sp-btn--primary" data-dialog="ok">保存</button>' +
+      '</div>';
+    dialog.hidden = false;
+    $('dialogBackdrop').hidden = false;
+    $('dialogQuestion').value = topic.question || '';
+    $('dialogQuestion').focus();
+    dialog.querySelector('[data-dialog="cancel"]').onclick = closeDialog;
+    dialog.querySelector('[data-dialog="ok"]').onclick = function () {
+      var value = $('dialogQuestion').value.trim();
+      if (!value) { toast('问题不能为空', 'error'); return; }
+      fetch('/set_part2_question', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ folder: topic.folder, question: value })
+      }).then(function (r) { return r.json(); }).then(function (data) {
+        if (!data.success) throw new Error(data.error || '保存失败');
+        closeDialog();
+        toast('问题已保存', 'success');
+        return loadTopics().then(function () { renderTopic(); });
+      }).catch(function (error) { toast(error.message, 'error'); });
+    };
+  }
+
+  function deleteClip(folder, file) {
+    fetch('/delete_audio', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ folder: folder, filename: file })
+    }).then(function (r) { return r.json(); }).then(function (data) {
+      if (!data.success) throw new Error(data.error || '删除失败');
+      toast('音频已删除', 'success');
+      if (state.player.folder === folder && state.player.file === file) {
+        audio.pause();
+        state.player.file = null;
+        renderPlayer();
+      }
+      return loadTopics().then(function () {
+        var topic = topicByKey(folder);
+        if (!topic) showLibrary(); else renderTopic();
+      });
+    }).catch(function (error) { toast(error.message, 'error'); });
+  }
+
+  function deleteFolder(folder) {
+    fetch('/delete_folder', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ folder: folder })
+    }).then(function (r) { return r.json(); }).then(function (data) {
+      if (!data.success) throw new Error(data.error || '删除失败');
+      toast('话题已删除', 'success');
+      if (state.player.folder === folder) { audio.pause(); state.player.file = null; renderPlayer(); }
+      return loadTopics().then(function () { showLibrary(); });
+    }).catch(function (error) { toast(error.message, 'error'); });
+  }
+
+  function fetchText(folder, file) {
+    var key = folder + '__' + file;
+    if (state.textCache[key] !== undefined) return Promise.resolve(state.textCache[key]);
+    return fetch('/text/' + encodeURIComponent(folder) + '/' + encodeURIComponent(file))
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        state.textCache[key] = data.error ? '（找不到原文）' : data.text;
+        return state.textCache[key];
+      });
+  }
+
+  // ==================== 事件 ====================
+  document.addEventListener('click', function (event) {
+    var target = event.target.closest('[data-action]');
+    if (!target) return;
+    var action = target.dataset.action;
+    var folder = target.dataset.folder;
+    var file = target.dataset.file;
+
+    if (action === 'filter') {
+      state.partFilter = target.dataset.part;
+      renderChips();
+      renderTopicList();
+      return;
+    }
+    if (action === 'open-topic') { event.stopPropagation(); closeComposer(); showTopic(folder); return; }
+    if (action === 'open-clip') { closeComposer(); showTopic(folder, file); return; }
+    if (action === 'play-topic') { event.stopPropagation(); playTopic(folder); return; }
+    if (action === 'play-clip') { event.stopPropagation(); playClip(folder, file); return; }
+    if (action === 'back') { showLibrary(); return; }
+    if (action === 'add-here') { openComposer(state.topicKey); return; }
+    if (action === 'close-composer') { closeComposer(); return; }
+    if (action === 'toggle-manage') {
+      state.manage = !state.manage;
+      renderTopic();
+      return;
+    }
+    if (action === 'edit-question') { questionDialog(topicByKey(state.topicKey)); return; }
+    if (action === 'toggle-text') {
+      var key = target.dataset.key;
+      state.expanded = state.expanded === key ? null : key;
+      renderTopic();
+      if (state.expanded) {
+        var parts = key.split('__');
+        fetchText(parts[0], parts.slice(1).join('__')).then(function () {
+          if (state.expanded === key) renderTopic();
         });
-      }, 500);
+      }
+      return;
     }
-    
-    // 跳转到文件夹
-    function jumpToFolder(folder) {
-      // 首先确定分类
-      let category = 'Part1';
-      if (folder.startsWith('P2')) category = 'Part2';
-      else if (folder.startsWith('P3')) category = 'Part3';
-      else if (!folder.startsWith('P1')) category = '其他';
-      
-      // 展开分类
-      categoryState[category] = true;
-      
-      // 展开文件夹
-      folderState[folder] = true;
-      
-      // 重新加载音频列表
-      loadAudioList();
-      
-      // 延迟滚动到文件夹
-      setTimeout(() => {
-        const folderElements = document.querySelectorAll('.folder-header');
-        folderElements.forEach(folderEl => {
-          if (folderEl.textContent.includes(folder)) {
-            folderEl.style.background = 'rgba(254, 243, 199, 0.8)';
-            folderEl.style.backdropFilter = 'blur(8px)';
-            folderEl.style.borderRadius = '12px';
-            folderEl.style.boxShadow = '0 8px 24px rgba(245, 158, 11, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2)';
-            folderEl.style.transform = 'translateY(-1px) scale(1.01)';
-            folderEl.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
-            folderEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        });
-      }, 500);
+    if (action === 'copy-text') {
+      var text = state.textCache[target.dataset.key] || '';
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(function () { toast('原文已复制', 'success'); });
+      }
+      return;
     }
-    function loadFolderList(){ fetch('/list_folders').then(r=>r.json()).then(data=>{ const datalist=document.getElementById('folderList'); datalist.innerHTML=''; (data.folders||[]).forEach(folder=>{ const option=document.createElement('option'); option.value=folder; datalist.appendChild(option); }); }); }
-    function setupAudioExclusivePlay(){ document.querySelectorAll('.audio-file audio').forEach(audio=>{ audio.addEventListener('play', function(){ if(lastPlayingAudio && lastPlayingAudio!==audio){ lastPlayingAudio.pause(); } lastPlayingAudio = audio; }); audio.addEventListener('pause', function(){ if(lastPlayingAudio===audio && audio.paused){ lastPlayingAudio=null; } }); }); }
-    </script>
+    if (action === 'delete-clip') {
+      event.stopPropagation();
+      confirmDialog({
+        title: '删除这条音频？',
+        body: esc(file),
+        warn: '音频文件和它的英文原文会一起删除，无法恢复。',
+        confirmText: '删除',
+        danger: true,
+        onConfirm: function () { deleteClip(folder, file); }
+      });
+      return;
+    }
+    if (action === 'delete-folder') {
+      var topic = topicByKey(state.topicKey);
+      confirmDialog({
+        title: '删除整个话题？',
+        body: esc(topic.folder) + ' · ' + topic.files.length + ' 条音频',
+        warn: '这个话题下所有音频和原文都会被删除，无法恢复。',
+        confirmText: '删除话题',
+        danger: true,
+        onConfirm: function () { deleteFolder(topic.folder); }
+      });
+      return;
+    }
+    if (action === 'pick-topic') {
+      pinnedFolder = folder;
+      var picked = topicByKey(folder);
+      $('topicInput').value = picked ? displayName(picked) : folder;
+      state.suggestOpen = false;
+      onTopicFieldChange();
+      $('textInput').focus();
+      return;
+    }
+    if (action === 'new-topic') {
+      pinnedFolder = null;
+      state.suggestOpen = false;
+      onTopicFieldChange();
+      $('textInput').focus();
+      return;
+    }
+  });
+
+  // 回车也能打开话题（列表行是 button，卡片是 div[role=button]）
+  document.addEventListener('keydown', function (event) {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    var target = event.target.closest('[data-action="open-topic"][role="button"]');
+    if (!target) return;
+    event.preventDefault();
+    showTopic(target.dataset.folder);
+  });
+
+  $('searchInput').addEventListener('input', function () {
+    state.query = this.value;
+    renderRecent();
+    renderTopicList();
+    var query = this.value.trim();
+    if (query.length < 2) $('hitsSection').hidden = true;
+    else runTextSearch(query);
+  });
+  $('sortSelect').addEventListener('change', function () { state.sort = this.value; renderTopicList(); });
+  $('manageToggle').addEventListener('click', function () {
+    state.manage = !state.manage;
+    this.textContent = state.manage ? '退出管理' : '管理';
+    toast(state.manage ? '管理模式已开，进入话题后可以删除' : '已退出管理模式');
+  });
+  $('partSeg').addEventListener('click', function (event) {
+    var btn = event.target.closest('[data-part]');
+    if (!btn) return;
+    pinnedFolder = null;
+    setPart(btn.dataset.part);
+  });
+  $('topicInput').addEventListener('input', function () { pinnedFolder = null; state.suggestOpen = true; onTopicFieldChange(); });
+  $('topicInput').addEventListener('focus', function () { state.suggestOpen = true; renderSuggest(); });
+  $('topicInput').addEventListener('blur', function () {
+    setTimeout(function () { state.suggestOpen = false; renderSuggest(); }, 160);
+  });
+  $('textInput').addEventListener('input', updateWordCount);
+  $('textInput').addEventListener('keydown', function (event) {
+    if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') { event.preventDefault(); generate(); }
+  });
+  $('generateBtn').addEventListener('click', generate);
+  $('composerFab').addEventListener('click', function () {
+    openComposer(state.view === 'topic' ? state.topicKey : null);
+  });
+  $('sheetBackdrop').addEventListener('click', closeComposer);
+  $('dialogBackdrop').addEventListener('click', closeDialog);
+  document.addEventListener('keydown', function (event) {
+    if (event.key !== 'Escape') return;
+    if (!$('dialog').hidden) closeDialog();
+    else if (state.composerOpen && isMobile()) closeComposer();
+  });
+
+  $('toggleBtn').addEventListener('click', function () { if (audio.paused) audio.play(); else audio.pause(); });
+  $('prevBtn').addEventListener('click', function () { step(-1); });
+  $('nextBtn').addEventListener('click', function () { step(1); });
+  $('closePlayer').addEventListener('click', function () {
+    audio.pause();
+    state.player.file = null;
+    renderPlayer();
+    refreshClipStates();
+  });
+  $('rateBtn').addEventListener('click', function () {
+    var rates = [1, 1.25, 1.5, 0.75];
+    var next = rates[(rates.indexOf(state.player.rate) + 1) % rates.length];
+    state.player.rate = next;
+    audio.playbackRate = next;
+    renderPlayer();
+  });
+  function seekTo(clientX) {
+    if (!audio.duration) return;
+    var rect = $('seekBar').getBoundingClientRect();
+    var ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    // 手动跳转时关掉过渡，否则往回拖会看到指针慢慢“滑”回去
+    $('seekFill').style.transition = 'none';
+    $('seekFill').style.width = (ratio * 100) + '%';
+    audio.currentTime = ratio * audio.duration;
+    setTimeout(function () { $('seekFill').style.transition = ''; }, 50);
+  }
+  var seeking = false;
+  $('seekBar').addEventListener('pointerdown', function (event) {
+    seeking = true;
+    this.setPointerCapture(event.pointerId);
+    seekTo(event.clientX);
+  });
+  $('seekBar').addEventListener('pointermove', function (event) {
+    if (seeking) seekTo(event.clientX);
+  });
+  $('seekBar').addEventListener('pointerup', function (event) {
+    seeking = false;
+    this.releasePointerCapture(event.pointerId);
+  });
+
+  window.addEventListener('resize', debounce(placeComposer, 150));
+  window.addEventListener('popstate', function () { routeFromHash(true); });
+  window.addEventListener('hashchange', function () { routeFromHash(true); });
+
+  function routeFromHash(skipHash) {
+    var hash = location.hash.replace(/^#/, '');
+    if (!hash) { showLibrary(true); return; }
+    var params = new URLSearchParams(hash);
+    var folder = params.get('folder');
+    if (!folder) { showLibrary(true); return; }
+    showTopic(folder, params.get('file'), skipHash);
+  }
+
+  // ==================== 启动 ====================
+  function verifyToken() {
+    var token = localStorage.getItem('authToken');
+    if (!token) return Promise.resolve(false);
+    return fetch('/verify_token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: token })
+    }).then(function (r) { return r.json(); }).then(function (data) {
+      if (data.valid) return true;
+      localStorage.removeItem('authToken');
+      return false;
+    }).catch(function () { return false; });
+  }
+
+  verifyToken().then(function (valid) {
+    if (!valid) { window.location.href = '/login'; return; }
+    updateWordCount();
+    onTopicFieldChange();
+    placeComposer();
+    loadTopics().then(function () {
+      renderLibrary();
+      routeFromHash(true);
+    }).catch(function () {
+      $('libStats').textContent = '音频列表加载失败';
+      toast('音频列表加载失败', 'error');
+    });
+  });
+
+})();
+</script>
 </body>
 </html>
-
