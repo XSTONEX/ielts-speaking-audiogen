@@ -308,15 +308,21 @@ html[data-theme="dark"] .app-shell-nav {
   color: var(--text-secondary);
   text-decoration: none;
   font-size: 13px;
-  font-weight: 700;
-  padding: 7px 10px;
-  border-radius: 8px;
+  font-weight: 500;
+  padding: 7px 12px;
+  border-radius: 999px;
+  transition: background-color .15s ease, color .15s ease;
 }
 
-.app-shell-link:hover,
+.app-shell-link:hover {
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+}
+
 .app-shell-link.is-active {
   background: var(--accent-soft);
   color: var(--accent);
+  font-weight: 600;
 }
 
 .app-shell-user {
@@ -328,12 +334,47 @@ html[data-theme="dark"] .app-shell-nav {
   font-size: 13px;
 }
 
+.app-shell-theme {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid var(--border-default);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  border-radius: 999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* 视觉 38，四周各留 3px 透明内边距凑够 44×44 的点击区 */
+  outline-offset: 3px;
+  transition: border-color .15s ease, color .15s ease, background-color .15s ease;
+}
+
+.app-shell-theme::before {
+  content: '';
+  position: absolute;
+  width: 44px;
+  height: 44px;
+}
+
+.app-shell-theme {
+  position: relative;
+}
+
+.app-shell-theme:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
 .app-shell-logout {
   border: 1px solid var(--border-default);
   background: var(--bg-surface);
   color: var(--text-secondary);
-  border-radius: 8px;
-  padding: 6px 10px;
+  border-radius: 999px;
+  padding: 7px 13px;
   cursor: pointer;
   font: inherit;
   font-size: 12px;
@@ -403,57 +444,9 @@ html[data-theme="dark"] .app-shell-nav {
   }
 }
 
-html[data-theme="dark"] body.theme-page.page-writing-practice {
-  --bg: var(--bg-page);
-  --card: var(--bg-surface);
-  --border: var(--border-default);
-  --text: var(--text-primary);
-  --text2: var(--text-secondary);
-  --text3: var(--text-muted);
-  --accent: var(--accent);
-  --accent-light: var(--accent-soft);
-  --accent-hover: var(--accent-hover);
-  --green: var(--success);
-  --green-light: var(--success-soft);
-  --amber: var(--warning);
-  --amber-light: var(--warning-soft);
-  --red: var(--danger);
-  --red-light: var(--danger-soft);
-  --shadow: 0 6px 24px rgba(var(--shadow-rgb), 0.18);
-  --shadow-lg: 0 18px 42px rgba(var(--shadow-rgb), 0.26);
-  --progress-bg-start: rgba(59, 130, 246, 0.12);
-  --progress-bg-end: rgba(14, 165, 233, 0.18);
-  --progress-border: rgba(96, 165, 250, 0.42);
-  --surface-soft: #162437;
-  --surface-soft-border: #2b3c59;
-  --surface-soft-hover: #1b304b;
-  --tag-blue-bg: rgba(59, 130, 246, 0.18);
-  --tag-blue-text: #bfdbfe;
-  --tag-orange-bg: rgba(249, 115, 22, 0.18);
-  --tag-orange-text: #fdba74;
-  --tag-green-bg: rgba(16, 185, 129, 0.18);
-  --tag-green-text: #86efac;
-  --tag-pink-bg: rgba(236, 72, 153, 0.18);
-  --tag-pink-text: #f9a8d4;
-  --tag-indigo-bg: rgba(99, 102, 241, 0.18);
-  --tag-indigo-text: #c7d2fe;
-  --tag-yellow-bg: rgba(245, 158, 11, 0.18);
-  --tag-yellow-text: #fcd34d;
-  --tag-purple-bg: rgba(168, 85, 247, 0.18);
-  --tag-purple-text: #e9d5ff;
-  --tag-teal-bg: rgba(20, 184, 166, 0.18);
-  --tag-teal-text: #99f6e4;
-  --tag-sky-bg: rgba(14, 165, 233, 0.18);
-  --tag-sky-text: #bae6fd;
-  --tag-rose-bg: rgba(244, 63, 94, 0.18);
-  --tag-rose-text: #fecdd3;
-  --tag-lime-bg: rgba(132, 204, 22, 0.18);
-  --tag-lime-text: #bef264;
-  --tag-fuchsia-bg: rgba(217, 70, 239, 0.18);
-  --tag-fuchsia-text: #f5d0fe;
-}
+/* 写作页（page-writing-practice）的暗色配色已迁到页面自己的 --w-* 令牌里，
+   theme.css 不再为它硬编码颜色。上面的 has-app-shell 避让规则仍然有效。 */
 
-html[data-theme="dark"] body.page-writing-practice .main-panel-wrapper,
 html[data-theme="dark"] body.page-audio-transcription .container,
 html[data-theme="dark"] body.page-login .login-container,
 html[data-theme="dark"] body.page-modules .wrap,
@@ -917,8 +910,7 @@ html[data-theme="dark"] body.page-vocabulary .tab.active,
 html[data-theme="dark"] body.page-vocab-summary .btn.primary,
 html[data-theme="dark"] body.page-intensive .toolbar .btn,
 html[data-theme="dark"] body.page-intensive .action-btn.primary,
-html[data-theme="dark"] body.page-intensive .vocab-btn.active,
-html[data-theme="dark"] body.page-writing-practice .nav-btn.active {
+html[data-theme="dark"] body.page-intensive .vocab-btn.active {
   background: var(--accent) !important;
   color: #fff !important;
   border-color: transparent !important;
@@ -1056,245 +1048,6 @@ html[data-theme="dark"] body.page-vocabulary .audio-status.audio-ready {
 
 html[data-theme="dark"] body.page-vocabulary .audio-status.audio-generating {
   color: #fbbf24 !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .review-fab {
-  background: linear-gradient(135deg, #1d4ed8, #4338ca) !important;
-  color: #fff !important;
-  border: 1px solid rgba(255, 255, 255, 0.14) !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-html[data-theme="dark"] body.page-writing-practice .image-upload-zone {
-  background: var(--surface-soft) !important;
-  border-color: var(--border-default) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .image-upload-zone:hover,
-html[data-theme="dark"] body.page-writing-practice .image-upload-zone.dragover {
-  background: var(--surface-soft-hover) !important;
-  border-color: var(--accent) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .image-upload-zone.has-image {
-  background: var(--surface-soft) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .image-replace-btn {
-  background: var(--bg-elevated) !important;
-  color: var(--text-secondary) !important;
-  border-color: var(--border-default) !important;
-  box-shadow: 0 6px 16px rgba(var(--shadow-rgb), 0.12);
-}
-
-html[data-theme="dark"] body.page-writing-practice .image-replace-btn:hover {
-  background: var(--surface-soft-hover) !important;
-  color: var(--accent-hover) !important;
-  border-color: var(--accent) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .chain-card {
-  background: linear-gradient(135deg, var(--accent-light) 0%, var(--surface-soft-hover) 100%) !important;
-  border-color: var(--progress-border) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .chain-en {
-  color: var(--text-secondary) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .example-header {
-  background: var(--surface-soft) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .example-header:hover {
-  background: var(--surface-soft-hover) !important;
-  border-bottom-color: var(--progress-border) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .example-header h4 {
-  color: var(--text-primary) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .example-hint,
-html[data-theme="dark"] body.page-writing-practice .editor-context .ctx-hint {
-  background: var(--surface-soft) !important;
-  border: 1px solid var(--surface-soft-border) !important;
-  color: var(--text-secondary) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .ai-float-btn {
-  background: linear-gradient(135deg, #3730a3 0%, #6d28d9 100%) !important;
-  color: #fff !important;
-  box-shadow: 0 12px 28px rgba(var(--shadow-rgb), 0.28) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .ai-chat-window {
-  background: rgba(16, 27, 45, 0.9) !important;
-  border-color: rgba(61, 79, 110, 0.85) !important;
-  box-shadow: 0 20px 44px rgba(var(--shadow-rgb), 0.34) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .ai-chat-header {
-  background: linear-gradient(135deg, rgba(29, 78, 216, 0.22) 0%, rgba(67, 56, 202, 0.18) 100%) !important;
-  border-bottom-color: var(--border-default) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .ai-chat-header-title {
-  color: var(--text-primary) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .ai-chat-header-actions button {
-  background: rgba(255, 255, 255, 0.08) !important;
-  color: var(--text-secondary) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .ai-chat-header-actions button:hover {
-  background: rgba(255, 255, 255, 0.14) !important;
-  color: var(--text-primary) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .ai-chat-dropzone {
-  background: rgba(255, 255, 255, 0.03) !important;
-  border-color: var(--border-default) !important;
-  color: var(--text-muted) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .ai-chat-dropzone.dragover {
-  background: var(--accent-soft) !important;
-  border-color: var(--accent) !important;
-  color: var(--accent-hover) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .ai-chat-dropzone.has-context {
-  background: rgba(59, 130, 246, 0.12) !important;
-  border-color: var(--progress-border) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .ai-chat-context-chip {
-  background: var(--bg-elevated) !important;
-  border-color: var(--progress-border) !important;
-  color: #bfdbfe !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .ai-chat-context-chip .remove-ctx {
-  background: rgba(59, 130, 246, 0.16) !important;
-  color: var(--text-secondary) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .ai-chat-context-chip .remove-ctx:hover {
-  background: rgba(248, 113, 113, 0.16) !important;
-  color: #f87171 !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .ai-chat-msg.assistant {
-  background: var(--surface-soft) !important;
-  color: var(--text-primary) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .ai-chat-msg.assistant code,
-html[data-theme="dark"] body.page-writing-practice .markdown-body code,
-html[data-theme="dark"] body.page-writing-practice .practice-followup-response code {
-  background: rgba(255, 255, 255, 0.08) !important;
-  color: #dbeafe !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .markdown-body,
-html[data-theme="dark"] body.page-writing-practice .markdown-body h1,
-html[data-theme="dark"] body.page-writing-practice .markdown-body h2,
-html[data-theme="dark"] body.page-writing-practice .markdown-body h3,
-html[data-theme="dark"] body.page-writing-practice .markdown-body h4,
-html[data-theme="dark"] body.page-writing-practice .markdown-body p,
-html[data-theme="dark"] body.page-writing-practice .markdown-body li {
-  color: var(--text-primary) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .markdown-body blockquote {
-  background: rgba(59, 130, 246, 0.08) !important;
-  color: var(--text-secondary) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .markdown-body th {
-  background: rgba(255, 255, 255, 0.06) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .markdown-body th,
-html[data-theme="dark"] body.page-writing-practice .markdown-body td {
-  border-color: var(--border-default) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .ai-chat-preset-btn {
-  background: var(--bg-elevated) !important;
-  color: var(--text-secondary) !important;
-  border-color: var(--border-default) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .ai-chat-preset-btn:hover {
-  background: var(--accent-soft) !important;
-  color: var(--accent-hover) !important;
-  border-color: var(--accent) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .ai-chat-input-row {
-  background: rgba(255, 255, 255, 0.04) !important;
-  border-top-color: var(--border-default) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .ai-chat-input {
-  background: var(--bg-elevated) !important;
-  color: var(--text-primary) !important;
-  border-color: var(--border-default) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .ai-chat-input::placeholder {
-  color: var(--text-muted) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .ai-chat-send-btn {
-  background: var(--accent) !important;
-  color: #fff !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .ai-chat-send-btn:hover {
-  background: var(--accent-hover) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .ai-chat-send-btn:disabled {
-  background: #475569 !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .ai-chat-history-panel {
-  background: rgba(16, 27, 45, 0.97) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .ai-chat-history-item {
-  border-bottom-color: var(--border-default) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .ai-chat-history-item:hover {
-  background: var(--accent-soft) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .ai-chat-history-item .hist-ctx {
-  color: var(--text-primary) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .ai-chat-history-item .hist-meta,
-html[data-theme="dark"] body.page-writing-practice .ai-chat-history-item .hist-del {
-  color: var(--text-muted) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .practice-followup {
-  background: var(--surface-soft) !important;
-  border-color: var(--border-default) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .practice-followup input {
-  color: var(--text-primary) !important;
-}
-
-html[data-theme="dark"] body.page-writing-practice .practice-followup-response {
-  background: var(--surface-soft) !important;
-  color: var(--text-primary) !important;
 }
 
 html[data-theme="dark"] body.page-message-board .comment-item {

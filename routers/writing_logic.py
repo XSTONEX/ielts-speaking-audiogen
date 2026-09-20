@@ -474,8 +474,13 @@ def small_example_detail(type_idx, example_idx):
     if example_idx >= len(ct['examples']):
         return jsonify({'error': '例题不存在'}), 404
     ex = ct['examples'][example_idx]
+    # 顺带告诉前端这道题对应模板模块里的哪套句型库，
+    # 实战页的「看句型库 / 先看提示」靠它跳转和取骨架
+    chart_id = next((fid for fid, names in SMALL_CHART_FAMILY.items() if ct['name'] in names), '')
     return jsonify({
         'chart_type': ct['name'],
+        'template_chart_id': chart_id,
+        'template_sections': {s['name']: _template_section_of(s['name']) for s in ex.get('sections', [])},
         **ex
     })
 
@@ -774,6 +779,7 @@ def writing_categories():
     result = []
     for ci, c in enumerate(cats):
         subs = [{'index': si, 'name': s['name'], 'keyword_count': len(s['keywords']),
+                 'keywords': s['keywords'][:2],
                  'chain_count': len(s['chains']), 'example_count': len(s['examples'])}
                 for si, s in enumerate(c['subcategories'])]
         result.append({'index': ci, 'name': c['name'], 'subcategories': subs})
@@ -1760,6 +1766,8 @@ def template_save_practice():
         'score': data.get('score', ''),
         'feedback': data.get('feedback', {}),
         'native_version': data.get('native_version', ''),
+        # 提交前点过「偷看答案」的，记一笔，复盘时知道这句是看过答案写的
+        'peeked': bool(data.get('peeked', False)),
         'in_review': bool(data.get('save_to_review', False)),
     }
     records.insert(0, record)
