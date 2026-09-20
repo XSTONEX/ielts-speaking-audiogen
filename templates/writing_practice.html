@@ -1050,6 +1050,10 @@ body.page-writing-practice textarea.tpl-textarea { font-family: var(--w-en); }
 .back-btn:hover { border-color: var(--w-big-line); background: var(--w-big-soft); }
 .back-btn:hover::before { border-color: var(--w-big); }
 
+/* .breadcrumb 等规则会把浏览器默认的 [hidden]{display:none} 盖掉，
+   结果标了 hidden 的面包屑照样显示出来，和左栏选中项、右栏标题重复 */
+[hidden] { display: none !important; }
+
 .breadcrumb {
   font-size: var(--w-fs-meta); color: var(--w-ink3);
   margin-bottom: 14px; display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
@@ -4685,11 +4689,21 @@ function renderExercise() {
   const hintItems = normalizeExHints(hints);
   const norm = t => String(t).replace(/\s+/g, '').replace(/[，。,.]/g, '');
   const used = hintItems.filter(x => x.kind === '使用').map(x => norm(x.text));
+  // 例题写的和语料里的链，箭头右半边常常换了说法
+  // （「→ 需要家长保护」vs「→ 需要保护和指导」），所以先整句对，
+  // 对不上再拿箭头左边的触发条件对，都对不上才退回全部。
+  const trigger = t => norm(t).split(/[→>]/)[0];
   let usedChains = chains;
   if (used.length) {
-    const hit = chains.filter(c => used.some(u =>
+    let hit = chains.filter(c => used.some(u =>
       norm(c.chinese) === u || norm(c.chinese).includes(u) || u.includes(norm(c.chinese))));
-    if (hit.length) usedChains = hit;   // 对不上就退回全部，宁可多给也别少给
+    if (!hit.length) {
+      hit = chains.filter(c => used.some(u => {
+        const a = trigger(c.chinese), b = trigger(u);
+        return a && b && (a === b || a.includes(b) || b.includes(a));
+      }));
+    }
+    if (hit.length) usedChains = hit;
   }
   // 链子已经用「正在用」说过了，提示里的「使用」那条不再重复挂
   document.getElementById('pracHints').innerHTML =
