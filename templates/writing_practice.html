@@ -282,6 +282,191 @@ body.page-writing-practice textarea.tpl-textarea { font-family: var(--w-en); }
   padding: 26px 44px 18px 44px;
   border-bottom: 1px solid var(--w-line);
 }
+/* ==================== 模板 · 大作文范文题（TplBigSamples 设计稿） ==================== */
+.tbs-overview {
+  background: var(--w-surface); border: 1px solid var(--w-line);
+  border-radius: var(--w-r-card); padding: 20px 24px; margin-bottom: 20px;
+}
+.tbs-ov-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.tbs-ov-label { font-size: 12px; letter-spacing: 1.5px; color: var(--w-ink3); flex-shrink: 0; }
+.tbs-ov-feature {
+  font-family: var(--w-en); font-size: 15px; font-weight: 600;
+  color: var(--w-ink); min-width: 0;
+}
+.tbs-gap { flex-grow: 1; }
+.tbs-ov-progtext { font-size: 12px; color: var(--w-ink3); white-space: nowrap; }
+.tbs-ov-bar {
+  width: 130px; height: 6px; border-radius: 999px;
+  background: var(--w-big-track); overflow: hidden; flex-shrink: 0;
+}
+.tbs-ov-bar i { display: block; height: 100%; border-radius: 999px; background: var(--w-big); }
+.tbs-ov-num {
+  font-family: var(--w-display); font-size: 13px; color: var(--w-big);
+  font-variant-numeric: tabular-nums; flex-shrink: 0;
+}
+.tbs-ov-bottom {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding-top: 14px; border-top: 1px solid var(--w-big-track);
+}
+.tbs-ov-cap { font-size: 12px; color: var(--w-ink3); margin-right: 2px; flex-shrink: 0; }
+.tbs-slot-chip {
+  font-size: 12.5px; color: var(--w-big); background: var(--w-big-soft);
+  border-radius: var(--w-r-chip); padding: 5px 13px; white-space: nowrap;
+}
+.tbs-var-chip {
+  font-size: 12.5px; color: var(--w-ink2); background: var(--w-sunken);
+  border-radius: var(--w-r-chip); padding: 5px 13px; white-space: nowrap;
+}
+.tbs-ov-sep { width: 1px; height: 20px; background: var(--w-line); margin: 0 4px; flex-shrink: 0; }
+
+.tbs-sec-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 14px; margin-bottom: 12px; flex-wrap: wrap;
+}
+.tbs-sec-head h3 {
+  font-family: var(--w-display); font-size: 20px; font-weight: 600;
+  color: var(--w-ink); margin: 0;
+}
+.tbs-sec-note { font-size: 12.5px; color: var(--w-ink3); }
+
+.tbs-list { display: flex; flex-direction: column; gap: 12px; }
+.tbs-card {
+  background: var(--w-surface); border: 1px solid var(--w-line);
+  border-radius: var(--w-r-card); padding: 20px 24px;
+  display: flex; gap: 22px; align-items: center; flex-wrap: wrap;
+  transition: border-color .15s, box-shadow .15s;
+}
+.tbs-card.is-started { border-color: var(--w-big-line); box-shadow: var(--w-shadow); }
+.tbs-card-body { flex-grow: 1; min-width: 260px; }
+.tbs-card-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.tbs-tag {
+  font-size: 11.5px; font-weight: 600; border-radius: var(--w-r-chip); padding: 3px 10px;
+  color: var(--w-ink2); background: var(--w-big-track);
+}
+.tbs-card.is-started .tbs-tag { color: var(--w-big); background: var(--w-big-soft); }
+.tbs-card-sub { font-size: 11.5px; color: var(--w-ink3); }
+.tbs-card-q {
+  margin: 0 0 12px 0; font-family: var(--w-en);
+  font-size: 17px; line-height: 1.7; color: var(--w-ink);
+}
+.tbs-card-prog { display: flex; align-items: center; gap: 10px; max-width: 420px; }
+.tbs-card-bar {
+  flex-grow: 1; height: 6px; border-radius: 999px;
+  background: var(--w-big-track); overflow: hidden;
+}
+.tbs-card-bar i { display: block; height: 100%; border-radius: 999px; background: var(--w-big); }
+.tbs-card-num {
+  font-family: var(--w-display); font-size: 12.5px; color: var(--w-ink3);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.tbs-card.is-started .tbs-card-num { color: var(--w-big); }
+.tbs-card-acts { display: flex; flex-direction: column; gap: 9px; flex-shrink: 0; }
+.tbs-btn {
+  height: 44px; padding: 0 24px; cursor: pointer; white-space: nowrap;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: var(--w-r-chip); border: 1px solid var(--w-line);
+  background: var(--w-surface); color: var(--w-ink2); font-size: 13.5px;
+  transition: border-color .15s, color .15s;
+}
+.tbs-btn:hover { border-color: var(--w-big-line); color: var(--w-big); }
+.tbs-btn.is-outline { border-color: var(--w-big-line); color: var(--w-big); font-weight: 600; }
+.tbs-btn.is-solid {
+  border-color: transparent; background: var(--w-big); color: #fff; font-weight: 600;
+  transition: filter .15s;
+}
+.tbs-btn.is-solid:hover { filter: brightness(1.08); color: #fff; }
+
+.tbs-foot {
+  margin-top: 20px; background: var(--w-sunken); border: 1px solid var(--w-line);
+  border-radius: 20px; padding: 18px 22px;
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+}
+.tbs-foot-ico {
+  width: 38px; height: 38px; flex-shrink: 0; border-radius: 12px;
+  background: var(--w-surface); color: var(--w-big);
+  display: flex; align-items: center; justify-content: center;
+}
+.tbs-foot-text { flex-grow: 1; min-width: 200px; font-size: 13.5px; color: var(--w-ink2); line-height: 1.7; }
+.tbs-foot-text b { color: var(--w-ink); }
+
+/* ==================== 模板 · 小作文句型库（TplSmallLearn 设计稿） ==================== */
+.tsl-filter { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.tsl-filter-label { font-size: 12px; color: var(--w-ink3); margin-right: 4px; flex-shrink: 0; }
+.tsl-chip {
+  height: 32px; padding: 0 16px; cursor: pointer; white-space: nowrap;
+  border-radius: var(--w-r-chip); border: 1px solid var(--w-line);
+  background: var(--w-surface); color: var(--w-ink2); font-size: 12.5px;
+  transition: border-color .15s, background .15s, color .15s;
+}
+.tsl-chip:hover { border-color: var(--w-line-strong); color: var(--w-ink); }
+.tsl-chip.active {
+  border-color: var(--w-big); background: var(--w-big-soft);
+  color: var(--w-big); font-weight: 600;
+}
+.tsl-hint { font-size: 12px; color: var(--w-ink3); }
+
+.tsl-group {
+  background: var(--w-surface); border: 1px solid var(--w-line);
+  border-radius: var(--w-r-card); padding: 20px 24px; margin-bottom: 12px;
+}
+.tsl-group.is-first { border-color: var(--w-big-line); box-shadow: var(--w-shadow); }
+.tsl-group-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.tsl-group-name {
+  font-family: var(--w-display); font-size: 17px; font-weight: 600;
+  color: var(--w-ink); letter-spacing: -.2px;
+}
+.tsl-form {
+  font-size: 11.5px; font-weight: 600; border-radius: var(--w-r-chip); padding: 3px 10px;
+  color: var(--w-big); background: var(--w-big-soft);
+}
+.tsl-form.is-static { color: var(--w-ink2); background: var(--w-big-track); }
+.tsl-count { font-size: 12px; color: var(--w-ink3); white-space: nowrap; }
+.tsl-count.high { color: var(--w-ok); }
+.tsl-count.mid { color: var(--w-big); }
+.tsl-note { margin: 0 0 14px 0; font-size: 12.5px; color: var(--w-ink2); line-height: 1.7; }
+.tsl-list { display: flex; flex-direction: column; gap: 9px; }
+.tsl-item {
+  background: var(--w-sunken); border-radius: 14px; padding: 14px 17px;
+  display: flex; gap: 12px; align-items: flex-start;
+}
+.tsl-item-body { flex-grow: 1; min-width: 0; }
+.tsl-item-en {
+  margin: 0; font-family: var(--w-en); font-size: 18px;
+  line-height: 1.75; color: var(--w-ink);
+}
+.tsl-item-en .tpl-slot {
+  background: var(--w-big-soft); border: 1px dashed var(--w-big-line);
+  border-radius: 6px; padding: 1px 7px; color: var(--w-big);
+}
+.tsl-item-cn { margin: 4px 0 0 0; font-size: 13.5px; line-height: 1.7; color: var(--w-ink2); }
+.tsl-copy {
+  width: 30px; height: 30px; flex-shrink: 0; border-radius: 9px; cursor: pointer;
+  border: 1px solid var(--w-line-strong); background: var(--w-surface);
+  color: var(--w-ink2); display: inline-flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity .18s, border-color .15s, color .15s;
+}
+.tsl-item:hover .tsl-copy, .tsl-item:focus-within .tsl-copy { opacity: 1; }
+.tsl-copy:hover { border-color: var(--w-big); color: var(--w-big); }
+
+.tsl-cta {
+  background: var(--w-big-soft); border: 1px solid var(--w-big-line);
+  border-radius: var(--w-r-card); padding: 20px 24px;
+  display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+}
+.tsl-cta-body { flex-grow: 1; min-width: 220px; }
+.tsl-cta-title {
+  font-family: var(--w-display); font-size: 18px; font-weight: 600;
+  color: var(--w-ink); margin-bottom: 5px;
+}
+.tsl-cta-sub { font-size: 13px; color: var(--w-small-ink); }
+.tsl-cta-btn {
+  height: 46px; padding: 0 28px; flex-shrink: 0; cursor: pointer; white-space: nowrap;
+  border: none; border-radius: var(--w-r-chip);
+  background: var(--w-big); color: #fff; font-size: 14px; font-weight: 600;
+  display: inline-flex; align-items: center; transition: filter .15s;
+}
+.tsl-cta-btn:hover { filter: brightness(1.08); }
+
 /* ==================== 模板写作 · 实战（TplBigPractice / TplSmallPractice 设计稿） ==================== */
 #tplBigPracticeView .view-head,
 #tplSmallPracticeView .view-head { border-bottom: none; padding-bottom: 14px; }
@@ -812,6 +997,7 @@ body.page-writing-practice textarea.tpl-textarea { font-family: var(--w-en); }
 .card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
 .card-head .card-title { margin-bottom: 0; }
 .card-note { font-size: 12px; color: var(--w-ink3); }
+.view-head-tools { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 /* 根页标题前的模块色块 */
 .mod-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; background: var(--w-big); }
 .mod-dot.is-small { background: var(--w-small); }
@@ -2185,8 +2371,6 @@ html[data-theme="dark"] body.page-writing-practice .review-overlay .review-overl
 .tpl-card-prog .num { font-size: 11.5px; color: var(--w-big); }
 .tpl-card-prog.full .bar i { background: var(--w-ok); }
 .tpl-card-prog.full .num { color: var(--w-ok); }
-.tpl-card-actions { display: flex; gap: 8px; margin-top: 14px; }
-.tpl-card-actions .mode-btn { flex: 1; }
 
 .tpl-badge {
   display: inline-flex; align-items: center; padding: 3px 10px;
@@ -2210,11 +2394,6 @@ html[data-theme="dark"] body.page-writing-practice .review-overlay .review-overl
   font-family: var(--w-en); font-size: var(--w-fs-q); line-height: 1.7;
   color: var(--w-ink); padding: 0; background: transparent;
 }
-.tpl-prac-head {
-  background: var(--w-sunken); border: 1px solid var(--w-line);
-  border-radius: var(--w-r-card); padding: 16px 20px; margin-bottom: 14px;
-}
-.tpl-prac-head .q { font-family: var(--w-en); font-size: 14.5px; line-height: 1.7; color: var(--w-ink); }
 .tpl-thumb {
   max-width: 100%; max-height: 200px; border-radius: var(--w-r-inner);
   cursor: zoom-in; display: block;
@@ -2308,7 +2487,6 @@ html[data-theme="dark"] body.page-writing-practice .review-overlay .review-overl
 .tpl-textarea:focus { border-color: var(--w-big-line); box-shadow: var(--w-ring); }
 
 
-.tpl-tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
 
 .tpl-imgslot { position: relative; background: var(--w-surface); border: 1px solid var(--w-line); border-radius: 20px; padding: 14px; }
 .tpl-imgdrop {
@@ -2714,10 +2892,13 @@ html[data-theme="dark"] body.page-writing-practice .tpl-btn.ghost {
       <button class="back-btn nav-back" onclick="goBack()">&larr; 返回</button>
       <div class="view-head-main">
         <div class="breadcrumb" id="tplBigSamplesCrumb"></div>
-        <div id="tplBigSamplesHead" class="view-head-slot"></div>
+        <h2 id="tplBigSamplesTitle"></h2>
+      </div>
+      <div class="view-head-tools">
+        <button type="button" class="tbs-btn" onclick="Tpl.openSkeletonOnly()">只看骨架</button>
       </div>
     </div>
-    <div id="tplBigSamplesGrid" class="tpl-type-grid"></div>
+    <div id="tplBigSamplesBody"></div>
   </div>
 
   <div id="tplSmallExamplesView" style="display:none;">
@@ -2725,10 +2906,13 @@ html[data-theme="dark"] body.page-writing-practice .tpl-btn.ghost {
       <button class="back-btn nav-back" onclick="goBack()">&larr; 返回</button>
       <div class="view-head-main">
         <div class="breadcrumb" id="tplSmallExCrumb"></div>
-        <div id="tplSmallExHead" class="view-head-slot"></div>
+        <h2 id="tplSmallExTitle"></h2>
+      </div>
+      <div class="view-head-tools">
+        <button type="button" class="tbs-btn" onclick="Tpl.openLibrary(Tpl.s.sectionId)">只看句型库</button>
       </div>
     </div>
-    <div id="tplSmallExGrid" class="tpl-type-grid"></div>
+    <div id="tplSmallExBody"></div>
   </div>
 
   <div id="tplBigLearnView" style="display:none;">
@@ -2786,7 +2970,11 @@ html[data-theme="dark"] body.page-writing-practice .tpl-btn.ghost {
       <button class="back-btn nav-back" onclick="goBack()">&larr; 返回</button>
       <div class="view-head-main">
         <div class="breadcrumb" id="tplSmallLearnCrumb"></div>
-        <div id="tplSmallLearnHead" class="view-head-slot"></div>
+        <h2 id="tplSmallLearnTitle"></h2>
+      </div>
+      <div class="seg-switch">
+        <button class="seg-btn is-on">学习</button>
+        <button class="seg-btn" onclick="Tpl.openSmallPractice(Tpl.s.exampleIdx)">实战</button>
       </div>
     </div>
     <div id="tplSmallLearnBody"></div>
@@ -6360,9 +6548,9 @@ var Tpl = {
   async openType(typeId) {
     Nav.enter(() => Tpl.openType(typeId), '范文列表');
     switchView('tplBigSamplesView');
-    document.getElementById('tplBigSamplesGrid').innerHTML = '<div class="tpl-hint">加载中…</div>';
+    document.getElementById('tplBigSamplesBody').innerHTML = '<div class="tpl-hint">加载中…</div>';
     const data = await API.get(`/api/writing/template/big/${typeId}`);
-    if (!data || data.error) { this.fail('tplBigSamplesGrid', data); return; }
+    if (!data || data.error) { this.fail('tplBigSamplesBody', data); return; }
     this.s.typeData = data;
     this.s.variantIdx = 0; this.s.sampleIdx = 0; this.s.versionIdx = 0;
     document.getElementById('pageTitle').textContent = `${data.name} · 模板写作`;
@@ -6370,38 +6558,113 @@ var Tpl = {
     this.renderBigSamples();
   },
 
+  // 这一篇范文练到哪了：按骨架顺序找最靠后的那一句
+  lastSpotOf(typeId, questionId) {
+    const q = (this.s.progress[typeId] || {})[questionId];
+    if (!q || !q.sections) return null;
+    const order = this.variant().sections || [];
+    let hit = null;
+    order.forEach(sec => {
+      this.sectionKeys(q.sections, sec.id).forEach(k => {
+        const idxs = Object.keys((q.sections[k] || {}).sentences || {}).map(Number).filter(n => !isNaN(n));
+        if (idxs.length) hit = { name: sec.name, idx: Math.max.apply(null, idxs) + 1 };
+      });
+    });
+    return hit;
+  },
+
   // 一个题型下的范文，每「题 × 版本」一张卡，各自独立记进度
   renderBigSamples() {
     const d = this.s.typeData;
     const meta = this.s.bigTypes.find(t => t.id === d.id) || { units: [], total_sentences: 0 };
     document.getElementById('tplBigSamplesCrumb').innerHTML =
-      `<span onclick="Tpl.enterBig()">模板写作</span><span class="sep">/</span><span class="current">${this.esc(d.name)}</span>`;
+      `<span onclick="Tpl.enterBig()">按题型选模板</span>` +
+      `<span class="sep">/</span><span class="current">${this.esc(d.name)}</span>`;
+    document.getElementById('tplBigSamplesTitle').textContent = d.name;
+
     const done = this.doneTotal(d.id);
-    document.getElementById('tplBigSamplesHead').innerHTML = `
-      <h2 style="font-size:18px;margin-bottom:4px;">${this.esc(d.name)}</h2>
-      <p class="tpl-hint">${this.esc(d.feature || '')}
-        ${d.derived ? ' · 骨架由范文反推' : ''}</p>
-      <div class="tpl-section-card" style="padding:12px 16px;margin-bottom:14px;">
-        <div class="tpl-card-prog${this.pct(done, meta.total_sentences) >= 100 ? ' full' : ''}">
-          <span class="num" style="font-size:12px;">本题型整体进度</span>
-          <div class="bar"><i style="width:${this.pct(done, meta.total_sentences)}%"></i></div>
-          <span class="num">${done}/${meta.total_sentences} 句</span>
-        </div>
-      </div>`;
-    document.getElementById('tplBigSamplesGrid').innerHTML = (meta.units || []).map(u => {
+    const pct = this.pct(done, meta.total_sentences);
+    const secs = this.variant().sections || [];
+    const variants = (d.variants || []).map((v, i) => v.name || (i === 0 ? '默认结构' : `结构 ${i + 1}`));
+
+    const overview = `<div class="tbs-overview">
+      <div class="tbs-ov-top">
+        <span class="tbs-ov-label">什么时候用这套骨架</span>
+        <span class="tbs-ov-feature">${this.esc(d.feature || d.name)}</span>
+        <span class="tbs-gap"></span>
+        <span class="tbs-ov-progtext">整套进度</span>
+        <span class="tbs-ov-bar"><i style="width:${pct}%"></i></span>
+        <span class="tbs-ov-num">${done}/${meta.total_sentences}</span>
+      </div>
+      <div class="tbs-ov-bottom">
+        <span class="tbs-ov-cap">${secs.length} 段骨架</span>
+        ${secs.map(sec => `<span class="tbs-slot-chip">${this.esc(sec.name)}${sec.slot_count ? ' · ' + sec.slot_count + ' 槽' : ''}</span>`).join('')}
+        ${variants.length ? `<span class="tbs-ov-sep"></span><span class="tbs-ov-cap">结构变体</span>
+          ${variants.map(n => `<span class="tbs-var-chip">${this.esc(n)}</span>`).join('')}` : ''}
+      </div>
+    </div>`;
+
+    // 同一道题可能有多个版本，角标要把版本带上，否则并排两张都写「范文 1」
+    const verCount = {};
+    (meta.units || []).forEach(u => { verCount[u.sample_index] = (verCount[u.sample_index] || 0) + 1; });
+
+    const cards = (meta.units || []).map(u => {
       const uDone = this.doneCount(d.id, u.question_id);
+      const uPct = this.pct(uDone, u.total);
+      const started = uDone > 0;
+      const spot = started ? this.lastSpotOf(d.id, u.question_id) : null;
       const cross = u.template_type_name && u.template_type_name !== d.name;
-      return `<div class="tpl-type-card" style="${this.progStyle(this.pct(uDone, u.total))}">
-        <div class="tpl-type-name">范文题 ${u.sample_index + 1} · ${this.esc(u.version_name)}
-          ${cross ? `<span class="tpl-badge warn">套「${this.esc(u.template_type_name)}」</span>` : ''}</div>
-        <div class="tpl-card-sub">${this.esc(u.question)}</div>
-        ${this.progBar(uDone, u.total)}
-        <div class="tpl-card-actions">
-          <button class="mode-btn learn" onclick="Tpl.openLearnFor(${u.sample_index},${u.version_index})">学习</button>
-          <button class="mode-btn practice" onclick="Tpl.openPracticeFor(${u.sample_index},${u.version_index})">实战</button>
+      const multi = verCount[u.sample_index] > 1;
+      const tag = `范文 ${u.sample_index + 1}` + (multi ? ` · ${this.esc(u.version_name || '版本' + (u.version_index + 1))}` : '');
+      const sub = [
+        multi ? '' : this.esc(u.version_name || '默认结构'),
+        `${u.total} 句`,
+        spot ? `上次练到 ${this.esc(spot.name)} 第 ${spot.idx} 句` : (started ? `已练 ${uDone} 句` : '还没练过'),
+      ].filter(Boolean).join(' · ');
+      return `<div class="tbs-card${started ? ' is-started' : ''}">
+        <div class="tbs-card-body">
+          <div class="tbs-card-meta">
+            <span class="tbs-tag">${tag}</span>
+            <span class="tbs-card-sub">${sub}</span>
+            ${cross ? `<span class="tpl-badge warn">套「${this.esc(u.template_type_name)}」</span>` : ''}
+          </div>
+          <p class="tbs-card-q">${this.esc(u.question)}</p>
+          <div class="tbs-card-prog">
+            <span class="tbs-card-bar"><i style="width:${uPct}%"></i></span>
+            <span class="tbs-card-num">${uDone}/${u.total} 句</span>
+          </div>
+        </div>
+        <div class="tbs-card-acts">
+          <button type="button" class="tbs-btn" onclick="Tpl.openLearnFor(${u.sample_index},${u.version_index})">先学对照</button>
+          <button type="button" class="tbs-btn ${started ? 'is-solid' : 'is-outline'}"
+            onclick="Tpl.openPracticeFor(${u.sample_index},${u.version_index})">${started ? '接着练' : '开始练'} &rarr;</button>
         </div>
       </div>`;
-    }).join('') || '<div class="tpl-hint">该题型还没有范文。</div>';
+    }).join('');
+
+    const refs = d.references || [];
+    const foot = `<div class="tbs-foot">
+      <span class="tbs-foot-ico">${this.LIB_ICON}</span>
+      <span class="tbs-foot-text">这套骨架的每一段该干什么，在<b>总结构</b>里写得更细；不确定题目算不算${this.esc(d.name)}，也可以回去对一眼各题型的问法。</span>
+      ${refs.length
+        ? `<button type="button" class="tbs-btn" onclick="Tpl.openRef('${this.esc(refs[0].id)}','tplBigSamplesView')">打开总结构</button>`
+        : `<button type="button" class="tbs-btn" onclick="Tpl.enterBig()">回题型列表</button>`}
+    </div>`;
+
+    document.getElementById('tplBigSamplesBody').innerHTML = overview + `
+      <div class="tbs-sec-head">
+        <h3>选一道题练</h3>
+        <span class="tbs-sec-note">同一套骨架，每篇范文的填法不一样</span>
+      </div>
+      <div class="tbs-list">${cards || '<div class="tpl-hint">该题型还没有范文。</div>'}</div>` + foot;
+  },
+
+  // 页头「只看骨架」：不挂范文，直接看这套模板的段落骨架
+  openSkeletonOnly() {
+    const meta = this.s.bigTypes.find(t => t.id === this.s.typeData.id) || { units: [] };
+    const u = (meta.units || [])[0];
+    if (!u) { alert('该题型还没有范文，暂时没有可对照的骨架'); return; }
+    this.openLearnFor(u.sample_index, u.version_index);
   },
 
   openLearnFor(si, vi) {
@@ -6984,7 +7247,9 @@ var Tpl = {
       section_id: step.id, section_name: step.name,
       question_id: p.questionId, question: p.question,
       example_name: p.exampleName, sentence_index: p.activeIdx,
-      template_text: sent.template || '',
+      // 小作文的句子自带骨架是空的，这里记下当下套用的句型，
+      // 句型库页靠它统计每组「已练 N/M」
+      template_text: sent.template || (p.task === 'task1' ? ((this.curPattern() || {}).text || '') : ''),
       target_chinese: sent.chinese || '',
       reference: sent.english || '',
       user_translation: answer,
@@ -7135,9 +7400,9 @@ var Tpl = {
     this.s.sectionId = sectionId;
     const c = this.s.chartData;
     switchView('tplSmallExamplesView');
-    document.getElementById('tplSmallExGrid').innerHTML = '<div class="tpl-hint">加载中…</div>';
+    document.getElementById('tplSmallExBody').innerHTML = '<div class="tpl-hint">加载中…</div>';
     const res = await API.get(`/api/writing/template/small/${c.id}/examples?section=${sectionId}`);
-    if (!res || res.error) { this.fail('tplSmallExGrid', res); return; }
+    if (!res || res.error) { this.fail('tplSmallExBody', res); return; }
     this.s.examples = res.examples || [];
     await this.loadProgress();
     this.renderExamples();
@@ -7147,42 +7412,101 @@ var Tpl = {
     const c = this.s.chartData, sid = this.s.sectionId;
     const sec = this.findSection(sid) || { name: '', groups: [], pattern_count: 0 };
     const meta = this.s.charts.find(x => x.id === c.id) || { sections: [] };
-    const st = meta.sections.find(x => x.id === sid) || { total_sentences: 0 };
+    const st = meta.sections.find(x => x.id === sid) || { total_sentences: 0, example_count: 0 };
     const sDone = this.doneTotal(c.id, sid);
+    const pct = this.pct(sDone, st.total_sentences);
+
+    // 徽章已经写了「模板写作」，面包屑就从图表类型起，标题只写段落名，别绕回去重复
     document.getElementById('tplSmallExCrumb').innerHTML =
-      `<span onclick="Tpl.enterSmall()">模板写作</span><span class="sep">/</span>` +
-      `<span onclick="Tpl.backToSections()">${this.esc(c.name)}</span><span class="sep">/</span>` +
-      `<span class="current">${this.esc(sec.name)}</span>`;
-    document.getElementById('tplSmallExHead').innerHTML = `
-      <h2 style="font-size:18px;margin-bottom:4px;">${this.esc(c.name)} · ${this.esc(sec.name)}</h2>
-      <p class="tpl-hint">挑一道例题，先看这一段的写法，再看中文写英文。</p>
-      <div class="tpl-section-card" style="padding:12px 16px;margin-bottom:14px;">
-        <div class="tpl-card-prog${this.pct(sDone, st.total_sentences) >= 100 ? ' full' : ''}">
-          <span class="num" style="font-size:12px;">本段整体进度</span>
-          <div class="bar"><i style="width:${this.pct(sDone, st.total_sentences)}%"></i></div>
-          <span class="num">${sDone}/${st.total_sentences} 句</span>
-        </div>
-        <div style="margin-top:10px;">
-          <button class="mode-btn learn" onclick="Tpl.openLibrary('${sid}')">只看句型库（${sec.pattern_count} 个句型）</button>
-        </div>
-      </div>`;
-    document.getElementById('tplSmallExGrid').innerHTML = this.s.examples.map((ex, i) => {
+      `<span onclick="Tpl.backToSections()">${this.esc(c.name)}</span>` +
+      `<span class="sep">/</span><span class="current">${this.esc(sec.name)}</span>`;
+    document.getElementById('tplSmallExTitle').textContent = sec.name;
+
+    // 句型库里带图型的分组，顺手当成这一段的适用范围提示
+    const forms = [];
+    (sec.groups || []).forEach(g => {
+      const f = this.groupForm(g);
+      if (!f) return;
+      const hit = forms.find(x => x.name === f);
+      if (hit) hit.n += (g.patterns || []).length;
+      else forms.push({ name: f, n: (g.patterns || []).length });
+    });
+    const touched = this.s.examples.filter(ex => this.doneCount(c.id, ex.id, sid) > 0).length;
+
+    // sec.title 常常就等于段落名，写上去只是把标题重复一遍。
+    // 改用分组名概括这一段覆盖哪些情形；都没有就整段省掉。
+    const heads = [];
+    (sec.groups || []).forEach(g => {
+      const head = String(g.label || '').split('·')[0].trim();
+      if (head && head !== sec.name && heads.indexOf(head) < 0) heads.push(head);
+    });
+    let desc = heads.length ? heads.slice(0, 5).join(' · ') + (heads.length > 5 ? ' …' : '') : '';
+    if (!desc) {
+      const note = (sec.groups || []).reduce((a, g) => a || (g.notes || []).find(n => String(n).trim().length > 6), '');
+      desc = note ? String(note).trim() : '';
+    }
+
+    const overview = `<div class="tbs-overview">
+      <div class="tbs-ov-top">
+        ${desc ? `<span class="tbs-ov-label">这一段覆盖</span>
+          <span class="tbs-ov-feature">${this.esc(desc)}</span>` : ''}
+        <span class="tbs-gap"></span>
+        <span class="tbs-ov-progtext">本段进度</span>
+        <span class="tbs-ov-bar"><i style="width:${pct}%"></i></span>
+        <span class="tbs-ov-num">${sDone}/${st.total_sentences}</span>
+      </div>
+      <div class="tbs-ov-bottom">
+        <span class="tbs-ov-cap">句型库</span>
+        <span class="tbs-slot-chip">${sec.pattern_count || 0} 个句型</span>
+        ${forms.map(f => `<span class="tbs-slot-chip">${f.name} ${f.n}</span>`).join('')}
+        <span class="tbs-ov-sep"></span>
+        <span class="tbs-ov-cap">例题</span>
+        <span class="tbs-var-chip">${this.s.examples.length} 道${touched ? ` · 已练 ${touched} 道` : ''}</span>
+      </div>
+    </div>`;
+
+    const cards = this.s.examples.map((ex, i) => {
       const eDone = this.doneCount(c.id, ex.id, sid);
-      return `<div class="tpl-type-card" style="${this.progStyle(this.pct(eDone, ex.total_sentences))}">
-        <div class="tpl-type-name">${this.esc(ex.name)}</div>
-        <div class="tpl-type-meta" style="margin-top:0;">
-          <span class="tpl-badge">${this.esc(ex.chart_type)}</span>
-          ${ex.chart_subtype ? `<span class="tpl-badge">${this.esc(ex.chart_subtype)}</span>` : ''}
-          ${ex.image_path ? '<span class="tpl-badge">有图</span>' : ''}
+      const ePct = this.pct(eDone, ex.total_sentences);
+      const started = eDone > 0;
+      const sub = [
+        this.esc(ex.chart_type || ''),
+        ex.chart_subtype ? this.esc(ex.chart_subtype) : '',
+        `${ex.total_sentences} 句`,
+        ex.image_path ? '有题图' : '',
+        started ? `已练 ${eDone} 句` : '还没练过',
+      ].filter(Boolean).join(' · ');
+      return `<div class="tbs-card${started ? ' is-started' : ''}">
+        <div class="tbs-card-body">
+          <div class="tbs-card-meta">
+            <span class="tbs-tag">${this.esc(ex.name)}</span>
+            <span class="tbs-card-sub">${sub}</span>
+          </div>
+          <p class="tbs-card-q">${this.esc(ex.question)}</p>
+          <div class="tbs-card-prog">
+            <span class="tbs-card-bar"><i style="width:${ePct}%"></i></span>
+            <span class="tbs-card-num">${eDone}/${ex.total_sentences} 句</span>
+          </div>
         </div>
-        <div class="tpl-card-sub" style="margin-top:8px;">${this.esc(ex.question)}</div>
-        ${this.progBar(eDone, ex.total_sentences)}
-        <div class="tpl-card-actions">
-          <button class="mode-btn learn" onclick="Tpl.openSmallLearn(${i})">学习</button>
-          <button class="mode-btn practice" onclick="Tpl.openSmallPractice(${i})">实战</button>
+        <div class="tbs-card-acts">
+          <button type="button" class="tbs-btn" onclick="Tpl.openSmallLearn(${i})">先看写法</button>
+          <button type="button" class="tbs-btn ${started ? 'is-solid' : 'is-outline'}"
+            onclick="Tpl.openSmallPractice(${i})">${started ? '接着练' : '开始练'} &rarr;</button>
         </div>
       </div>`;
-    }).join('') || '<div class="tpl-hint">这一段还没有可练的例题。</div>';
+    }).join('');
+
+    document.getElementById('tplSmallExBody').innerHTML = overview + `
+      <div class="tbs-sec-head">
+        <h3>挑一道例题练</h3>
+        <span class="tbs-sec-note">先看这一段在范文里怎么写，再看中文写英文</span>
+      </div>
+      <div class="tbs-list">${cards || '<div class="tpl-hint">这一段还没有可练的例题。</div>'}</div>
+      <div class="tbs-foot">
+        <span class="tbs-foot-ico">${this.LIB_ICON}</span>
+        <span class="tbs-foot-text">写之前先把<b>${this.esc(sec.name)}句型库</b>过一遍，${sec.pattern_count || 0} 个句式按用法分好了组，实战时照着套。</span>
+        <button type="button" class="tbs-btn" onclick="Tpl.openLibrary('${sid}')">打开句型库</button>
+      </div>`;
   },
 
   backToSections() {
@@ -7213,32 +7537,49 @@ var Tpl = {
     }).join('');
   },
 
-  groupsHtml(sec) {
-    const c = this.s.chartData;
-    return (sec.groups || []).map((g, gi) => `
-      <div class="tpl-group">
-        ${(g.patterns || []).length ? `<div class="tpl-group-label">${this.esc(g.label)}</div>` : ''}
-        ${this.groupBody(g, gi, `tpl|small|${c.id}|${sec.id}|`, c.name + ' / ' + sec.name)}
-      </div>`).join('');
-  },
 
   // exampleIdx 传 -1 表示只看句型库，不挂例题
-  openSmallLearn(exampleIdx) {
+  async openSmallLearn(exampleIdx) {
     Nav.enter(() => Tpl.openSmallLearn(exampleIdx), Number(exampleIdx) < 0 ? '句型库' : '学习');
     const c = this.s.chartData, sec = this.findSection(this.s.sectionId);
     this.s.exampleIdx = Number(exampleIdx);
     const ex = this.s.examples[this.s.exampleIdx];
     switchView('tplSmallLearnView');
     document.getElementById('tplSmallLearnCrumb').innerHTML =
-      `<span onclick="Tpl.enterSmall()">模板写作</span><span class="sep">/</span>` +
-      `<span onclick="Tpl.backToSections()">${this.esc(c.name)}</span><span class="sep">/</span>` +
-      `<span onclick="Tpl.backToExamples()">${this.esc(sec.name)}</span><span class="sep">/</span>` +
-      `<span class="current">${this.esc(ex ? ex.name : '句型库')}</span>`;
-    document.getElementById('tplSmallLearnHead').innerHTML = `
-      <h2 style="font-size:18px;margin-bottom:4px;">${this.esc(c.name)} · ${this.esc(sec.name)}</h2>
-      <p class="tpl-hint">左边是句型库，右边是这道例题里这一段的写法。
-        ${ex ? `<button class="tpl-btn" style="padding:4px 12px;" onclick="Tpl.openSmallPractice(${this.s.exampleIdx})">去实战 &rarr;</button>` : ''}</p>`;
+      `<span onclick="Tpl.backToSections()">${this.esc(c.name)}</span>` +
+      (ex ? `<span class="sep">·</span><span>${this.esc(sec.name)}</span>` +
+            `<span class="sep">/</span><span class="current">${this.esc(ex.name)}</span>`
+          : `<span class="sep">/</span><span class="current">${this.esc(sec.name)}</span>`);
+    document.getElementById('tplSmallLearnTitle').textContent = `${sec.name} · 句型库`;
+    this.s.libFilter = '全部';
     this.renderSmallLearnBody();
+    // 每组「已练 N/M」要看练习记录里用过哪些句型，拉一次就够
+    await this.loadPatternUsage();
+    this.renderSmallLearnBody();
+  },
+
+  // 从模板练习记录里收集用过的句型原文（按图表 + 段落过滤）
+  async loadPatternUsage() {
+    const c = this.s.chartData, sec = this.findSection(this.s.sectionId);
+    const key = `${c.id}|${sec.id}`;
+    if (!this.s.patternUsage) this.s.patternUsage = {};
+    if (this.s.patternUsage[key]) return;
+    const used = new Set();
+    try {
+      const hist = await API.get('/api/writing/template/practice_history');
+      Object.keys(hist || {}).forEach(tn => {
+        const t = hist[tn] || {};
+        Object.keys(t.questions || {}).forEach(qn => {
+          const q = t.questions[qn] || {};
+          Object.keys(q.sections || {}).forEach(sn => {
+            (q.sections[sn].records || []).forEach(r => {
+              if (r.template_text) used.add(String(r.template_text).trim());
+            });
+          });
+        });
+      });
+    } catch (e) { /* 拉不到就当没练过，不影响看句型 */ }
+    this.s.patternUsage[key] = used;
   },
 
   openLibrary(sectionId) {
@@ -7246,40 +7587,145 @@ var Tpl = {
     this.openSmallLearn(-1);
   },
 
+  setLibFilter(tag) {
+    this.s.libFilter = tag;
+    this.renderSmallLearnBody();
+  },
+
+  // 分组标签末尾常挂着图型（动态图 / 静态图），据此做筛选和角标
+  FORM_TAGS: ['动态图', '静态图'],
+  groupForm(g) {
+    const label = g.label || '';
+    for (var i = 0; i < this.FORM_TAGS.length; i++) {
+      if (label.indexOf(this.FORM_TAGS[i]) >= 0) return this.FORM_TAGS[i];
+    }
+    return '';
+  },
+
+  copyPattern(gi, pi, btn) {
+    const sec = this.findSection(this.s.sectionId);
+    const g = (sec.groups || [])[gi];
+    const pt = g && (g.patterns || [])[pi];
+    if (pt) copyWithFeedback(this.plain(pt.text), btn);
+  },
+
   renderSmallLearnBody() {
     const c = this.s.chartData, sec = this.findSection(this.s.sectionId);
     const ex = this.s.examples[this.s.exampleIdx];
-    const exSecs = ex ? ex.sections.filter(x => x.id === sec.id) : [];
-    const right = ex ? `
-      <div class="tpl-prac-head" style="margin-bottom:10px;">
-        <div class="q">
-          <div class="tpl-fb-title">${this.esc(ex.name)}</div>
-          <div class="tpl-question">${this.esc(ex.question)}</div>
+    const groups = (sec.groups || []).filter(g => (g.patterns || []).length || (g.notes || []).length);
+    const used = (this.s.patternUsage || {})[`${c.id}|${sec.id}`] || new Set();
+
+    // ---- 筛句型 ----
+    const forms = [];
+    groups.forEach(g => { const f = this.groupForm(g); if (f && forms.indexOf(f) < 0) forms.push(f); });
+    const countOf = tag => groups.reduce((a, g) =>
+      a + ((tag === '全部' || this.groupForm(g) === tag) ? (g.patterns || []).length : 0), 0);
+    const filter = this.s.libFilter || '全部';
+    const chips = ['全部'].concat(forms).map(tag =>
+      `<button type="button" class="tsl-chip${tag === filter ? ' active' : ''}"
+        onclick="Tpl.setLibFilter('${tag}')">${tag} ${countOf(tag)}</button>`).join('');
+
+    const shown = groups.filter(g => filter === '全部' || this.groupForm(g) === filter);
+
+    // ---- 句型分组卡 ----
+    const keyPrefix = `tpl|small|${c.id}|${sec.id}|`;
+    const cards = shown.map((g) => {
+      const gi = (sec.groups || []).indexOf(g);
+      const pats = g.patterns || [];
+      const form = this.groupForm(g);
+      const nUsed = pats.filter(pt => used.has(String(pt.text || '').trim())).length;
+      const cls = !pats.length ? '' : nUsed >= pats.length ? 'high' : nUsed > 0 ? 'mid' : '';
+      // 原文里的说明段和句型是穿插的，按 items 顺序走，别把说明丢了
+      const items = (g.items && g.items.length)
+        ? g.items
+        : (g.notes || []).map(t => ({ type: 'note', text: t }))
+            .concat(pats.map((_, i) => ({ type: 'pattern', index: i })));
+      const notes = items.filter(x => x.type === 'note')
+        .map(x => `<p class="tsl-note">${this.esc(x.text)}</p>`).join('');
+      const list = items.filter(x => x.type === 'pattern').map(x => {
+        const pt = pats[x.index];
+        if (!pt) return '';
+        return `<div class="tsl-item" ${this.dragAttrs(pt.chinese, this.plain(pt.text), c.name + ' / ' + sec.name)}>
+          <div class="tsl-item-body">
+            <p class="tsl-item-en" data-hl-key="${keyPrefix}${gi}_${x.index}|en">${this.tplText(pt.text)}</p>
+            ${pt.chinese ? `<p class="tsl-item-cn" data-hl-key="${keyPrefix}${gi}_${x.index}|cn">${this.esc(pt.chinese)}</p>` : ''}
+          </div>
+          <button type="button" class="tsl-copy" aria-label="复制这个句型"
+            onclick="event.stopPropagation(); Tpl.copyPattern(${gi}, ${x.index}, this)">${COPY_ICON}</button>
+        </div>`;
+      }).join('');
+
+      return `<div class="tsl-group${g === shown[0] ? ' is-first' : ''}">
+        <div class="tsl-group-head">
+          <span class="tsl-group-name">${this.esc(g.label || sec.name)}</span>
+          ${form ? `<span class="tsl-form${form === '静态图' ? ' is-static' : ''}">${form}</span>` : ''}
+          <span class="tbs-gap"></span>
+          ${pats.length ? `<span class="tsl-count ${cls}">已练 ${nUsed}/${pats.length}</span>` : ''}
         </div>
-        ${this.imageSlot(ex.image_path, ex)}
-      </div>
-      ${exSecs.map((es, k) => `
-        ${exSecs.length > 1 ? `<div class="tpl-group-label" style="margin-top:12px;">${this.esc(es.name)}</div>` : ''}
-        ${(es.sentences || []).map((x, i) => `
-          <div class="tpl-row" ${this.dragAttrs(x.chinese, x.english, c.name + ' / ' + es.name)}>
-            ${(x.tags || []).length ? `<div class="tpl-tag-row">${x.tags.map(t => `<span class="tpl-badge">${this.esc(t)}</span>`).join('')}</div>` : ''}
-            <div class="tpl-pattern-cn" data-hl-key="tpl|ex|${ex.id}|${sec.id}|${k}_${i}|cn">${this.esc(x.chinese)}</div>
-            <div class="tpl-sent" data-hl-key="tpl|ex|${ex.id}|${sec.id}|${k}_${i}|en">${this.esc(x.english)}</div>
-          </div>`).join('')}`).join('')}`
-      : '<div class="tpl-sent empty">当前只看句型库，没有挂例题。</div>';
-    document.getElementById('tplSmallLearnBody').innerHTML = `
-      <div class="tpl-cmp">
-        <div class="tpl-section-card"><div class="tpl-cmp-col-title">句型库</div>${this.groupsHtml(sec)}</div>
-        <div class="tpl-section-card"><div class="tpl-cmp-col-title">例题里这一段怎么写</div>${right}</div>
+        ${notes}
+        <div class="tsl-list">${list}</div>
       </div>`;
-    Highlights.loadAndApply('tplSmallLearnBody', `tpl|small|${c.id}|${sec.id}|`);
+    }).join('') || '<div class="tpl-hint">这一段还没有收录句型。</div>';
+
+    // ---- 挂了例题时，额外给出这道题这一段的写法 ----
+    let exBlock = '';
+    if (ex) {
+      const exSecs = ex.sections.filter(x => x.id === sec.id);
+      exBlock = `<div class="tsl-group">
+        <div class="tsl-group-head">
+          <span class="tsl-group-name">这道例题的这一段</span>
+          <span class="tsl-form">${this.esc(ex.name)}</span>
+          <span class="tbs-gap"></span>
+          <span class="tsl-count">句型怎么落地</span>
+        </div>
+        <p class="tsl-note">${this.esc(ex.question || '')}</p>
+        ${this.imageSlot(ex.image_path, ex)}
+        ${exSecs.map((es, k) => `
+          ${exSecs.length > 1 ? `<p class="tsl-note">${this.esc(es.name)}</p>` : ''}
+          <div class="tsl-list">
+            ${(es.sentences || []).map((x, i) => `
+              <div class="tsl-item" ${this.dragAttrs(x.chinese, x.english, c.name + ' / ' + es.name)}>
+                <div class="tsl-item-body">
+                  <p class="tsl-item-en" data-hl-key="tpl|ex|${ex.id}|${sec.id}|${k}_${i}|en">${this.esc(x.english)}</p>
+                  <p class="tsl-item-cn" data-hl-key="tpl|ex|${ex.id}|${sec.id}|${k}_${i}|cn">${this.esc(x.chinese)}</p>
+                </div>
+              </div>`).join('')}
+          </div>`).join('')}
+      </div>`;
+    }
+
+    document.getElementById('tplSmallLearnBody').innerHTML = `
+      <div class="tsl-filter">
+        <span class="tsl-filter-label">筛句型</span>
+        ${chips}
+        <span class="tbs-gap"></span>
+        <span class="tsl-hint">方括号 = 要自己填的槽位 · 选中任意单词可加荧光笔</span>
+      </div>
+      ${cards}
+      ${exBlock}
+      <div class="tsl-cta">
+        <div class="tsl-cta-body">
+          <div class="tsl-cta-title">句型看完了，拿真题套一遍</div>
+          <div class="tsl-cta-sub">实战会给你一道真题的中文，按这一段的句型库写英文，AI 逐句批改。</div>
+        </div>
+        <button type="button" class="tsl-cta-btn" onclick="Tpl.openSmallPractice(${this.s.exampleIdx})">去实战 &rarr;</button>
+      </div>`;
+
+    Highlights.loadAndApply('tplSmallLearnBody', keyPrefix);
     if (ex) Highlights.loadAndApply('tplSmallLearnBody', `tpl|ex|${ex.id}|${sec.id}|`);
   },
 
   openSmallPractice(exampleIdx) {
-    Nav.enter(() => Tpl.openSmallPractice(exampleIdx), '实战');
-    this.s.exampleIdx = Number(exampleIdx);
-    if (!this.s.examples[this.s.exampleIdx]) { alert('这一段暂时没有可练的例题'); return; }
+    // 「只看句型库」时 exampleIdx 是 -1，这时自动挑本段第一道能练的例题
+    var idx = Number(exampleIdx);
+    if (!this.s.examples[idx]) {
+      const sec = this.findSection(this.s.sectionId);
+      idx = this.s.examples.findIndex(x =>
+        (x.sections || []).some(es => es.id === sec.id && (es.sentences || []).length));
+    }
+    if (idx < 0 || !this.s.examples[idx]) { alert('这一段暂时没有可练的例题'); return; }
+    Nav.enter(() => Tpl.openSmallPractice(idx), '实战');
+    this.s.exampleIdx = idx;
     switchView('tplSmallPracticeView');
     this.buildSmallPractice();
   },
