@@ -288,6 +288,8 @@ body.page-writing-practice textarea.tpl-textarea { font-family: var(--w-en); }
   border-radius: var(--w-r-card); padding: 20px 24px; margin-bottom: 20px;
 }
 .tbs-ov-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+/* 只有一行时不用再给下面留空 */
+.tbs-ov-top.is-single { margin-bottom: 0; gap: 8px; }
 .tbs-ov-label { font-size: 12px; letter-spacing: 1.5px; color: var(--w-ink3); flex-shrink: 0; }
 .tbs-ov-feature {
   font-family: var(--w-en); font-size: 15px; font-weight: 600;
@@ -7460,24 +7462,29 @@ var Tpl = {
       desc = note ? String(note).trim() : '';
     }
 
-    const overview = `<div class="tbs-overview">
-      <div class="tbs-ov-top">
-        ${desc ? `<span class="tbs-ov-label">这一段覆盖</span>
-          <span class="tbs-ov-feature">${this.esc(desc)}</span>` : ''}
-        <span class="tbs-gap"></span>
-        <span class="tbs-ov-progtext">本段进度</span>
-        <span class="tbs-ov-bar"><i style="width:${pct}%"></i></span>
-        <span class="tbs-ov-num">${sDone}/${st.total_sentences}</span>
-      </div>
-      <div class="tbs-ov-bottom">
-        <span class="tbs-ov-cap">句型库</span>
-        <span class="tbs-slot-chip">${sec.pattern_count || 0} 个句型</span>
-        ${forms.map(f => `<span class="tbs-slot-chip">${f.name} ${f.n}</span>`).join('')}
-        <span class="tbs-ov-sep"></span>
-        <span class="tbs-ov-cap">例题</span>
-        <span class="tbs-var-chip">${this.s.examples.length} 道${touched ? ` · 已练 ${touched} 道` : ''}</span>
-      </div>
-    </div>`;
+    const progHtml = `<span class="tbs-ov-progtext">本段进度</span>
+      <span class="tbs-ov-bar"><i style="width:${pct}%"></i></span>
+      <span class="tbs-ov-num">${sDone}/${st.total_sentences}</span>`;
+    const statHtml = `<span class="tbs-ov-cap">句型库</span>
+      <span class="tbs-slot-chip">${sec.pattern_count || 0} 个句型</span>
+      ${forms.map(f => `<span class="tbs-slot-chip">${f.name} ${f.n}</span>`).join('')}
+      <span class="tbs-ov-sep"></span>
+      <span class="tbs-ov-cap">例题</span>
+      <span class="tbs-var-chip">${this.s.examples.length} 道${touched ? ` · 已练 ${touched} 道` : ''}</span>`;
+
+    // 有说明才分两行；没有的话并成一行，否则左边会空出一大块
+    const overview = desc
+      ? `<div class="tbs-overview">
+          <div class="tbs-ov-top">
+            <span class="tbs-ov-label">这一段覆盖</span>
+            <span class="tbs-ov-feature">${this.esc(desc)}</span>
+            <span class="tbs-gap"></span>${progHtml}
+          </div>
+          <div class="tbs-ov-bottom">${statHtml}</div>
+        </div>`
+      : `<div class="tbs-overview">
+          <div class="tbs-ov-top is-single">${statHtml}<span class="tbs-gap"></span>${progHtml}</div>
+        </div>`;
 
     const cards = this.s.examples.map((ex, i) => {
       const eDone = this.doneCount(c.id, ex.id, sid);
