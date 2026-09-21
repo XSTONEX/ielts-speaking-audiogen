@@ -82,15 +82,60 @@ def _match_all(old_seg, new_segs, cover=0.6):
     return sorted(out, key=lambda n: n['start']), best_ov
 
 
-def _locate(needle, new_seg, new_segs, window=2):
-    """在新句里重新定位词，找不到就看左右邻居。返回 (句, 起偏移, 止偏移) 或 None。"""
+def _common_suffix(a, b):
+    n = 0
+    while n < len(a) and n < len(b) and a[-1 - n] == b[-1 - n]:
+        n += 1
+    return n
+
+
+def _common_prefix(a, b):
+    n = 0
+    while n < len(a) and n < len(b) and a[n] == b[n]:
+        n += 1
+    return n
+
+
+def _whole_word(text, pos, length):
+    before = pos == 0 or not text[pos - 1].isalnum()
+    after = pos + length >= len(text) or not text[pos + length].isalnum()
+    return before and after
+
+
+def _locate(needle, old_text, old_so, old_eo, new_seg, new_segs, window=2):
+    """在新句里重新定位标注锚点，返回 (句, 起偏移, 止偏移) 或 None。
+
+    不能简单 find() 取第一个匹配：有条真实笔记的 quote 就是「end」，三个字母，
+    新句里只要出现 recommend / friend / attend 就会锚到错误的位置。所以拿旧句
+    里该锚点左右的文本当上下文打分，再叠一个「整词性要和旧的一致」的加分。
+    """
+    needle_low = needle.lower()
+    if not needle_low:
+        return None
+    left = old_text[max(0, old_so - 24):old_so].lower()
+    right = old_text[old_eo:old_eo + 24].lower()
+    old_whole = _whole_word(old_text.lower(), old_so, old_eo - old_so)
+
     idx = new_segs.index(new_seg)
-    for cand in [new_seg] + [new_segs[i] for i in range(max(0, idx - window), min(len(new_segs), idx + window + 1))
-                             if new_segs[i] is not new_seg]:
-        pos = cand['text'].lower().find(needle.lower())
-        if pos >= 0:
-            return cand, pos, pos + len(needle)
-    return None
+    cands = [new_seg] + [new_segs[i]
+                         for i in range(max(0, idx - window), min(len(new_segs), idx + window + 1))
+                         if new_segs[i] is not new_seg]
+
+    best = None
+    for rank, cand in enumerate(cands):
+        low = cand['text'].lower()
+        pos = low.find(needle_low)
+        while pos >= 0:
+            score = (_common_suffix(low[:pos], left)
+                     + _common_prefix(low[pos + len(needle_low):], right)
+                     + (4 if _whole_word(low, pos, len(needle_low)) == old_whole else 0)
+                     - rank * 0.5)
+            if best is None or score > best[0]:
+                best = (score, cand, pos, pos + len(needle_low))
+            pos = low.find(needle_low, pos + 1)
+    if best is None:
+        return None
+    return best[1], best[2], best[3]
 
 
 def cmd_transcribe(keywords):
@@ -201,7 +246,7 @@ def cmd_apply(keywords, write=True):
                 lost.append(f'📖 {a["word"]} 旧句不存在')
                 continue
             n = next(s for s in new_segs if s['id'] == nid)
-            hit = _locate(a['word'], n, new_segs)
+            hit = _locate(a['word'], o['text'], a['start_offset'], a['end_offset'], n, new_segs)
             if not hit:
                 lost.append(f'📖 «{a["word"]}» 在新字幕 @{n["start"]:.1f}s 附近找不到')
                 continue
@@ -218,7 +263,7 @@ def cmd_apply(keywords, write=True):
                 lost.append(f'📝 «{nt["quote"]}» 旧句不存在')
                 continue
             n = next(s for s in new_segs if s['id'] == nid)
-            hit = _locate(nt['quote'], n, new_segs)
+            hit = _locate(nt['quote'], o['text'], nt['start_offset'], nt['end_offset'], n, new_segs)
             if not hit:
                 lost.append(f'📝 «{nt["quote"]}» 在新字幕 @{n["start"]:.1f}s 附近找不到')
                 continue
