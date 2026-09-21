@@ -60,6 +60,28 @@ def _best_match(old_seg, new_segs):
     return nearest, 0.0
 
 
+def _match_all(old_seg, new_segs, cover=0.6):
+    """一句旧句可能被新转录拆成好几句，星标和错误分类要跟着拆。
+
+    只取重叠最大的那一句会丢掉另一半——旧稿里「These holidays are becoming
+    increasingly popular. Would you like to...」是两句并成一句的，新稿拆开后
+    只标后半句就丢了前半句。
+
+    所以除了重叠最大的那句（保底，绝不丢），再带上任何被这句旧句覆盖掉
+    cover 以上的新句。旧稿时间戳可能是退化的均匀值，用「覆盖新句的比例」
+    判断比用旧句时长可靠。
+    """
+    best, best_ov = _best_match(old_seg, new_segs)
+    out = [best]
+    for n in new_segs:
+        if n is best:
+            continue
+        span = n['end'] - n['start']
+        if span > 0 and _overlap(old_seg, n) / span >= cover:
+            out.append(n)
+    return sorted(out, key=lambda n: n['start']), best_ov
+
+
 def _locate(needle, new_seg, new_segs, window=2):
     """在新句里重新定位词，找不到就看左右邻居。返回 (句, 起偏移, 止偏移) 或 None。"""
     idx = new_segs.index(new_seg)
@@ -132,33 +154,44 @@ def cmd_apply(keywords, write=True):
             n, ov = _best_match(o, new_segs)
             return n['id'], ov, o
 
+        def remap_all(old_id):
+            o = old_by_id.get(int(old_id))
+            if not o:
+                return None, None, None
+            hits, ov = _match_all(o, new_segs)
+            return hits, ov, o
+
         lost = []
 
-        # 星标
+        # 星标（旧句被拆成多句时全都标上）
         stars = []
         for oid in old.get('starred_segments') or []:
-            nid, ov, o = remap_id(oid)
-            if nid is None:
+            hits, ov, o = remap_all(oid)
+            if hits is None:
                 lost.append(f'★ id={oid} 旧句不存在')
                 continue
-            stars.append(nid)
-            n = next(s for s in new_segs if s['id'] == nid)
+            stars.extend(n['id'] for n in hits)
             mark = '' if ov > 0 else '  (无时间重叠, 取最近句)'
-            print(f'    ★ {oid} -> {nid} @{n["start"]:.1f}s  {n["text"][:52]}{mark}')
+            split = '  (旧句被拆成 %d 句)' % len(hits) if len(hits) > 1 else ''
+            print(f'    ★ {oid} -> {[n["id"] for n in hits]}{split}{mark}')
+            for n in hits:
+                print(f'         @{n["start"]:.1f}s  {n["text"][:58]}')
         stars = sorted(set(stars))
 
-        # 错误分类
+        # 错误分类（同样跟着拆）
         tags = {}
         for oid, vals in (old.get('error_tags') or {}).items():
-            nid, ov, o = remap_id(oid)
-            if nid is None:
+            hits, ov, o = remap_all(oid)
+            if hits is None:
                 lost.append(f'🏷 id={oid} 旧句不存在')
                 continue
-            tags.setdefault(str(nid), [])
-            for v in vals:
-                if v not in tags[str(nid)]:
-                    tags[str(nid)].append(v)
-            print(f'    🏷 {oid} -> {nid} {vals}')
+            for n in hits:
+                key = str(n['id'])
+                tags.setdefault(key, [])
+                for v in vals:
+                    if v not in tags[key]:
+                        tags[key].append(v)
+            print(f'    🏷 {oid} -> {[n["id"] for n in hits]} {vals}')
 
         # 生词（需要重算字符偏移）
         vocab = []
