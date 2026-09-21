@@ -7,6 +7,7 @@ from core import (
     LISTENING_REVIEW_DIR, is_token_valid, load_tokens, get_proxies,
     get_openai_http_client, load_prompt, is_safe_path_segment, call_gemini_llm,
 )
+from utils.audio_segment import transcribe_segmented
 
 listening_review_bp = Blueprint('listening_review', __name__)
 
@@ -155,6 +156,10 @@ def _parse_transcription_response(result, provider_label):
     return {'segments': segments, 'duration': duration}, None
 
 
+# 这些状态码重试前必须退避；其余非 2xx 立刻失败或按原逻辑走
+RETRY_AFTER_BACKOFF = (429, 500, 502, 503, 504)
+
+
 def _post_audio_transcription(url, api_key, model, audio_file_path, proxies, max_retries, provider_label):
     """通用 OpenAI 兼容 audio/transcriptions 调用（verbose_json + segment）。"""
     for attempt in range(max_retries):
@@ -191,6 +196,10 @@ def _post_audio_transcription(url, api_key, model, audio_file_path, proxies, max
                     return None, error_msg
                 if attempt == max_retries - 1:
                     return None, error_msg
+                # 限流/网关错误必须退避后再来。WildAPI 背后是 Azure S0，实测约 3 个
+                # 请求就会被限一次；这里不 sleep 的话三次重试会在几毫秒内烧完。
+                if response.status_code in RETRY_AFTER_BACKOFF:
+                    time.sleep(min(30, 3 * (attempt + 1)))
 
         except requests.exceptions.Timeout:
             if attempt == max_retries - 1:
@@ -208,7 +217,7 @@ def _post_audio_transcription(url, api_key, model, audio_file_path, proxies, max
     return None, f'转录失败，已重试 {max_retries} 次'
 
 
-def _call_groq_transcription(audio_file_path, max_retries=3):
+def _call_groq_transcription(audio_file_path, max_retries=6):
     """Call Groq Whisper API with verbose_json to get timestamped segments."""
     api_key = os.getenv('GROQ_API_KEY')
     if not api_key:
@@ -225,7 +234,7 @@ def _call_groq_transcription(audio_file_path, max_retries=3):
     )
 
 
-def _call_wildapi_transcription(audio_file_path, max_retries=3):
+def _call_wildapi_transcription(audio_file_path, max_retries=6):
     """Call WildAPI Whisper (whisper-1) with verbose_json segments. 国内可直连。"""
     api_key = os.getenv('WILDAPI_API_KEY')
     if not api_key:
@@ -251,6 +260,22 @@ def _call_transcription(audio_file_path):
     if provider != 'wildapi':
         return None, f'Unknown LISTENING_ASR_PROVIDER: {provider}'
     return _call_wildapi_transcription(audio_file_path)
+
+
+def _transcribe(audio_file_path):
+    """转录入口：按长静音切段后逐段转录。
+
+    整篇直接送会让 Whisper 在雅思的「看题静音」处崩坏成重复循环（见
+    utils/audio_segment 的说明）。ffmpeg 不可用或音频没有长静音时，
+    transcribe_segmented 自己会回退成整篇调用。
+    """
+    if (os.getenv('LISTENING_ASR_SEGMENT') or '1').strip().lower() in ('0', 'false', 'no'):
+        return _call_transcription(audio_file_path)
+    try:
+        return transcribe_segmented(audio_file_path, _call_transcription)
+    except Exception as e:
+        print(f'切段转录异常，回退整篇: {e}')
+        return _call_transcription(audio_file_path)
 
 
 def _strip_code_fence(content):
@@ -438,7 +463,8 @@ def _transcribe_async(project_id, audio_path, username):
     """Run transcription + LLM polish/translate in background thread."""
     try:
         # Phase 1: ASR transcription（默认 WildAPI，可 LISTENING_ASR_PROVIDER=groq 回切）
-        result, error = _call_transcription(audio_path)
+        # 按长静音切段送，避免 Whisper 在看题停顿处崩成重复循环
+        result, error = _transcribe(audio_path)
         if not result:
             _update_project_status(username, project_id, status='error',
                                    error=error, error_phase='transcribe')
