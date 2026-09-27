@@ -22,6 +22,7 @@
         })();
     </script>
     <meta charset="UTF-8">
+    <script src="/static/auth-fetch.js?v=20260927"></script>
     <title>IELTS 阅读真题</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -817,22 +818,25 @@
             const tk = localStorage.getItem('authToken');
             if (!tk) return Promise.resolve(false);
             return fetch('/verify_token', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: tk }) })
-                .then(r => r.json()).then(d => {
-                    if (d.valid) {
-                        currentToken = tk;
-                        if (d.user) {
-                            currentUser = d.user;
-                        }
-                        return true;
+                .then(r => r.json())
+                // 断网、服务器重启时的 502 页面：说明不了凭证失效，当作"没拿到结论"
+                .catch(() => null)
+                .then(d => {
+                    // 只有服务器明确回答"无效"才清掉凭证
+                    if (d && d.valid === false) {
+                        localStorage.removeItem('authToken');
+                        currentUser = null;
+                        return false;
                     }
-                    localStorage.removeItem('authToken');
-                    currentUser = null;
-                    return false;
-                })
-                .catch(() => {
-                    localStorage.removeItem('authToken');
-                    currentUser = null;
-                    return false;
+                    currentToken = tk;
+                    if (d && d.user) {
+                        currentUser = d.user;
+                    } else {
+                        try {
+                            currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null') || currentUser;
+                        } catch (e) {}
+                    }
+                    return true;
                 });
         }
 
@@ -1346,9 +1350,9 @@
     <link rel="stylesheet" href="/static/theme.css?v=20260919">
     <script src="/static/theme.js?v=20260919" defer></script>
   <script src="/static/api-client.js?v=20260919" defer></script>
-  <script src="/static/auth.js?v=20260919" defer></script>
+  <script src="/static/auth.js?v=20260927" defer></script>
   <script src="/static/ui-feedback.js?v=20260919" defer></script>
-  <script src="/static/app-shell.js?v=20260919" defer></script>
+  <script src="/static/app-shell.js?v=20260927" defer></script>
 </head>
 
 <body class="theme-page page-reading">

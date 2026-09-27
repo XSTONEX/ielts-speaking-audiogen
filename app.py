@@ -1,8 +1,17 @@
-from flask import Flask, request
-from core import init_directories
+import logging
+
+from flask import Flask, jsonify, request
+from werkzeug.exceptions import RequestEntityTooLarge
+
+from core import AuthStoreError, get_bearer_token, init_directories, resolve_token_user
 
 # 创建 Flask 应用
 app = Flask(__name__, static_folder='static', static_url_path='/static')
+
+# 单个请求体的上限。最大的正常上传是 25MB 的听力/转写音频（各接口还会按 25MB / 10MB 再校验），
+# 这里留一点 multipart 开销的余量；超过的请求直接 413，不会被读进内存或落盘。
+MAX_REQUEST_BYTES = 30 * 1024 * 1024
+app.config['MAX_CONTENT_LENGTH'] = MAX_REQUEST_BYTES
 
 # 初始化目录
 init_directories()
@@ -33,6 +42,78 @@ app.register_blueprint(asr_bp)
 app.register_blueprint(writing_bp)
 app.register_blueprint(listening_review_bp)
 app.register_blueprint(learning_bp)
+
+# ==================== 默认要求登录 ====================
+# 所有请求默认都要带有效的 Authorization: Bearer <token>，只有下面列出的端点例外。
+# 以后新加的路由自动受保护；确实需要公开的，才加进这里
+# （tests/test_auth_guard.py 会检查每个没列在这里的路由，匿名访问都得是 401）。
+PUBLIC_ENDPOINTS = frozenset({
+    'static',
+    # 页面：浏览器地址栏直接打开，带不上 Bearer 头；页面脚本会自己校验登录，没登录就跳 /login
+    'auth.index', 'auth.login_page',
+    'speaking.speaking_page', 'speaking_playlist.combined_page',
+    'reading.reading_page',
+    'intensive_reading.intensive_page', 'intensive_reading.intensive_new_page',
+    'intensive_reading.vocab_summary',
+    'community.message_board_page', 'vocabulary.vocabulary_page',
+    'study_tips.study_techniques_page', 'asr.audio_transcription_page',
+    'writing.writing_practice_page',
+    'listening_review.listening_review_page', 'listening_review.listening_notes_page',
+    # 登录流程本身
+    'auth.user_login', 'auth.verify_token',
+    # 只读的媒体文件：<audio>/<img>/下载链接/新窗口打开都发不了 Authorization 头。
+    # 这些接口只读已有文件，不会触发 TTS/LLM；要把它们也保护起来，得改成 cookie 登录。
+    'speaking.serve_audio', 'speaking_playlist.serve_combined_audio',
+    'community.serve_message_image',
+    'intensive_reading.serve_intensive_image', 'intensive_reading.get_vocab_audio',
+    'intensive_reading.get_article_audio',
+    'vocabulary.serve_vocabulary_audio', 'writing.small_serve_image',
+    'reading.serve_reading_file', 'reading.reading_view',
+})
+
+# 这两个音频接口本来就允许把 token 放在 ?token= 里（<audio src> 只能这样带），规则照旧
+QUERY_TOKEN_ENDPOINTS = frozenset({
+    'listening_review.serve_audio',
+    'asr.serve_transcription_audio',
+})
+
+
+def _too_large_response():
+    limit_mb = MAX_REQUEST_BYTES // (1024 * 1024)
+    return jsonify({'success': False, 'error': f'上传内容太大，单次不能超过 {limit_mb}MB'}), 413
+
+
+@app.errorhandler(RequestEntityTooLarge)
+def _handle_request_too_large(_error):
+    return _too_large_response()
+
+
+@app.before_request
+def _guard_request():
+    # 先挡超大的请求体。很多接口外面包着 except Exception，会把 413 吞成 500，
+    # 所以进视图之前先按 Content-Length 判一次；不带 Content-Length 的分块上传，
+    # 由 MAX_CONTENT_LENGTH 在读取时兜底。
+    if request.content_length is not None and request.content_length > MAX_REQUEST_BYTES:
+        return _too_large_response()
+
+    endpoint = request.endpoint
+    # 路由不存在（404/405）交给 Flask 自己处理；OPTIONS 预检不会执行视图函数
+    if endpoint is None or request.method == 'OPTIONS' or endpoint in PUBLIC_ENDPOINTS:
+        return None
+
+    token = get_bearer_token()
+    if not token and endpoint in QUERY_TOKEN_ENDPOINTS:
+        token = request.args.get('token', '')
+    try:
+        username = resolve_token_user(token)
+    except AuthStoreError:
+        # 读不出 tokens.json / users.json 时说不清 token 是否有效：回 503，
+        # 不回 401 —— 前端只在服务器明确说无效时才清掉登录状态
+        logging.exception('登录状态校验失败：tokens.json / users.json 读不出来')
+        return jsonify({'error': '身份校验暂时不可用，请稍后重试'}), 503
+    if not username:
+        return jsonify({'error': '未登录或登录已失效，请重新登录'}), 401
+    return None
 
 # ==================== 文本类响应 gzip ====================
 # 手机上最贵的是字节数。/list_audio 这类 JSON 原始体积近 100KB，

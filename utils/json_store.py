@@ -16,11 +16,13 @@ def load_json(path, default):
 
 
 def save_json_atomic(path, data):
-    os.makedirs(os.path.dirname(path), exist_ok=True)
+    # 'tokens.json' 这种不带目录的相对路径，dirname 是空串，makedirs('') 会直接报错
+    directory = os.path.dirname(path) or "."
+    os.makedirs(directory, exist_ok=True)
     fd, tmp_path = tempfile.mkstemp(
         prefix=f".{os.path.basename(path)}.",
         suffix=".tmp",
-        dir=os.path.dirname(path),
+        dir=directory,
         text=True,
     )
     try:

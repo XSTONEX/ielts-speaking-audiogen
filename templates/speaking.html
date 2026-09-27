@@ -21,6 +21,7 @@
         })();
     </script>
     <meta charset="UTF-8">
+    <script src="/static/auth-fetch.js?v=20260927"></script>
     <title>口语音频库 · IELTS Lab</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
@@ -811,9 +812,9 @@ body.page-speaking.on-topic .sp-fab { display: none; }
     </style>
     <script src="/static/theme.js?v=20260919" defer></script>
     <script src="/static/api-client.js?v=20260919" defer></script>
-    <script src="/static/auth.js?v=20260919" defer></script>
+    <script src="/static/auth.js?v=20260927" defer></script>
     <script src="/static/ui-feedback.js?v=20260919" defer></script>
-    <script src="/static/app-shell.js?v=20260919" defer></script>
+    <script src="/static/app-shell.js?v=20260927" defer></script>
 </head>
 <body class="theme-page page-speaking">
 
@@ -1953,10 +1954,16 @@ body.page-speaking.on-topic .sp-fab { display: none; }
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token: token })
     }).then(function (r) { return r.json(); }).then(function (data) {
-      if (data.valid) return true;
-      localStorage.removeItem('authToken');
-      return false;
-    }).catch(function () { return false; });
+      // 只有服务器明确回答"无效"才清掉凭证、去登录页
+      if (data && data.valid === false) {
+        localStorage.removeItem('authToken');
+        return false;
+      }
+      return true;
+    }).catch(function () {
+      // 断网、服务器重启时的 502 页面：说明不了凭证失效，按已登录继续
+      return true;
+    });
   }
 
   verifyToken().then(function (valid) {

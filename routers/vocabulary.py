@@ -5,7 +5,8 @@ from werkzeug.utils import secure_filename
 
 from core import (
     VOCABULARY_BOOK_DIR, VOCABULARY_CATEGORIES_DIR, VOCABULARY_AUDIO_DIR,
-    VOCABULARY_TASKS_DIR, VOCABULARY_CHALLENGE_DIR, generate_tts
+    VOCABULARY_TASKS_DIR, VOCABULARY_CHALLENGE_DIR, generate_tts,
+    is_safe_path_segment
 )
 
 vocabulary_bp = Blueprint('vocabulary', __name__)
@@ -282,19 +283,25 @@ def get_current_user_id():
         auth_token = request.headers.get('Authorization', '').replace('Bearer ', '')
         current_user = request.headers.get('X-Current-User', '')
 
+        user_id = None
         if current_user:
             # 如果是JSON字符串，解析并提取username
             if current_user.startswith('{') and current_user.endswith('}'):
                 try:
                     user_obj = json.loads(current_user)
-                    return user_obj.get('username', 'default_user')
+                    user_id = user_obj.get('username', 'default_user')
                 except json.JSONDecodeError:
-                    pass
+                    # 解析失败时和原来一样，直接用原字符串
+                    user_id = current_user
+            else:
+                # 如果已经是字符串，直接使用
+                user_id = current_user
 
-            # 如果已经是字符串，直接使用
-            return current_user
+        # 返回值会被拼成 challenges/<user_id>.json 读写，"../../users" 这类值会写穿到目录外面
+        if isinstance(user_id, str) and is_safe_path_segment(user_id):
+            return user_id
 
-        # 如果没有用户信息，使用默认值
+        # 如果没有用户信息（或用户信息不合法），使用默认值
         return "default_user"
     except:
         return "default_user"

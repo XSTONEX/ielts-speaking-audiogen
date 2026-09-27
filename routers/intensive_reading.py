@@ -24,7 +24,14 @@ def _safe_article_id(title: str) -> str:
     ts = datetime.now().strftime('%Y%m%d%H%M%S')
     return f"{ts}-{base}"
 
+def _valid_article_id(article_id) -> bool:
+    """文章 ID 会被拼进文件路径（删除时还会 rmtree），必须是单段安全文件名。
+    否则 "../users" 会指到项目根的 users.json，绝对路径还会让 os.path.join 丢掉前缀。"""
+    return isinstance(article_id, str) and is_safe_path_segment(article_id)
+
 def _article_path(article_id: str) -> str:
+    if not _valid_article_id(article_id):
+        raise ValueError(f'无效的文章ID: {article_id!r}')
     return os.path.join(INTENSIVE_DIR, f"{article_id}.json")
 
 def _allowed_file(filename):
@@ -311,6 +318,8 @@ def intensive_create():
 
 @intensive_reading_bp.route('/intensive_article/<article_id>', methods=['GET'])
 def intensive_article(article_id):
+    if not _valid_article_id(article_id):
+        return jsonify({'error': '无效的文章ID'}), 400
     path = _article_path(article_id)
     if not os.path.exists(path):
         return jsonify({'error': '文章不存在'}), 404
@@ -340,6 +349,8 @@ def intensive_add_highlight():
     sel_text = (data.get('text') or '').strip()
     if article_id is None or start is None or end is None or not meaning:
         return jsonify({'error': '参数不完整'}), 400
+    if not _valid_article_id(article_id):
+        return jsonify({'error': '无效的文章ID'}), 400
     path = _article_path(article_id)
     if not os.path.exists(path):
         return jsonify({'error': '文章不存在'}), 404
@@ -397,6 +408,8 @@ def intensive_delete_highlight():
     highlight_id = data.get('highlight_id')
     if not article_id or not highlight_id:
         return jsonify({'error': '参数不完整'}), 400
+    if not _valid_article_id(article_id):
+        return jsonify({'error': '无效的文章ID'}), 400
     path = _article_path(article_id)
     if not os.path.exists(path):
         return jsonify({'error': '文章不存在'}), 404
@@ -433,6 +446,8 @@ def intensive_update_category():
     category = (data.get('category') or '').strip()
     if not article_id or category not in ['Reading','Listening','Writing']:
         return jsonify({'error': '参数不合法'}), 400
+    if not _valid_article_id(article_id):
+        return jsonify({'error': '无效的文章ID'}), 400
     path = _article_path(article_id)
     if not os.path.exists(path):
         return jsonify({'error': '文章不存在'}), 404
@@ -452,6 +467,8 @@ def intensive_delete_article():
     article_id = data.get('id')
     if not article_id:
         return jsonify({'error': '缺少文章ID'}), 400
+    if not _valid_article_id(article_id):
+        return jsonify({'error': '无效的文章ID'}), 400
     path = _article_path(article_id)
     if not os.path.exists(path):
         return jsonify({'error': '文章不存在'}), 404
@@ -558,6 +575,8 @@ def intensive_delete_image():
 
         if not article_id or not image_id:
             return jsonify({'error': '缺少参数'}), 400
+        if not _valid_article_id(article_id):
+            return jsonify({'error': '无效的文章ID'}), 400
 
         article_path = _article_path(article_id)
         if not os.path.exists(article_path):
@@ -603,6 +622,8 @@ def intensive_update_title():
 
         if not old_article_id or not new_title:
             return jsonify({'error': '缺少必要参数'}), 400
+        if not _valid_article_id(old_article_id):
+            return jsonify({'error': '无效的文章ID'}), 400
 
         old_article_path = _article_path(old_article_id)
         if not os.path.exists(old_article_path):
@@ -731,6 +752,8 @@ def generate_article_audio():
 
     if not article_id or not text:
         return jsonify({'error': '缺少必要参数'}), 400
+    if not _valid_article_id(article_id):
+        return jsonify({'error': '无效的文章ID'}), 400
 
     # 检查文章是否存在
     article_path = _article_path(article_id)
@@ -840,6 +863,8 @@ def prepare_article_audio():
 
     if not article_id or not text:
         return jsonify({'error': '缺少必要参数'}), 400
+    if not _valid_article_id(article_id):
+        return jsonify({'error': '无效的文章ID'}), 400
 
     # 检查文章是否存在
     article_path = _article_path(article_id)
@@ -1171,6 +1196,8 @@ def cleanup_article_audio():
 @intensive_reading_bp.route('/check_article_audio/<article_id>', methods=['GET'])
 def check_article_audio(article_id):
     """检查文章是否已有音频文件"""
+    if not _valid_article_id(article_id):
+        return jsonify({'error': '无效的文章ID'}), 400
     try:
         # 检查文章是否存在
         article_path = _article_path(article_id)

@@ -198,7 +198,9 @@
   function init() {
     if (window.location.pathname === '/login') return;
     if (!window.IELTSAuth) return;
-    window.IELTSAuth.verifyStoredToken({ redirect: false }).then(function (result) {
+    // 没有凭证、或服务器明确说凭证无效时跳去登录页（单词本页自己不做这个检查，全靠这里）；
+    // 网络出错时 verifyStoredToken 会保留登录状态，照常显示导航
+    window.IELTSAuth.verifyStoredToken().then(function (result) {
       if (result.valid) createShell();
     });
   }

@@ -1,10 +1,12 @@
 import os
 import json
+import logging
 from flask import Blueprint, request, jsonify, send_file
 from core import (
     load_tokens, is_token_valid, create_token,
     load_users, authenticate_user,
-    verify_token_get_username, require_auth, USER_DATA_DIR
+    verify_token_get_username, require_auth, USER_DATA_DIR,
+    resolve_token_user, AuthStoreError
 )
 
 auth_bp = Blueprint('auth', __name__)
@@ -62,30 +64,32 @@ def login_page():
 
 @auth_bp.route('/verify_token', methods=['POST'])
 def verify_token():
-    """验证token是否有效"""
-    data = request.json
-    token = data.get('token')
+    """验证token是否有效。
 
-    if token and is_token_valid(token):
-        # 尝试获取用户信息
-        tokens = load_tokens()
-        username = tokens.get(token, {}).get('username')
+    前端只在这里明确回 {'valid': False} 时才清掉登录状态，所以：
+    - 判定标准和全局登录检查（app.py）一致：token 存在、带用户名、用户仍在 users.json 里；
+    - tokens.json / users.json 读不出来时回 503，而不是说 token 无效。
+    """
+    data = request.get_json(silent=True)
+    token = data.get('token') if isinstance(data, dict) else None
 
-        if username:
-            users = load_users()
-            if username in users:
-                user_data = users[username]
-                user_info = {
-                    'username': user_data['username'],
-                    'display_name': user_data['display_name'],
-                    'role': user_data['role'],
-                    'avatar': user_data['avatar']
-                }
-                return jsonify({'valid': True, 'user': user_info})
+    try:
+        username = resolve_token_user(token)
+    except AuthStoreError:
+        logging.exception('校验登录状态时读取 tokens.json / users.json 失败')
+        return jsonify({'error': '身份校验暂时不可用，请稍后重试'}), 503
 
-        return jsonify({'valid': True})
-    else:
+    if not username:
         return jsonify({'valid': False})
+
+    user_data = load_users().get(username) or {}
+    user_info = {
+        'username': user_data.get('username', username),
+        'display_name': user_data.get('display_name', username),
+        'role': user_data.get('role'),
+        'avatar': user_data.get('avatar')
+    }
+    return jsonify({'valid': True, 'user': user_info})
 
 @auth_bp.route('/user_login', methods=['POST'])
 def user_login():

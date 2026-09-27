@@ -21,6 +21,7 @@
     })();
   </script>
   <meta charset="UTF-8" />
+  <script src="/static/auth-fetch.js?v=20260927"></script>
   <title>模块选择</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
@@ -251,27 +252,30 @@
         body: JSON.stringify({ token: token })
       })
         .then(function (response) { return response.json(); })
+        // 断网、服务器重启时的 502 页面：说明不了凭证失效，当作"没拿到结论"
+        .catch(function () { return null; })
         .then(function (data) {
-          if (data.valid) {
-            currentToken = token;
-            if (data.user) {
-              currentUser = data.user;
-              localStorage.setItem('currentUser', JSON.stringify(data.user));
-            } else {
-              try {
-                currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
-              } catch (error) {
-                currentUser = null;
-              }
-            }
-            return true;
+          // 只有服务器明确回答"无效"才清掉登录状态
+          if (data && data.valid === false) {
+            clearSession();
+            return false;
           }
-          clearSession();
-          return false;
-        })
-        .catch(function () {
-          clearSession();
-          return false;
+          currentToken = token;
+          if (data && data.user) {
+            currentUser = data.user;
+            try {
+              localStorage.setItem('currentUser', JSON.stringify(data.user));
+            } catch (error) {
+              // 存储不可用时只影响缓存的用户信息
+            }
+          } else {
+            try {
+              currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+            } catch (error) {
+              currentUser = null;
+            }
+          }
+          return true;
         });
     }
 

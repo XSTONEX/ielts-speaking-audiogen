@@ -20,7 +20,7 @@ from core import (
     is_token_valid, load_tokens, load_users,
     verify_token_get_username,
     delete_article_vocab_audio, generate_challenge_vocab_audio,
-    get_vocab_audio_path, is_safe_path_segment
+    get_vocab_audio_path, is_safe_path_segment, uploaded_file_size
 )
 from routers.intensive_reading import _article_path
 
@@ -201,8 +201,8 @@ def upload_message_image():
         if file.filename == '':
             return jsonify({'error': '没有选择文件'}), 400
 
-        # 检查文件大小（最大10MB）
-        if file.content_length and file.content_length > 10 * 1024 * 1024:
+        # 检查文件大小（最大10MB）。file.content_length 在 multipart 里一般是 0，要量真实大小
+        if uploaded_file_size(file) > 10 * 1024 * 1024:
             return jsonify({'error': '图片文件大小不能超过10MB'}), 400
 
         # 检查MIME类型
@@ -627,12 +627,21 @@ def get_users_list():
 
 # ==================== 挑战系统相关API ====================
 
+def _valid_challenge_id(challenge_id):
+    """挑战 ID 会被拼进文件路径；帖子内容里的 challenge.id 是客户端原样提交的，不能直接信"""
+    return isinstance(challenge_id, str) and is_safe_path_segment(challenge_id)
+
 def _challenge_file(challenge_id):
     """获取挑战文件路径"""
+    if not _valid_challenge_id(challenge_id):
+        raise ValueError(f'无效的挑战ID: {challenge_id!r}')
     return os.path.join(CHALLENGES_DIR, f"{challenge_id}.json")
 
 def delete_challenge_record(challenge_id):
     """删除挑战记录文件和相关音频"""
+    if not _valid_challenge_id(challenge_id):
+        print(f"拒绝删除挑战记录：无效的挑战ID {challenge_id!r}")
+        return False
     challenge_path = _challenge_file(challenge_id)
     success = False
 
@@ -652,6 +661,9 @@ def extract_vocabulary_from_articles(article_ids, word_count):
     articles_vocab = defaultdict(list)
 
     for article_id in article_ids:
+        # 和"文章不存在"一样直接跳过；_article_path 遇到非法 ID 会抛异常
+        if not isinstance(article_id, str) or not is_safe_path_segment(article_id):
+            continue
         article_path = _article_path(article_id)
         if os.path.exists(article_path):
             try:
@@ -740,6 +752,9 @@ def extract_vocabulary_from_articles_improved(article_ids, word_count):
     articles_vocab = defaultdict(list)
 
     for article_id in article_ids:
+        # 和"文章不存在"一样直接跳过；_article_path 遇到非法 ID 会抛异常
+        if not isinstance(article_id, str) or not is_safe_path_segment(article_id):
+            continue
         article_path = _article_path(article_id)
         if os.path.exists(article_path):
             try:
@@ -934,6 +949,8 @@ def participate_challenge():
         challenge_id = data.get('challenge_id')
         answers = data.get('answers', [])  # [{question_index, selected_option, time_taken, is_correct}]
 
+        if not _valid_challenge_id(challenge_id):
+            return jsonify({'error': '无效的挑战ID'}), 400
         challenge_path = _challenge_file(challenge_id)
         if not os.path.exists(challenge_path):
             return jsonify({'error': '挑战不存在'}), 404

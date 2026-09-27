@@ -21,6 +21,7 @@
     })();
   </script>
   <meta charset="UTF-8" />
+  <script src="/static/auth-fetch.js?v=20260927"></script>
   <title>Listening Review</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
@@ -241,9 +242,9 @@
   <link rel="stylesheet" href="/static/theme.css?v=20260919">
   <script src="/static/theme.js?v=20260919" defer></script>
   <script src="/static/api-client.js?v=20260919" defer></script>
-  <script src="/static/auth.js?v=20260919" defer></script>
+  <script src="/static/auth.js?v=20260927" defer></script>
   <script src="/static/ui-feedback.js?v=20260919" defer></script>
-  <script src="/static/app-shell.js?v=20260919" defer></script>
+  <script src="/static/app-shell.js?v=20260927" defer></script>
 </head>
 <body class="theme-page page-listening bg-slate-50 min-h-screen dark:bg-slate-900">
 
@@ -535,11 +536,13 @@ const API = {
 (async function init() {
   const tk = localStorage.getItem('authToken');
   if (!tk) { location.href = '/login'; return; }
+  // 只有服务器明确回答"无效"才清掉凭证、跳登录页；断网、服务器重启时的 502 页面说明不了凭证失效，按已登录继续
+  let d = null;
   try {
     const r = await fetch('/verify_token', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: tk }) });
-    const d = await r.json();
-    if (!d.valid) { localStorage.removeItem('authToken'); location.href = '/login'; return; }
-  } catch { location.href = '/login'; return; }
+    d = await r.json();
+  } catch { d = null; }
+  if (d && d.valid === false) { localStorage.removeItem('authToken'); location.href = '/login'; return; }
   await loadProjects();
   await maybeDeepLinkFromUrl();
 })();

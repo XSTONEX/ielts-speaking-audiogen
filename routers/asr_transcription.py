@@ -2,7 +2,10 @@ from flask import Blueprint, request, jsonify, send_file, send_from_directory
 import os, json, re, uuid, threading, shutil, requests, time
 from datetime import datetime
 from werkzeug.utils import secure_filename
-from core import AUDIO_TRANSCRIPTION_DIR, verify_token_from_request, is_token_valid, load_tokens
+from core import (
+    AUDIO_TRANSCRIPTION_DIR, verify_token_from_request, is_token_valid, load_tokens,
+    uploaded_file_size
+)
 
 asr_bp = Blueprint('asr', __name__)
 
@@ -178,8 +181,8 @@ def upload_audio_for_transcription():
         if file_ext not in allowed_extensions:
             return jsonify({'error': '不支持的音频格式'}), 400
 
-        # 验证文件大小 (25MB)
-        if file.content_length and file.content_length > 25 * 1024 * 1024:
+        # 验证文件大小 (25MB)。file.content_length 在 multipart 里一般是 0，要量真实大小
+        if uploaded_file_size(file) > 25 * 1024 * 1024:
             return jsonify({'error': '文件大小不能超过25MB'}), 400
 
         # 生成转录ID和创建文件夹

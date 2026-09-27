@@ -473,10 +473,21 @@ class LearningPlatformTestCase(unittest.TestCase):
         response = self.client.post(
             "/intensive_create",
             json={"title": "Optimization Flow", "category": "Reading", "content": "A short article."},
+            headers=self.auth_headers(),
         )
 
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.get_json()["success"])
+
+    def test_intensive_article_create_requires_login(self):
+        response = self.client.post(
+            "/intensive_create",
+            json={"title": "Anonymous", "category": "Reading", "content": "A short article."},
+        )
+
+        self.assertEqual(response.status_code, 401)
+        articles = [f for f in os.listdir(self.paths["INTENSIVE_DIR"]) if f.endswith(".json")]
+        self.assertEqual(articles, [])
 
 
 if __name__ == "__main__":

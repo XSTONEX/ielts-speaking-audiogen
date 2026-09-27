@@ -17,6 +17,8 @@ from functools import wraps
 from flask import request, jsonify
 from dotenv import load_dotenv
 
+from utils.json_store import save_json_atomic
+
 load_dotenv()
 
 # ==================== 全局常量 ====================
@@ -181,6 +183,20 @@ def is_safe_path_segment(name):
     return '/' not in name and '\\' not in name and '\x00' not in name
 
 
+def uploaded_file_size(file_storage):
+    """上传文件的真实字节数。
+
+    multipart 里单个文件分段一般不带 Content-Length，file.content_length 几乎总是 0，
+    拿它判断大小等于没判断；这里直接量底层流的长度，量完把读写位置放回原处。
+    """
+    stream = file_storage.stream
+    position = stream.tell()
+    stream.seek(0, os.SEEK_END)
+    size = stream.tell()
+    stream.seek(position)
+    return size
+
+
 # ==================== 目录初始化 ====================
 
 def init_directories():
@@ -223,9 +239,9 @@ def load_tokens():
     return {}
 
 def save_tokens(tokens):
-    """保存token数据"""
-    with open(TOKEN_FILE, 'w', encoding='utf-8') as f:
-        json.dump(tokens, f, ensure_ascii=False, indent=2)
+    """保存token数据。先写临时文件再整体替换：别的请求要么读到旧文件、要么读到新文件，
+    不会读到写了一半的内容而把所有人都判成未登录。"""
+    save_json_atomic(TOKEN_FILE, tokens)
 
 def generate_token():
     """生成新的token"""
@@ -236,21 +252,25 @@ def is_token_valid(token):
     tokens = load_tokens()
     return token in tokens
 
+# 两个人同时登录时，读-改-写 tokens.json 不加锁会丢掉其中一个人的新 token
+_TOKENS_LOCK = threading.Lock()
+
 def create_token(username=None):
     """创建新token，同时清理同一用户的旧token（保留最近30个）"""
     token = generate_token()
-    tokens = load_tokens()
-    # 清理同一用户的旧token，防止tokens.json无限增长
-    if username:
-        user_tokens = [(k, v) for k, v in tokens.items() if v.get('username') == username]
-        user_tokens.sort(key=lambda x: x[1].get('created_time', ''), reverse=True)
-        for old_token, _ in user_tokens[30:]:
-            del tokens[old_token]
-    tokens[token] = {
-        'created_time': datetime.now().isoformat(),
-        'username': username
-    }
-    save_tokens(tokens)
+    with _TOKENS_LOCK:
+        tokens = load_tokens()
+        # 清理同一用户的旧token，防止tokens.json无限增长
+        if username:
+            user_tokens = [(k, v) for k, v in tokens.items() if v.get('username') == username]
+            user_tokens.sort(key=lambda x: x[1].get('created_time', ''), reverse=True)
+            for old_token, _ in user_tokens[30:]:
+                del tokens[old_token]
+        tokens[token] = {
+            'created_time': datetime.now().isoformat(),
+            'username': username
+        }
+        save_tokens(tokens)
     return token
 
 
@@ -319,6 +339,56 @@ def require_auth(f):
     return decorated_function
 
 
+class AuthStoreError(Exception):
+    """tokens.json / users.json 读不出来。这时说不清 token 到底有没有效，不能当成"无效"处理。"""
+
+
+def _load_auth_json(path):
+    """严格读取 tokens.json / users.json：文件不存在当作空表，读不出来就抛 AuthStoreError。
+
+    load_tokens() 读失败会返回 {}，等于告诉调用方"所有 token 都无效"，
+    前端据此会把用户踢下线；登录校验这里必须把"读不出来"和"没有这个 token"分开。
+    """
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        return {}
+    except (OSError, ValueError) as exc:   # json.JSONDecodeError / UnicodeDecodeError 都是 ValueError
+        raise AuthStoreError(f'{path}: {exc}') from exc
+    if not isinstance(data, dict):
+        raise AuthStoreError(f'{path}: 顶层不是 JSON 对象')
+    return data
+
+
+def resolve_token_user(token):
+    """token 有效就返回用户名，否则返回 None。
+
+    有效 = tokens.json 里有这个 token、记录里带着用户名、并且这个用户还在 users.json 里。
+    tokens.json / users.json 读不出来时抛 AuthStoreError —— 调用方应该回 503 而不是 401，
+    因为前端只在服务器明确说"无效"时才清掉登录状态。
+    """
+    if not token or not isinstance(token, str):
+        return None
+    entry = _load_auth_json(TOKEN_FILE).get(token)
+    if not isinstance(entry, dict):
+        return None
+    username = entry.get('username')
+    if not username or not isinstance(username, str):
+        return None
+    if username not in _load_auth_json(USERS_FILE):
+        return None
+    return username
+
+
+def get_bearer_token():
+    """取请求头 Authorization: Bearer <token> 里的 token，没有就返回空串"""
+    auth_header = request.headers.get('Authorization', '')
+    if auth_header.startswith('Bearer '):
+        return auth_header[len('Bearer '):].strip()
+    return ''
+
+
 # ==================== TTS 基础函数 ====================
 
 def generate_tts(text, folder):
@@ -356,6 +426,9 @@ def generate_tts(text, folder):
 
 def get_vocab_audio_path(article_id, word):
     """获取词汇音频文件路径"""
+    # article_id 会被拼进路径（还会 makedirs），必须是单段安全文件名
+    if not is_safe_path_segment(article_id):
+        raise ValueError(f'无效的文章ID: {article_id!r}')
     article_audio_dir = os.path.join(VOCAB_AUDIO_DIR, article_id)
     os.makedirs(article_audio_dir, exist_ok=True)
 
@@ -399,6 +472,9 @@ def generate_and_save_vocab_audio(article_id, word):
 
 def delete_vocab_audio(article_id, word):
     """删除特定词汇的音频文件"""
+    if not is_safe_path_segment(article_id):
+        print(f"拒绝删除词汇音频：无效的文章ID {article_id!r}")
+        return
     audio_path = get_vocab_audio_path(article_id, word)
     if os.path.exists(audio_path):
         try:
@@ -409,6 +485,10 @@ def delete_vocab_audio(article_id, word):
 
 def delete_article_vocab_audio(article_id):
     """删除整篇文章的所有词汇音频"""
+    # 下面是 rmtree：article_id 若是 ../ 或绝对路径，会删到 vocab_audio 之外去
+    if not is_safe_path_segment(article_id):
+        print(f"拒绝删除词汇音频目录：无效的文章ID {article_id!r}")
+        return
     article_audio_dir = os.path.join(VOCAB_AUDIO_DIR, article_id)
     if os.path.exists(article_audio_dir):
         try:
@@ -419,6 +499,9 @@ def delete_article_vocab_audio(article_id):
 
 def delete_article_audio_files(article_id):
     """删除文章的整体音频文件（包括完整音频和临时文件）"""
+    if not is_safe_path_segment(article_id):
+        print(f"拒绝删除文章音频：无效的文章ID {article_id!r}")
+        return
     article_audio_dir = os.path.join(VOCAB_AUDIO_DIR, 'articles', article_id)
 
     if os.path.exists(article_audio_dir):
