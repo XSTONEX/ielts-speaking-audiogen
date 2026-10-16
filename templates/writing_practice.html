@@ -486,7 +486,10 @@ body.page-writing-practice textarea.tpl-textarea { font-family: var(--w-en); }
 .tpl-prac-total-bar i { display: block; height: 100%; border-radius: var(--w-r-chip); background: var(--w-big); transition: width .25s; }
 .tpl-prac-sep { width: 1px; height: 20px; background: var(--w-line); flex-shrink: 0; margin: 0 2px; }
 
-.tpl-prac-main { display: grid; grid-template-columns: minmax(0, 1fr) 316px; gap: 18px; align-items: start; }
+.tpl-prac-main { display: grid; grid-template-columns: minmax(0, 1fr) 316px; gap: 18px; align-items: stretch; }
+/* 同上：答题卡和侧栏底边对齐。侧栏末尾常是一个跳转按钮，拉伸它上面那张卡，不拉伸按钮 */
+.tpl-side > :last-child:not(.tpl-side-link),
+.tpl-side > :has(+ .tpl-side-link:last-child) { flex-grow: 1; }
 #tplSmallPracticeView .tpl-prac-main { grid-template-columns: minmax(0, 1fr) 340px; }
 
 .tpl-answer-card {
@@ -771,8 +774,12 @@ body.page-writing-practice textarea.tpl-textarea { font-family: var(--w-en); }
 /* ==================== 小作文 · 学习页（SmallLearn 设计稿） ==================== */
 .sl-top {
   display: grid; grid-template-columns: minmax(0, 1fr) 380px;
-  gap: 20px; margin-bottom: 22px; align-items: start;
+  gap: 20px; margin-bottom: 22px; align-items: stretch;
 }
+/* 题目卡和题图卡等高：题目卡的进度条贴底，题图在卡内垂直居中 */
+.sl-top > .card { display: flex; flex-direction: column; }
+.sl-top > .card .sl-qfoot { margin-top: auto; }
+.sl-top > .sl-figure.has-image { display: flex; flex-direction: column; justify-content: center; }
 .sl-top .card { margin-bottom: 0; }
 .sl-question {
   font-family: var(--w-en); font-size: var(--w-fs-en); line-height: 1.7;
@@ -889,7 +896,12 @@ body.page-writing-practice textarea.tpl-textarea { font-family: var(--w-en); }
 }
 .sp-total-bar i { display: block; height: 100%; border-radius: var(--w-r-chip); background: var(--w-big); transition: width .25s; }
 
-.sp-main { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 18px; align-items: start; }
+.sp-main { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 18px; align-items: stretch; }
+/* 左右底边对齐：侧栏更高时题卡拉伸，题卡更高时侧栏最后一张卡拉伸 */
+#smallPracticeContent, #smallEditorPanel.show { display: flex; flex-direction: column; }
+#smallPracticeContent > #smallEditorPanel.show { flex-grow: 1; }
+#smallEditorPanel > .task-card { flex-grow: 1; }
+.sp-side > :last-child { flex-grow: 1; }
 .sp-side { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .sp-q {
   background: var(--w-sunken); border: 1px solid var(--w-line);
@@ -986,8 +998,10 @@ body.page-writing-practice textarea.tpl-textarea { font-family: var(--w-en); }
 /* 学习页顶部：左关键词、右逻辑链 */
 .learn-top {
   display: grid; grid-template-columns: 300px minmax(0, 1fr);
-  gap: 18px; margin-bottom: 20px; align-items: start;
+  gap: 18px; margin-bottom: 20px; align-items: stretch;
 }
+/* 并排的两张卡等高：内容靠上，多出的空白留在底部 */
+.learn-top > .card { display: flex; flex-direction: column; }
 .learn-top .card { margin-bottom: 0; }
 .learn-top .kw-bar { flex-direction: column; align-items: stretch; }
 .kw-tip { margin: 14px 0 0 0; font-size: var(--w-fs-meta); color: var(--w-ink3); line-height: 1.6; }
@@ -1108,6 +1122,16 @@ body.page-writing-practice textarea.tpl-textarea { font-family: var(--w-en); }
   gap: 22px;
 }
 .entry-column { display: flex; flex-direction: column; gap: 12px; }
+/* 宽屏：两列拆成同一张 3 行网格（标题 / 卡片 / 卡片），
+   左右两张卡片落在同一行，高度自然一致 */
+@media (min-width: 901px) {
+  .home-grid {
+    grid-template-rows: auto auto auto; grid-auto-flow: column;
+    column-gap: 22px; row-gap: 12px;
+  }
+  .entry-column { display: contents; }
+}
+.entry-card-prog { margin-top: auto; }
 .entry-column-title {
   font-size: var(--w-fs-en); color: var(--w-ink); padding-bottom: 0; border-bottom: none;
   display: flex; align-items: center; gap: 10px; margin-bottom: 2px;
@@ -1682,7 +1706,9 @@ body.has-app-shell.page-writing-practice .practice-header { top: 56px; }
 .task-actions-btns { display: flex; gap: 10px; }
 
 /* 分数环 + 反馈两栏 */
-.fb-grid { display: grid; grid-template-columns: 252px minmax(0, 1fr); gap: 18px; margin-top: 18px; align-items: start; }
+.fb-grid { display: grid; grid-template-columns: 252px minmax(0, 1fr); gap: 18px; margin-top: 18px; align-items: stretch; }
+/* 批改内容自带的上外边距在两栏里会让右栏比分数栏低一截，顶边要对齐 */
+.fb-main > .feedback-card:first-child { margin-top: 0; }
 .fb-side { display: flex; flex-direction: column; gap: 12px; }
 .fb-side > .score-ring {
   align-self: center; margin-top: 8px;
