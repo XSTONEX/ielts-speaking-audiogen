@@ -479,6 +479,7 @@ body.page-writing-practice textarea.tpl-textarea { font-family: var(--w-en); }
 .tpl-prac-bar-label { font-size: var(--w-fs-meta); color: var(--w-ink3); flex-shrink: 0; margin-right: 4px; }
 .tpl-prac-gap { flex-grow: 1; }
 .tpl-prac-total { font-size: var(--w-fs-meta); color: var(--w-ink3); white-space: nowrap; }
+.tpl-prac-sum { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; flex-shrink: 0; }
 .tpl-prac-total-bar {
   width: 150px; height: 6px; border-radius: var(--w-r-chip);
   background: var(--w-big-track); overflow: hidden; flex-shrink: 0;
@@ -1036,6 +1037,9 @@ body.page-writing-practice textarea.tpl-textarea { font-family: var(--w-en); }
 .view-head .view-head-slot h2 {
   font-family: var(--w-display); font-size: var(--w-fs-title); font-weight: 600; color: var(--w-ink); margin: 0;
 }
+/* 页面自己在标题区写了 h2 时，自动补的模块名标题就多余了（两者先后渲染，会同时留下） */
+.view-head-main:has(.view-head-slot h2) > h2[data-auto-title="1"],
+.view-head-main:has(.view-head-slot h2) > .view-head-title-row { display: none; }
 /* JS 注入的头部里常跟一句说明，压成次要信息而不是标题的一部分 */
 .view-head .view-head-slot .tpl-hint,
 .view-head .view-head-slot p {
@@ -6789,7 +6793,7 @@ var Tpl = {
       `<span onclick="Tpl.backToSamples()">${this.esc(d.name)}</span><span class="sep">/</span>` +
       `<span class="current">范文题 ${this.s.sampleIdx + 1} · ${this.esc((this.sampleVersion() || {version:{name:''}}).version.name)}</span>`;
     document.getElementById('tplBigLearnHead').innerHTML = `
-      <h2 style="font-size:18px;margin-bottom:4px;">${this.esc(d.name)}模板</h2>
+      <h2>${this.esc(d.name)}模板</h2>
       <p class="tpl-hint">${this.esc(d.feature || '')}
         ${d.derived ? ' · 飞书没有该题型的官方模板，此骨架由范文反推，仅供参考' : ''}</p>`;
 
@@ -7031,23 +7035,24 @@ var Tpl = {
         onclick="Tpl.pickSentence(${i})">句子${TPL_CN_NUM[i] || (i + 1)}${tag ? ' · ' + this.esc(tag) : ''}</button>`;
     }).join('');
 
+    // 进度文字和进度条包成一组（.tpl-prac-sum），标签多到换行时一起换，不会只剩一截进度条掉到下一行
+    const totalBar = `<span class="tpl-prac-total-bar"><i style="width:${pct}%"></i></span>`;
     let bar;
     if (p.task === 'task1') {
       bar = `<span class="tpl-prac-bar-label">这一段 ${step.sentences.length} 句</span>
         ${p.steps.length > 1 ? stepPills + '<span class="tpl-prac-sep"></span>' : ''}
         ${sentPills}
         <span class="tpl-prac-gap"></span>
-        <span class="tpl-prac-total">${this.esc(step.name)} ${t.done} / ${t.total}</span>`;
+        <span class="tpl-prac-sum"><span class="tpl-prac-total">${this.esc(step.name)} ${t.done} / ${t.total}</span>${totalBar}</span>`;
     } else {
       bar = `<span class="tpl-prac-bar-label">段落</span>${stepPills}
         <span class="tpl-prac-gap"></span>
-        <span class="tpl-prac-total">全篇 ${t.done} / ${t.total}</span>`;
+        <span class="tpl-prac-sum"><span class="tpl-prac-total">全篇 ${t.done} / ${t.total}</span>${totalBar}</span>`;
     }
 
     return `
       <div class="tpl-prac-bar">
         ${bar}
-        <span class="tpl-prac-total-bar"><i style="width:${pct}%"></i></span>
       </div>
       <div class="tpl-prac-main">
         <div class="tpl-answer-card" id="tplEditor"></div>
