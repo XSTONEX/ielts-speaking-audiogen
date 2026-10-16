@@ -3032,7 +3032,7 @@ html[data-theme="dark"] body.page-writing-practice .tpl-btn.ghost {
     <div>
       <div class="review-eyebrow">REVIEW</div>
       <h2>复习中心</h2>
-      <p class="review-sub">练习时点过「收进复习中心」的句子都在这里，按来源分组。</p>
+      <p class="review-sub">练习时选择「收录」的句子都在这里，按来源分组。</p>
     </div>
     <button class="review-overlay-close" onclick="toggleReview()">&times;</button>
   </div>
@@ -3520,7 +3520,7 @@ async function renderHome() {
     Object.values(reviewBig || {}).forEach(cat => {
       Object.values(cat || {}).forEach(sub => { n += (sub && sub.count) || 0; });
     });
-    tip.textContent = n ? `已收 ${n} 条大作文错句笔记` : '练过的错句都在这里';
+    tip.textContent = n ? `已收录 ${n} 条大作文错句笔记` : '练过的错句都在这里';
   }
 }
 
@@ -4254,9 +4254,9 @@ function renderSmallEditor(idx) {
 
   // ---- 已提交：显示答案 + 批改 ----
   let reviewPrompt = '';
-  if (res._savedToReview === true) reviewPrompt = '<div class="saved-badge"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 2.5h9v11.5l-4.5-2.6-4.5 2.6V2.5Z" fill="currentColor"/></svg>已收进复习中心</div>';
-  else if (res._savedToReview === 'skipped') reviewPrompt = '<div class="save-skipped">已跳过，未录入复习中心</div>';
-  else reviewPrompt = `<div class="save-review-prompt"><span class="prompt-text">收进复习中心？</span><button class="save-review-btn yes" onclick="smallSaveToReview(${idx})">收进去</button><button class="save-review-btn no" onclick="smallSkipSaveToReview(${idx})">不用</button></div>`;
+  if (res._savedToReview === true) reviewPrompt = '<div class="saved-badge"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 2.5h9v11.5l-4.5-2.6-4.5 2.6V2.5Z" fill="currentColor"/></svg>已收录到复习中心</div>';
+  else if (res._savedToReview === 'skipped') reviewPrompt = '<div class="save-skipped">未收录到复习中心</div>';
+  else reviewPrompt = `<div class="save-review-prompt"><span class="prompt-text">是否收录到复习中心？</span><button class="save-review-btn yes" onclick="smallSaveToReview(${idx})">收录</button><button class="save-review-btn no" onclick="smallSkipSaveToReview(${idx})">不收录</button></div>`;
 
   const fKey = `small_${idx}`;
   practiceFollowupCtx[fKey] = { target_chinese: s.translation, user_translation: res._userInput || '', ai_feedback_summary: res.feedback_summary || '', grammar_corrections: JSON.stringify(res.grammar_corrections || []) };
@@ -5011,9 +5011,9 @@ function renderEditor(idx) {
   }
 
   let reviewPrompt = '';
-  if (res._savedToReview === true) reviewPrompt = '<div class="saved-badge"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 2.5h9v11.5l-4.5-2.6-4.5 2.6V2.5Z" fill="currentColor"/></svg>已收进复习中心</div>';
-  else if (res._savedToReview === 'skipped') reviewPrompt = '<div class="save-skipped">已跳过，未录入复习中心</div>';
-  else reviewPrompt = `<div class="save-review-prompt"><span class="prompt-text">收进复习中心？</span><button class="save-review-btn yes" onclick="saveToReview(${idx})">收进去</button><button class="save-review-btn no" onclick="skipSaveToReview(${idx})">不用</button></div>`;
+  if (res._savedToReview === true) reviewPrompt = '<div class="saved-badge"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 2.5h9v11.5l-4.5-2.6-4.5 2.6V2.5Z" fill="currentColor"/></svg>已收录到复习中心</div>';
+  else if (res._savedToReview === 'skipped') reviewPrompt = '<div class="save-skipped">未收录到复习中心</div>';
+  else reviewPrompt = `<div class="save-review-prompt"><span class="prompt-text">是否收录到复习中心？</span><button class="save-review-btn yes" onclick="saveToReview(${idx})">收录</button><button class="save-review-btn no" onclick="skipSaveToReview(${idx})">不收录</button></div>`;
 
   const fKey = `big_${state.currentExIdx}_${idx}`;
   practiceFollowupCtx[fKey] = { target_chinese: s.chinese, user_translation: res._userInput || '', ai_feedback_summary: res.feedback_summary || '', grammar_corrections: JSON.stringify(res.grammar_corrections || []) };
@@ -5256,7 +5256,7 @@ async function loadReviewStats() {
   const box = document.getElementById('reviewStats');
   if (!box) return;
   box.innerHTML =
-    reviewStatCard(all.length, '收藏的句子') +
+    reviewStatCard(all.length, '已收录的句子') +
     reviewStatCard(low, '低于 6.0，优先看', low ? 'low' : '') +
     reviewStatCard(recentAvg, '近 7 天平均分', 'score') +
     reviewStatCard(top ? top.name : '—', top ? `最常犯的错误类型（${top.n} 次）` : '还没够数据归类');
@@ -5271,7 +5271,7 @@ function setReviewSort(mode) {
 const RV_TABS = {
   small: { box: 'reviewSmallContent', api: '/api/writing/small/practice_history', build: rvGroupsSmall, empty: '暂无小作文练习记录' },
   big:   { box: 'reviewBigContent',   api: '/api/writing/practice_history',       build: rvGroupsBig,   empty: '暂无大作文练习记录' },
-  tpl:   { box: 'reviewTplContent',   api: '/api/writing/template/practice_history', build: rvGroupsTpl, empty: '还没有录入复习中心的模板练习' }
+  tpl:   { box: 'reviewTplContent',   api: '/api/writing/template/practice_history', build: rvGroupsTpl, empty: '还没有收录到复习中心的模板练习' }
 };
 
 async function loadReviewContent() {
@@ -7229,11 +7229,11 @@ var Tpl = {
     const savedBtn = saved === 'saving'
       ? `<button type="button" class="tpl-fb-btn" disabled>保存中…</button>`
       : saved === 'pending'
-        ? `<button type="button" class="tpl-fb-btn" onclick="Tpl.saveResult(true)">收进复习中心</button>
-           <button type="button" class="tpl-fb-btn" onclick="Tpl.saveResult(false)">不录入</button>`
+        ? `<button type="button" class="tpl-fb-btn" onclick="Tpl.saveResult(true)">收录到复习中心</button>
+           <button type="button" class="tpl-fb-btn" onclick="Tpl.saveResult(false)">不收录</button>`
         : saved === true
-          ? `<button type="button" class="tpl-fb-btn is-on"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 2.5h9v11.5l-4.5-2.6-4.5 2.6V2.5Z" fill="currentColor"/></svg>已收进复习中心</button>`
-          : `<button type="button" class="tpl-fb-btn" disabled>已记录，未进复习中心</button>`;
+          ? `<button type="button" class="tpl-fb-btn is-on"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 2.5h9v11.5l-4.5-2.6-4.5 2.6V2.5Z" fill="currentColor"/></svg>已收录到复习中心</button>`
+          : `<button type="button" class="tpl-fb-btn" disabled>已记录，未收录到复习中心</button>`;
 
     return `<div class="tpl-fb">
       <div class="tpl-fb-top">
