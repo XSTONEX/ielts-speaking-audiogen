@@ -718,8 +718,7 @@ body.page-writing-practice textarea.tpl-textarea { font-family: var(--w-en); }
   transition: background .18s, border-color .18s;
 }
 .ex-sent:hover, .ex-sent:focus-within { background: var(--w-big-soft); border-color: var(--w-big-line); }
-/* 「下一句要练的」不占一块常驻底色，只用序号和一道细边标出来 */
-.ex-sent.is-next { box-shadow: inset 3px 0 0 var(--w-big); }
+/* 「下一句要练的」只把序号标成主色，不加底色也不加竖线 */
 .ex-sent.is-next .ex-sent-no { color: var(--w-big); font-weight: 600; }
 .ex-sent-no {
   font-family: var(--w-display); font-size: var(--w-fs-meta); color: var(--w-ink3);
@@ -2312,28 +2311,37 @@ html[data-theme="dark"] body.page-writing-practice .review-overlay .review-overl
 .sl-sent[draggable="true"]:active { cursor: grabbing; }
 .sl-sent.dragging { opacity: .45; }
 
-.wp-hl { border-radius: 3px; padding: 1px 2px; cursor: pointer; color: var(--w-hl-ink); }
+/* <mark> 不设底色会落到浏览器默认的刺眼纯黄，这里用页面统一的荧光笔黄 */
+.wp-hl { background: var(--w-hl-yellow); border-radius: 3px; padding: 1px 2px; cursor: pointer; color: var(--w-hl-ink); }
 .wp-hl:hover { filter: brightness(.94); }
+/* 选中文字后浮出的「高亮 / 取消高亮」按钮：白底细边的小气泡，图标 + 文字一行 */
 .wp-hl-toolbar {
   position: absolute; z-index: 1500; display: none;
-  transform: translate(-50%, -100%);
-  align-items: center; gap: 7px; padding: 8px 12px;
-  background: var(--w-dark-surface); border-radius: var(--w-r-sm);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, .18);
+  transform: translate(-50%, calc(-100% - 8px));
+  padding: 3px;
+  background: var(--w-surface); border: 1px solid var(--w-line-strong);
+  border-radius: var(--w-r-sm); box-shadow: var(--w-shadow-lg);
 }
-.wp-hl-toolbar.show { display: flex; animation: wpHlPop .16s ease; }
-.wp-hl-toolbar button { display: inline-flex; align-items: center; justify-content: center; }
-.wp-hl-toolbar svg { width: 15px; height: 15px; }
-@keyframes wpHlPop { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.wp-hl-toolbar.show { display: flex; animation: wpHlPop .14s ease; }
+/* 动画也要带上定位用的 translate，否则弹出那一下会跳位 */
+@keyframes wpHlPop {
+  from { opacity: 0; transform: translate(-50%, calc(-100% - 4px)); }
+  to   { opacity: 1; transform: translate(-50%, calc(-100% - 8px)); }
+}
 .wp-hl-toolbar button {
-  width: 20px; height: 20px; border-radius: 6px; border: none; padding: 0; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 30px; padding: 0 10px; border: none; border-radius: var(--w-r-sm);
+  background: transparent; color: var(--w-ink); cursor: pointer;
+  font-family: var(--w-cn); font-size: var(--w-fs-meta); line-height: 1;
 }
-.wp-hl-toolbar button:hover { transform: scale(1.12); }
-.wp-hl-toolbar button:active { transform: scale(.96); }
-.wp-hl-toolbar svg { display: block; }
-.wp-hl-toolbar.is-remove svg { opacity: .9; }
-.wp-hl-toolbar.is-remove button:hover { background: rgba(255, 255, 255, .18); }
-.wp-hl-toolbar.is-remove button:hover svg { opacity: 1; }
+.wp-hl-toolbar button:hover { background: var(--w-sunken); }
+.wp-hl-toolbar svg {
+  display: block; width: 15px; height: 15px; flex-shrink: 0;
+  fill: none; stroke: currentColor; stroke-width: 1.8;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.wp-hl-toolbar.is-remove button { color: var(--w-err); }
+.wp-hl-toolbar.is-remove button:hover { background: var(--w-err-soft); }
 
 /* ==================== 模板写作 ====================
    模板不另起颜色：跟所属大类走，用描边而非实底区分。 */
