@@ -1,0 +1,41 @@
+"""批改结果归一化：不管模型返回字符串还是数组，前端拿到的结构都一致。纯函数测试，不发任何网络请求。"""
+
+import os
+import sys
+import unittest
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from routers.writing_logic import _normalize_feedback  # noqa: E402
+
+
+class NormalizeFeedbackTest(unittest.TestCase):
+    def test_vocab_string_on_one_line_becomes_list(self):
+        r = _normalize_feedback({'vocabulary_upgrade':
+            '1. [build] -> [fostering] (促进/营造) 2. [quiet environment] -> [tranquil atmosphere] (宁静)'})
+        self.assertEqual(r['vocabulary_upgrade'], [
+            {'original': 'build', 'replacement': 'fostering', 'reason': '促进/营造'},
+            {'original': 'quiet environment', 'replacement': 'tranquil atmosphere', 'reason': '宁静'},
+        ])
+
+    def test_vocab_list_keys_are_unified(self):
+        r = _normalize_feedback({'vocabulary_upgrade': [{'original': 'a', 'upgrade': 'b', 'explanation': 'c'}]})
+        self.assertEqual(r['vocabulary_upgrade'], [{'original': 'a', 'replacement': 'b', 'reason': 'c'}])
+
+    def test_native_fields_are_composed_with_blank_line(self):
+        r = _normalize_feedback({'native_standard': 'A.', 'native_optimized': 'B.'})
+        self.assertEqual(r['native_version'], '1. 标准答案：A.\n\n2. 你的结构优化版：B.')
+        self.assertNotIn('native_standard', r)
+
+    def test_legacy_single_line_native_gets_line_breaks(self):
+        r = _normalize_feedback({'native_version': '1. 标准答案： A. 2. 你的结构优化版： B.'})
+        self.assertEqual(r['native_version'], '1. 标准答案： A.\n\n2. 你的结构优化版： B.')
+
+    def test_empty_and_non_dict_are_safe(self):
+        self.assertEqual(_normalize_feedback({}), {})
+        self.assertEqual(_normalize_feedback({'vocabulary_upgrade': '', 'native_version': ''})['vocabulary_upgrade'], [])
+        self.assertEqual(_normalize_feedback([1]), [1])
+
+
+if __name__ == '__main__':
+    unittest.main()

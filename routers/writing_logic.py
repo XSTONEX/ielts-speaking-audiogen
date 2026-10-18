@@ -66,6 +66,68 @@ def _parse_ai_json(content):
     raise json.JSONDecodeError('unable to parse AI JSON', text, 0)
 
 
+_VOCAB_ITEM_RE = re.compile(
+    r'\[([^\]]*)\]\s*(?:->|→|–>)\s*\[([^\]]*)\]\s*(?:[（(]([^)）]*)[)）])?')
+_NUMBER_SPLIT_RE = re.compile(r'\n+|\s+(?=\d{1,2}[.、]\s*\S)')
+
+
+def _split_numbered(text):
+    parts = [re.sub(r'^\d{1,2}[.、]\s*', '', x.strip()) for x in _NUMBER_SPLIT_RE.split(text or '')]
+    return [x for x in parts if x]
+
+
+def _normalize_feedback(result):
+    """把批改结果统一成固定结构，不依赖模型是否严格遵守格式。
+
+    - vocabulary_upgrade → [{original, replacement, reason}]（模型返回 "1. [a] -> [b] (c)" 字符串也能拆开）
+    - native_version → "1. 标准答案：…\n\n2. 你的结构优化版：…"（优先用 native_standard / native_optimized 拼）
+    """
+    if not isinstance(result, dict):
+        return result
+
+    vu = result.get('vocabulary_upgrade')
+    if isinstance(vu, str):
+        items = []
+        for part in _split_numbered(vu):
+            m = _VOCAB_ITEM_RE.search(part)
+            if m:
+                items.append({'original': m.group(1), 'replacement': m.group(2), 'reason': m.group(3) or ''})
+        result['vocabulary_upgrade'] = items if items else ([{'original': vu.strip(), 'replacement': '', 'reason': ''}] if vu.strip() else [])
+    elif isinstance(vu, list):
+        fixed = []
+        for it in vu:
+            if isinstance(it, dict):
+                fixed.append({
+                    'original': str(it.get('original', '') or ''),
+                    'replacement': str(it.get('replacement') or it.get('upgrade') or it.get('suggestion') or ''),
+                    'reason': str(it.get('reason') or it.get('explanation') or ''),
+                })
+            elif isinstance(it, str):
+                m = _VOCAB_ITEM_RE.search(it)
+                if m:
+                    fixed.append({'original': m.group(1), 'replacement': m.group(2), 'reason': m.group(3) or ''})
+        result['vocabulary_upgrade'] = fixed
+
+    std = str(result.pop('native_standard', '') or '').strip()
+    opt = str(result.pop('native_optimized', '') or '').strip()
+    nv = result.get('native_version')
+    if isinstance(nv, dict):
+        std = std or str(nv.get('standard', '') or '').strip()
+        opt = opt or str(nv.get('optimized', '') or '').strip()
+        nv = ''
+    if std or opt:
+        lines = []
+        if std:
+            lines.append(f'{len(lines) + 1}. 标准答案：{std}')
+        if opt:
+            lines.append(f'{len(lines) + 1}. 你的结构优化版：{opt}')
+        result['native_version'] = '\n\n'.join(lines)
+    elif isinstance(nv, str) and nv.strip():
+        result['native_version'] = '\n\n'.join(
+            f'{i}. {x}' for i, x in enumerate(_split_numbered(nv), 1))
+    return result
+
+
 def _has_chinese(text):
     return bool(re.search(r'[\u4e00-\u9fff]', text))
 
@@ -583,7 +645,7 @@ def small_writing_correct():
             {'role': 'system', 'content': cfg['system_prompt']},
             {'role': 'user', 'content': user_prompt},
         ])
-        result = _parse_ai_json(content)
+        result = _normalize_feedback(_parse_ai_json(content))
         return jsonify(result)
     except requests.exceptions.Timeout:
         return jsonify({'error': 'AI 服务超时，请重试'}), 504
@@ -822,7 +884,7 @@ def writing_correct():
             {'role': 'system', 'content': cfg['system_prompt']},
             {'role': 'user', 'content': user_prompt},
         ])
-        result = _parse_ai_json(content)
+        result = _normalize_feedback(_parse_ai_json(content))
         return jsonify(result)
         
     except requests.exceptions.Timeout:
@@ -1729,7 +1791,7 @@ def template_correct():
             {'role': 'system', 'content': cfg['system_prompt']},
             {'role': 'user', 'content': user_prompt},
         ])
-        return jsonify(_parse_ai_json(content))
+        return jsonify(_normalize_feedback(_parse_ai_json(content)))
     except requests.exceptions.Timeout:
         return jsonify({'error': 'AI 服务超时，请重试'}), 504
     except json.JSONDecodeError:
