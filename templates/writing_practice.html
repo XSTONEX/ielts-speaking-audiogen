@@ -642,6 +642,19 @@ body.page-writing-practice textarea.tpl-textarea { font-family: var(--w-en); }
 .tpl-fb-en { font-family: var(--w-en); font-size: var(--w-fs-en); line-height: 1.75; color: var(--w-ink); }
 .tpl-fb-why { font-size: var(--w-fs-meta); line-height: 1.7; color: var(--w-err-ink); margin-top: 6px; }
 .tpl-fb-card.is-vocab .tpl-fb-en b { color: var(--w-small); }
+
+.fb-native { white-space: normal; }
+.fb-native-item + .fb-native-item { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--w-line); }
+.fb-native-label { display: inline-block; font-family: var(--w-cn); font-size: var(--w-fs-meta); font-weight: 600; color: var(--w-ok); margin-bottom: 3px; }
+.fb-native-text { font-family: var(--w-en); line-height: 1.75; }
+.tpl-fb-list .fb-vocab-item { display: block; padding: 9px 12px; margin-bottom: 8px; border-radius: var(--w-r-sm); background: var(--w-sunken); }
+.tpl-fb-list .fb-vocab-item:last-child { margin-bottom: 0; }
+.tpl-fb-list .fb-vocab-item .orig { color: var(--w-ink3); text-decoration: line-through; }
+.tpl-fb-list .fb-vocab-item .fixed { color: var(--w-small); }
+.tpl-fb-list .fb-vocab-item .reason { margin-top: 3px; font-family: var(--w-cn); line-height: 1.6; }
+.tpl-fb-list .fb-native-item { margin: 0; }
+.tpl-fb-list .fb-native-item + .fb-native-item { margin-top: 10px; padding-top: 10px; }
+.tpl-fb-list .fb-native-text { font-size: var(--w-fs-en); color: var(--w-ink); }
 .tpl-fb-actions { display: flex; align-items: center; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
 .tpl-fb-actions .tpl-prac-gap { flex-grow: 1; }
 .tpl-fb-btn {
@@ -4268,7 +4281,7 @@ function renderSmallEditor(idx) {
       <textarea id="smallTransInput" class="editor-input" placeholder="在这里写英文…&#10;写不出来可以先点「先看提示」，会给你这一段的常用句式骨架。" onkeydown="handleSmallEditorKey(event)">${takeRetryDraft()}</textarea>
       ${smallHintBoxHtml()}
       <div class="task-actions">
-        <span class="editor-hint">Enter 提交 · Shift+Enter 换行</span>
+        <span class="editor-hint">⌘/Ctrl + Enter 提交 · Enter 换行</span>
         <span class="task-actions-btns">
           <button class="skip-btn" onclick="advanceSmallNext()">跳过这句</button>
           <button class="skip-btn" onclick="toggleSmallHint()">${state.small.hintOpen ? '收起提示' : '先看提示'}</button>
@@ -4307,7 +4320,7 @@ function retrySmallSentence(idx) {
 }
 
 function handleSmallEditorKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitSmallTranslation(); }
+  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); submitSmallTranslation(); }
 }
 
 async function submitSmallTranslation() {
@@ -4847,28 +4860,34 @@ function formatVocabItem(orig, fixed, reason) {
   </div>`;
 }
 
+function fbEsc(t) {
+  return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// AI 经常把 "1. … 2. … 3. …" 挤在一行里返回：按序号（或换行）切成条目
+function fbSplitNumbered(str) {
+  return String(str || '').split(/\n+|\s+(?=\d{1,2}[.、]\s*\S)/)
+    .map(x => x.trim().replace(/^\d{1,2}[.、]\s*/, ''))
+    .filter(Boolean);
+}
+
 function parseVocabString(str) {
-  // Match lines like: 1. [crime show] -> [crime drama] (reason text)
-  // or: [crime show] -> [crime drama] (reason text)
-  const lines = str.split('\n').map(l => l.trim()).filter(Boolean);
-  const parsed = [];
-  const re = /^\d+\.\s*\[([^\]]*)\]\s*(?:->|→|–>)\s*\[([^\]]*)\]\s*(?:\(([^)]*)\))?/;
-  for (const line of lines) {
-    const m = line.match(re);
-    if (m) {
-      parsed.push(formatVocabItem(m[1], m[2], m[3] || ''));
-    } else {
-      // Fallback: try without numbering
-      const re2 = /\[([^\]]*)\]\s*(?:->|→|–>)\s*\[([^\]]*)\]\s*(?:\(([^)]*)\))?/;
-      const m2 = line.match(re2);
-      if (m2) {
-        parsed.push(formatVocabItem(m2[1], m2[2], m2[3] || ''));
-      } else {
-        parsed.push(`<div class="fb-vocab-item">${line}</div>`);
-      }
-    }
-  }
-  return parsed.join('');
+  const re = /\[([^\]]*)\]\s*(?:->|→|–>)\s*\[([^\]]*)\]\s*(?:[（(]([^)）]*)[)）])?/;
+  return fbSplitNumbered(str).map(part => {
+    const m = part.match(re);
+    return m ? formatVocabItem(fbEsc(m[1]), fbEsc(m[2]), fbEsc(m[3] || ''))
+             : `<div class="fb-vocab-item">${fbEsc(part)}</div>`;
+  }).join('');
+}
+
+// 高分示范："1. 标准答案：… 2. 你的结构优化版：…" → 带标签的分行卡片
+function formatNativeVersion(str) {
+  return fbSplitNumbered(str).map(part => {
+    const m = part.match(/^([\u4e00-\u9fa5（）()]{2,12})[:：]\s*([\s\S]*)$/);
+    return m
+      ? `<div class="fb-native-item"><span class="fb-native-label">${fbEsc(m[1])}</span><div class="fb-native-text">${fbEsc(m[2])}</div></div>`
+      : `<div class="fb-native-item"><div class="fb-native-text">${fbEsc(part)}</div></div>`;
+  }).join('');
 }
 
 function formatVocabUpgrade(vu) {
@@ -4915,7 +4934,7 @@ function renderFeedbackCard(fb, opts) {
       ${fb.native_version ? `
         <div class="fb-section is-native">
           <div class="fb-section-title">高分示范</div>
-          <div class="fb-native">${fb.native_version}</div>
+          <div class="fb-native">${formatNativeVersion(fb.native_version)}</div>
         </div>` : ''}
       ${opts.reviewPrompt || ''}
       ${(opts.retryFn || opts.nextBtn) ? `<div class="fb-actions">
@@ -5029,7 +5048,7 @@ function renderEditor(idx) {
       <textarea id="transInput" class="editor-input" placeholder="在此输入你的英文翻译…" onkeydown="handleEditorKey(event)">${takeRetryDraft()}</textarea>
       ${bigHintBoxHtml()}
       <div class="task-actions">
-        <span class="editor-hint">Enter 提交 · Shift+Enter 换行 · 提交前不会显示答案</span>
+        <span class="editor-hint">⌘/Ctrl + Enter 提交 · Enter 换行 · 提交前不会显示答案</span>
         <span class="task-actions-btns">
           <button class="skip-btn" onclick="advanceNext()">跳过这句</button>
           <button class="skip-btn" onclick="toggleBigHint()">${state.hintOpen ? '收起提示' : '先看提示'}</button>
@@ -5102,7 +5121,7 @@ function retrySentence(idx) {
   renderExercise();
 }
 
-function handleEditorKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitTranslation(); } }
+function handleEditorKey(e) { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); submitTranslation(); } }
 
 async function submitTranslation() {
   if (state.submitting) return;
@@ -5367,7 +5386,7 @@ function rvGrammarText(fb) {
 function rvVocabText(fb) {
   const vu = fb && fb.vocabulary_upgrade;
   if (!vu) return '';
-  if (typeof vu === 'string') return vu;
+  if (typeof vu === 'string') return fbSplitNumbered(vu).map(fbEsc).join('<br>');
   if (!Array.isArray(vu)) return '';
   return vu.map(item => {
     if (typeof item === 'string') return item;
@@ -5469,7 +5488,7 @@ function rvItemHtml(it, group) {
   const cls = rvScoreCls(score);
   const grammar = rvGrammarText(fb);
   const vocab = rvVocabText(fb);
-  const native = fb.native_version || last.native_version || '';
+  const native = fbSplitNumbered(fb.native_version || last.native_version || '').map(fbEsc).join('<br>');
   const canRetry = group.tab !== 'tpl';
 
   rvItemIndex[it.key] = { tab: group.tab, record: last, cn: it.cn };
@@ -7205,7 +7224,7 @@ var Tpl = {
         placeholder="${p.task === 'task1' ? '把上面的句型套进去写…' : '按骨架把这一句写出来…'}"
         oninput="Tpl.onDraft(this.value)" onkeydown="Tpl.onAnswerKey(event)">${this.esc(draft)}</textarea>
       <div class="tpl-answer-foot">
-        <span class="editor-hint">Enter 提交 · Shift+Enter 换行</span>
+        <span class="editor-hint">⌘/Ctrl + Enter 提交 · Enter 换行</span>
         <div class="tpl-answer-btns">
           <button type="button" class="tpl-eye-btn${peeked ? ' is-on' : ''}" onclick="Tpl.peekAnswer()">${this.EYE_ICON}${peeked ? '收起答案' : '偷看答案'}</button>
           <button type="button" class="skip-btn" onclick="Tpl.skipSentence()">跳过</button>
@@ -7252,9 +7271,9 @@ var Tpl = {
        ${c.reason ? `<p class="tpl-fb-why">${this.esc(c.reason)}</p>` : ''}`).join('') : '';
 
     const vArr = Array.isArray(res.vocabulary_upgrade) ? res.vocabulary_upgrade : [];
-    let vocab = vArr.map(v =>
-      `${this.esc(v.original)} &rarr; <b>${this.esc(v.replacement || v.upgrade || '')}</b>`).join('<br>');
-    if (!vocab && typeof res.vocabulary_upgrade === 'string') vocab = this.esc(res.vocabulary_upgrade);
+    let vocab = vArr.map(v => formatVocabItem(this.esc(v.original), this.esc(v.replacement || v.upgrade || ''),
+      this.esc(v.reason || v.explanation || ''))).join('');
+    if (!vocab && typeof res.vocabulary_upgrade === 'string') vocab = parseVocabString(res.vocabulary_upgrade);
 
     const saved = res._saved;
     const savedBtn = saved === 'saving'
@@ -7275,8 +7294,8 @@ var Tpl = {
       </div>
       <div class="tpl-fb-cards">
         ${grammar ? `<div class="tpl-fb-card is-grammar"><div class="tpl-fb-card-title">语法修正</div>${grammar}</div>` : ''}
-        ${vocab ? `<div class="tpl-fb-card is-vocab"><div class="tpl-fb-card-title">词汇提升</div><p class="tpl-fb-en">${vocab}</p></div>` : ''}
-        ${res.native_version ? `<div class="tpl-fb-card is-native"><div class="tpl-fb-card-title">高分示范</div><p class="tpl-fb-en">${this.esc(res.native_version)}</p></div>` : ''}
+        ${vocab ? `<div class="tpl-fb-card is-vocab"><div class="tpl-fb-card-title">词汇提升</div><div class="tpl-fb-list">${vocab}</div></div>` : ''}
+        ${res.native_version ? `<div class="tpl-fb-card is-native"><div class="tpl-fb-card-title">高分示范</div><div class="tpl-fb-list">${formatNativeVersion(res.native_version)}</div></div>` : ''}
       </div>
       <div class="tpl-fb-actions">
         ${savedBtn}
@@ -7293,7 +7312,7 @@ var Tpl = {
   },
 
   onAnswerKey(e) {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.submitSentence(); }
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); this.submitSentence(); }
   },
 
   async submitSentence() {
