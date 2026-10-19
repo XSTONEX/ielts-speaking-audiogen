@@ -78,6 +78,8 @@ body.page-writing-practice {
   --w-shadow: none;
   --w-shadow-lg: 0 4px 16px rgba(0, 0, 0, .08);
   --w-ring: 0 0 0 3px rgba(47, 93, 158, .15);
+  /* 批改中蒙在练习区上的半透明纸面 */
+  --w-mask: rgba(247, 247, 245, .78);
 
   /* 字号只有四档：13 辅助 / 15 中文正文与界面 / 17 英文读写 / 22 标题与当前任务句 */
   --w-fs-meta: 13px;
@@ -176,6 +178,7 @@ html[data-theme="dark"] body.page-writing-practice {
   --w-shadow: none;
   --w-shadow-lg: 0 4px 16px rgba(0, 0, 0, .45);
   --w-ring: 0 0 0 3px rgba(138, 176, 230, .22);
+  --w-mask: rgba(22, 22, 22, .78);
 
   --accent-hover: #A7C4EE;
   --shadow-rgb: 0, 0, 0;
@@ -244,7 +247,10 @@ body.page-writing-practice textarea.tpl-textarea { font-family: var(--w-en); }
 /* ==================== 外壳 ==================== */
 .main-panel-wrapper {
   max-width: 1180px; width: 92%; margin: 0 auto; min-height: 100vh;
-  background: transparent; border-radius: 0; box-shadow: none; padding: 0 0 130px 0;
+  background: transparent; border-radius: 0; box-shadow: none;
+  /* 底部留白要高过右下角那摞浮动按钮（复习 / 速记 / AI，最高 bottom 144 + 48 = 192px），
+     否则页面最后一行（追问框、下一句…）滚到底也会被按钮压住 */
+  padding: 0 0 210px 0;
 }
 .app { max-width: 100%; margin: 0; padding: 0; }
 
@@ -1711,6 +1717,7 @@ body.has-app-shell.page-writing-practice .practice-header { top: 56px; }
   font-family: var(--w-en); font-size: var(--w-fs-en); line-height: 1.7;
   color: var(--w-ink); background: var(--w-sunken);
   border-radius: var(--w-r-inner); padding: 16px 18px;
+  white-space: pre-wrap; overflow-wrap: break-word;
 }
 .task-answer-time { display: block; font-family: var(--w-cn); font-size: var(--w-fs-meta); color: var(--w-ink3); margin-bottom: 6px; }
 .task-tagrow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
@@ -2322,6 +2329,25 @@ html[data-theme="dark"] body.page-writing-practice .review-overlay .review-overl
 }
 .ai-chat-history-item .hist-del:hover { background: var(--w-err-soft); color: var(--w-err); }
 
+/* 提交批改后盖在练习区上的蒙版：页头（返回 / 学习·实战）留在外面照常可点 */
+.is-grading { position: relative; }
+.grading-mask {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 40;
+  background: var(--w-mask); cursor: progress;
+}
+/* 练习区可能比一屏长，提示框跟着滚动停在视口里 */
+.grading-mask-box {
+  position: sticky; top: 38vh;
+  display: flex; align-items: center; gap: 12px;
+  width: max-content; max-width: calc(100% - 32px); margin: 72px auto 0;
+  padding: 14px 22px; background: var(--w-surface);
+  border: 1px solid var(--w-line-strong); border-radius: var(--w-r-card);
+  box-shadow: var(--w-shadow-lg);
+  font-size: var(--w-fs-ui); color: var(--w-ink); line-height: 1.5;
+}
+.grading-mask-box .spinner { flex-shrink: 0; border-color: var(--w-line-strong); border-top-color: var(--w-big); }
+.grading-mask-sub { display: block; font-size: var(--w-fs-meta); color: var(--w-ink3); }
+
 /* 批改结果下方的追问 */
 .practice-followup {
   display: flex; align-items: center; gap: 10px; margin-top: 12px;
@@ -2343,6 +2369,7 @@ html[data-theme="dark"] body.page-writing-practice .review-overlay .review-overl
   margin-top: 10px; padding: 16px 20px; background: var(--w-sunken);
   border-radius: var(--w-r-card); font-size: var(--w-fs-ui); line-height: 1.85; color: var(--w-ink);
 }
+.practice-followup-response .spinner { border-color: var(--w-line-strong); border-top-color: var(--w-big); vertical-align: -3px; }
 .practice-followup-response h3, .practice-followup-response h4 { font-size: var(--w-fs-ui); font-weight: 700; margin: 8px 0 4px; }
 .practice-followup-response p { margin: 0 0 7px; }
 .practice-followup-response code {
@@ -2626,7 +2653,7 @@ html[data-theme="dark"] body.page-writing-practice .tpl-btn.ghost {
   .tpl-cmp > div:last-child { border-left: none; padding-left: 0; border-top: 1px solid var(--w-line); padding-top: 16px; }
 }
 @media (max-width: 768px) {
-  .main-panel-wrapper { width: 100%; padding: 0 16px 80px 16px; }
+  .main-panel-wrapper { width: 100%; padding: 0 16px 210px 16px; }
   .entry-grid { grid-template-columns: minmax(0, 1fr); }
   .top-bar { flex-wrap: wrap; gap: 12px; }
   .top-bar h1 { font-size: var(--w-fs-title); }
@@ -2656,6 +2683,8 @@ html[data-theme="dark"] body.page-writing-practice .tpl-btn.ghost {
   .review-fab { right: 14px; bottom: 14px; }
   .np-fab { right: 14px; bottom: 72px; }
   .ai-float-btn { right: 14px; bottom: 130px; }
+  /* 浮动按钮这里收到最高 130 + 48 = 178px，底部留白跟着收 */
+  .main-panel-wrapper { padding-bottom: 194px; }
   .chart-type-grid, .cat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .sub-list, .example-list-grid, .tpl-type-grid { grid-template-columns: minmax(0, 1fr); }
   .tpl-prac-main, #tplSmallPracticeView .tpl-prac-main, .tpl-fb-cards { grid-template-columns: minmax(0, 1fr); }
@@ -3182,6 +3211,116 @@ const API = {
   async del(url) { const r = await fetch(url, { method: 'DELETE', headers: this.headers() }); return r.json(); }
 };
 
+function escHtml(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+/* ==================== 提交批改：失败退避重试 + 练习区蒙版 ==================== */
+// 第一次失败后最多再试 3 次，依次等 1 / 2 / 4 秒
+const GRADE_RETRY_DELAYS = [1000, 2000, 4000];
+
+function gradeSleep(ms, signal) {
+  return new Promise((resolve, reject) => {
+    const abort = () => { clearTimeout(t); reject(new DOMException('Aborted', 'AbortError')); };
+    const t = setTimeout(resolve, ms);
+    if (!signal) return;
+    if (signal.aborted) abort();
+    else signal.addEventListener('abort', abort, { once: true });
+  });
+}
+
+/* 批改请求。断网、服务器 5xx / 408 / 429、返回的不是 JSON（Cloudflare 超时页）
+   都是再来一次可能就好的，自动重试；400 / 401 这类请求本身的问题直接报错。
+   成功返回解析好的 JSON；最终失败抛 Error，message 是给人看的原因，attempts 是一共试了几次。 */
+async function postGrading(url, body, { signal, onRetry } = {}) {
+  for (let attempt = 0; ; attempt++) {
+    let msg, retryable;
+    try {
+      const r = await fetch(url, { method: 'POST', headers: API.headers(), body: JSON.stringify(body), signal });
+      let data = null;
+      try { data = await r.json(); } catch (e) { if (e.name === 'AbortError') throw e; }
+      if (r.ok && data && !data.error) return data;
+      msg = (data && data.error) || `服务器返回 ${r.status}`;
+      retryable = !data || r.status >= 500 || r.status === 408 || r.status === 429;
+    } catch (e) {
+      if (e.name === 'AbortError') throw e;
+      msg = '网络连接失败';
+      retryable = true;
+    }
+    if (!retryable || attempt >= GRADE_RETRY_DELAYS.length) {
+      const err = new Error(msg);
+      err.attempts = attempt + 1;
+      throw err;
+    }
+    if (onRetry) onRetry(attempt + 1, GRADE_RETRY_DELAYS.length);
+    await gradeSleep(GRADE_RETRY_DELAYS[attempt], signal);
+  }
+}
+
+function alertGradingFailed(err) {
+  const msg = (err && err.message) || '请求失败';
+  alert(err && err.attempts > 1
+    ? `批改失败：${msg}（已自动重试 ${err.attempts - 1} 次），请稍后再提交`
+    : `批改失败：${msg}`);
+}
+
+/* 批改进行中：把所在视图页头以下的练习区整块盖住（inert 连键盘也挡住），
+   页头的返回 / 学习·实战照常可点。离开这个视图就放弃这次批改：
+   请求中止、蒙版撤掉，回来可以马上重新提交。 */
+const Grading = {
+  job: null,
+
+  start(viewId) {
+    if (this.job) this.cancel();
+    const view = document.getElementById(viewId);
+    const ctrl = new AbortController();
+    const job = { viewId, view, ctrl, signal: ctrl.signal, mask: null, covered: [] };
+    this.job = job;
+    if (!view) return job;
+    const head = view.querySelector(':scope > .view-head');
+    view.classList.add('is-grading');
+    const mask = document.createElement('div');
+    mask.className = 'grading-mask';
+    mask.innerHTML = `<div class="grading-mask-box" role="status" aria-live="polite">
+      <span class="spinner"></span>
+      <span><span class="grading-mask-text">正在批改…</span><span class="grading-mask-sub">AI 正在看你写的句子，请稍等</span></span>
+    </div>`;
+    mask.style.top = (head ? head.offsetTop + head.offsetHeight : 0) + 'px';
+    job.covered = Array.from(view.children).filter(el => el !== head && !el.inert);
+    job.covered.forEach(el => { el.inert = true; });
+    view.appendChild(mask);
+    job.mask = mask;
+    return job;
+  },
+
+  retrying(job, n, total) {
+    const el = job && job.mask && job.mask.querySelector('.grading-mask-text');
+    if (el) el.textContent = `批改没成功，正在自动重试（${n}/${total}）…`;
+  },
+
+  // 可重复调用
+  finish(job) {
+    if (!job) return;
+    if (job.mask) { job.mask.remove(); job.mask = null; }
+    job.covered.forEach(el => { el.inert = false; });
+    job.covered = [];
+    if (job.view) job.view.classList.remove('is-grading');
+    if (this.job === job) this.job = null;
+  },
+
+  cancel() {
+    const job = this.job;
+    if (!job) return;
+    job.ctrl.abort();
+    this.finish(job);
+  },
+
+  // switchView 调用：要切去的不是批改所在的视图，就放弃这次批改
+  leave(nextView) {
+    if (this.job && this.job.viewId !== nextView) this.cancel();
+  },
+};
+
 /* ==================== State ==================== */
 let state = {
   activeModule: null,
@@ -3390,6 +3529,7 @@ function paintViewBadge(view) {
 }
 
 function switchView(view) {
+  Grading.leave(view);
   ALL_VIEWS.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
   const el = document.getElementById(view);
   if (el) el.style.display = '';
@@ -4264,7 +4404,7 @@ function renderSmallEditor(idx) {
       const fb = rec.feedback || {};
       const score = fb.score || rec.score || '-';
       const ts = rec.timestamp ? new Date(rec.timestamp).toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
-      panel.innerHTML = taskCard(`<div class="task-answer"><span class="task-answer-time">${ts}</span>${rec.user_translation || ''}</div>`);
+      panel.innerHTML = taskCard(`<div class="task-answer"><span class="task-answer-time">${ts}</span>${escHtml(rec.user_translation)}</div>`);
       fbBox.innerHTML = fbShell(subLabel, score,
         scoreGapHtml(Object.assign({}, fb, { score })) +
         renderFeedbackCard(Object.assign({}, fb, { score }), { reviewPrompt: '', nextBtn: false, omitScore: true }) +
@@ -4304,7 +4444,7 @@ function renderSmallEditor(idx) {
   const fKey = `small_${idx}`;
   practiceFollowupCtx[fKey] = { target_chinese: s.translation, user_translation: res._userInput || '', ai_feedback_summary: res.feedback_summary || '', grammar_corrections: JSON.stringify(res.grammar_corrections || []) };
 
-  panel.innerHTML = taskCard(`<div class="task-answer">${res._userInput || ''}</div>`);
+  panel.innerHTML = taskCard(`<div class="task-answer">${escHtml(res._userInput)}</div>`);
   fbBox.innerHTML = fbShell(subLabel, res.score,
     scoreGapHtml(res) +
     renderFeedbackCard(res, { reviewPrompt, nextBtn: true, nextFn: `advanceSmallNext()`, retryFn: `retrySmallSentence(${idx})`, followupKey: fKey, omitScore: true }) +
@@ -4339,26 +4479,36 @@ async function submitSmallTranslation() {
   for (const section of data.sections) {
     for (const sent of section.sentences) allSentences.push(sent);
   }
-  const s = allSentences[state.small.activeSentIdx];
+  const sentIdx = state.small.activeSentIdx;
+  const s = allSentences[sentIdx];
+  const job = Grading.start('smallPracticeView');
+  let failed = false;
 
   try {
-    const result = await API.post('/api/writing/small/correct', {
+    const result = await postGrading('/api/writing/small/correct', {
       question_text: data.question,
       target_chinese: s.translation,
       user_translation: text,
       standard_reference: s.original || ''
-    });
-    if (result.error) { alert(result.error); return; }
+    }, { signal: job.signal, onRetry: (n, total) => Grading.retrying(job, n, total) });
+    // 批改期间离开了，或从复习中心跳去了别的题：结果已不属于眼前这句
+    if (job.signal.aborted || state.small.exampleData !== data || state.small.activeSentIdx !== sentIdx) return;
     result._userInput = text;
     result._savedToReview = 'pending';
-    state.small.sentResults[state.small.activeSentIdx] = result;
-    activateSmallSentence(state.small.activeSentIdx);
+    state.small.sentResults[sentIdx] = result;
+    activateSmallSentence(sentIdx);
   } catch (err) {
-    alert('请求失败，请重试');
+    if (err.name === 'AbortError') return;
+    failed = true;
+    Grading.finish(job);
+    alertGradingFailed(err);
   } finally {
     state.small.submitting = false;
+    Grading.finish(job);
     const b = document.getElementById('smallSubmitBtn');
     if (b) { b.disabled = false; b.textContent = '提交批改'; }
+    const t = failed && document.getElementById('smallTransInput');
+    if (t) t.focus();
   }
 }
 
@@ -4942,12 +5092,30 @@ function renderFeedbackCard(fb, opts) {
         ${opts.nextBtn ? `<button class="submit-btn" onclick="${nextFn}">下一句 →</button>` : ''}
       </div>` : ''}
     </div>
-    ${showFollowup ? `
+    ${showFollowup ? practiceFollowupHtml(sentKey, fb) : ''}`;
+}
+
+/* 批改结果下方的「追问 AI」。res 是这次批改结果对象：追问的问答记在它身上，
+   点「收录」之类重绘之后还能看到；结果被清掉（改一遍 / 再试一次）就跟着没了。
+   用 WeakMap 记，不会混进存到后端的 feedback 里。 */
+const practiceFollowupMemo = new WeakMap();
+const practiceFollowupRes = {};
+
+function practiceFollowupHtml(sentKey, res) {
+  const memo = res ? practiceFollowupMemo.get(res) : null;
+  practiceFollowupRes[sentKey] = res || null;
+  return `
       <div class="practice-followup" id="followup_${sentKey}">
-        <input type="text" placeholder="对批改结果有疑问？追问 AI..." onkeydown="if(event.key==='Enter')sendPracticeFollowup('${sentKey}')">
+        <input type="text" placeholder="对批改结果有疑问？追问 AI..." onkeydown="if(event.key==='Enter'&&!event.isComposing&&event.keyCode!==229)sendPracticeFollowup('${sentKey}')">
         <button class="followup-send" onclick="sendPracticeFollowup('${sentKey}')">发送</button>
       </div>
-      <div class="practice-followup-response markdown-body" id="followupResp_${sentKey}" style="display:none;"></div>` : ''}`;
+      <div class="practice-followup-response markdown-body" id="followupResp_${sentKey}" style="display:${memo ? 'block' : 'none'};">${memo ? practiceFollowupBody(memo) : ''}</div>`;
+}
+
+function practiceFollowupBody(memo) {
+  if (memo.loading) return '<span class="spinner" style="display:inline-block;width:16px;height:16px;"></span> AI 思考中...';
+  if (memo.error) return `<span style="color:var(--red);">${escHtml(memo.error)}</span>`;
+  return memo.content ? renderMarkdown(memo.content) : '<span style="color:var(--text3);">无回复</span>';
 }
 
 /* ==================== 实战页：分数环 / 差距归因 / 历史侧栏 ==================== */
@@ -5026,7 +5194,7 @@ function renderEditor(idx) {
       const fb = rec.feedback || {};
       const ts = rec.timestamp ? new Date(rec.timestamp).toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
       document.getElementById('editorPanel').innerHTML =
-        taskCard(`<div class="task-answer"><span class="task-answer-time">${ts}</span>${rec.user_translation || ''}</div>`) +
+        taskCard(`<div class="task-answer"><span class="task-answer-time">${ts}</span>${escHtml(rec.user_translation)}</div>`) +
         `<div class="fb-grid">
            <div class="fb-side">
              ${scoreRingHtml(fb.score !== undefined ? fb.score : (rec.score || '-'))}
@@ -5068,7 +5236,7 @@ function renderEditor(idx) {
   practiceFollowupCtx[fKey] = { target_chinese: s.chinese, user_translation: res._userInput || '', ai_feedback_summary: res.feedback_summary || '', grammar_corrections: JSON.stringify(res.grammar_corrections || []) };
 
   document.getElementById('editorPanel').innerHTML =
-    taskCard(`<div class="task-answer">${res._userInput || ''}</div>`) +
+    taskCard(`<div class="task-answer">${escHtml(res._userInput)}</div>`) +
     `<div class="fb-grid">
        <div class="fb-side">
          ${scoreRingHtml(res.score)}
@@ -5132,22 +5300,34 @@ async function submitTranslation() {
   state.submitting = true;
   const btn = document.getElementById('submitBtn');
   if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> 批改中…'; }
-  const ex = state.subData.examples[state.currentExIdx];
-  const s = ex.sentences[state.activeSentIdx];
+  const subData = state.subData, exIdx = state.currentExIdx, sentIdx = state.activeSentIdx;
+  const ex = subData.examples[exIdx];
+  const s = ex.sentences[sentIdx];
+  const job = Grading.start('practiceView');
+  let failed = false;
   try {
-    const result = await API.post('/api/writing/correct', {
+    const result = await postGrading('/api/writing/correct', {
       question_text: ex.question, target_chinese: s.chinese, user_translation: text, standard_reference: s.english || ''
-    });
-    if (result.error) { alert(result.error); return; }
+    }, { signal: job.signal, onRetry: (n, total) => Grading.retrying(job, n, total) });
+    // 批改期间离开了，或从复习中心跳去了别的题：结果已不属于眼前这句
+    if (job.signal.aborted || state.subData !== subData || state.currentExIdx !== exIdx || state.activeSentIdx !== sentIdx) return;
     result._userInput = text; result._savedToReview = 'pending';
-    state.sentResults[state.activeSentIdx] = result;
+    state.sentResults[sentIdx] = result;
     renderExercise();
-  } catch (err) { alert('请求失败，请重试'); } finally {
+  } catch (err) {
+    if (err.name === 'AbortError') return;
+    failed = true;
+    Grading.finish(job);
+    alertGradingFailed(err);
+  } finally {
     state.submitting = false;
+    Grading.finish(job);
     // 失败路径不重绘编辑器，按钮会一直卡在「批改中…」，这里兜底还原。
     // 成功路径已经重绘过，此时查不到这个 id，天然不受影响。
     const b = document.getElementById('submitBtn');
     if (b) { b.disabled = false; b.textContent = '提交批改'; }
+    const t = failed && document.getElementById('transInput');
+    if (t) t.focus();
   }
 }
 
@@ -5592,6 +5772,7 @@ async function reviewPracticeAgain(key) {
       if (ci < 0) { alert('找不到这道题所在的话题'); return; }
       const si = (state.categories[ci].subcategories || []).findIndex(x => x.name === r.subcategory);
       if (si < 0) { alert('找不到这道题所在的子类'); return; }
+      Grading.cancel();   // 正在批改的那句被换掉了，放弃它
       if (state.drawerOpen) toggleReview();
       state.activeModule = 'big_chain';
       await enterPractice(ci, si);
@@ -5608,6 +5789,7 @@ async function reviewPracticeAgain(key) {
       const data = await API.get(`/api/writing/small/chart_type/${ti}`);
       const ei = (data.examples || []).findIndex(x => x.name === r.example_name);
       if (ei < 0) { alert('找不到这道题'); return; }
+      Grading.cancel();   // 正在批改的那句被换掉了，放弃它
       if (state.drawerOpen) toggleReview();
       state.small.currentTypeData = data;
       await enterSmallPractice(ti, ei);
@@ -5990,18 +6172,27 @@ async function sendPracticeFollowup(sentKey) {
   const input = container.querySelector('input');
   const query = input ? input.value.trim() : '';
   if (!query) return;
-  input.value = '';
 
   const ctx = practiceFollowupCtx[sentKey];
   if (!ctx) return;
+  input.value = '';
 
-  const respDiv = document.getElementById('followupResp_' + sentKey);
-  respDiv.style.display = 'block';
+  const res = practiceFollowupRes[sentKey];
+  const memo = { query, loading: true };
+  if (res) practiceFollowupMemo.set(res, memo);
+  // 等回复期间页面可能重绘过：按 id 重新找框，且只画进仍是这次批改、这次提问的那个框
+  const paint = () => {
+    if (res && (practiceFollowupRes[sentKey] !== res || practiceFollowupMemo.get(res) !== memo)) return;
+    const respDiv = document.getElementById('followupResp_' + sentKey);
+    if (!respDiv) return;
+    respDiv.style.display = 'block';
+    respDiv.innerHTML = practiceFollowupBody(memo);
+  };
 
   await practiceAIProvider(query, ctx, {
-    onLoading: () => { respDiv.innerHTML = '<span class="spinner" style="display:inline-block;width:16px;height:16px;"></span> AI 思考中...'; },
-    onDone: (content) => { respDiv.innerHTML = content ? renderMarkdown(content) : '<span style="color:var(--text3);">无回复</span>'; },
-    onError: (err) => { respDiv.innerHTML = `<span style="color:var(--red);">${err}</span>`; }
+    onLoading: paint,
+    onDone: (content) => { memo.loading = false; memo.content = content; paint(); },
+    onError: (err) => { memo.loading = false; memo.error = err; paint(); }
   });
 }
 
@@ -7215,10 +7406,18 @@ var Tpl = {
       </div>`;
     }
 
-    box.innerHTML = `
-      ${skel}
-      <div class="task-label">把这句写成英文</div>
-      <p class="task-cn">${this.esc(sent.chinese || '（这句没有中文提示，可直接参考范文原句）')}</p>
+    const eyeBtn = `<button type="button" class="tpl-eye-btn${peeked ? ' is-on' : ''}" onclick="Tpl.peekAnswer()">${this.EYE_ICON}${peeked ? '收起答案' : '偷看答案'}</button>`;
+    // 批改过：答案定住成文字，只能「再试一次」清空重写
+    const answer = res ? `
+      <div class="task-input-label">你的翻译</div>
+      <div class="task-answer" id="tplAnswerLocked">${this.esc((res._payload || {}).user_translation || '')}</div>
+      <div class="tpl-answer-foot">
+        <span class="editor-hint">已批改 · 想换个写法就点「再试一次」，会清空重写</span>
+        <div class="tpl-answer-btns">
+          ${eyeBtn}
+          <button type="button" class="submit-btn" id="tplRetryBtn" onclick="Tpl.retrySentence()">再试一次</button>
+        </div>
+      </div>` : `
       <label class="task-input-label" for="tplAnswer">你的翻译</label>
       <textarea class="editor-input" id="tplAnswer" rows="3"
         placeholder="${p.task === 'task1' ? '把上面的句型套进去写…' : '按骨架把这一句写出来…'}"
@@ -7226,11 +7425,17 @@ var Tpl = {
       <div class="tpl-answer-foot">
         <span class="editor-hint">⌘/Ctrl + Enter 提交 · Enter 换行</span>
         <div class="tpl-answer-btns">
-          <button type="button" class="tpl-eye-btn${peeked ? ' is-on' : ''}" onclick="Tpl.peekAnswer()">${this.EYE_ICON}${peeked ? '收起答案' : '偷看答案'}</button>
+          ${eyeBtn}
           <button type="button" class="skip-btn" onclick="Tpl.skipSentence()">跳过</button>
           <button type="button" class="submit-btn" id="tplSubmitBtn" onclick="Tpl.submitSentence()">提交批改</button>
         </div>
-      </div>
+      </div>`;
+
+    box.innerHTML = `
+      ${skel}
+      <div class="task-label">把这句写成英文</div>
+      <p class="task-cn">${this.esc(sent.chinese || '（这句没有中文提示，可直接参考范文原句）')}</p>
+      ${answer}
       ${peeked ? `<div class="tpl-peek">
         <div class="tpl-peek-head">${this.EYE_ICON}<span>偷看的答案（看过会记在这次练习里）</span></div>
         <p class="tpl-peek-text">${this.esc(sent.english || '这句没有范文原句')}</p>
@@ -7238,7 +7443,21 @@ var Tpl = {
 
     const fb = document.getElementById(p.task === 'task1' ? 'tplSmallPracBody' : 'tplBigPracBody')
       .querySelector('#tplFeedback');
-    if (fb) fb.innerHTML = res ? this.resultHtml(res) : '';
+    if (fb) {
+      let html = '';
+      if (res) {
+        // 追问框：和思维链 / 仿写实战同一套，key 只用数字，能直接放进 id 和 onclick
+        const fKey = `tpl_${p.task}_${p.stepIdx}_${p.activeIdx}`;
+        practiceFollowupCtx[fKey] = {
+          target_chinese: sent.chinese || '',
+          user_translation: (res._payload || {}).user_translation || '',
+          ai_feedback_summary: res.feedback_summary || '',
+          grammar_corrections: JSON.stringify(res.grammar_corrections || []),
+        };
+        html = this.resultHtml(res) + practiceFollowupHtml(fKey, res);
+      }
+      fb.innerHTML = html;
+    }
 
     const ta = this.$('tplAnswer');
     if (ta && !res) ta.focus();
@@ -7299,7 +7518,6 @@ var Tpl = {
       </div>
       <div class="tpl-fb-actions">
         ${savedBtn}
-        <button type="button" class="tpl-fb-btn" onclick="Tpl.retrySentence()">改一遍再提交</button>
         <span class="tpl-prac-gap"></span>
         <button type="button" class="tpl-fb-next" onclick="Tpl.nextSentence()">下一句 &rarr;</button>
       </div>
@@ -7339,10 +7557,12 @@ var Tpl = {
       user_translation: answer,
       peeked: !!p.peeked[key],
     };
+    const job = Grading.start(p.task === 'task1' ? 'tplSmallPracticeView' : 'tplBigPracticeView');
+    let failed = false;
     try {
-      const res = await API.post('/api/writing/template/correct', payload);
-      if (this.s.prac !== p || p.token !== token) return;  // 批改期间用户已经切走
-      if (res && res.error) { alert('批改失败：' + res.error); return; }
+      const res = await postGrading('/api/writing/template/correct', payload,
+        { signal: job.signal, onRetry: (n, total) => Grading.retrying(job, n, total) });
+      if (job.signal.aborted || this.s.prac !== p || p.token !== token) return;  // 批改期间用户已经切走
       res._payload = payload;
       res._saved = 'pending';
       p.results[key] = res;
@@ -7350,18 +7570,26 @@ var Tpl = {
       if (p.stepIdx !== fromStep || p.activeIdx !== fromIdx) return;
       this.renderEditor();
     } catch (e) {
-      alert('批改失败：' + e.message);
+      if (e.name === 'AbortError') return;
+      failed = true;
+      Grading.finish(job);
+      alertGradingFailed(e);
     } finally {
       p.busy = false;
+      Grading.finish(job);
       if (btn) { btn.disabled = false; btn.textContent = '提交批改'; }
+      const ta = failed && this.s.prac === p && this.$('tplAnswer');
+      if (ta) ta.focus();
     }
   },
 
-  // 改一遍：清掉本句结果回到可编辑，草稿留着上次写的
+  // 再试一次：清掉本句结果和草稿，回到空白输入框从头写
   retrySentence() {
     const p = this.s.prac;
+    if (p.busy) return;
     const key = this.cellKey(this.curStep().id, p.activeIdx);
     delete p.results[key];
+    delete p.drafts[key];
     this.renderPractice();
   },
 
