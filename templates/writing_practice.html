@@ -19,6 +19,18 @@
       document.documentElement.style.colorScheme = 'light';
     }
   })();
+  // 刷新时要回到原来那页（见 PageRestore）：先把正文藏起来，免得首页闪一下。
+  // 正常由 PageRestore 撤掉；脚本出错卡住时 10 秒后兜底撤掉
+  (function () {
+    try {
+      var nav = performance.getEntriesByType('navigation')[0];
+      if (nav && (nav.type === 'reload' || nav.type === 'back_forward')
+          && sessionStorage.getItem('writing-page-snapshot')) {
+        document.documentElement.classList.add('wp-restoring');
+        setTimeout(function () { document.documentElement.classList.remove('wp-restoring'); }, 10000);
+      }
+    } catch (e) {}
+  })();
 </script>
 <meta charset="UTF-8">
 <script src="/static/auth-fetch.js?v=20260927"></script>
@@ -2348,6 +2360,14 @@ html[data-theme="dark"] body.page-writing-practice .review-overlay .review-overl
 .grading-mask-box .spinner { flex-shrink: 0; border-color: var(--w-line-strong); border-top-color: var(--w-big); }
 .grading-mask-sub { display: block; font-size: var(--w-fs-meta); color: var(--w-ink3); }
 
+/* 刷新后正在回到原来那页：正文先藏起来（布局照算，滚动位置能提前设好），中间给一句提示 */
+html.wp-restoring #app { visibility: hidden; }
+html.wp-restoring .main-panel-wrapper::after {
+  content: '正在回到刚才的位置…';
+  position: fixed; top: 40vh; left: 0; right: 0; text-align: center;
+  font-size: var(--w-fs-ui); color: var(--w-ink3);
+}
+
 /* 批改结果下方的追问 */
 .practice-followup {
   display: flex; align-items: flex-end; gap: 10px; margin-top: 12px;
@@ -3326,6 +3346,7 @@ const Grading = {
 /* ==================== State ==================== */
 let state = {
   activeModule: null,
+  view: 'entryView',      // 当前显示的视图，switchView 维护
   // Big essay
   categories: [],
   currentCat: null,
@@ -3393,22 +3414,27 @@ const ALL_VIEWS = ['entryView','directoryView','learningView','practiceView',
    原来每个返回按钮都写死目的地，所以"从学习页进实战、再返回"会跳回列表，
    老思维链更是从实战直接回到分类网格，跨了两级。
    这里记录真实的访问路径，返回就是回到上一个页面。
-   与浏览器历史一比一挂钩：按钮只调 history.back()，恢复统一在 popstate 里做。 */
+   与浏览器历史一比一挂钩：按钮只调 history.back()，恢复统一在 popstate 里做。
+   每一页登记成路由 [名字, ...参数]（见 NAV_ROUTES）而不是闭包，
+   这样整条路径能存进 sessionStorage，刷新后照着重建（见 PageRestore）。 */
 var Nav = {
-  stack: [],        // 每项 {restore, label}：怎么回到那一页、那一页叫什么
+  stack: [],        // 每项 {route, label}：怎么回到那一页、那一页叫什么
   current: null,
   replaying: false,
+  muted: false,     // 为真时 enter / replace 什么都不记：中间跳转和刷新重放用
 
   // 进入某一页时登记"怎么重进这一页"，并把上一页压栈
   // 同一个视图里换选中项（换话题 / 换图表类型）不该多压一层，
   // 否则「返回」会退到自己这一页，看起来像点了没反应
-  replace(restore, label) {
-    this.current = { restore, label: label || '' };
+  replace(route, label) {
+    if (this.muted) return;
+    this.current = { route, label: label || '' };
     updateBackLabel();
   },
 
-  enter(restore, label) {
-    const entry = { restore, label: label || '' };
+  enter(route, label) {
+    if (this.muted) return;
+    const entry = { route, label: label || '' };
     if (this.replaying) { this.current = entry; return; }
     if (this.current) {
       this.stack.push(this.current);
@@ -3422,7 +3448,7 @@ var Nav = {
     const prev = this.stack.pop();
     if (!prev) return false;
     this.replaying = true;
-    try { prev.restore(); } finally { this.replaying = false; }
+    try { runRoute(prev.route); } finally { this.replaying = false; }
     this.current = prev;
     updateBackLabel();
     return true;
@@ -3434,6 +3460,37 @@ var Nav = {
     return top ? top.label : '';
   }
 };
+
+/* 路由表。view：这一页显示在哪个视图；
+   cold：刚刷新、什么数据都还没加载时也能直接打开（缺的列表自己补）。
+   不带 cold 的页要靠路径上前一页留下的数据，比如模板范文的学习 / 实战要先有题型数据。 */
+const NAV_ROUTES = {
+  enterBigChain:        { view: 'directoryView',        cold: true, run: () => enterBigChain() },
+  selectCategory:       { view: 'directoryView',        cold: true, run: (i) => selectCategory(i) },
+  enterLearning:        { view: 'learningView',         cold: true, run: (c, s) => enterLearning(c, s) },
+  enterPractice:        { view: 'practiceView',         cold: true, run: (c, s) => enterPractice(c, s) },
+  enterSmallFangxie:    { view: 'smallChartTypesView',  cold: true, run: () => enterSmallFangxie() },
+  enterChartType:       { view: 'smallChartTypesView',  cold: true, run: (t) => enterChartType(t) },
+  enterSmallLearning:   { view: 'smallLearnView',       cold: true, run: (t, e) => enterSmallLearning(t, e) },
+  enterSmallPractice:   { view: 'smallPracticeView',    cold: true, run: (t, e) => enterSmallPractice(t, e) },
+  openTplSmallLib:      { view: 'tplSmallLearnView',    cold: true, run: (c, s) => openTplSmallLib(c, s) },
+  tplEnterBig:          { view: 'tplBigTypesView',      cold: true, run: () => Tpl.enterBig() },
+  tplOpenType:          { view: 'tplBigSamplesView',    cold: true, run: (id) => Tpl.openType(id) },
+  tplOpenLearnFor:      { view: 'tplBigLearnView',                  run: (si, vi) => Tpl.openLearnFor(si, vi) },
+  tplOpenPracticeFor:   { view: 'tplBigPracticeView',               run: (si, vi) => Tpl.openPracticeFor(si, vi) },
+  tplEnterSmall:        { view: 'tplSmallChartsView',   cold: true, run: () => Tpl.enterSmall() },
+  tplOpenChart:         { view: 'tplSmallChartsView',   cold: true, run: (id) => Tpl.openChart(id) },
+  tplOpenSection:       { view: 'tplSmallExamplesView',             run: (id) => Tpl.openSection(id) },
+  tplOpenSmallLearn:    { view: 'tplSmallLearnView',                run: (i) => Tpl.openSmallLearn(i) },
+  tplOpenSmallPractice: { view: 'tplSmallPracticeView',             run: (i) => Tpl.openSmallPractice(i) },
+  // 参考资料页的「返回」只是切回来源视图、不重绘，所以来源页也得重放一遍，不算 cold
+  tplOpenRef:           { view: 'tplRefView',                       run: (id, from) => Tpl.openRef(id, from) },
+};
+
+function runRoute(route) {
+  const r = route && NAV_ROUTES[route[0]];
+  return r ? r.run(...route.slice(1)) : undefined;
+}
 
 // 返回按钮：交给浏览器历史，popstate 里统一恢复，这样两边永远一致
 function goBack() {
@@ -3532,6 +3589,7 @@ function paintViewBadge(view) {
 
 function switchView(view) {
   Grading.leave(view);
+  state.view = view;
   ALL_VIEWS.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
   const el = document.getElementById(view);
   if (el) el.style.display = '';
@@ -3711,7 +3769,7 @@ async function renderHome() {
 
 /* ==================== Entry Functions ==================== */
 async function enterBigChain() {
-  Nav.enter(() => enterBigChain(), '分类');
+  Nav.enter(['enterBigChain'], '分类');
   state.activeModule = 'big_chain';
   document.getElementById('pageTitle').textContent = '写作思维链';
   switchView('directoryView');
@@ -3721,7 +3779,7 @@ async function enterBigChain() {
 }
 
 async function enterSmallFangxie() {
-  Nav.enter(() => enterSmallFangxie(), '图表类型');
+  Nav.enter(['enterSmallFangxie'], '图表类型');
   state.activeModule = 'small_fangxie';
   document.getElementById('pageTitle').textContent = '小作文仿写';
   switchView('smallChartTypesView');
@@ -3757,7 +3815,13 @@ function renderChartTypes() {
 
 /* ==================== Small Essay: Example List ==================== */
 async function enterChartType(typeIdx) {
-  Nav.replace(() => enterChartType(typeIdx), '题目列表');
+  Nav.replace(['enterChartType', typeIdx], '题目列表');
+  // 冷启动直接进来时（刷新恢复）左侧类型栏还没数据
+  state.activeModule = 'small_fangxie';
+  if (!state.small.chartTypes.length) {
+    document.getElementById('pageTitle').textContent = '小作文仿写';
+    await loadChartTypes();
+  }
   state.small.currentTypeIdx = typeIdx;
   resetSmallState();
   const data = await API.get(`/api/writing/small/chart_type/${typeIdx}`);
@@ -3843,7 +3907,7 @@ function gotoSmallPractice() {
 }
 
 async function enterSmallLearning(typeIdx, exIdx) {
-  Nav.enter(() => enterSmallLearning(typeIdx, exIdx), '学习');
+  Nav.enter(['enterSmallLearning', typeIdx, exIdx], '学习');
   state.activeModule = 'small_fangxie';
   resetSmallState();
   state.small.currentTypeIdx = typeIdx;
@@ -3860,7 +3924,7 @@ async function enterSmallLearning(typeIdx, exIdx) {
 
 async function enterSmallPractice(typeIdx, exIdx) {
   rememberSmallSpot(typeIdx, exIdx);
-  Nav.enter(() => enterSmallPractice(typeIdx, exIdx), '实战');
+  Nav.enter(['enterSmallPractice', typeIdx, exIdx], '实战');
   state.activeModule = 'small_fangxie';
   resetSmallState();
   state.small.currentTypeIdx = typeIdx;
@@ -4342,22 +4406,24 @@ function smallHintBoxHtml() {
 }
 
 // 标签行的「看句型库」：跳到模板模块里这一段的句型库
-async function openSmallPatternLib() {
+function openSmallPatternLib() {
   const ref = smallTemplateRef();
-  if (!ref) return;
-  if (!Tpl.s.charts || !Tpl.s.charts.length) {
-    try { Tpl.s.charts = (await API.get('/api/writing/template/small')).charts || []; } catch (e) {}
-  }
+  if (ref) openTplSmallLib(ref.chartId, ref.secId);
+}
+
+// 直接打开模板模块某张图表、某一段的句型库。返回栈里只记这一项，
+// 中间几跳不登记，这样点一次「返回」就直接回到来的那页，而不是退三层；
+// 刷新后也能单凭这一项重新打开
+async function openTplSmallLib(chartId, secId) {
   state.activeModule = 'tpl_small';
-  // 先把当前实战页压进返回栈，后面几跳只替换当前项，
-  // 这样点一次「返回」就直接回实战页，而不是退三层
-  Nav.enter(() => Tpl.openSmallLearn(-1), '句型库');
-  Nav.replaying = true;
+  Nav.enter(['openTplSmallLib', chartId, secId], '句型库');
+  const muted = Nav.muted;
+  Nav.muted = true;
   try {
-    await Tpl.openChart(ref.chartId);
-    await Tpl.openSection(ref.secId);
-    Tpl.openSmallLearn(-1);
-  } finally { Nav.replaying = false; }
+    await Tpl.openChart(chartId);
+    await Tpl.openSection(secId);
+    await Tpl.openSmallLearn(-1);
+  } finally { Nav.muted = muted; }
 }
 
 function renderSmallEditor(idx) {
@@ -4576,6 +4642,14 @@ async function backToDirectory() {
   switchView('directoryView');
 }
 
+// 话题目录 / 学习 / 实战可能是冷启动直接进来的（刷新恢复、首页「继续上次」），
+// 这时话题列表还没加载，模块标记和页标题也没人设
+async function ensureBigChain() {
+  state.activeModule = 'big_chain';
+  document.getElementById('pageTitle').textContent = '写作思维链';
+  if (!state.categories.length) await loadCategories();
+}
+
 async function loadCategories() {
   state.categories = await API.get('/api/writing/categories');
   try { state.progressData = await API.get('/api/writing/practice_progress'); } catch(e) { state.progressData = {}; }
@@ -4605,7 +4679,8 @@ function renderCategories() {
 function showCategories() { renderCategories(); }
 
 async function selectCategory(idx) {
-  Nav.replace(() => selectCategory(idx), '话题目录');
+  Nav.replace(['selectCategory', idx], '话题目录');
+  await ensureBigChain();
   switchView('directoryView');
   state.currentCat = idx;
   const cat = state.categories[idx];
@@ -4658,7 +4733,8 @@ function gotoPractice() {
 }
 
 async function enterLearning(catIdx, subIdx) {
-  Nav.enter(() => enterLearning(catIdx, subIdx), '学习');
+  Nav.enter(['enterLearning', catIdx, subIdx], '学习');
+  await ensureBigChain();
   state.currentCat = catIdx; state.currentSub = subIdx;
   const data = await API.get(`/api/writing/subcategory/${catIdx}/${subIdx}`);
   state.subData = data;
@@ -4823,8 +4899,9 @@ function legacyCopy(text) {
 function copyText(text, e) { e.stopPropagation(); writeClipboard(text); const el = e.target; el.textContent = '✓'; setTimeout(() => el.innerHTML = '&#x2398;', 1000); }
 
 async function enterPractice(catIdx, subIdx) {
+  Nav.enter(['enterPractice', catIdx, subIdx], '实战');
+  await ensureBigChain();
   rememberBigSpot(catIdx, subIdx);
-  Nav.enter(() => enterPractice(catIdx, subIdx), '实战');
   state.currentCat = catIdx; state.currentSub = subIdx;
   state.currentExIdx = 0; state.activeSentIdx = -1; state.sentResults = {};
   const data = await API.get(`/api/writing/subcategory/${catIdx}/${subIdx}`);
@@ -4848,6 +4925,8 @@ async function enterPractice(catIdx, subIdx) {
 }
 
 async function quickPractice(exampleIdx, sentenceIdx) {
+  // 和从列表进实战一样登记一页：返回回到学习页，刷新后也知道人在实战页
+  Nav.enter(['enterPractice', state.currentCat, state.currentSub], '实战');
   rememberBigSpot(state.currentCat, state.currentSub);
   state.currentExIdx = exampleIdx;
   state.activeSentIdx = sentenceIdx;
@@ -5108,7 +5187,7 @@ function practiceFollowupHtml(sentKey, res) {
   practiceFollowupRes[sentKey] = res || null;
   return `
       <div class="practice-followup" id="followup_${sentKey}">
-        <textarea rows="1" placeholder="对批改结果有疑问？追问 AI…（⌘/Ctrl + Enter 发送）" onkeydown="handleFollowupKey(event, '${sentKey}')" oninput="fitFollowupInput(this)"></textarea>
+        <textarea id="followupInput_${sentKey}" rows="1" placeholder="对批改结果有疑问？追问 AI…（⌘/Ctrl + Enter 发送）" onkeydown="handleFollowupKey(event, '${sentKey}')" oninput="fitFollowupInput(this)"></textarea>
         <button class="followup-send" onclick="sendPracticeFollowup('${sentKey}')">发送</button>
       </div>
       <div class="practice-followup-response markdown-body" id="followupResp_${sentKey}" style="display:${memo ? 'block' : 'none'};">${memo ? practiceFollowupBody(memo) : ''}</div>`;
@@ -6801,10 +6880,15 @@ var Tpl = {
 
   /* ==================== 大作文：题型列表 ==================== */
   async enterBig() {
-    Nav.enter(() => Tpl.enterBig(), '题型');
+    Nav.enter(['tplEnterBig'], '题型');
     state.activeModule = 'tpl_big';
     document.getElementById('pageTitle').textContent = '大作文 · 模板写作';
     switchView('tplBigTypesView');
+    await this.loadBigTypes();
+  },
+
+  // 题型列表 + 参考资料，画进题型页。范文页刷新后直接打开时也靠它补数据
+  async loadBigTypes() {
     document.getElementById('tplBigTypeGrid').innerHTML = '<div class="tpl-hint">加载中…</div>';
     const data = await API.get('/api/writing/template/big');
     if (!data || data.error) { this.fail('tplBigTypeGrid', data); return; }
@@ -6837,7 +6921,10 @@ var Tpl = {
 
   /* ==================== 大作文：学习（模板 + 范文对照） ==================== */
   async openType(typeId) {
-    Nav.enter(() => Tpl.openType(typeId), '范文列表');
+    Nav.enter(['tplOpenType', typeId], '范文列表');
+    // 刷新后直接进来时还没有题型列表，范文页的进度条要用它
+    state.activeModule = 'tpl_big';
+    if (!this.s.bigTypes.length) await this.loadBigTypes();
     switchView('tplBigSamplesView');
     document.getElementById('tplBigSamplesBody').innerHTML = '<div class="tpl-hint">加载中…</div>';
     const data = await API.get(`/api/writing/template/big/${typeId}`);
@@ -6959,14 +7046,14 @@ var Tpl = {
   },
 
   openLearnFor(si, vi) {
-    Nav.enter(() => Tpl.openLearnFor(si, vi), '模板与范文');
+    Nav.enter(['tplOpenLearnFor', si, vi], '模板与范文');
     this.s.sampleIdx = Number(si); this.s.versionIdx = Number(vi);
     this.syncVariantToSample();
     switchView('tplBigLearnView');
     this.renderBigLearn();
   },
   openPracticeFor(si, vi) {
-    Nav.enter(() => Tpl.openPracticeFor(si, vi), '实战');
+    Nav.enter(['tplOpenPracticeFor', si, vi], '实战');
     this.s.sampleIdx = Number(si); this.s.versionIdx = Number(vi);
     this.syncVariantToSample();
     this.startBigPractice();
@@ -7643,23 +7730,29 @@ var Tpl = {
 
   /* ==================== 小作文 ==================== */
   async enterSmall() {
-    Nav.enter(() => Tpl.enterSmall(), '图表类型');
+    Nav.enter(['tplEnterSmall'], '图表类型');
     state.activeModule = 'tpl_small';
     document.getElementById('pageTitle').textContent = '小作文 · 模板写作';
     switchView('tplSmallChartsView');
-    document.getElementById('tplSmallChartGrid').innerHTML = '<div class="tpl-hint">加载中…</div>';
-    const data = await API.get('/api/writing/template/small');
-    if (!data || data.error) { this.fail('tplSmallChartGrid', data); return; }
-    this.s.charts = data.charts || [];
-    await this.loadProgress();
-    const icons = { data: '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="3" y="9" width="3.4" height="8" rx="1" stroke="currentColor" stroke-width="1.6"/><rect x="8.3" y="4.5" width="3.4" height="12.5" rx="1" stroke="currentColor" stroke-width="1.6"/><rect x="13.6" y="11.5" width="3.4" height="5.5" rx="1" stroke="currentColor" stroke-width="1.6"/></svg>', process: '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="2" y="7.2" width="5.6" height="5.6" rx="1.4" stroke="currentColor" stroke-width="1.6"/><rect x="12.4" y="7.2" width="5.6" height="5.6" rx="1.4" stroke="currentColor" stroke-width="1.6"/><path d="M7.6 10h4.8M11 8.4 12.6 10 11 11.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>', map: '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M2.8 5 7.5 3.4l5 1.6 4.7-1.6v12L12.5 17l-5-1.6L2.8 17V5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7.5 3.4v12M12.5 5v12" stroke="currentColor" stroke-width="1.4"/></svg>' };
-    this._chartIcons = icons;
-    this.renderSmallRail();
+    if (!(await this.loadSmallCharts())) return;
     // 类型栏常驻，进来就默认选中一个类型，右栏不留空屏
     const first = this.s.chartData && this.s.chartData.id
       ? this.s.chartData.id
       : (this.s.charts[0] && this.s.charts[0].id);
     if (first) await this.openChart(first);
+  },
+
+  // 左侧图表类型栏的数据和图标。段落页刷新后直接打开时也靠它补数据
+  async loadSmallCharts() {
+    document.getElementById('tplSmallChartGrid').innerHTML = '<div class="tpl-hint">加载中…</div>';
+    const data = await API.get('/api/writing/template/small');
+    if (!data || data.error) { this.fail('tplSmallChartGrid', data); return false; }
+    this.s.charts = data.charts || [];
+    await this.loadProgress();
+    const icons = { data: '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="3" y="9" width="3.4" height="8" rx="1" stroke="currentColor" stroke-width="1.6"/><rect x="8.3" y="4.5" width="3.4" height="12.5" rx="1" stroke="currentColor" stroke-width="1.6"/><rect x="13.6" y="11.5" width="3.4" height="5.5" rx="1" stroke="currentColor" stroke-width="1.6"/></svg>', process: '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="2" y="7.2" width="5.6" height="5.6" rx="1.4" stroke="currentColor" stroke-width="1.6"/><rect x="12.4" y="7.2" width="5.6" height="5.6" rx="1.4" stroke="currentColor" stroke-width="1.6"/><path d="M7.6 10h4.8M11 8.4 12.6 10 11 11.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>', map: '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M2.8 5 7.5 3.4l5 1.6 4.7-1.6v12L12.5 17l-5-1.6L2.8 17V5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7.5 3.4v12M12.5 5v12" stroke="currentColor" stroke-width="1.4"/></svg>' };
+    this._chartIcons = icons;
+    this.renderSmallRail();
+    return true;
   },
 
   // 左侧图表类型栏，和小作文仿写共用一套条目样式
@@ -7684,7 +7777,13 @@ var Tpl = {
   },
 
   async openChart(chartId) {
-    Nav.replace(() => Tpl.openChart(chartId), '段落');
+    Nav.replace(['tplOpenChart', chartId], '段落');
+    // 刷新后直接进来时还没有图表栏，段落卡片的统计也要用它
+    state.activeModule = 'tpl_small';
+    if (!this.s.charts.length) {
+      document.getElementById('pageTitle').textContent = '小作文 · 模板写作';
+      if (!(await this.loadSmallCharts())) return;
+    }
     switchView('tplSmallChartsView');
     document.getElementById('tplSmallSecGrid').innerHTML = '<div class="tpl-hint">加载中…</div>';
     const data = await API.get(`/api/writing/template/small/${chartId}`);
@@ -7725,7 +7824,7 @@ var Tpl = {
   // 某个段落下的例题列表：每道例题一张卡，各自独立记进度
   async openSection(sectionId) {
     if (!this.s.chartData) { this.enterSmall(); return; }
-    Nav.enter(() => Tpl.openSection(sectionId), '例题列表');
+    Nav.enter(['tplOpenSection', sectionId], '例题列表');
     this.s.sectionId = sectionId;
     const c = this.s.chartData;
     switchView('tplSmallExamplesView');
@@ -7874,7 +7973,7 @@ var Tpl = {
 
   // exampleIdx 传 -1 表示只看句型库，不挂例题
   async openSmallLearn(exampleIdx) {
-    Nav.enter(() => Tpl.openSmallLearn(exampleIdx), Number(exampleIdx) < 0 ? '句型库' : '学习');
+    Nav.enter(['tplOpenSmallLearn', exampleIdx], Number(exampleIdx) < 0 ? '句型库' : '学习');
     const c = this.s.chartData, sec = this.findSection(this.s.sectionId);
     this.s.exampleIdx = Number(exampleIdx);
     const ex = this.s.examples[this.s.exampleIdx];
@@ -8058,7 +8157,7 @@ var Tpl = {
         (x.sections || []).some(es => es.id === sec.id && (es.sentences || []).length));
     }
     if (idx < 0 || !this.s.examples[idx]) { alert('这一段暂时没有可练的例题'); return; }
-    Nav.enter(() => Tpl.openSmallPractice(idx), '实战');
+    Nav.enter(['tplOpenSmallPractice', idx], '实战');
     this.s.exampleIdx = idx;
     switchView('tplSmallPracticeView');
     this.buildSmallPractice();
@@ -8192,7 +8291,7 @@ var Tpl = {
 
   /* ==================== 参考资料 ==================== */
   async openRef(refId, backView) {
-    Nav.enter(() => Tpl.openRef(refId, backView), '参考资料');
+    Nav.enter(['tplOpenRef', refId, backView], '参考资料');
     this.s.refFrom = backView;
     switchView('tplRefView');
     document.getElementById('tplRefBody').innerHTML = '<div class="tpl-hint">加载中…</div>';
@@ -8217,6 +8316,167 @@ var Tpl = {
   /* ==================== 复习中心 ==================== */
 };
 
+/* ==================== 刷新后回到原处 ====================
+   刷新（或从别的页面后退回来）时回到刷新前的那一页、那一句，
+   已经出来的批改结果和输入框里还没提交的内容也一起带回来。
+   离开页面时拍一张快照存进 sessionStorage：只属于这个标签页，关掉就没了；
+   从链接正常点进来不恢复，照旧从首页开始。 */
+const SNAPSHOT_KEY = 'writing-page-snapshot';   // <head> 里提前遮住页面的脚本也认这个名字
+
+var PageRestore = {
+  restoring: null,   // 正在恢复的快照；恢复到一半又刷新，就把它原样存回去
+
+  save() {
+    try {
+      if (this.restoring) { sessionStorage.setItem(SNAPSHOT_KEY, JSON.stringify(this.restoring)); return; }
+      const view = state.view;
+      if (!Nav.current || !view || view === 'entryView') { sessionStorage.removeItem(SNAPSHOT_KEY); return; }
+      const scroller = document.querySelector('.main-panel-wrapper');
+      sessionStorage.setItem(SNAPSHOT_KEY, JSON.stringify({
+        view,
+        stack: Nav.stack.map(e => [e.route, e.label]),
+        current: [Nav.current.route, Nav.current.label],
+        pos: this.capturePos(view),
+        drafts: this.captureDrafts(view),
+        scroll: [window.scrollY, scroller ? scroller.scrollTop : 0],
+      }));
+    } catch (e) { /* 隐私模式或超出配额：这次就不恢复了 */ }
+  },
+
+  // 练习页停在哪一段、哪一句，以及已经出来的批改结果
+  capturePos(view) {
+    if (view === 'practiceView') {
+      return { exIdx: state.currentExIdx, sentIdx: state.activeSentIdx, results: state.sentResults };
+    }
+    if (view === 'smallPracticeView') {
+      return { sentIdx: state.small.activeSentIdx, results: state.small.sentResults };
+    }
+    if (view === 'tplBigPracticeView' || view === 'tplSmallPracticeView') {
+      const p = Tpl.s.prac;
+      return p && { typeId: p.typeId, questionId: p.questionId, stepIdx: p.stepIdx, activeIdx: p.activeIdx,
+                    results: p.results, drafts: p.drafts, peeked: p.peeked, patternIdx: p.patternIdx };
+    }
+    if (view === 'tplBigLearnView') return { variantIdx: Tpl.s.variantIdx };
+    return null;
+  },
+
+  // 当前视图里还没提交的输入（作答框、追问框），按 id 记
+  captureDrafts(view) {
+    const out = {};
+    const root = document.getElementById(view);
+    if (root) root.querySelectorAll('textarea[id]').forEach(el => { if (el.value.trim()) out[el.id] = el.value; });
+    return out;
+  },
+
+  // 页面初始化时调用：有快照就恢复并返回 true（恢复失败会退回首页，同样算处理过），
+  // 没有可恢复的返回 false
+  async run() {
+    let snap = null;
+    try {
+      const nav = performance.getEntriesByType('navigation')[0];
+      if (nav && (nav.type === 'reload' || nav.type === 'back_forward')) {
+        snap = JSON.parse(sessionStorage.getItem(SNAPSHOT_KEY) || 'null');
+      }
+      sessionStorage.removeItem(SNAPSHOT_KEY);
+    } catch (e) { snap = null; }
+    if (!snap || !snap.current || !NAV_ROUTES[(snap.current[0] || [])[0]]) { this.unveil(); return false; }
+
+    this.restoring = snap;
+    const chain = [...(snap.stack || []), snap.current].map(e => e[0]);
+    const viewOf = route => (NAV_ROUTES[route[0]] || {}).view;
+    // 停在哪一站：一般就是路径最后一站；点面包屑退回上一级时不登记新页，
+    // 这时取路径上最后一个显示在那个视图的站
+    let target = chain.length - 1;
+    if (viewOf(chain[target]) !== snap.view) {
+      for (let i = chain.length - 1; i >= 0; i--) {
+        if (viewOf(chain[i]) === snap.view) { target = i; break; }
+      }
+    }
+    // 从目标往前找最近一个能冷启动的站，从那里按原顺序重放到目标；
+    // 重放期间不登记导航，结束后把返回栈原样装回去（浏览器历史在刷新后还在，两边仍然对得上）
+    let start = 0;
+    for (let i = target; i >= 0; i--) {
+      if ((NAV_ROUTES[chain[i][0]] || {}).cold) { start = i; break; }
+    }
+    Nav.muted = true;
+    try {
+      for (let i = start; i <= target; i++) await runRoute(chain[i]);
+      Nav.muted = false;
+      Nav.stack = (snap.stack || []).map(([route, label]) => ({ route, label }));
+      Nav.current = { route: snap.current[0], label: snap.current[1] };
+      updateBackLabel();
+      if (state.view === snap.view) {
+        this.applyPos(snap.view, snap.pos);
+        this.applyDrafts(snap.view, snap.drafts);
+        // 内容已经画好（正文只是隐藏，布局照算），直接设滚动位置，揭开时就在原处
+        const [y, inner] = snap.scroll || [];
+        const scroller = document.querySelector('.main-panel-wrapper');
+        window.scrollTo(0, y || 0);
+        if (scroller) scroller.scrollTop = inner || 0;
+      }
+    } catch (e) {
+      // 语料改过、接口挂了：退回首页，别停在半截页面上
+      Nav.muted = false;
+      backToEntry();
+    } finally {
+      this.restoring = null;
+      this.unveil();
+    }
+    return true;
+  },
+
+  applyPos(view, pos) {
+    if (!pos) return;
+    if (view === 'practiceView') {
+      const ex = state.subData && state.subData.examples[pos.exIdx];
+      if (!ex) return;
+      state.currentExIdx = pos.exIdx;
+      state.sentResults = pos.results || {};
+      state.activeSentIdx = ex.sentences[pos.sentIdx] ? pos.sentIdx : -1;
+      renderPractice();
+    } else if (view === 'smallPracticeView') {
+      state.small.sentResults = pos.results || {};
+      // 越界的下标会被渲染函数拉回第一句没练的
+      state.small.activeSentIdx = Number.isInteger(pos.sentIdx) ? pos.sentIdx : -1;
+      renderSmallPracticeContent();
+      updateSmallProgress();
+    } else if (view === 'tplBigPracticeView' || view === 'tplSmallPracticeView') {
+      const p = Tpl.s.prac;
+      const step = p && p.typeId === pos.typeId && p.questionId === pos.questionId && p.steps[pos.stepIdx];
+      if (!step) return;
+      Object.assign(p, {
+        stepIdx: pos.stepIdx,
+        activeIdx: step.sentences[pos.activeIdx] ? pos.activeIdx : 0,
+        results: pos.results || {}, drafts: pos.drafts || {}, peeked: pos.peeked || {},
+      });
+      if (pos.patternIdx) p.patternIdx = pos.patternIdx;
+      Tpl.renderPractice();
+    } else if (view === 'tplBigLearnView' && Tpl.s.typeData && (Tpl.s.typeData.variants || [])[pos.variantIdx]) {
+      Tpl.setVariant(pos.variantIdx);
+    }
+  },
+
+  applyDrafts(view, drafts) {
+    const root = document.getElementById(view);
+    if (!root || !drafts) return;
+    Object.keys(drafts).forEach(id => {
+      const el = root.querySelector('#' + CSS.escape(id));
+      if (!el || el.tagName !== 'TEXTAREA' || el.value) return;
+      el.value = drafts[id];
+      // 追问框靠 input 事件撑高，模板实战靠它记草稿
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+  },
+
+  unveil() { document.documentElement.classList.remove('wp-restoring'); },
+};
+
+window.addEventListener('pagehide', () => PageRestore.save());
+// 手机上切到后台的页面可能被直接回收、等不到 pagehide，切走时也存一次
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') PageRestore.save();
+});
+
 (async function init() {
   const tk = localStorage.getItem('authToken');
   if (!tk) { window.location.href = '/login'; return; }
@@ -8233,7 +8493,7 @@ var Tpl = {
   Highlights.init();
   Notepad.init();
   Tpl.loadProgress();
-  renderHome();
+  if (!(await PageRestore.run())) renderHome();
 })();
 </script>
 </body>
