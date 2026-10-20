@@ -3,9 +3,12 @@ import json
 import re
 import logging
 import requests
+import threading
+import time
 import uuid
 from datetime import datetime
 from flask import Blueprint, request, jsonify, send_file, send_from_directory
+from utils.json_store import load_json, save_json_atomic
 from core import (
     WRITING_CORRECTION_DIR, WRITING_DATA_DIR, WRITING_MD_FILE,
     WRITING_SMALL_MD_FILE, WRITING_IMAGES_DIR, WRITING_CHAT_DIR, WRITING_TEMPLATE_FILE,
@@ -1111,6 +1114,98 @@ def writing_notebook_delete():
     return jsonify({'success': True})
 
 
+# ===================== 实战追问记录 =====================
+# 批改结果下方「追问 AI」的问答，按句子存，改一遍、再试一次、隔天回来都还在。
+# 数据结构：{ "<句子键>": [ {id, question, answer, created_at, attempt}, ... ] }，按时间先后。
+# created_at 存毫秒时间戳：服务器和用户常不在一个时区，交给浏览器按本地时间显示。
+# 句子键由前端按模块拼好（思维链 big|话题|子类|中文 之类），后端只当不透明字符串。
+# attempt 是提问时那次作答：{answer, score, graded_at(毫秒)}，前端按它把记录分段。
+# 每次追问仍是单次调用（见 writing_ai_chat_practice），这里只负责记下来和取回。
+
+FOLLOWUP_KEY_MAX = 300          # 句子键长度上限
+FOLLOWUP_MAX_PER_KEY = 50       # 每句最多留 50 条，多了丢最早的
+FOLLOWUP_QUESTION_MAX = 4000
+_followups_lock = threading.Lock()   # 两条追问同时答完时，读-改-写不能互相覆盖
+
+
+def _followups_path(username):
+    return os.path.join(WRITING_DATA_DIR, f'{username}_followups.json')
+
+
+def _followup_key_arg(raw):
+    key = (raw or '').strip()
+    return key if key and len(key) <= FOLLOWUP_KEY_MAX else None
+
+
+def _clean_followup_attempt(raw):
+    if not isinstance(raw, dict):
+        return {}
+    attempt = {
+        'answer': str(raw.get('answer') or '')[:2000],
+        'score': str(raw.get('score') if raw.get('score') is not None else '')[:10],
+    }
+    graded_at = raw.get('graded_at')
+    if isinstance(graded_at, (int, float)) and not isinstance(graded_at, bool):
+        attempt['graded_at'] = int(graded_at)
+    return attempt
+
+
+def _append_followup(username, key, question, answer, attempt):
+    item = {
+        'id': str(uuid.uuid4()),
+        'question': question[:FOLLOWUP_QUESTION_MAX],
+        'answer': answer,
+        'created_at': int(time.time() * 1000),
+        'attempt': attempt,
+    }
+    path = _followups_path(username)
+    with _followups_lock:
+        data = load_json(path, {})
+        if not isinstance(data, dict):
+            data = {}
+        items = data.get(key) if isinstance(data.get(key), list) else []
+        items.append(item)
+        data[key] = items[-FOLLOWUP_MAX_PER_KEY:]
+        save_json_atomic(path, data)
+    return item
+
+
+@writing_bp.route('/api/writing/followups', methods=['GET'])
+def writing_followups_get():
+    username = _highlights_user()
+    if not username:
+        return jsonify({'error': '未登录'}), 401
+    key = _followup_key_arg(request.args.get('key'))
+    if not key:
+        return jsonify({'error': '参数错误'}), 400
+    data = load_json(_followups_path(username), {})
+    items = data.get(key) if isinstance(data, dict) else None
+    return jsonify({'items': items if isinstance(items, list) else []})
+
+
+@writing_bp.route('/api/writing/followups/<fid>', methods=['DELETE'])
+def writing_followups_delete(fid):
+    username = _highlights_user()
+    if not username:
+        return jsonify({'error': '未登录'}), 401
+    key = _followup_key_arg(request.args.get('key'))
+    if not key:
+        return jsonify({'error': '参数错误'}), 400
+    path = _followups_path(username)
+    with _followups_lock:
+        data = load_json(path, {})
+        items = data.get(key) if isinstance(data, dict) else None
+        if isinstance(items, list):
+            kept = [it for it in items if not (isinstance(it, dict) and it.get('id') == fid)]
+            if len(kept) != len(items):
+                if kept:
+                    data[key] = kept
+                else:
+                    del data[key]
+                save_json_atomic(path, data)
+    return jsonify({'success': True})
+
+
 @writing_bp.route('/api/writing/save_practice', methods=['POST'])
 def writing_save_practice():
     token = request.headers.get('Authorization', '').replace('Bearer ', '')
@@ -1389,11 +1484,22 @@ def writing_ai_chat_practice():
 
     try:
         content = _call_ai_chat(messages, cfg)
-        return jsonify({'content': content})
     except requests.exceptions.Timeout:
         return jsonify({'error': 'AI 服务超时，请重试'}), 504
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+    # 带了句子键就把这一问一答记进追问记录；记失败不影响把回复交给用户
+    item = None
+    key = _followup_key_arg(data.get('followup_key'))
+    username = _highlights_user() if key else None
+    if username:
+        try:
+            item = _append_followup(username, key, user_query.strip(), content,
+                                    _clean_followup_attempt(data.get('attempt')))
+        except OSError:
+            logging.exception('追问记录保存失败')
+    return jsonify({'content': content, 'item': item})
 
 
 @writing_bp.route('/api/writing/chat_history/save', methods=['POST'])

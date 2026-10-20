@@ -173,8 +173,17 @@ class GradingWiringTest(unittest.TestCase):
         tpl = self.html[start:]
         self.assertIn('id="tplAnswerLocked"', tpl)
         self.assertIn('onclick="Tpl.retrySentence()">再试一次</button>', tpl)
-        self.assertIn('practiceFollowupHtml(fKey, res)', tpl)
+        self.assertIn('practiceFollowupHtml(fKey)', tpl)
         self.assertNotIn('改一遍再提交', tpl)
+
+    def test_followups_are_stored_per_sentence_on_all_three_pages(self):
+        # 三个实战页都把句子键和这次作答交给追问，记录才能按句子存、按作答分段
+        for module in ('big', 'small', 'tpl'):
+            with self.subTest(module=module):
+                self.assertIn(f"store_key: followupStoreKey('{module}'", self.html)
+        self.assertEqual(self.html.count('attempt: followupAttempt(res'), 3)
+        # 批改时间是分段的依据，三处提交批改都要记
+        self.assertEqual(self.html.count('_gradedAt = Date.now()'), 3)
 
     def test_locked_answers_are_escaped(self):
         self.assertNotIn('${res._userInput || \'\'}</div>', self.html)

@@ -1009,7 +1009,7 @@ body.page-writing-practice textarea.tpl-textarea { font-family: var(--w-en); }
 .sp-fb .saved-badge,
 .sp-fb .save-skipped { grid-column: 1 / -1; }
 .sp-fb .fb-section { margin: 0; }
-.sp-fb .practice-followup { margin-top: 12px; }
+.sp-fb .fu-card { margin-top: 12px; }
 
 /* 页头右侧「学习 / 实战」切换（设计稿 BigLearn / BigPractice） */
 .seg-switch {
@@ -2368,11 +2368,89 @@ html.wp-restoring .main-panel-wrapper::after {
   font-size: var(--w-fs-ui); color: var(--w-ink3);
 }
 
-/* 批改结果下方的追问 */
-.practice-followup {
-  display: flex; align-items: flex-end; gap: 10px; margin-top: 12px;
-  padding: 12px 14px 12px 20px; background: var(--w-surface);
+/* 批改结果下方的追问：一张卡片，上面是这句的追问记录，下面是输入框 */
+.fu-card {
+  margin-top: 12px; padding: 18px 24px 22px; background: var(--w-surface);
   border: 1px solid var(--w-line); border-radius: var(--w-r-card);
+}
+.fu-thread:empty { display: none; }
+.fu-card.has-items .fu-compose { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--w-line); }
+.fu-hint { margin: 8px 0 0; font-size: var(--w-fs-meta); line-height: 1.6; color: var(--w-ink2); }
+.fu-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.fu-title { margin: 0; font-size: var(--w-fs-ui); font-weight: 600; color: var(--w-ink); }
+.fu-count { font-size: var(--w-fs-meta); color: var(--w-ink2); }
+.fu-grow { flex-grow: 1; }
+.fu-link {
+  height: 32px; padding: 0 10px; border: none; background: transparent; border-radius: var(--w-r-sm);
+  font-size: var(--w-fs-meta); color: var(--w-ink2); white-space: nowrap;
+}
+.fu-head .fu-link { margin-right: -10px; }
+.fu-link:hover { color: var(--w-big); }
+.fu-more {
+  width: 100%; height: 40px; margin-bottom: 16px; border: 1px dashed var(--w-line-strong);
+  border-radius: var(--w-r-card); background: var(--w-paper); font-size: var(--w-fs-meta); color: var(--w-big);
+}
+.fu-more:hover { border-color: var(--w-big-line); }
+/* 按作答分段：段首写那次的时间、分数和答案 */
+.fu-attempt {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 4px;
+  font-size: var(--w-fs-meta); color: var(--w-ink2); white-space: nowrap;
+}
+.fu-score { font-weight: 600; }
+.fu-score.high { color: var(--w-ok); }
+.fu-score.mid { color: var(--w-warn); }
+.fu-score.low { color: var(--w-err); }
+.fu-chip {
+  font-size: 12px; line-height: 20px; font-weight: 600; color: var(--w-big);
+  background: var(--w-big-soft); border-radius: 4px; padding: 0 7px;
+}
+.fu-rule { flex-grow: 1; height: 1px; background: var(--w-line); }
+.fu-attempt-answer {
+  margin: 0 0 14px; font-family: var(--w-en); font-size: 14px; line-height: 1.6; color: var(--w-ink2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.fu-item { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+.fu-thread > .fu-item:last-child { margin-bottom: 4px; }
+.fu-q { display: flex; align-items: flex-start; gap: 10px; }
+.fu-q-tag {
+  flex-shrink: 0; margin-top: 3px; font-size: 12px; line-height: 20px; font-weight: 600;
+  color: var(--w-big); background: var(--w-big-soft); border-radius: 4px; padding: 0 6px;
+}
+.fu-q-text {
+  flex-grow: 1; min-width: 0; margin: 0; font-size: var(--w-fs-ui); line-height: 1.75; font-weight: 500;
+  color: var(--w-ink); white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.fu-time { flex-shrink: 0; font-size: var(--w-fs-meta); line-height: 26px; color: var(--w-ink2); }
+.fu-del {
+  flex-shrink: 0; width: 32px; height: 32px; margin: -3px -8px 0 -4px; display: inline-flex;
+  align-items: center; justify-content: center; border: none; background: transparent;
+  color: var(--w-ink3); border-radius: var(--w-r-sm);
+}
+.fu-del:hover { color: var(--w-err); background: var(--w-err-soft); }
+.fu-a { margin-left: 34px; padding: 14px 18px; background: var(--w-sunken); border-radius: var(--w-r-card); }
+.fu-a.markdown-body p { margin: 0 0 6px; }
+.fu-a.markdown-body > :last-child { margin-bottom: 0; }
+.fu-a.markdown-body code { background: var(--w-surface); }
+.fu-a.is-pending { display: flex; align-items: center; gap: 10px; color: var(--w-ink2); font-size: var(--w-fs-ui); }
+.fu-a.is-pending .spinner { width: 16px; height: 16px; flex-shrink: 0; border-color: var(--w-line-strong); border-top-color: var(--w-big); }
+.fu-a.is-error {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  background: var(--w-err-soft); border: 1px solid var(--w-err-line);
+}
+.fu-err-text { flex: 1 1 220px; min-width: 0; font-size: var(--w-fs-ui); line-height: 1.7; color: var(--w-err); }
+.fu-retry {
+  height: 34px; padding: 0 16px; border-radius: var(--w-r-sm); border: 1px solid var(--w-big-line);
+  background: var(--w-surface); font-size: var(--w-fs-ui); color: var(--w-big); white-space: nowrap;
+}
+@media (max-width: 600px) {
+  .fu-card { padding: 14px 16px 16px; }
+  .fu-a { margin-left: 0; }
+}
+
+.practice-followup {
+  display: flex; align-items: flex-end; gap: 10px;
+  padding: 12px 14px 12px 20px; background: var(--w-surface);
+  border: 1px solid var(--w-line-strong); border-radius: var(--w-r-card);
 }
 /* 多行输入：一行高起步（和发送按钮对齐），随内容长高，最多约 8 行 */
 .practice-followup textarea {
@@ -2387,16 +2465,6 @@ html.wp-restoring .main-panel-wrapper::after {
   font-size: var(--w-fs-ui); color: var(--w-ink2); flex-shrink: 0;
 }
 .practice-followup .followup-send:hover { border-color: var(--w-big-line); color: var(--w-big); }
-.practice-followup-response {
-  margin-top: 10px; padding: 16px 20px; background: var(--w-sunken);
-  border-radius: var(--w-r-card); font-size: var(--w-fs-ui); line-height: 1.85; color: var(--w-ink);
-}
-.practice-followup-response .spinner { border-color: var(--w-line-strong); border-top-color: var(--w-big); vertical-align: -3px; }
-.practice-followup-response h3, .practice-followup-response h4 { font-size: var(--w-fs-ui); font-weight: 700; margin: 8px 0 4px; }
-.practice-followup-response p { margin: 0 0 7px; }
-.practice-followup-response code {
-  font-family: var(--w-en); background: var(--w-surface); border-radius: 5px; padding: 1px 5px;
-}
 
 /* ==================== 学习页选词高亮 ==================== */
 .sl-sent[draggable="true"] { cursor: grab; }
@@ -4510,7 +4578,11 @@ function renderSmallEditor(idx) {
   else reviewPrompt = `<div class="save-review-prompt"><span class="prompt-text">是否收录到复习中心？</span><button class="save-review-btn yes" onclick="smallSaveToReview(${idx})">收录</button><button class="save-review-btn no" onclick="smallSkipSaveToReview(${idx})">不收录</button></div>`;
 
   const fKey = `small_${idx}`;
-  practiceFollowupCtx[fKey] = { target_chinese: s.translation, user_translation: res._userInput || '', ai_feedback_summary: res.feedback_summary || '', grammar_corrections: JSON.stringify(res.grammar_corrections || []) };
+  practiceFollowupCtx[fKey] = {
+    target_chinese: s.translation, user_translation: res._userInput || '', ai_feedback_summary: res.feedback_summary || '', grammar_corrections: JSON.stringify(res.grammar_corrections || []),
+    store_key: followupStoreKey('small', data.chart_type, data.name, s.translation),
+    attempt: followupAttempt(res, res._userInput),
+  };
 
   panel.innerHTML = taskCard(`<div class="task-answer">${escHtml(res._userInput)}</div>`);
   fbBox.innerHTML = fbShell(subLabel, res.score,
@@ -4563,6 +4635,7 @@ async function submitSmallTranslation() {
     if (job.signal.aborted || state.small.exampleData !== data || state.small.activeSentIdx !== sentIdx) return;
     result._userInput = text;
     result._savedToReview = 'pending';
+    result._gradedAt = Date.now();
     state.small.sentResults[sentIdx] = result;
     activateSmallSentence(sentIdx);
   } catch (err) {
@@ -5173,30 +5246,243 @@ function renderFeedbackCard(fb, opts) {
         ${opts.nextBtn ? `<button class="submit-btn" onclick="${nextFn}">下一句 →</button>` : ''}
       </div>` : ''}
     </div>
-    ${showFollowup ? practiceFollowupHtml(sentKey, fb) : ''}`;
+    ${showFollowup ? practiceFollowupHtml(sentKey) : ''}`;
 }
 
-/* 批改结果下方的「追问 AI」。res 是这次批改结果对象：追问的问答记在它身上，
-   点「收录」之类重绘之后还能看到；结果被清掉（改一遍 / 再试一次）就跟着没了。
-   用 WeakMap 记，不会混进存到后端的 feedback 里。 */
-const practiceFollowupMemo = new WeakMap();
-const practiceFollowupRes = {};
+/* ==================== 追问记录 ====================
+   批改结果下方的「追问 AI」：每一句一份记录，存在服务器上，按句子键取回，
+   所以改一遍、再试一次、隔天回来、刷新页面，只要这句批改完，问过的都还在。
+   每次追问仍是单次调用：AI 只看本次批改结果，不带上面的问答。
+   各练习页在 practiceFollowupCtx[sentKey] 里放好上下文、句子键（store_key）和这次作答（attempt）；
+   sentKey 是页面里的 DOM 键（big_1_2 这种），只用来找元素。 */
 
-function practiceFollowupHtml(sentKey, res) {
-  const memo = res ? practiceFollowupMemo.get(res) : null;
-  practiceFollowupRes[sentKey] = res || null;
-  return `
-      <div class="practice-followup" id="followup_${sentKey}">
-        <textarea id="followupInput_${sentKey}" rows="1" placeholder="对批改结果有疑问？追问 AI…（⌘/Ctrl + Enter 发送）" onkeydown="handleFollowupKey(event, '${sentKey}')" oninput="fitFollowupInput(this)"></textarea>
-        <button class="followup-send" onclick="sendPracticeFollowup('${sentKey}')">发送</button>
+// 句子键：模块 + 题目 + 这句的中文。认中文不认序号，题库调整顺序后记录还对得上
+function followupStoreKey(...parts) {
+  return parts.map(x => String(x == null ? '' : x).replace(/\|/g, '/')).join('|').slice(0, 300);
+}
+
+// 这次作答：提问时一起存下，记录里按它分段
+function followupAttempt(res, answer) {
+  return { answer: answer || '', score: res.score == null ? '' : String(res.score), graded_at: res._gradedAt || null };
+}
+
+const FOLLOWUP_RECENT = 3;   // 默认只显示最近几条，更早的折起来
+const FOLLOWUP_TRASH_ICON = '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 8.5h5.8l.6-8.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+var Followups = {
+  cache: {},   // 句子键 -> { items, loaded, loading, pending, showAll, collapsed }
+  seq: 0,
+
+  entry(key) {
+    return this.cache[key] || (this.cache[key] = {
+      items: [], loaded: false, loading: false, pending: [], showAll: false, collapsed: false,
+    });
+  },
+
+  // 第一次显示某句时去服务器取记录，取回来再补画；取不到就当没有，下次显示这句再试
+  async load(key) {
+    const e = this.entry(key);
+    if (e.loaded || e.loading) return;
+    e.loading = true;
+    try {
+      const resp = await API.get('/api/writing/followups?key=' + encodeURIComponent(key));
+      if (resp && Array.isArray(resp.items)) {
+        // 取的时候刚答完的那条可能还没写进服务器的回复里，别把它冲掉
+        const ids = new Set(resp.items.map(it => it.id));
+        e.items = resp.items.concat(e.items.filter(it => it.id && !ids.has(it.id)));
+        e.loaded = true;
+      }
+    } catch (err) { /* 同上 */ }
+    e.loading = false;
+    this.paint(key);
+  },
+
+  // 把某句的记录重画进所有正显示着它的卡片
+  paint(key) {
+    Object.keys(practiceFollowupCtx).forEach(sentKey => {
+      if (practiceFollowupCtx[sentKey].store_key !== key) return;
+      const box = document.getElementById('followupThread_' + sentKey);
+      if (!box) return;
+      box.innerHTML = this.threadHtml(sentKey);
+      box.parentElement.classList.toggle('has-items', !!box.innerHTML);
+    });
+  },
+
+  // 同一次批改下问的几条归成一段
+  attemptSig(a) {
+    a = a || {};
+    return a.graded_at ? 't' + a.graded_at : 'a' + (a.answer || '') + '|' + (a.score || '');
+  },
+
+  threadHtml(sentKey) {
+    const ctx = practiceFollowupCtx[sentKey];
+    const e = this.entry(ctx.store_key);
+    const all = e.items.map(it => ({ it })).concat(e.pending.map(p => ({ p })));
+    if (!all.length) return '';
+    let html = `<div class="fu-head">
+        <h3 class="fu-title">追问记录</h3>
+        <span class="fu-count">这句共 ${all.length} 条</span>
+        <span class="fu-grow"></span>
+        <button type="button" class="fu-link" onclick="Followups.toggle('${sentKey}')">${e.collapsed ? '展开' : '收起'}</button>
+      </div>`;
+    if (e.collapsed) return html;
+    const hidden = e.showAll ? 0 : Math.max(0, all.length - FOLLOWUP_RECENT);
+    if (hidden) html += `<button type="button" class="fu-more" onclick="Followups.expand('${sentKey}')">展开更早的 ${hidden} 条</button>`;
+    const current = this.attemptSig(ctx.attempt);
+    let last = null;
+    all.slice(hidden).forEach(x => {
+      const rec = x.it || x.p;
+      const sig = this.attemptSig(rec.attempt);
+      if (sig !== last) { html += this.attemptHtml(rec.attempt, sig === current); last = sig; }
+      html += x.it ? this.itemHtml(sentKey, x.it) : this.pendingHtml(sentKey, x.p);
+    });
+    return html;
+  },
+
+  attemptHtml(a, isCurrent) {
+    a = a || {};
+    const v = parseFloat(a.score);
+    const parts = [a.graded_at ? `${this.when(a.graded_at)} 作答` : '之前的作答'];
+    if (!isNaN(v)) parts.push(`<b class="fu-score ${scoreClassOf(v)}">${v.toFixed(1)}</b>`);
+    return `<div class="fu-attempt">
+        <span>${parts.join(' · ')}</span>
+        ${isCurrent ? '<span class="fu-chip">本次</span>' : ''}
+        <span class="fu-rule"></span>
       </div>
-      <div class="practice-followup-response markdown-body" id="followupResp_${sentKey}" style="display:${memo ? 'block' : 'none'};">${memo ? practiceFollowupBody(memo) : ''}</div>`;
-}
+      ${a.answer ? `<p class="fu-attempt-answer" title="${escHtml(a.answer)}">${escHtml(a.answer)}</p>` : ''}`;
+  },
 
-function practiceFollowupBody(memo) {
-  if (memo.loading) return '<span class="spinner" style="display:inline-block;width:16px;height:16px;"></span> AI 思考中...';
-  if (memo.error) return `<span style="color:var(--red);">${escHtml(memo.error)}</span>`;
-  return memo.content ? renderMarkdown(memo.content) : '<span style="color:var(--text3);">无回复</span>';
+  questionHtml(question, time, delBtn) {
+    return `<div class="fu-q">
+        <span class="fu-q-tag">问</span>
+        <p class="fu-q-text">${escHtml(question)}</p>
+        <span class="fu-time">${time}</span>${delBtn || ''}
+      </div>`;
+  },
+
+  itemHtml(sentKey, it) {
+    const del = it.id
+      ? `<button type="button" class="fu-del" aria-label="删除这条追问" title="删除" onclick="Followups.remove('${sentKey}', '${escHtml(it.id)}')">${FOLLOWUP_TRASH_ICON}</button>`
+      : '';
+    // 追问提示词让 AI 把对比例句分行写，所以回答按「单个换行就换行」来渲染
+    return `<article class="fu-item">
+        ${this.questionHtml(it.question, this.when(it.created_at), del)}
+        <div class="fu-a markdown-body">${renderMarkdown(it.answer || '', { breaks: true })}</div>
+      </article>`;
+  },
+
+  pendingHtml(sentKey, p) {
+    const body = p.error
+      ? `<div class="fu-a is-error" role="alert">
+          <span class="fu-err-text">没拿到回复（${escHtml(p.error)}），这条还没保存。</span>
+          <button type="button" class="fu-retry" onclick="Followups.retry('${sentKey}', ${p.tmp})">重试</button>
+          <button type="button" class="fu-link" onclick="Followups.discard('${sentKey}', ${p.tmp})">放弃</button>
+        </div>`
+      : '<div class="fu-a is-pending" role="status"><span class="spinner"></span>AI 思考中…</div>';
+    return `<article class="fu-item">${this.questionHtml(p.question, '刚刚')}${body}</article>`;
+  },
+
+  // 今天的只写时分，别的日子带上月日
+  when(t) {
+    const d = new Date(t);
+    if (isNaN(d.getTime())) return '';
+    const pad = n => String(n).padStart(2, '0');
+    const hm = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    return d.toDateString() === new Date().toDateString() ? hm : `${d.getMonth() + 1}/${d.getDate()} ${hm}`;
+  },
+
+  ask(sentKey, question) {
+    const ctx = practiceFollowupCtx[sentKey];
+    if (!ctx) return;
+    const e = this.entry(ctx.store_key);
+    // 记下提问那一刻的上下文：页面之后重绘、换了作答，重试时仍用这一份
+    const p = { tmp: ++this.seq, question, attempt: ctx.attempt, ctx: { ...ctx } };
+    e.pending.push(p);
+    e.collapsed = false;
+    this.paint(ctx.store_key);
+    return this.send(p, e);
+  },
+
+  async send(p, e) {
+    p.error = null;
+    const { store_key, attempt, ...context } = p.ctx;
+    let resp = null;
+    try {
+      resp = await API.post('/api/writing/ai_chat/practice',
+        { context, user_query: p.question, followup_key: store_key, attempt });
+    } catch (err) {
+      resp = { error: '网络连接失败' };
+    }
+    if (resp && !resp.error && typeof resp.content === 'string') {
+      e.pending = e.pending.filter(x => x !== p);
+      // 服务器没记上（比如句子键缺了）也照样显示这次的回答，只是刷新后就没了
+      e.items.push(resp.item || { id: null, question: p.question, answer: resp.content, created_at: Date.now(), attempt });
+    } else {
+      p.error = (resp && resp.error) || '请求失败';
+    }
+    this.paint(store_key);
+  },
+
+  retry(sentKey, tmp) {
+    const e = this.entry(practiceFollowupCtx[sentKey].store_key);
+    const p = e.pending.find(x => x.tmp === tmp);
+    if (!p || !p.error) return;
+    p.error = null;
+    this.paint(p.ctx.store_key);
+    this.send(p, e);
+  },
+
+  discard(sentKey, tmp) {
+    const key = practiceFollowupCtx[sentKey].store_key;
+    const e = this.entry(key);
+    e.pending = e.pending.filter(x => x.tmp !== tmp);
+    this.paint(key);
+  },
+
+  async remove(sentKey, id) {
+    const key = practiceFollowupCtx[sentKey].store_key;
+    if (!confirm('删除这条追问和它的回答？')) return;
+    let resp = null;
+    try {
+      resp = await API.del(`/api/writing/followups/${encodeURIComponent(id)}?key=${encodeURIComponent(key)}`);
+    } catch (err) { resp = null; }
+    if (!resp || resp.error) { alert('删除失败，请稍后再试'); return; }
+    const e = this.entry(key);
+    e.items = e.items.filter(it => it.id !== id);
+    this.paint(key);
+  },
+
+  toggle(sentKey) {
+    const key = practiceFollowupCtx[sentKey].store_key;
+    const e = this.entry(key);
+    e.collapsed = !e.collapsed;
+    this.paint(key);
+  },
+
+  expand(sentKey) {
+    const key = practiceFollowupCtx[sentKey].store_key;
+    this.entry(key).showAll = true;
+    this.paint(key);
+  },
+};
+
+// 批改结果下方的整张追问卡片：上面是这句的记录（没有就不占地方），下面是输入框
+function practiceFollowupHtml(sentKey) {
+  const ctx = practiceFollowupCtx[sentKey];
+  const key = ctx && ctx.store_key;
+  const thread = key ? Followups.threadHtml(sentKey) : '';
+  if (key) Followups.load(key);   // 还没取过就去取，取回来自己补画
+  return `
+      <section class="fu-card${thread ? ' has-items' : ''}" id="followup_${sentKey}" aria-label="追问 AI">
+        <div class="fu-thread" id="followupThread_${sentKey}">${thread}</div>
+        <div class="fu-compose">
+          <div class="practice-followup">
+            <textarea id="followupInput_${sentKey}" rows="1" aria-label="追问 AI" placeholder="有疑问？追问 AI…" onkeydown="handleFollowupKey(event, '${sentKey}')" oninput="fitFollowupInput(this)"></textarea>
+            <button class="followup-send" onclick="sendPracticeFollowup('${sentKey}')">发送</button>
+          </div>
+          <p class="fu-hint">⌘/Ctrl + Enter 发送。每条追问单独发给 AI：它只看本次的批改结果，不记得上面的问答；问过的都会留在这句下面。</p>
+        </div>
+      </section>`;
 }
 
 /* ==================== 实战页：分数环 / 差距归因 / 历史侧栏 ==================== */
@@ -5314,7 +5600,11 @@ function renderEditor(idx) {
   else reviewPrompt = `<div class="save-review-prompt"><span class="prompt-text">是否收录到复习中心？</span><button class="save-review-btn yes" onclick="saveToReview(${idx})">收录</button><button class="save-review-btn no" onclick="skipSaveToReview(${idx})">不收录</button></div>`;
 
   const fKey = `big_${state.currentExIdx}_${idx}`;
-  practiceFollowupCtx[fKey] = { target_chinese: s.chinese, user_translation: res._userInput || '', ai_feedback_summary: res.feedback_summary || '', grammar_corrections: JSON.stringify(res.grammar_corrections || []) };
+  practiceFollowupCtx[fKey] = {
+    target_chinese: s.chinese, user_translation: res._userInput || '', ai_feedback_summary: res.feedback_summary || '', grammar_corrections: JSON.stringify(res.grammar_corrections || []),
+    store_key: followupStoreKey('big', state.categories[state.currentCat].name, state.subData.name, s.chinese),
+    attempt: followupAttempt(res, res._userInput),
+  };
 
   document.getElementById('editorPanel').innerHTML =
     taskCard(`<div class="task-answer">${escHtml(res._userInput)}</div>`) +
@@ -5392,7 +5682,7 @@ async function submitTranslation() {
     }, { signal: job.signal, onRetry: (n, total) => Grading.retrying(job, n, total) });
     // 批改期间离开了，或从复习中心跳去了别的题：结果已不属于眼前这句
     if (job.signal.aborted || state.subData !== subData || state.currentExIdx !== exIdx || state.activeSentIdx !== sentIdx) return;
-    result._userInput = text; result._savedToReview = 'pending';
+    result._userInput = text; result._savedToReview = 'pending'; result._gradedAt = Date.now();
     state.sentResults[sentIdx] = result;
     renderExercise();
   } catch (err) {
@@ -6049,9 +6339,10 @@ function renderAIPresets() {
 }
 
 /* ==================== AI 浮窗：Markdown 渲染 ==================== */
-function renderMarkdown(md) {
+// opts 原样交给 marked，比如 { breaks: true } 让单个换行也换行
+function renderMarkdown(md, opts) {
   if (!md) return '';
-  return DOMPurify.sanitize(marked.parse(md));
+  return DOMPurify.sanitize(marked.parse(md, opts));
 }
 
 /* ==================== AI 浮窗：消息渲染 ==================== */
@@ -6090,21 +6381,6 @@ async function globalAIProvider(query, context, chatHistory, { onLoading, onDone
   try {
     const resp = await API.post('/api/writing/ai_chat/global', {
       context, user_query: query, chat_history: chatHistory
-    });
-    if (resp.error) { onError && onError(resp.error); return null; }
-    onDone && onDone(resp.content);
-    return resp.content;
-  } catch(e) {
-    onError && onError('请求失败，请重试');
-    return null;
-  }
-}
-
-async function practiceAIProvider(query, context, { onLoading, onDone, onError }) {
-  onLoading && onLoading();
-  try {
-    const resp = await API.post('/api/writing/ai_chat/practice', {
-      context, user_query: query
     });
     if (resp.error) { onError && onError(resp.error); return null; }
     onDone && onDone(resp.content);
@@ -6261,35 +6537,13 @@ function fitFollowupInput(el) {
   el.style.height = el.scrollHeight + 'px';
 }
 
-async function sendPracticeFollowup(sentKey) {
-  const container = document.getElementById('followup_' + sentKey);
-  if (!container) return;
-  const input = container.querySelector('textarea');
+function sendPracticeFollowup(sentKey) {
+  const input = document.getElementById('followupInput_' + sentKey);
   const query = input ? input.value.trim() : '';
-  if (!query) return;
-
-  const ctx = practiceFollowupCtx[sentKey];
-  if (!ctx) return;
+  if (!query || !practiceFollowupCtx[sentKey]) return;
   input.value = '';
   input.style.height = '';
-
-  const res = practiceFollowupRes[sentKey];
-  const memo = { query, loading: true };
-  if (res) practiceFollowupMemo.set(res, memo);
-  // 等回复期间页面可能重绘过：按 id 重新找框，且只画进仍是这次批改、这次提问的那个框
-  const paint = () => {
-    if (res && (practiceFollowupRes[sentKey] !== res || practiceFollowupMemo.get(res) !== memo)) return;
-    const respDiv = document.getElementById('followupResp_' + sentKey);
-    if (!respDiv) return;
-    respDiv.style.display = 'block';
-    respDiv.innerHTML = practiceFollowupBody(memo);
-  };
-
-  await practiceAIProvider(query, ctx, {
-    onLoading: paint,
-    onDone: (content) => { memo.loading = false; memo.content = content; paint(); },
-    onError: (err) => { memo.loading = false; memo.error = err; paint(); }
-  });
+  Followups.ask(sentKey, query);
 }
 
 /* ==================== 学习页选词高亮 ====================
@@ -7557,8 +7811,11 @@ var Tpl = {
           user_translation: (res._payload || {}).user_translation || '',
           ai_feedback_summary: res.feedback_summary || '',
           grammar_corrections: JSON.stringify(res.grammar_corrections || []),
+          // 没有中文提示的句子退回用句序认
+          store_key: followupStoreKey('tpl', p.typeId, p.questionId, step.id, sent.chinese || `#${p.activeIdx}`),
+          attempt: followupAttempt(res, (res._payload || {}).user_translation),
         };
-        html = this.resultHtml(res) + practiceFollowupHtml(fKey, res);
+        html = this.resultHtml(res) + practiceFollowupHtml(fKey);
       }
       fb.innerHTML = html;
     }
@@ -7669,6 +7926,7 @@ var Tpl = {
       if (job.signal.aborted || this.s.prac !== p || p.token !== token) return;  // 批改期间用户已经切走
       res._payload = payload;
       res._saved = 'pending';
+      res._gradedAt = Date.now();
       p.results[key] = res;
       // 结果回来时用户可能已经翻到别的句子，那就只存不渲染，回到该句时自然会显示
       if (p.stepIdx !== fromStep || p.activeIdx !== fromIdx) return;
