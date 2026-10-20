@@ -2350,15 +2350,17 @@ html[data-theme="dark"] body.page-writing-practice .review-overlay .review-overl
 
 /* 批改结果下方的追问 */
 .practice-followup {
-  display: flex; align-items: center; gap: 10px; margin-top: 12px;
+  display: flex; align-items: flex-end; gap: 10px; margin-top: 12px;
   padding: 12px 14px 12px 20px; background: var(--w-surface);
   border: 1px solid var(--w-line); border-radius: var(--w-r-card);
 }
-.practice-followup input {
-  flex-grow: 1; border: none; background: transparent; outline: none;
-  font-size: var(--w-fs-ui); color: var(--w-ink); font-family: var(--w-cn);
+/* 多行输入：一行高起步（和发送按钮对齐），随内容长高，最多约 8 行 */
+.practice-followup textarea {
+  flex-grow: 1; min-width: 0; border: none; background: transparent; outline: none;
+  resize: none; padding: 8px 0; height: 38px; max-height: 200px; box-sizing: border-box;
+  font-size: var(--w-fs-ui); line-height: 22px; color: var(--w-ink); font-family: var(--w-cn);
 }
-.practice-followup input::placeholder { color: var(--w-ink3); }
+.practice-followup textarea::placeholder { color: var(--w-ink3); }
 .practice-followup .followup-send {
   height: 38px; padding: 0 18px; border-radius: var(--w-r-chip);
   border: 1px solid var(--w-line); background: var(--w-surface);
@@ -5106,7 +5108,7 @@ function practiceFollowupHtml(sentKey, res) {
   practiceFollowupRes[sentKey] = res || null;
   return `
       <div class="practice-followup" id="followup_${sentKey}">
-        <input type="text" placeholder="对批改结果有疑问？追问 AI..." onkeydown="if(event.key==='Enter'&&!event.isComposing&&event.keyCode!==229)sendPracticeFollowup('${sentKey}')">
+        <textarea rows="1" placeholder="对批改结果有疑问？追问 AI…（⌘/Ctrl + Enter 发送）" onkeydown="handleFollowupKey(event, '${sentKey}')" oninput="fitFollowupInput(this)"></textarea>
         <button class="followup-send" onclick="sendPracticeFollowup('${sentKey}')">发送</button>
       </div>
       <div class="practice-followup-response markdown-body" id="followupResp_${sentKey}" style="display:${memo ? 'block' : 'none'};">${memo ? practiceFollowupBody(memo) : ''}</div>`;
@@ -6166,16 +6168,31 @@ async function deleteAIChatSession(sessionId) {
 }
 
 /* ==================== 实战追问助手 ==================== */
+// 和作答框一致：Enter 换行，⌘/Ctrl + Enter 发送（输入法选词时按的回车不算）
+function handleFollowupKey(e, sentKey) {
+  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && !e.isComposing) {
+    e.preventDefault();
+    sendPracticeFollowup(sentKey);
+  }
+}
+
+// 随内容长高，超过 max-height 后框内滚动
+function fitFollowupInput(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
 async function sendPracticeFollowup(sentKey) {
   const container = document.getElementById('followup_' + sentKey);
   if (!container) return;
-  const input = container.querySelector('input');
+  const input = container.querySelector('textarea');
   const query = input ? input.value.trim() : '';
   if (!query) return;
 
   const ctx = practiceFollowupCtx[sentKey];
   if (!ctx) return;
   input.value = '';
+  input.style.height = '';
 
   const res = practiceFollowupRes[sentKey];
   const memo = { query, loading: true };
