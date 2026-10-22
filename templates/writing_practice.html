@@ -2368,15 +2368,16 @@ html.wp-restoring .main-panel-wrapper::after {
   font-size: var(--w-fs-ui); color: var(--w-ink3);
 }
 
-/* 批改结果下方的追问：一张卡片，上面是这句的追问记录，下面是输入框 */
+/* 批改结果下方的追问：一张卡片，上面是输入框，下面是这句的追问记录（新问的在上） */
 .fu-card {
   margin-top: 12px; padding: 18px 24px 22px; background: var(--w-surface);
   border: 1px solid var(--w-line); border-radius: var(--w-r-card);
 }
 .fu-thread:empty { display: none; }
-.fu-card.has-items .fu-compose { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--w-line); }
+.fu-card.has-items .fu-thread { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--w-line); }
 .fu-hint { margin: 8px 0 0; font-size: var(--w-fs-meta); line-height: 1.6; color: var(--w-ink2); }
 .fu-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.fu-head:last-child { margin-bottom: 0; }
 .fu-title { margin: 0; font-size: var(--w-fs-ui); font-weight: 600; color: var(--w-ink); }
 .fu-count { font-size: var(--w-fs-meta); color: var(--w-ink2); }
 .fu-grow { flex-grow: 1; }
@@ -2387,7 +2388,7 @@ html.wp-restoring .main-panel-wrapper::after {
 .fu-head .fu-link { margin-right: -10px; }
 .fu-link:hover { color: var(--w-big); }
 .fu-more {
-  width: 100%; height: 40px; margin-bottom: 16px; border: 1px dashed var(--w-line-strong);
+  width: 100%; height: 40px; border: 1px dashed var(--w-line-strong);
   border-radius: var(--w-r-card); background: var(--w-paper); font-size: var(--w-fs-meta); color: var(--w-big);
 }
 .fu-more:hover { border-color: var(--w-big-line); }
@@ -5317,7 +5318,8 @@ var Followups = {
   threadHtml(sentKey) {
     const ctx = practiceFollowupCtx[sentKey];
     const e = this.entry(ctx.store_key);
-    const all = e.items.map(it => ({ it })).concat(e.pending.map(p => ({ p })));
+    // 新问的在上：还在等回复的排最前，越早问的越靠下
+    const all = e.items.map(it => ({ it })).concat(e.pending.map(p => ({ p }))).reverse();
     if (!all.length) return '';
     let html = `<div class="fu-head">
         <h3 class="fu-title">追问记录</h3>
@@ -5326,16 +5328,17 @@ var Followups = {
         <button type="button" class="fu-link" onclick="Followups.toggle('${sentKey}')">${e.collapsed ? '展开' : '收起'}</button>
       </div>`;
     if (e.collapsed) return html;
-    const hidden = e.showAll ? 0 : Math.max(0, all.length - FOLLOWUP_RECENT);
-    if (hidden) html += `<button type="button" class="fu-more" onclick="Followups.expand('${sentKey}')">展开更早的 ${hidden} 条</button>`;
+    const shown = e.showAll ? all : all.slice(0, FOLLOWUP_RECENT);
     const current = this.attemptSig(ctx.attempt);
     let last = null;
-    all.slice(hidden).forEach(x => {
+    shown.forEach(x => {
       const rec = x.it || x.p;
       const sig = this.attemptSig(rec.attempt);
       if (sig !== last) { html += this.attemptHtml(rec.attempt, sig === current); last = sig; }
       html += x.it ? this.itemHtml(sentKey, x.it) : this.pendingHtml(sentKey, x.p);
     });
+    const hidden = all.length - shown.length;
+    if (hidden) html += `<button type="button" class="fu-more" onclick="Followups.expand('${sentKey}')">展开更早的 ${hidden} 条</button>`;
     return html;
   },
 
@@ -5466,7 +5469,7 @@ var Followups = {
   },
 };
 
-// 批改结果下方的整张追问卡片：上面是这句的记录（没有就不占地方），下面是输入框
+// 批改结果下方的整张追问卡片：上面是输入框，下面是这句的记录（没有就不占地方，新问的在上）
 function practiceFollowupHtml(sentKey) {
   const ctx = practiceFollowupCtx[sentKey];
   const key = ctx && ctx.store_key;
@@ -5474,14 +5477,14 @@ function practiceFollowupHtml(sentKey) {
   if (key) Followups.load(key);   // 还没取过就去取，取回来自己补画
   return `
       <section class="fu-card${thread ? ' has-items' : ''}" id="followup_${sentKey}" aria-label="追问 AI">
-        <div class="fu-thread" id="followupThread_${sentKey}">${thread}</div>
         <div class="fu-compose">
           <div class="practice-followup">
             <textarea id="followupInput_${sentKey}" rows="1" aria-label="追问 AI" placeholder="有疑问？追问 AI…" onkeydown="handleFollowupKey(event, '${sentKey}')" oninput="fitFollowupInput(this)"></textarea>
             <button class="followup-send" onclick="sendPracticeFollowup('${sentKey}')">发送</button>
           </div>
-          <p class="fu-hint">⌘/Ctrl + Enter 发送。每条追问单独发给 AI：它只看本次的批改结果，不记得上面的问答；问过的都会留在这句下面。</p>
+          <p class="fu-hint">⌘/Ctrl + Enter 发送。每条追问单独发给 AI：它只看本次的批改结果，不记得之前的问答；问过的都会留在下面，新问的在上。</p>
         </div>
+        <div class="fu-thread" id="followupThread_${sentKey}">${thread}</div>
       </section>`;
 }
 
