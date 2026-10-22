@@ -2410,9 +2410,16 @@ html.wp-restoring .main-panel-wrapper::after {
   margin: 0 0 14px; font-family: var(--w-en); font-size: 14px; line-height: 1.6; color: var(--w-ink2);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.fu-item { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+/* 一问一答一个线框：上面灰底一条是问，隔一道线，下面白底是答 */
+.fu-item {
+  margin-bottom: 14px; background: var(--w-surface);
+  border: 1px solid var(--w-line); border-radius: var(--w-r-card); overflow: hidden;
+}
 .fu-thread > .fu-item:last-child { margin-bottom: 4px; }
-.fu-q { display: flex; align-items: flex-start; gap: 10px; }
+.fu-q {
+  display: flex; align-items: flex-start; gap: 10px; padding: 10px 16px;
+  background: var(--w-sunken); border-bottom: 1px solid var(--w-line);
+}
 .fu-q-tag {
   flex-shrink: 0; margin-top: 3px; font-size: 12px; line-height: 20px; font-weight: 600;
   color: var(--w-big); background: var(--w-big-soft); border-radius: 4px; padding: 0 6px;
@@ -2428,15 +2435,14 @@ html.wp-restoring .main-panel-wrapper::after {
   color: var(--w-ink3); border-radius: var(--w-r-sm);
 }
 .fu-del:hover { color: var(--w-err); background: var(--w-err-soft); }
-.fu-a { margin-left: 34px; padding: 14px 18px; background: var(--w-sunken); border-radius: var(--w-r-card); }
+.fu-a { padding: 14px 16px; }
 .fu-a.markdown-body p { margin: 0 0 6px; }
 .fu-a.markdown-body > :last-child { margin-bottom: 0; }
-.fu-a.markdown-body code { background: var(--w-surface); }
+.fu-a.markdown-body code { background: var(--w-sunken); }
 .fu-a.is-pending { display: flex; align-items: center; gap: 10px; color: var(--w-ink2); font-size: var(--w-fs-ui); }
 .fu-a.is-pending .spinner { width: 16px; height: 16px; flex-shrink: 0; border-color: var(--w-line-strong); border-top-color: var(--w-big); }
 .fu-a.is-error {
-  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-  background: var(--w-err-soft); border: 1px solid var(--w-err-line);
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: var(--w-err-soft);
 }
 .fu-err-text { flex: 1 1 220px; min-width: 0; font-size: var(--w-fs-ui); line-height: 1.7; color: var(--w-err); }
 .fu-retry {
@@ -2445,7 +2451,7 @@ html.wp-restoring .main-panel-wrapper::after {
 }
 @media (max-width: 600px) {
   .fu-card { padding: 14px 16px 16px; }
-  .fu-a { margin-left: 0; }
+  .fu-q, .fu-a { padding-left: 12px; padding-right: 12px; }
 }
 
 .practice-followup {
