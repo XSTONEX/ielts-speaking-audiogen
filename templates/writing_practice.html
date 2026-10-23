@@ -2790,7 +2790,7 @@ html[data-theme="dark"] body.page-writing-practice .tpl-btn.ghost {
   .editor-context .ctx-cn { font-size: var(--w-fs-title); }
   .fb-native { font-size: var(--w-fs-en); }
   .sentence-en, .editor-input, .tpl-textarea { font-size: var(--w-fs-en); }
-  .review-overlay-header, .review-overlay-tabs, .review-overlay-body { padding-left: 16px; padding-right: 16px; }
+  .review-overlay-header, .review-stats, .review-controls, .review-overlay-body { padding-left: 16px; padding-right: 16px; }
   .editor-actions, .tpl-actions { justify-content: stretch; }
   .editor-actions > *, .tpl-actions > * { flex: 1; }
   .sent-item { flex: 1 1 auto; }
@@ -2817,7 +2817,18 @@ html[data-theme="dark"] body.page-writing-practice .tpl-btn.ghost {
   .chart-type-grid, .cat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .sub-list, .example-list-grid, .tpl-type-grid { grid-template-columns: minmax(0, 1fr); }
   .tpl-prac-main, #tplSmallPracticeView .tpl-prac-main, .tpl-fb-cards { grid-template-columns: minmax(0, 1fr); }
-  .review-stats, .rv-cards { grid-template-columns: minmax(0, 1fr); }
+  .rv-cards { grid-template-columns: minmax(0, 1fr); }
+  /* 复习中心：标题、统计、页签原先固定在上面，手机上占掉大半屏，列表只剩一小条能滚。
+     改成整块一起滚，往下翻时列表用满整屏；关闭按钮钉在右上角，翻到哪都点得到 */
+  .review-overlay { overflow-y: auto; }
+  .review-overlay-body { flex: none; overflow: visible; }
+  .review-overlay-close { position: fixed; top: 12px; right: 12px; z-index: 2; }
+  .review-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .review-stat { padding: 12px 14px; }
+  /* 展开的句子：分数和按钮一行，中文和「你写的」换到下一行占满宽度，不再挤成一词一行 */
+  .rv-detail-top { flex-wrap: wrap; row-gap: 10px; }
+  .rv-detail-acts { margin-left: auto; }
+  .rv-detail-texts { order: 3; flex-basis: 100%; }
   /* 语法修正：类型标签和改法一行，原因换到下面；图例收起 */
   .fb-gc-row { grid-template-columns: 62px minmax(0, 1fr); column-gap: 10px; row-gap: 2px; }
   .fb-gc-row .fb-gc-why { grid-column: 2; }
