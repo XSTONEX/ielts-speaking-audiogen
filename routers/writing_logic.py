@@ -517,6 +517,18 @@ def _save_small_practice(username, data):
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
+def _set_in_review(load, save, username, record_id):
+    """把一条练习记录移出 / 放回复习中心。提交时默认收录，这里只改 in_review 开关。"""
+    flag = bool((request.json or {}).get('in_review', False))
+    records = load(username)
+    for r in records:
+        if r.get('id') == record_id:
+            r['in_review'] = flag
+            save(username, records)
+            return jsonify({'success': True, 'in_review': flag})
+    return jsonify({'error': '记录不存在'}), 404
+
+
 # ===================== 小作文 API 路由 =====================
 
 @writing_bp.route('/api/writing/small/chart_types', methods=['GET'])
@@ -788,6 +800,16 @@ def small_delete_practice(record_id):
     records = [r for r in records if r['id'] != record_id]
     _save_small_practice(username, records)
     return jsonify({'success': True})
+
+
+@writing_bp.route('/api/writing/small/set_in_review/<record_id>', methods=['POST'])
+def small_set_in_review(record_id):
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    if not is_token_valid(token):
+        return jsonify({'error': '未登录'}), 401
+    tokens = load_tokens()
+    username = tokens.get(token, {}).get('username', 'anonymous')
+    return _set_in_review(_load_small_practice, _save_small_practice, username, record_id)
 
 
 @writing_bp.route('/api/writing/small/practice_progress', methods=['GET'])
@@ -1371,6 +1393,16 @@ def writing_delete_practice(record_id):
     records = [r for r in records if r['id'] != record_id]
     _save_practice(username, records)
     return jsonify({'success': True})
+
+
+@writing_bp.route('/api/writing/set_in_review/<record_id>', methods=['POST'])
+def writing_set_in_review(record_id):
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    if not is_token_valid(token):
+        return jsonify({'error': '未登录'}), 401
+    tokens = load_tokens()
+    username = tokens.get(token, {}).get('username', 'anonymous')
+    return _set_in_review(_load_practice, _save_practice, username, record_id)
 
 
 # ===================== AI 聊天历史数据 =====================
@@ -1975,6 +2007,14 @@ def template_delete_practice(record_id):
         return jsonify({'error': '记录不存在'}), 404
     _save_template_practice(username, remaining)
     return jsonify({'success': True})
+
+
+@writing_bp.route('/api/writing/template/set_in_review/<record_id>', methods=['POST'])
+def template_set_in_review(record_id):
+    username = _highlights_user()
+    if username is None:
+        return jsonify({'error': '未登录'}), 401
+    return _set_in_review(_load_template_practice, _save_template_practice, username, record_id)
 
 
 def _avg_score(values):

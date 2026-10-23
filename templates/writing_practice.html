@@ -669,15 +669,7 @@ body.page-writing-practice textarea.tpl-textarea { font-family: var(--w-en); }
 .tpl-fb-list .fb-native-text { font-size: var(--w-fs-en); color: var(--w-ink); }
 .tpl-fb-actions { display: flex; align-items: center; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
 .tpl-fb-actions .tpl-prac-gap { flex-grow: 1; }
-.tpl-fb-btn {
-  display: inline-flex; align-items: center; gap: 7px;
-  height: 40px; padding: 0 17px; cursor: pointer;
-  border-radius: var(--w-r-chip); border: 1px solid var(--w-line);
-  background: var(--w-surface); color: var(--w-ink2); font-size: var(--w-fs-meta);
-  transition: border-color .15s, color .15s;
-}
-.tpl-fb-btn:hover { border-color: var(--w-line-strong); color: var(--w-ink); }
-.tpl-fb-btn.is-on { border-color: var(--w-big-line); background: var(--w-big-soft); color: var(--w-big); font-weight: 600; }
+.tpl-fb-actions .save-review-prompt { margin-top: 0; }
 .tpl-fb-next {
   height: 44px; padding: 0 26px; cursor: pointer; flex-shrink: 0;
   border: none; border-radius: var(--w-r-chip);
@@ -999,9 +991,7 @@ body.page-writing-practice textarea.tpl-textarea { font-family: var(--w-en); }
 .sp-fb .feedback-card { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
 .sp-fb .fb-summary,
 .sp-fb .fb-actions,
-.sp-fb .save-review-prompt,
-.sp-fb .saved-badge,
-.sp-fb .save-skipped { grid-column: 1 / -1; }
+.sp-fb .save-review-prompt { grid-column: 1 / -1; }
 .sp-fb .fb-section { margin: 0; }
 .sp-fb .fu-card { margin-top: 12px; }
 
@@ -1775,7 +1765,6 @@ body.has-app-shell.page-writing-practice .practice-header { top: 56px; }
 .hist-score.mid { color: var(--w-warn); }
 .hist-score.low { color: var(--w-err); }
 .hist-time { flex-grow: 1; text-align: left; font-size: var(--w-fs-meta); color: var(--w-ink2); }
-.save-skipped { font-size: var(--w-fs-meta); color: var(--w-ink3); margin-top: 4px; }
 
 /* ==================== 批改反馈 ==================== */
 .feedback-card {
@@ -1876,7 +1865,7 @@ body.has-app-shell.page-writing-practice .practice-header { top: 56px; }
 .rv-card .fb-vu-tile { padding: 0; background: none; }
 .fb-native { font-size: var(--w-fs-en); line-height: 1.8; color: var(--w-ink); white-space: pre-wrap; }
 
-/* 录入复习：一次点击的开关，不再是两步问答 */
+/* 复习中心：提交即收录，这里只剩「已收录」状态和移出 / 重新收录的开关 */
 .save-review-prompt {
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
   margin-top: 4px; padding: 0;
@@ -1901,6 +1890,7 @@ body.has-app-shell.page-writing-practice .practice-header { top: 56px; }
   border: 1px solid var(--w-big-line); color: var(--w-big);
   font-size: var(--w-fs-ui); font-weight: 600; margin-top: 4px;
 }
+.save-review-prompt .saved-badge { margin-top: 0; }
 .done-badge {
   display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px;
   border-radius: var(--w-r-chip); background: var(--w-ok-soft);
@@ -3362,6 +3352,77 @@ function escHtml(s) {
   return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+/* ==================== 收录到复习中心 ====================
+   每次提交批改，结果一出来就存一条记录并默认收录进复习中心，不用再手动点。
+   批改下面只留一个开关：「移出复习中心」/「重新收录」，改的都是同一条记录。
+   res._savedToReview：true 已收录 · false 已移出 · 其他（'failed'）没存上，可以重试
+   res._recordId：存下来的那条记录的 id，开关按它改 */
+const REVIEW_TOGGLE_API = {
+  small: id => `/api/writing/small/set_in_review/${id}`,
+  big:   id => `/api/writing/set_in_review/${id}`,
+  tpl:   id => `/api/writing/template/set_in_review/${id}`
+};
+// 还在路上的保存请求、正在切换的结果；不挂在 res 上，免得被刷新快照存进去
+const reviewSaving = new WeakMap();
+const reviewBusy = new WeakSet();
+const REVIEW_BADGE = '<span class="saved-badge"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 2.5h9v11.5l-4.5-2.6-4.5 2.6V2.5Z" fill="currentColor"/></svg>已收录到复习中心</span>';
+
+// 存一条并收录：先按已收录显示，存失败再换成「重试收录」。要在渲染结果之前调用
+function saveToReviewCenter(res, url, body, onSaved) {
+  res._savedToReview = true;
+  const req = API.post(url, Object.assign({}, body, { save_to_review: true }))
+    .then(r => {
+      if (!r || r.error || !r.id) throw new Error((r && r.error) || '没有返回记录 id');
+      res._recordId = r.id;
+      if (onSaved) onSaved();
+    })
+    .catch(() => { res._savedToReview = 'failed'; })
+    .finally(() => { reviewSaving.delete(res); repaintReviewToggle(res); });
+  reviewSaving.set(res, req);
+  return req;
+}
+
+// 移出 / 放回复习中心，成功返回 true
+async function setInReview(kind, res, inReview) {
+  if (!res || reviewBusy.has(res)) return false;
+  reviewBusy.add(res);
+  try {
+    if (reviewSaving.has(res)) await reviewSaving.get(res);   // 刚提交就点：等那条先存好
+    if (!res._recordId) return false;
+    const r = await API.post(REVIEW_TOGGLE_API[kind](res._recordId), { in_review: inReview });
+    if (!r || r.error) throw new Error(r && r.error);
+    res._savedToReview = inReview;
+    return true;
+  } catch (e) {
+    alert('操作失败：' + (e.message || '请稍后重试'));
+    return false;
+  } finally {
+    reviewBusy.delete(res);
+  }
+}
+
+// onToggle / onRetry 是按钮的 onclick 代码，记在外层上，存完后原地重画用
+function reviewToggleHtml(res, onToggle, onRetry) {
+  const st = res._savedToReview;
+  let inner;
+  if (st === true) {
+    // 刷新前没存完的，拿不到记录 id，只能显示状态
+    const canToggle = res._recordId || reviewSaving.has(res);
+    inner = REVIEW_BADGE + (canToggle ? `<button class="save-review-btn no" onclick="${onToggle}">移出复习中心</button>` : '');
+  } else if (st === false) {
+    inner = `<span class="prompt-text">已移出复习中心</span><button class="save-review-btn yes" onclick="${onToggle}">重新收录</button>`;
+  } else {
+    inner = `<span class="prompt-text">没能收录到复习中心</span><button class="save-review-btn yes" onclick="${onRetry}">重试收录</button>`;
+  }
+  return `<div class="save-review-prompt" data-review-of="${res._gradedAt}" data-toggle="${onToggle}" data-retry="${onRetry}">${inner}</div>`;
+}
+
+// 只重画这一块，不整页重绘：追问框里写了一半的字不会丢
+function repaintReviewToggle(res) {
+  const el = document.querySelector(`[data-review-of="${res._gradedAt}"]`);
+  if (el) el.outerHTML = reviewToggleHtml(res, el.dataset.toggle, el.dataset.retry);
+}
+
 /* ==================== 提交批改：失败退避重试 + 练习区蒙版 ==================== */
 // 第一次失败后最多再试 3 次，依次等 1 / 2 / 4 秒
 const GRADE_RETRY_DELAYS = [1000, 2000, 4000];
@@ -4629,10 +4690,7 @@ function renderSmallEditor(idx) {
   }
 
   // ---- 已提交：显示答案 + 批改 ----
-  let reviewPrompt = '';
-  if (res._savedToReview === true) reviewPrompt = '<div class="saved-badge"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 2.5h9v11.5l-4.5-2.6-4.5 2.6V2.5Z" fill="currentColor"/></svg>已收录到复习中心</div>';
-  else if (res._savedToReview === 'skipped') reviewPrompt = '<div class="save-skipped">未收录到复习中心</div>';
-  else reviewPrompt = `<div class="save-review-prompt"><span class="prompt-text">是否收录到复习中心？</span><button class="save-review-btn yes" onclick="smallSaveToReview(${idx})">收录</button><button class="save-review-btn no" onclick="smallSkipSaveToReview(${idx})">不收录</button></div>`;
+  const reviewPrompt = reviewToggleHtml(res, `smallToggleReview(${idx})`, `smallSaveToReview(${idx})`);
 
   const fKey = `small_${idx}`;
   practiceFollowupCtx[fKey] = {
@@ -4691,9 +4749,9 @@ async function submitSmallTranslation() {
     // 批改期间离开了，或从复习中心跳去了别的题：结果已不属于眼前这句
     if (job.signal.aborted || state.small.exampleData !== data || state.small.activeSentIdx !== sentIdx) return;
     result._userInput = text;
-    result._savedToReview = 'pending';
     result._gradedAt = Date.now();
     state.small.sentResults[sentIdx] = result;
+    smallSaveToReview(sentIdx);
     activateSmallSentence(sentIdx);
   } catch (err) {
     if (err.name === 'AbortError') return;
@@ -4710,48 +4768,27 @@ async function submitSmallTranslation() {
   }
 }
 
-async function smallSaveToReview(sentIdx) {
+// 提交后自动调用；没存上时「重试收录」也走这里
+function smallSaveToReview(sentIdx) {
   const res = state.small.sentResults[sentIdx];
-  if (!res || res._savedToReview === true) return;
+  if (!res || res._recordId || reviewSaving.has(res)) return;
   const data = state.small.exampleData;
-  const allSentences = [];
-  for (const section of data.sections) {
-    for (const sent of section.sentences) allSentences.push({ ...sent, sectionName: section.name });
-  }
-  const s = allSentences[sentIdx];
-  res._savedToReview = true;
-  await API.post('/api/writing/small/save_practice', {
+  const s = smallFlatSentences().all[sentIdx];
+  saveToReviewCenter(res, '/api/writing/small/save_practice', {
     chart_type: data.chart_type, chart_subtype: data.chart_subtype,
     example_name: data.name, question: data.question,
     section_name: s.sectionName, sentence_tags: s.tags,
     target_chinese: s.translation, user_translation: res._userInput,
-    score: res.score, feedback: res, native_version: res.native_version || '',
-    save_to_review: true
-  });
-  refreshSmallProgress();
-  activateSmallSentence(sentIdx);
+    score: res.score, feedback: res, native_version: res.native_version || ''
+  }, refreshSmallProgress);
+  repaintReviewToggle(res);
 }
 
-async function smallSkipSaveToReview(sentIdx) {
+async function smallToggleReview(sentIdx) {
   const res = state.small.sentResults[sentIdx];
-  if (!res) return;
-  const data = state.small.exampleData;
-  const allSentences = [];
-  for (const section of data.sections) {
-    for (const sent of section.sentences) allSentences.push({ ...sent, sectionName: section.name });
-  }
-  const s = allSentences[sentIdx];
-  res._savedToReview = 'skipped';
-  await API.post('/api/writing/small/save_practice', {
-    chart_type: data.chart_type, chart_subtype: data.chart_subtype,
-    example_name: data.name, question: data.question,
-    section_name: s.sectionName, sentence_tags: s.tags,
-    target_chinese: s.translation, user_translation: res._userInput,
-    score: res.score, feedback: res, native_version: res.native_version || '',
-    save_to_review: false
-  });
-  refreshSmallProgress();
-  activateSmallSentence(sentIdx);
+  if (!(await setInReview('small', res, res._savedToReview !== true))) return;
+  await refreshSmallProgress();
+  if (state.small.sentResults[sentIdx] === res && state.small.activeSentIdx === sentIdx) renderSmallPracticeContent();
 }
 
 function advanceSmallNext() {
@@ -5832,10 +5869,7 @@ function renderEditor(idx) {
     return;
   }
 
-  let reviewPrompt = '';
-  if (res._savedToReview === true) reviewPrompt = '<div class="saved-badge"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 2.5h9v11.5l-4.5-2.6-4.5 2.6V2.5Z" fill="currentColor"/></svg>已收录到复习中心</div>';
-  else if (res._savedToReview === 'skipped') reviewPrompt = '<div class="save-skipped">未收录到复习中心</div>';
-  else reviewPrompt = `<div class="save-review-prompt"><span class="prompt-text">是否收录到复习中心？</span><button class="save-review-btn yes" onclick="saveToReview(${idx})">收录</button><button class="save-review-btn no" onclick="skipSaveToReview(${idx})">不收录</button></div>`;
+  const reviewPrompt = reviewToggleHtml(res, `toggleReviewRecord(${idx})`, `saveToReview(${idx})`);
 
   const fKey = `big_${state.currentExIdx}_${idx}`;
   practiceFollowupCtx[fKey] = {
@@ -5920,8 +5954,9 @@ async function submitTranslation() {
     }, { signal: job.signal, onRetry: (n, total) => Grading.retrying(job, n, total) });
     // 批改期间离开了，或从复习中心跳去了别的题：结果已不属于眼前这句
     if (job.signal.aborted || state.subData !== subData || state.currentExIdx !== exIdx || state.activeSentIdx !== sentIdx) return;
-    result._userInput = text; result._savedToReview = 'pending'; result._gradedAt = Date.now();
+    result._userInput = text; result._gradedAt = Date.now();
     state.sentResults[sentIdx] = result;
+    saveToReview(sentIdx);
     renderExercise();
   } catch (err) {
     if (err.name === 'AbortError') return;
@@ -5940,32 +5975,24 @@ async function submitTranslation() {
   }
 }
 
-async function saveToReview(sentIdx) {
+// 提交后自动调用；没存上时「重试收录」也走这里
+function saveToReview(sentIdx) {
   const res = state.sentResults[sentIdx];
-  if (!res || res._savedToReview === true) return;
+  if (!res || res._recordId || reviewSaving.has(res)) return;
   const ex = state.subData.examples[state.currentExIdx];
   const s = ex.sentences[sentIdx];
-  res._savedToReview = true;
-  await API.post('/api/writing/save_practice', {
+  saveToReviewCenter(res, '/api/writing/save_practice', {
     category: state.categories[state.currentCat].name, subcategory: state.subData.name,
     question: ex.question, target_chinese: s.chinese, user_translation: res._userInput,
-    score: res.score, feedback: res, native_version: res.native_version || '', save_to_review: true
+    score: res.score, feedback: res, native_version: res.native_version || ''
   });
-  renderExercise();
+  repaintReviewToggle(res);
 }
 
-async function skipSaveToReview(sentIdx) {
+async function toggleReviewRecord(sentIdx) {
   const res = state.sentResults[sentIdx];
-  if (!res || res._savedToReview === 'skipped') return;
-  const ex = state.subData.examples[state.currentExIdx];
-  const s = ex.sentences[sentIdx];
-  res._savedToReview = 'skipped';
-  await API.post('/api/writing/save_practice', {
-    category: state.categories[state.currentCat].name, subcategory: state.subData.name,
-    question: ex.question, target_chinese: s.chinese, user_translation: res._userInput,
-    score: res.score, feedback: res, native_version: res.native_version || '', save_to_review: false
-  });
-  renderExercise();
+  if (!(await setInReview('big', res, res._savedToReview !== true))) return;
+  if (state.sentResults[sentIdx] === res && state.activeSentIdx === sentIdx) renderExercise();
 }
 
 function advanceNext() {
@@ -8063,15 +8090,7 @@ var Tpl = {
     const grammar = fbGrammarList(res.grammar_corrections);
     const vocab = fbVocabGrid(res.vocabulary_upgrade);
 
-    const saved = res._saved;
-    const savedBtn = saved === 'saving'
-      ? `<button type="button" class="tpl-fb-btn" disabled>保存中…</button>`
-      : saved === 'pending'
-        ? `<button type="button" class="tpl-fb-btn" onclick="Tpl.saveResult(true)">收录到复习中心</button>
-           <button type="button" class="tpl-fb-btn" onclick="Tpl.saveResult(false)">不收录</button>`
-        : saved === true
-          ? `<button type="button" class="tpl-fb-btn is-on"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 2.5h9v11.5l-4.5-2.6-4.5 2.6V2.5Z" fill="currentColor"/></svg>已收录到复习中心</button>`
-          : `<button type="button" class="tpl-fb-btn" disabled>已记录，未收录到复习中心</button>`;
+    const savedBtn = reviewToggleHtml(res, 'Tpl.toggleReview()', 'Tpl.saveResult()');
 
     return `<div class="tpl-fb">
       <div class="tpl-fb-top">
@@ -8133,9 +8152,9 @@ var Tpl = {
         { signal: job.signal, onRetry: (n, total) => Grading.retrying(job, n, total) });
       if (job.signal.aborted || this.s.prac !== p || p.token !== token) return;  // 批改期间用户已经切走
       res._payload = payload;
-      res._saved = 'pending';
       res._gradedAt = Date.now();
       p.results[key] = res;
+      this.saveResult(key);
       // 结果回来时用户可能已经翻到别的句子，那就只存不渲染，回到该句时自然会显示
       if (p.stepIdx !== fromStep || p.activeIdx !== fromIdx) return;
       this.renderEditor();
@@ -8175,23 +8194,22 @@ var Tpl = {
     this.renderPractice();
   },
 
-  async saveResult(toReview) {
+  // 提交后自动调用（带上句子的 key）；没存上时「重试收录」不带 key，按当前句
+  saveResult(key) {
     const p = this.s.prac;
-    const key = this.cellKey(this.curStep().id, p.activeIdx);
+    key = key || this.cellKey(this.curStep().id, p.activeIdx);
     const res = p.results[key];
-    if (!res || res._saved !== 'pending') return;
-    res._saved = 'saving';   // 先占位，避免连点两次存成两条
-    const body = Object.assign({}, res._payload, {
+    if (!res || res._recordId || reviewSaving.has(res)) return;
+    saveToReviewCenter(res, '/api/writing/template/save_practice', Object.assign({}, res._payload, {
       score: res.score || '', feedback: res, native_version: res.native_version || '',
-      // 偷看状态按保存这一刻算，提交后再点开答案也算看过
-      peeked: !!p.peeked[key],
-      save_to_review: !!toReview,
-    });
-    const r = await API.post('/api/writing/template/save_practice', body);
-    if (r && r.error) { res._saved = 'pending'; alert('保存失败：' + r.error); return; }
-    res._saved = !!toReview;
-    await this.loadProgress();
-    this.renderPractice();
+    }), () => this.loadProgress());
+    repaintReviewToggle(res);
+  },
+
+  async toggleReview() {
+    const p = this.s.prac;
+    const res = p.results[this.cellKey(this.curStep().id, p.activeIdx)];
+    if (await setInReview('tpl', res, res._savedToReview !== true)) repaintReviewToggle(res);
   },
 
   /* ==================== 小作文 ==================== */
