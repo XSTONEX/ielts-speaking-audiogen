@@ -31,6 +31,29 @@ class NormalizeFeedbackTest(unittest.TestCase):
         r = _normalize_feedback({'native_version': '1. 标准答案： A. 2. 你的结构优化版： B.'})
         self.assertEqual(r['native_version'], '1. 标准答案： A.\n\n2. 你的结构优化版： B.')
 
+    def test_grammar_items_keep_type_and_drop_no_ops(self):
+        r = _normalize_feedback({'grammar_corrections': [
+            {'original': ' sepcial ', 'corrected': 'special', 'type': '拼写', 'reason': None},
+            {'original': 'rules', 'corrected': 'rules', 'type': '用词', 'reason': '没改'},
+            {'original': 'and strict', 'corrected': '', 'type': '多余'},
+            {'original': '', 'corrected': ''},
+        ]})
+        self.assertEqual(r['grammar_corrections'], [
+            {'original': 'sepcial', 'corrected': 'special', 'type': '拼写', 'reason': ''},
+            {'original': 'and strict', 'corrected': '', 'type': '多余', 'reason': ''},
+        ])
+
+    def test_legacy_grammar_string_is_left_alone(self):
+        self.assertEqual(_normalize_feedback({'grammar_corrections': 'a -> b'})['grammar_corrections'], 'a -> b')
+
+    def test_vocab_original_that_was_a_mistake_uses_the_corrected_text(self):
+        r = _normalize_feedback({
+            'grammar_corrections': [{'original': 'speechs', 'corrected': 'speeches', 'type': '拼写'}],
+            'vocabulary_upgrade': [{'original': 'Speechs', 'replacement': 'lectures', 'reason': '学术讲座'},
+                                   {'original': 'take part in', 'replacement': 'participate in', 'reason': ''}],
+        })
+        self.assertEqual([v['original'] for v in r['vocabulary_upgrade']], ['speeches', 'take part in'])
+
     def test_empty_and_non_dict_are_safe(self):
         self.assertEqual(_normalize_feedback({}), {})
         self.assertEqual(_normalize_feedback({'vocabulary_upgrade': '', 'native_version': ''})['vocabulary_upgrade'], [])

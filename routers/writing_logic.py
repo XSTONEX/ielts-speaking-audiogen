@@ -82,11 +82,25 @@ def _split_numbered(text):
 def _normalize_feedback(result):
     """把批改结果统一成固定结构，不依赖模型是否严格遵守格式。
 
+    - grammar_corrections → [{original, corrected, type, reason}]，丢掉改了等于没改的条目
     - vocabulary_upgrade → [{original, replacement, reason}]（模型返回 "1. [a] -> [b] (c)" 字符串也能拆开）
     - native_version → "1. 标准答案：…\n\n2. 你的结构优化版：…"（优先用 native_standard / native_optimized 拼）
     """
     if not isinstance(result, dict):
         return result
+
+    gc = result.get('grammar_corrections')
+    if isinstance(gc, list):
+        fixed = []
+        for it in gc:
+            if not isinstance(it, dict):
+                fixed.append(it)
+                continue
+            item = {k: str(it.get(k) or '').strip() for k in ('original', 'corrected', 'type', 'reason')}
+            if not (item['original'] or item['corrected']) or item['original'] == item['corrected']:
+                continue
+            fixed.append(item)
+        result['grammar_corrections'] = gc = fixed
 
     vu = result.get('vocabulary_upgrade')
     if isinstance(vu, str):
@@ -109,6 +123,13 @@ def _normalize_feedback(result):
                 m = _VOCAB_ITEM_RE.search(it)
                 if m:
                     fixed.append({'original': m.group(1), 'replacement': m.group(2), 'reason': m.group(3) or ''})
+        # 词汇提升只该从改对后的句子里挑；模型偶尔把写错的原文又列一遍，换成改对后的写法
+        wrong = {str(g.get('original', '')).strip().lower(): g.get('corrected', '')
+                 for g in (gc if isinstance(gc, list) else []) if isinstance(g, dict) and g.get('corrected')}
+        for it in fixed:
+            right = wrong.get(it['original'].strip().lower())
+            if right:
+                it['original'] = right
         result['vocabulary_upgrade'] = fixed
 
     std = str(result.pop('native_standard', '') or '').strip()

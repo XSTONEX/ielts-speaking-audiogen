@@ -233,8 +233,7 @@ body.page-writing-practice ::selection { background: var(--w-hl-yellow); color: 
 /* 英文正文走 --w-en；中文由 --w-cn 接住 */
 .sentence-en, .fb-native, .editor-input, .tpl-textarea,
 .tpl-sent, .tpl-pattern-en, .tpl-question, .example-question,
-.kw-tag, .chain-en, .fb-correction .orig,
-.fb-correction .fixed, .fb-vocab-item .orig, .fb-vocab-item .fixed {
+.kw-tag, .chain-en, .fb-gc-fix, .fb-vu-pair {
   font-family: var(--w-en);
 }
 /* 上面那条选择器压不过 body.page-writing-practice textarea，
@@ -652,24 +651,19 @@ body.page-writing-practice textarea.tpl-textarea { font-family: var(--w-en); }
 .tpl-fb-which { font-size: var(--w-fs-meta); color: var(--w-ink3); }
 .tpl-fb-cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
 .tpl-fb-card { border-radius: var(--w-r-inner); padding: 16px 18px; background: var(--w-surface); border: 1px solid var(--w-line); }
-.tpl-fb-card-title { font-size: var(--w-fs-meta); font-weight: 700; margin-bottom: 9px; }
+.tpl-fb-card-title {
+  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  font-size: var(--w-fs-meta); font-weight: 700; margin-bottom: 9px;
+}
 .tpl-fb-card p { margin: 0; }
 .tpl-fb-card.is-grammar .tpl-fb-card-title { color: var(--w-err); }
 .tpl-fb-card.is-vocab .tpl-fb-card-title { color: var(--w-small); }
 .tpl-fb-card.is-native .tpl-fb-card-title { color: var(--w-ok); }
-.tpl-fb-en { font-family: var(--w-en); font-size: var(--w-fs-en); line-height: 1.75; color: var(--w-ink); }
-.tpl-fb-why { font-size: var(--w-fs-meta); line-height: 1.7; color: var(--w-err-ink); margin-top: 6px; }
-.tpl-fb-card.is-vocab .tpl-fb-en b { color: var(--w-small); }
 
 .fb-native { white-space: normal; }
 .fb-native-item + .fb-native-item { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--w-line); }
 .fb-native-label { display: inline-block; font-family: var(--w-cn); font-size: var(--w-fs-meta); font-weight: 600; color: var(--w-ok); margin-bottom: 3px; }
 .fb-native-text { font-family: var(--w-en); line-height: 1.75; }
-.tpl-fb-list .fb-vocab-item { display: block; padding: 9px 12px; margin-bottom: 8px; border-radius: var(--w-r-sm); background: var(--w-sunken); }
-.tpl-fb-list .fb-vocab-item:last-child { margin-bottom: 0; }
-.tpl-fb-list .fb-vocab-item .orig { color: var(--w-ink3); text-decoration: line-through; }
-.tpl-fb-list .fb-vocab-item .fixed { color: var(--w-small); }
-.tpl-fb-list .fb-vocab-item .reason { margin-top: 3px; font-family: var(--w-cn); line-height: 1.6; }
 .tpl-fb-list .fb-native-item { margin: 0; }
 .tpl-fb-list .fb-native-item + .fb-native-item { margin-top: 10px; padding-top: 10px; }
 .tpl-fb-list .fb-native-text { font-size: var(--w-fs-en); color: var(--w-ink); }
@@ -1828,20 +1822,58 @@ body.has-app-shell.page-writing-practice .practice-header { top: 56px; }
 .fb-section.is-native .fb-section-title { color: var(--w-ok); }
 /* 模板模块自己一套反馈 UI，颜色规则对齐 */
 
-.fb-correction { margin-bottom: 10px; }
-.fb-correction:last-child { margin-bottom: 0; }
-.fb-correction .orig {
-  font-size: var(--w-fs-en2); line-height: 1.8; color: var(--w-err);
-  text-decoration: line-through; text-decoration-thickness: 1px;
+/* 语法修正逐条：类型 | 原文 → 改后 | 一句原因。划线 = 写错的，^ = 漏了词，绿色 = 改后的 */
+.fb-count { font-size: var(--w-fs-meta); font-weight: 400; color: var(--w-ink3); }
+.fb-gc-legend {
+  margin-left: auto; display: inline-flex; gap: 14px; flex-wrap: wrap;
+  font-size: 12px; font-weight: 400; color: var(--w-ink3);
 }
-.fb-correction .fixed { font-size: var(--w-fs-en); line-height: 1.8; color: var(--w-ink); font-weight: 600; }
-.fb-correction .reason { font-size: var(--w-fs-ui); line-height: 1.7; color: var(--w-err-ink); margin-top: 4px; }
+.fb-gc-row {
+  display: grid; grid-template-columns: 64px minmax(0, 1.35fr) minmax(0, 1fr);
+  column-gap: 16px; align-items: baseline; padding: 10px 0; border-top: 1px solid var(--w-line);
+}
+.fb-gc-list.no-type .fb-gc-row { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); }
+.fb-gc-list.no-type .fb-gc-type { display: none; }
+.fb-gc-row.is-text .fb-gc-fix { grid-column: 1 / -1; }
+.fb-gc-type > span {
+  display: inline-block; font-size: 12px; line-height: 1; padding: 4px 7px; border-radius: 4px;
+  background: var(--w-sunken); color: var(--w-ink2); white-space: nowrap;
+}
+.fb-gc-fix { font-size: var(--w-fs-en); line-height: 1.6; color: var(--w-ink); overflow-wrap: anywhere; }
+.fb-gc-before { color: var(--w-ink2); }
+.fb-gc-arrow { color: var(--w-ink3); margin: 0 8px; }
+.fb-gc-why { font-size: var(--w-fs-meta); line-height: 1.6; color: var(--w-ink2); }
+.fb-del, .fb-sp { text-decoration: line-through; text-decoration-color: var(--w-err); text-decoration-thickness: 1.5px; }
+.fb-del { color: var(--w-err-ink); }
+.fb-sp { color: var(--w-ink3); }
+.fb-bad { color: var(--w-err); font-weight: 700; background: var(--w-err-line); border-radius: 2px; }
+.fb-caret { color: var(--w-err); font-weight: 700; padding: 0 1px; }
+.fb-ins { color: var(--w-ok); font-weight: 600; background: var(--w-ok-soft); border-radius: 3px; padding: 0 2px; }
+.fb-fix { color: var(--w-ok); font-weight: 700; background: var(--w-hl-green); border-radius: 2px; }
+.fb-gone { font-family: var(--w-cn); font-size: var(--w-fs-meta); color: var(--w-ink3); }
 
-.fb-vocab-item { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 9px; }
-.fb-vocab-item:last-child { margin-bottom: 0; }
-.fb-vocab-item .orig { font-size: var(--w-fs-en2); color: var(--w-ink2); }
-.fb-vocab-item .fixed { font-size: var(--w-fs-en2); font-weight: 600; color: var(--w-ink); }
-.fb-vocab-item .reason { font-size: var(--w-fs-ui); color: var(--w-ink2); }
+/* 词汇提升：原词没写错，不划线；电脑上两列 */
+.fb-vu-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.fb-vu-tile { padding: 11px 14px; border-radius: var(--w-r-sm); background: var(--w-sunken); }
+.fb-vu-pair { font-size: var(--w-fs-en); line-height: 1.5; overflow-wrap: anywhere; }
+.fb-vu-orig { color: var(--w-ink2); }
+.fb-vu-new { color: var(--w-small); font-weight: 600; }
+.fb-vu-why { margin-top: 3px; font-size: var(--w-fs-meta); line-height: 1.6; color: var(--w-ink2); }
+/* 高分示范里用上的提升词 */
+.fb-vu-mark { color: var(--w-small); font-weight: 600; background: var(--w-small-soft); border-radius: 3px; padding: 0 2px; }
+.fb-native-hint { margin-left: 8px; font-family: var(--w-cn); font-size: 12px; font-weight: 400; color: var(--w-ink3); }
+
+/* 复习中心三张小卡片：类型和改法挤一行，原因换行，词汇提升单列 */
+.rv-card .fb-gc-row, .rv-card .fb-gc-list.no-type .fb-gc-row {
+  grid-template-columns: auto minmax(0, 1fr); column-gap: 8px; padding: 6px 0;
+}
+.rv-card .fb-gc-row:first-child { border-top: none; padding-top: 0; }
+.rv-card .fb-gc-why { grid-column: 2; }
+.rv-card .fb-gc-list.no-type .fb-gc-why { grid-column: 1; }
+.rv-card .fb-gc-fix, .rv-card .fb-vu-pair { font-size: var(--w-fs-ui); }
+.rv-card .fb-gc-arrow { margin: 0 5px; }
+.rv-card .fb-vu-grid { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+.rv-card .fb-vu-tile { padding: 0; background: none; }
 .fb-native { font-size: var(--w-fs-en); line-height: 1.8; color: var(--w-ink); white-space: pre-wrap; }
 
 /* 录入复习：一次点击的开关，不再是两步问答 */
@@ -2786,6 +2818,13 @@ html[data-theme="dark"] body.page-writing-practice .tpl-btn.ghost {
   .sub-list, .example-list-grid, .tpl-type-grid { grid-template-columns: minmax(0, 1fr); }
   .tpl-prac-main, #tplSmallPracticeView .tpl-prac-main, .tpl-fb-cards { grid-template-columns: minmax(0, 1fr); }
   .review-stats, .rv-cards { grid-template-columns: minmax(0, 1fr); }
+  /* 语法修正：类型标签和改法一行，原因换到下面；图例收起 */
+  .fb-gc-row { grid-template-columns: 62px minmax(0, 1fr); column-gap: 10px; row-gap: 2px; }
+  .fb-gc-row .fb-gc-why { grid-column: 2; }
+  .fb-gc-list.no-type .fb-gc-row { grid-template-columns: minmax(0, 1fr); }
+  .fb-gc-list.no-type .fb-gc-why { grid-column: 1; }
+  .fb-gc-legend { display: none; }
+  .fb-vu-grid { grid-template-columns: minmax(0, 1fr); }
 }
 </style>
 <link rel="stylesheet" href="/static/theme.css?v=20260919">
@@ -5152,25 +5191,6 @@ function showHistoryFeedback(sentIdx, recordIdx) {
   renderExercise();
 }
 
-function formatGrammarCorrections(gc) {
-  if (!gc) return '';
-  if (typeof gc === 'string') return `<div class="fb-correction">${gc}</div>`;
-  if (Array.isArray(gc)) {
-    return gc.map(g => {
-      if (typeof g === 'string') return `<div class="fb-correction">${g}</div>`;
-      return `<div class="fb-correction"><span class="orig">${g.original || ''}</span> → <span class="fixed">${g.corrected || ''}</span><div class="reason">${g.reason || ''}</div></div>`;
-    }).join('');
-  }
-  return `<div class="fb-correction">${String(gc)}</div>`;
-}
-
-function formatVocabItem(orig, fixed, reason) {
-  return `<div class="fb-vocab-item">
-    <span class="orig">${orig}</span> → <span class="fixed">${fixed}</span>
-    ${reason ? `<div class="reason">${reason}</div>` : ''}
-  </div>`;
-}
-
 function fbEsc(t) {
   return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
@@ -5182,40 +5202,238 @@ function fbSplitNumbered(str) {
     .filter(Boolean);
 }
 
-function parseVocabString(str) {
-  const re = /\[([^\]]*)\]\s*(?:->|→|–>)\s*\[([^\]]*)\]\s*(?:[（(]([^)）]*)[)）])?/;
-  return fbSplitNumbered(str).map(part => {
-    const m = part.match(re);
-    return m ? formatVocabItem(fbEsc(m[1]), fbEsc(m[2]), fbEsc(m[3] || ''))
-             : `<div class="fb-vocab-item">${fbEsc(part)}</div>`;
-  }).join('');
-}
+/* ==================== 批改结果：改错逐条 / 词汇提升 / 高分示范 ====================
+   改错每条是「原文片段 → 改后」。页面自己按单词比对两边：写错的词划掉、漏词处标 ^、
+   改后新加的词标绿；一词对一词又长得像的（拼写、时态这类），再按字母比对，只标那几个字母。
+   字母级的说明（“e 和 p 写反了”）也由这里算，模型数字母经常数错。 */
 
-// 高分示范："1. 标准答案：… 2. 你的结构优化版：…" → 带标签的分行卡片
-function formatNativeVersion(str) {
-  return fbSplitNumbered(str).map(part => {
-    const m = part.match(/^([\u4e00-\u9fa5（）()]{2,12})[:：]\s*([\s\S]*)$/);
-    return m
-      ? `<div class="fb-native-item"><span class="fb-native-label">${fbEsc(m[1])}</span><div class="fb-native-text">${fbEsc(m[2])}</div></div>`
-      : `<div class="fb-native-item"><div class="fb-native-text">${fbEsc(part)}</div></div>`;
-  }).join('');
-}
-
-function formatVocabUpgrade(vu) {
-  if (!vu) return '';
-  if (typeof vu === 'string') return parseVocabString(vu);
-  if (Array.isArray(vu)) {
-    return vu.map(item => {
-      if (typeof item === 'string') return parseVocabString(item);
-      const orig = item.original || '';
-      const fixed = item.upgrade || item.suggestion || item.replacement || '';
-      const reason = item.explanation || item.reason || item.chinese || '';
-      if (orig || fixed) return formatVocabItem(orig, fixed, reason);
-      return `<div class="fb-vocab-item">${JSON.stringify(item)}</div>`;
-    }).join('');
+// 两个序列的最长公共子序列，展开成 same / del / ins 操作；同一处改动里先出 del 再出 ins
+function fbLcsOps(a, b, eq) {
+  const n = a.length, m = b.length;
+  const dp = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+  for (let i = n - 1; i >= 0; i--) {
+    for (let j = m - 1; j >= 0; j--) {
+      dp[i][j] = eq(a[i], b[j]) ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+    }
   }
-  if (typeof vu === 'object') return `<div class="fb-vocab-item">${JSON.stringify(vu)}</div>`;
-  return parseVocabString(String(vu));
+  const ops = [];
+  let i = 0, j = 0;
+  while (i < n && j < m) {
+    if (eq(a[i], b[j])) { ops.push({ op: 'same', a: a[i++], b: b[j++] }); }
+    else if (dp[i + 1][j] >= dp[i][j + 1]) ops.push({ op: 'del', a: a[i++] });
+    else ops.push({ op: 'ins', b: b[j++] });
+  }
+  while (i < n) ops.push({ op: 'del', a: a[i++] });
+  while (j < m) ops.push({ op: 'ins', b: b[j++] });
+  return ops;
+}
+
+// 切成单词和标点，各自记下前面有没有空格，拼回去时还原
+function fbTokens(s) {
+  const out = [];
+  const re = /(\s*)([A-Za-z0-9À-ɏ]+(?:['’-][A-Za-z0-9À-ɏ]+)*|\S)/g;
+  let m;
+  while ((m = re.exec(String(s || '')))) out.push({ sp: m[1] ? ' ' : '', t: m[2] });
+  if (out.length) out[0].sp = '';
+  return out;
+}
+
+const fbSameChar = (p, q) => p === q;
+
+// 一词对一词时，像不像同一个词写错了（sepcial / special、became / become 算；on / in、consistently / constant 不算）
+function fbAlike(x, y) {
+  if (x.toLowerCase() === y.toLowerCase()) return true;
+  if (Math.min(x.length, y.length) < 2) return false;
+  const common = fbLcsOps([...x.toLowerCase()], [...y.toLowerCase()], fbSameChar).filter(o => o.op === 'same').length;
+  return 2 * common / (x.length + y.length) >= 0.72;
+}
+
+// [[cls, text], …] → 相邻同类合并成一个 span；cls 为空的原样输出
+function fbRuns(parts) {
+  let html = '', cur = null, buf = '';
+  // 开头的空格留在 span 外面，底色不从空格开始
+  const flush = () => {
+    const lead = cur ? buf.match(/^\s*/)[0] : '';
+    if (buf) html += cur ? `${lead}<span class="${cur}">${buf.slice(lead.length)}</span>` : buf;
+    buf = '';
+  };
+  parts.forEach(([cls, text]) => {
+    if (cls !== cur) { flush(); cur = cls; }
+    buf += text;
+  });
+  flush();
+  return html;
+}
+
+// 一个拼错的词：原词里多出来 / 写错的字母标红，改后新补上的字母标绿。
+// 原词没有写错的字母、只是少了几个（building → buildings），原词不划线，缺的地方标 ^
+function fbLetters(x, y) {
+  const ops = fbLcsOps([...x], [...y], fbSameChar);
+  const bad = ops.some(o => o.op === 'del');
+  const before = [], after = [];
+  ops.forEach((o, k) => {
+    if (o.op === 'same') { before.push(['', fbEsc(o.a)]); after.push(['', fbEsc(o.b)]); }
+    else if (o.op === 'del') before.push(['fb-bad', fbEsc(o.a)]);
+    else {
+      after.push(['fb-fix', fbEsc(o.b)]);
+      if (!bad && (k === 0 || ops[k - 1].op !== 'ins')) before.push(['fb-caret', '^']);
+    }
+  });
+  return { before: fbRuns(before), after: fbRuns(after), bad };
+}
+
+// 单个拼错的词能说清楚的几种情况；说不清就返回空，交给模型的原因
+function fbSpellNote(x, y) {
+  if (x.length === y.length) {
+    const d = [];
+    for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) d.push(i);
+    if (d.length === 1) return `${x[d[0]]} 应为 ${y[d[0]]}`;
+    if (d.length === 2 && d[1] === d[0] + 1 && x[d[0]] === y[d[1]] && x[d[1]] === y[d[0]]) {
+      return `${x[d[0]]} 和 ${x[d[1]]} 写反了`;
+    }
+    return '';
+  }
+  const ops = fbLcsOps([...x], [...y], fbSameChar);
+  const idx = kind => ops.map((o, k) => (o.op === kind ? k : -1)).filter(k => k >= 0);
+  const dels = idx('del'), ins = idx('ins');
+  const together = list => list.length && list[list.length - 1] - list[0] === list.length - 1;
+  if (!dels.length && together(ins)) return `少了 ${ins.map(k => ops[k].b).join('')}`;
+  if (!ins.length && together(dels)) return `多了 ${dels.map(k => ops[k].a).join('')}`;
+  return '';
+}
+
+// 一条改错的两边：before 划线 / 标 ^，after 标绿。只有一个拼错的词时顺带给出字母说明
+function fbDiff(a, b) {
+  const ops = fbLcsOps(fbTokens(a), fbTokens(b), (x, y) => x.t === y.t);
+  const before = [], after = [];
+  let regions = 0, note = '';
+  for (let k = 0; k < ops.length;) {
+    if (ops[k].op === 'same') {
+      before.push(['', ops[k].a.sp + fbEsc(ops[k].a.t)]);
+      after.push(['', ops[k].b.sp + fbEsc(ops[k].b.t)]);
+      k++;
+      continue;
+    }
+    const dels = [], ins = [];
+    while (k < ops.length && ops[k].op !== 'same') (ops[k].op === 'del' ? dels : ins).push(ops[k++]);
+    regions++;
+    // 按顺序给每个划掉的词找后面第一个长得像的新词配对（responsability → the responsibility）
+    const pairOf = dels.map(() => -1), delOf = ins.map(() => -1);
+    let from = 0;
+    dels.forEach((d, i) => {
+      for (let q = from; q < ins.length; q++) {
+        if (fbAlike(d.a.t, ins[q].b.t)) { pairOf[i] = q; delOf[q] = i; from = q + 1; break; }
+      }
+    });
+    if (!dels.length) before.push(['fb-caret', (before.length ? ' ' : '') + '^']);
+    dels.forEach((d, i) => {
+      if (pairOf[i] < 0) { before.push(['fb-del', d.a.sp + fbEsc(d.a.t)]); return; }
+      const w = fbLetters(d.a.t, ins[pairOf[i]].b.t);
+      before.push([w.bad ? 'fb-sp' : '', d.a.sp + w.before]);
+    });
+    ins.forEach((t, q) => {
+      if (delOf[q] < 0) after.push(['fb-ins', t.b.sp + fbEsc(t.b.t)]);
+      else after.push(['', t.b.sp + fbLetters(dels[delOf[q]].a.t, t.b.t).after]);
+    });
+    if (dels.length === 1 && ins.length === 1 && pairOf[0] === 0) note = fbSpellNote(dels[0].a.t, ins[0].b.t);
+  }
+  // ^ 后面紧跟的词补一个空格，免得和 ^ 粘在一起
+  const spaced = before.map(([cls, html], i) => {
+    const prev = before[i - 1];
+    return [cls, prev && prev[0] === 'fb-caret' && cls !== 'fb-caret' && !/^\s/.test(html) ? ' ' + html : html];
+  });
+  return {
+    before: fbRuns(spaced),
+    after: after.length ? fbRuns(after) : '<span class="fb-gone">删去</span>',
+    note: regions === 1 ? note : '',
+  };
+}
+
+// 模型写的拼写原因如果是在数字母（“少了一个 l”“p 和 c 写反”），换成页面算出来的
+const FB_LETTER_TALK = /字母|写反|颠倒|顺序|少了|多了|漏写|漏了|多写|拼错|拼写错误/;
+const FB_GC_LEGEND = '<span class="fb-gc-legend"><span><span class="fb-del">划线</span> 写错的</span>'
+  + '<span><span class="fb-caret">^</span> 漏了词</span><span><span class="fb-ins">绿色</span> 改后的</span></span>';
+
+// 语法修正：返回列表 html 和标题后面要接的「N 处 + 图例」
+function fbGrammarList(gc) {
+  if (!gc) return { html: '', head: '' };
+  const items = Array.isArray(gc) ? gc : [gc];
+  let count = 0, typed = false;
+  const rows = items.map(g => {
+    if (!g) return '';
+    if (typeof g !== 'object') return `<div class="fb-gc-row is-text"><div class="fb-gc-fix">${fbEsc(g)}</div></div>`;
+    if (!g.original && !g.corrected) return '';
+    const d = fbDiff(g.original || '', g.corrected || '');
+    let why = String(g.reason || g.explanation || '').trim();
+    if (g.type === '拼写' && d.note && (!why || FB_LETTER_TALK.test(why))) why = d.note;
+    count++;
+    if (g.type) typed = true;
+    return `<div class="fb-gc-row">
+      <span class="fb-gc-type">${g.type ? `<span>${fbEsc(g.type)}</span>` : ''}</span>
+      <div class="fb-gc-fix"><span class="fb-gc-before">${d.before}</span><span class="fb-gc-arrow">→</span>${d.after}</div>
+      <div class="fb-gc-why">${fbEsc(why)}</div>
+    </div>`;
+  }).filter(Boolean);
+  if (!rows.length) return { html: '', head: '' };
+  return {
+    html: `<div class="fb-gc-list${typed ? '' : ' no-type'}">${rows.join('')}</div>`,
+    head: count ? `<span class="fb-count">${count} 处</span>${FB_GC_LEGEND}` : '',
+  };
+}
+
+// 词汇提升统一成 [{original, replacement, reason}]；老数据里的 "1. [a] -> [b] (c)" 字符串也拆开，拆不开的放 text
+function fbVocabItems(vu) {
+  if (!vu) return [];
+  const re = /\[([^\]]*)\]\s*(?:->|→|–>)\s*\[([^\]]*)\]\s*(?:[（(]([^)）]*)[)）])?/;
+  const fromString = str => fbSplitNumbered(str).map(part => {
+    const m = part.match(re);
+    return m ? { original: m[1], replacement: m[2], reason: m[3] || '' } : { text: part };
+  });
+  if (typeof vu === 'string') return fromString(vu);
+  if (!Array.isArray(vu)) return typeof vu === 'object' ? [{ text: JSON.stringify(vu) }] : fromString(String(vu));
+  return vu.flatMap(item => {
+    if (typeof item === 'string') return fromString(item);
+    if (!item || typeof item !== 'object') return [];
+    const original = item.original || '';
+    const replacement = item.upgrade || item.suggestion || item.replacement || '';
+    if (!original && !replacement) return [{ text: JSON.stringify(item) }];
+    return [{ original, replacement, reason: item.explanation || item.reason || item.chinese || '' }];
+  });
+}
+
+// 词汇提升：原词没写错，所以不划线；电脑上两列
+function fbVocabGrid(vu) {
+  const items = fbVocabItems(vu);
+  if (!items.length) return '';
+  return `<div class="fb-vu-grid">${items.map(v => v.text !== undefined
+    ? `<div class="fb-vu-tile"><div class="fb-vu-why">${fbEsc(v.text)}</div></div>`
+    : `<div class="fb-vu-tile">
+        <div class="fb-vu-pair"><span class="fb-vu-orig">${fbEsc(v.original)}</span><span class="fb-gc-arrow">→</span><span class="fb-vu-new">${fbEsc(v.replacement)}</span></div>
+        ${v.reason ? `<div class="fb-vu-why">${fbEsc(v.reason)}</div>` : ''}
+      </div>`).join('')}</div>`;
+}
+
+// 在已转义的英文里把词汇提升的替换词标蓝；返回有没有标到
+function fbMarkVocab(html, items) {
+  const alts = items.map(v => fbEsc(v.replacement || '').trim()).filter(r => r.length > 1)
+    .sort((a, b) => b.length - a.length).map(r => r.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  if (!alts.length) return { html, hit: false };
+  let hit = false;
+  const re = new RegExp(`(^|[^A-Za-z])(${alts.join('|')})(?![A-Za-z])`, 'gi');
+  const out = html.replace(re, (all, pre, word) => { hit = true; return `${pre}<span class="fb-vu-mark">${word}</span>`; });
+  return { html: out, hit };
+}
+
+// 高分示范："1. 标准答案：… 2. 你的结构优化版：…" → 带标签的分行卡片；
+// 传了词汇提升的话，优化版里用上的替换词标蓝
+function formatNativeVersion(str, vocab) {
+  const items = fbVocabItems(vocab).filter(v => v.replacement);
+  return fbSplitNumbered(str).map(part => {
+    const m = part.match(/^([一-龥（）()]{2,12})[:：]\s*([\s\S]*)$/);
+    if (!m) return `<div class="fb-native-item"><div class="fb-native-text">${fbEsc(part)}</div></div>`;
+    const marked = m[1].includes('优化') ? fbMarkVocab(fbEsc(m[2]), items) : { html: fbEsc(m[2]), hit: false };
+    return `<div class="fb-native-item"><span class="fb-native-label">${fbEsc(m[1])}</span>${marked.hit ? '<span class="fb-native-hint">蓝色 = 用上了词汇提升</span>' : ''}<div class="fb-native-text">${marked.html}</div></div>`;
+  }).join('');
 }
 
 function renderFeedbackCard(fb, opts) {
@@ -5223,8 +5441,8 @@ function renderFeedbackCard(fb, opts) {
   const cls = sc >= 7 ? 'high' : sc >= 6 ? 'mid' : 'low';
   // 分数环：把分数换算成角度交给 CSS 的 conic-gradient，9 分封顶一圈
   const deg = Math.max(0, Math.min(360, Math.round(sc / 9 * 360)));
-  const gcHtml = formatGrammarCorrections(fb.grammar_corrections);
-  const vuHtml = formatVocabUpgrade(fb.vocabulary_upgrade);
+  const gc = fbGrammarList(fb.grammar_corrections);
+  const vuHtml = fbVocabGrid(fb.vocabulary_upgrade);
   const nextFn = opts.nextFn || 'advanceNext()';
   const sentKey = opts.followupKey || '';
   const showFollowup = opts.showFollowup !== false && sentKey;
@@ -5232,20 +5450,20 @@ function renderFeedbackCard(fb, opts) {
     <div class="feedback-card">
       ${opts.omitScore ? '' : `<div class="fb-score ${cls}" style="--score-deg:${deg}deg;"><span>${fb.score}</span></div>`}
       <div class="fb-summary">${fb.feedback_summary || ''}</div>
-      ${gcHtml ? `
+      ${gc.html ? `
         <div class="fb-section is-grammar">
-          <div class="fb-section-title">语法修正</div>
-          ${gcHtml}
+          <div class="fb-section-title">语法修正${gc.head}</div>
+          ${gc.html}
         </div>` : ''}
       ${vuHtml ? `
         <div class="fb-section is-vocab">
-          <div class="fb-section-title">词汇提升</div>
+          <div class="fb-section-title">词汇提升<span class="fb-count">改对之后，还能写得更地道</span></div>
           ${vuHtml}
         </div>` : ''}
       ${fb.native_version ? `
         <div class="fb-section is-native">
           <div class="fb-section-title">高分示范</div>
-          <div class="fb-native">${formatNativeVersion(fb.native_version)}</div>
+          <div class="fb-native">${formatNativeVersion(fb.native_version, fb.vocabulary_upgrade)}</div>
         </div>` : ''}
       ${opts.reviewPrompt || ''}
       ${(opts.retryFn || opts.nextBtn) ? `<div class="fb-actions">
@@ -5798,7 +6016,7 @@ function collectReviewRecords(node, out) {
   return out;
 }
 
-// 按 AI 给的 reason 文本归类错误。纯关键词启发式，够用且透明
+// 新批改每条都带 type，直接用；老记录没有 type，按 reason 文本里的关键词归类
 const MISTAKE_RULES = [
   ['连接词', /连接词|连词|but|however|so\b|because/i],
   ['时态', /时态|过去式|现在完成|将来时/],
@@ -5807,7 +6025,7 @@ const MISTAKE_RULES = [
   ['介词', /介词|搭配.*of|搭配.*in|搭配.*to\b/],
   ['冠词', /冠词|the\b.*用法|a\/an/],
   ['词性', /词性|名词形式|形容词形式|副词形式|动词形式/],
-  ['固定搭配', /固定搭配|搭配|collocation/i],
+  ['搭配', /固定搭配|搭配|collocation/i],
   ['拼写', /拼写|spelling|拼错/],
   ['语序', /语序|词序|顺序/]
 ];
@@ -5818,6 +6036,7 @@ function classifyMistakes(records) {
     const fb = r.feedback || {};
     const gcs = Array.isArray(fb.grammar_corrections) ? fb.grammar_corrections : [];
     gcs.forEach(c => {
+      if (c && c.type) { tally[c.type] = (tally[c.type] || 0) + 1; return; }
       const text = [c && c.reason, c && c.explanation].filter(Boolean).join(' ');
       if (!text) return;
       for (const [name, re] of MISTAKE_RULES) {
@@ -5932,30 +6151,6 @@ function rvDate(ts) {
   return isNaN(d.getTime()) ? '' : d.toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-function rvGrammarText(fb) {
-  const gc = fb && fb.grammar_corrections;
-  if (!gc) return '';
-  if (typeof gc === 'string') return gc;
-  if (!Array.isArray(gc)) return '';
-  return gc.map(g => {
-    if (typeof g === 'string') return g;
-    return (g.reason || g.explanation || '').trim();
-  }).filter(Boolean).join('；');
-}
-
-function rvVocabText(fb) {
-  const vu = fb && fb.vocabulary_upgrade;
-  if (!vu) return '';
-  if (typeof vu === 'string') return fbSplitNumbered(vu).map(fbEsc).join('<br>');
-  if (!Array.isArray(vu)) return '';
-  return vu.map(item => {
-    if (typeof item === 'string') return item;
-    const orig = item.original || '';
-    const fixed = item.upgrade || item.suggestion || item.replacement || '';
-    return (orig || fixed) ? `${orig} → ${fixed}` : '';
-  }).filter(Boolean).join('<br>');
-}
-
 function rvGroupsSmall(data) {
   const groups = [];
   Object.keys(data || {}).forEach(ct => {
@@ -6046,8 +6241,8 @@ function rvItemHtml(it, group) {
   const fb = last.feedback || {};
   const score = fb.score || last.score || '-';
   const cls = rvScoreCls(score);
-  const grammar = rvGrammarText(fb);
-  const vocab = rvVocabText(fb);
+  const grammar = fbGrammarList(fb.grammar_corrections).html;
+  const vocab = fbVocabGrid(fb.vocabulary_upgrade);
   const native = fbSplitNumbered(fb.native_version || last.native_version || '').map(fbEsc).join('<br>');
   const canRetry = group.tab !== 'tpl';
 
@@ -6074,8 +6269,8 @@ function rvItemHtml(it, group) {
         </div>
       </div>
       ${(grammar || vocab || native) ? `<div class="rv-cards">
-        ${grammar ? `<div class="rv-card is-grammar"><div class="rv-card-title">语法修正</div><p>${grammar}</p></div>` : ''}
-        ${vocab ? `<div class="rv-card is-vocab"><div class="rv-card-title">词汇提升</div><p>${vocab}</p></div>` : ''}
+        ${grammar ? `<div class="rv-card is-grammar"><div class="rv-card-title">语法修正</div>${grammar}</div>` : ''}
+        ${vocab ? `<div class="rv-card is-vocab"><div class="rv-card-title">词汇提升</div>${vocab}</div>` : ''}
         ${native ? `<div class="rv-card is-native"><div class="rv-card-title">高分示范</div><p>${native}</p></div>` : ''}
       </div>` : ''}
       <div class="rv-foot">
@@ -7854,15 +8049,8 @@ var Tpl = {
     const p = this.s.prac, step = this.curStep();
     const cls = this.scoreCls(res.score);
 
-    const corr = (res.grammar_corrections || []).filter(c => c && (c.original || c.corrected));
-    const grammar = corr.length ? corr.map(c =>
-      `<p class="tpl-fb-en">${this.esc(c.original)} &rarr; <b>${this.esc(c.corrected)}</b></p>
-       ${c.reason ? `<p class="tpl-fb-why">${this.esc(c.reason)}</p>` : ''}`).join('') : '';
-
-    const vArr = Array.isArray(res.vocabulary_upgrade) ? res.vocabulary_upgrade : [];
-    let vocab = vArr.map(v => formatVocabItem(this.esc(v.original), this.esc(v.replacement || v.upgrade || ''),
-      this.esc(v.reason || v.explanation || ''))).join('');
-    if (!vocab && typeof res.vocabulary_upgrade === 'string') vocab = parseVocabString(res.vocabulary_upgrade);
+    const grammar = fbGrammarList(res.grammar_corrections);
+    const vocab = fbVocabGrid(res.vocabulary_upgrade);
 
     const saved = res._saved;
     const savedBtn = saved === 'saving'
@@ -7882,9 +8070,9 @@ var Tpl = {
         <span class="tpl-fb-which">${this.esc(this.sentLabel(step, p.activeIdx))} 的批改</span>
       </div>
       <div class="tpl-fb-cards">
-        ${grammar ? `<div class="tpl-fb-card is-grammar"><div class="tpl-fb-card-title">语法修正</div>${grammar}</div>` : ''}
-        ${vocab ? `<div class="tpl-fb-card is-vocab"><div class="tpl-fb-card-title">词汇提升</div><div class="tpl-fb-list">${vocab}</div></div>` : ''}
-        ${res.native_version ? `<div class="tpl-fb-card is-native"><div class="tpl-fb-card-title">高分示范</div><div class="tpl-fb-list">${formatNativeVersion(res.native_version)}</div></div>` : ''}
+        ${grammar.html ? `<div class="tpl-fb-card is-grammar"><div class="tpl-fb-card-title">语法修正${grammar.head}</div>${grammar.html}</div>` : ''}
+        ${vocab ? `<div class="tpl-fb-card is-vocab"><div class="tpl-fb-card-title">词汇提升<span class="fb-count">改对之后，还能写得更地道</span></div>${vocab}</div>` : ''}
+        ${res.native_version ? `<div class="tpl-fb-card is-native"><div class="tpl-fb-card-title">高分示范</div><div class="tpl-fb-list">${formatNativeVersion(res.native_version, res.vocabulary_upgrade)}</div></div>` : ''}
       </div>
       <div class="tpl-fb-actions">
         ${savedBtn}
