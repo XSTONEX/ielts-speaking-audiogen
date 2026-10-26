@@ -5087,6 +5087,10 @@ async function enterPractice(catIdx, subIdx) {
       });
     }
   } catch(e) { state.historySentences = {}; }
+  // 停在第一道还有句子没分数的例题上，例题里具体哪一句由 renderExercise 去找
+  const exIdx = data.examples.findIndex((ex, ei) =>
+    ex.sentences.some((_, si) => !state.historySentences[`${ei}_${si}`]));
+  if (exIdx > 0) state.currentExIdx = exIdx;
   renderPractice();
   switchView('practiceView');
 }
@@ -7740,6 +7744,7 @@ var Tpl = {
       steps, stepIdx: 0, activeIdx: 0,
       results: {}, drafts: {}, peeked: {}, busy: false,
     };
+    this.gotoFirstUnscored();
     document.getElementById('pageTitle').textContent = `${d.name} · 实战`;
     switchView('tplBigPracticeView');
     this.renderPractice();
@@ -7762,6 +7767,15 @@ var Tpl = {
   },
   curStep() { return this.s.prac.steps[this.s.prac.stepIdx] || { sentences: [] }; },
   curSentence() { return this.curStep().sentences[this.s.prac.activeIdx] || null; },
+  // 进实战（「接着练」）停在全篇第一句还没分数的；全练过了就停在开头
+  gotoFirstUnscored() {
+    const p = this.s.prac;
+    for (let si = 0; si < p.steps.length; si++) {
+      const st = p.steps[si];
+      const i = st.sentences.findIndex((_, k) => !this.cellScore(st.id, k));
+      if (i >= 0) { p.stepIdx = si; p.activeIdx = i; return; }
+    }
+  },
   cellKey(stepId, idx) { return `${stepId}#${idx}`; },
 
   savedScore(stepId, idx) {
@@ -8681,6 +8695,7 @@ var Tpl = {
       })).filter(st => st.sentences.length),
       stepIdx: 0, activeIdx: 0, results: {}, drafts: {}, peeked: {}, busy: false,
     };
+    this.gotoFirstUnscored();
     document.getElementById('pageTitle').textContent = `${c.name} · 实战`;
     setTimeout(() => this.rememberSpot(), 0);
     this.renderPractice();
