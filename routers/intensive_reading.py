@@ -4,14 +4,17 @@ from datetime import datetime
 from werkzeug.utils import secure_filename
 from pydub import AudioSegment
 from urllib.parse import unquote
+from concurrent.futures import ThreadPoolExecutor
 
 from core import (
     INTENSIVE_DIR, INTENSIVE_IMAGES_DIR, VOCAB_AUDIO_DIR,
     generate_tts, generate_token, get_vocab_audio_path,
     generate_and_save_vocab_audio, delete_vocab_audio,
     delete_article_vocab_audio, delete_article_audio_files,
-    generate_vocab_audio_async, is_safe_path_segment
+    generate_vocab_audio_async, is_safe_path_segment,
+    load_prompt, call_gemini_llm
 )
+from utils import jiufen_import
 
 intensive_reading_bp = Blueprint('intensive_reading', __name__)
 
@@ -33,6 +36,59 @@ def _article_path(article_id: str) -> str:
     if not _valid_article_id(article_id):
         raise ValueError(f'无效的文章ID: {article_id!r}')
     return os.path.join(INTENSIVE_DIR, f"{article_id}.json")
+
+def _content_html(content):
+    """将简单换行转化为段落 HTML，保持只读展示友好"""
+    paragraphs = [f"<p>{re.sub(r'<', '&lt;', p)}</p>" for p in content.split('\n') if p.strip()]
+    return '\n'.join(paragraphs) or f"<p>{re.sub(r'<', '&lt;', content)}</p>"
+
+def _strip_code_fence(content):
+    text = (content or '').strip()
+    m = re.match(r'^```(?:json)?\s*(.*?)\s*```$', text, re.S)
+    return m.group(1) if m else text
+
+def _translate_batch(cfg, batch):
+    """翻一批；返回 ({id: 译文}, 错误)。"""
+    try:
+        content = call_gemini_llm(cfg, [
+            {'role': 'system', 'content': cfg['system_prompt']},
+            {'role': 'user', 'content': cfg['user_prompt'].format(items_json=json.dumps(batch, ensure_ascii=False))},
+        ])
+        data = json.loads(_strip_code_fence(content))
+    except Exception as e:
+        return None, str(e)
+    rows = data.get('items') if isinstance(data, dict) else data
+    wanted = {b['id'] for b in batch}
+    got = {str(r.get('id')): str(r.get('zh') or '').strip() for r in rows or [] if isinstance(r, dict)}
+    return {k: v for k, v in got.items() if k in wanted and v}, None
+
+def _translate_items(items):
+    """逐条翻译 [{id, en}]，返回 ({id: 译文}, 错误)。
+
+    和听力润色一样分批并发：WildAPI 前面的 Cloudflare 单次请求约 60 秒就掐断。
+    接口出错整体算失败（让用户决定要不要不带译文导入）；个别条目漏翻就重试那一批一次，
+    还漏就留空，原文照样能读。"""
+    if not items:
+        return {}, None
+    if not os.getenv('WILDAPI_API_KEY'):
+        return None, '服务器没有配置 WILDAPI_API_KEY'
+    cfg = load_prompt('intensive_translate')
+    size = max(1, int(cfg.get('batch_size') or 25))
+    batches = [items[i:i + size] for i in range(0, len(items), size)]
+    workers = min(len(batches), max(1, int(cfg.get('batch_concurrency') or 3)))
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        results = list(pool.map(lambda b: _translate_batch(cfg, b), batches))
+    merged = {}
+    for batch, (got, error) in zip(batches, results):
+        if error:
+            return None, error
+        missing = [b for b in batch if b['id'] not in got]
+        if missing:
+            again, error = _translate_batch(cfg, missing)
+            if not error:
+                got.update(again)
+        merged.update(got)
+    return merged, None
 
 def _allowed_file(filename):
     """检查文件类型是否允许"""
@@ -276,7 +332,8 @@ def intensive_list():
                     'title': data.get('title'),
                     'category': data.get('category'),
                     'created_at': data.get('created_at'),
-                    'highlight_count': len(data.get('highlights') or [])
+                    'highlight_count': len(data.get('highlights') or []),
+                    'exam': ((data.get('exam') or {}).get('attempt') or {}) if data.get('exam') else None
                 })
             except Exception:
                 continue
@@ -296,9 +353,7 @@ def intensive_create():
     if not content:
         return jsonify({'error': '内容不能为空'}), 400
     article_id = _safe_article_id(title)
-    # 将简单换行转化为段落 HTML，保持只读展示友好
-    paragraphs = [f"<p>{re.sub(r'<', '&lt;', p)}</p>" for p in content.split('\n') if p.strip()]
-    content_html = '\n'.join(paragraphs) or f"<p>{re.sub(r'<', '&lt;', content)}</p>"
+    content_html = _content_html(content)
     obj = {
         'id': article_id,
         'title': title,
@@ -315,6 +370,75 @@ def intensive_create():
         return jsonify({'success': True, 'id': article_id})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@intensive_reading_bp.route('/intensive_import_preview', methods=['POST'])
+def intensive_import_preview():
+    """先解析一遍九分学长 JSON，把能拿到的东西告诉用户，确认后再导入。"""
+    data = request.json or {}
+    try:
+        parts = jiufen_import.parse(data.get('raw'))
+    except jiufen_import.JiufenFormatError as e:
+        return jsonify({'error': str(e)}), 400
+    return jsonify({'success': True, 'parts': [jiufen_import.summarize(p) for p in parts]})
+
+@intensive_reading_bp.route('/intensive_import', methods=['POST'])
+def intensive_import():
+    """导入九分学长阅读 JSON：一个 part 建一篇文章，原文 + 题目 + 作答 + 做题时的划线一起存。"""
+    data = request.json or {}
+    try:
+        parts = jiufen_import.parse(data.get('raw'))
+    except jiufen_import.JiufenFormatError as e:
+        return jsonify({'error': str(e)}), 400
+    category = (data.get('category') or 'Reading').strip()
+    category = category if category in ['Reading', 'Listening', 'Writing'] else 'Reading'
+    titles = data.get('titles') if isinstance(data.get('titles'), list) else []
+    warnings = []
+
+    translated = False
+    if data.get('translate', True):
+        items = []
+        for k, part in enumerate(parts):
+            items += [{'id': f"p{k}.{it['id']}", 'en': it['en']} for it in jiufen_import.translation_items(part)]
+        zh, error = _translate_items(items)
+        if error:
+            return jsonify({'error': f'翻译没成功：{error}', 'translate_failed': True}), 502
+        for k, part in enumerate(parts):
+            prefix = f'p{k}.'
+            jiufen_import.apply_translations(part, {i[len(prefix):]: v for i, v in zh.items() if i.startswith(prefix)})
+        if len(zh) < len(items):
+            warnings.append(f'有 {len(items) - len(zh)} 条没翻出来，原文照常显示')
+        translated = True
+
+    ids = []
+    for k, part in enumerate(parts):
+        title = (str(titles[k]).strip() if k < len(titles) and titles[k] else '') or part['title'] or '未命名'
+        if len(parts) > 1 and part['part'] and not (k < len(titles) and titles[k]):
+            title = f"{part['part']} · {title}"
+        content_text = jiufen_import.build_article_text(part)
+        article_id = _safe_article_id(title)
+        n = 2
+        while os.path.exists(_article_path(article_id)):
+            article_id = f"{_safe_article_id(title)}-{n}"
+            n += 1
+        obj = {
+            'id': article_id,
+            'title': title,
+            'category': category,
+            'created_at': datetime.now().isoformat(),
+            'content_text': content_text,
+            'content_html': _content_html(content_text),
+            'highlights': [],
+            'images': [],
+            'source': 'jiufen',
+            'exam': {**part, 'translated': translated},
+        }
+        try:
+            with open(_article_path(article_id), 'w', encoding='utf-8') as f:
+                json.dump(obj, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            return jsonify({'error': str(e), 'ids': ids}), 500
+        ids.append(article_id)
+    return jsonify({'success': True, 'ids': ids, 'warnings': warnings})
 
 @intensive_reading_bp.route('/intensive_article/<article_id>', methods=['GET'])
 def intensive_article(article_id):
@@ -334,7 +458,8 @@ def intensive_article(article_id):
             'content_html': data.get('content_html'),
             'content_text': data.get('content_text'),
             'highlights': data.get('highlights') or [],
-            'images': data.get('images') or []
+            'images': data.get('images') or [],
+            'exam': data.get('exam')
         }})
     except Exception as e:
         return jsonify({'error': str(e)}), 500

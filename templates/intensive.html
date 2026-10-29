@@ -55,7 +55,8 @@ body.page-intensive {
   --w-zh: #77776F;        /* 译文：比正文淡一档，退到英文后面，但仍然读得清 */
 
   --w-accent: #2F5D9E; --w-accent-soft: #EEF3FA; --w-accent-line: #B7C8E2;
-  --w-err: #B3261E;    --w-err-soft: #FBEFEE;
+  --w-err: #B3261E;    --w-err-soft: #FBEFEE; --w-err-line: #EFCFCC;
+  --w-ok: #2E7D4F;     --w-ok-soft: #EDF6F0;  --w-ok-line: #C9E2D2;
 
   /* 荧光笔：只用一种黄，和写作页的 --w-hl-yellow 同色 */
   --w-hl: #F7E6A8; --w-hl-hover: #F0D984;
@@ -103,7 +104,8 @@ html[data-theme="dark"] body.page-intensive {
   --w-ink3: #7C7C77;
   --w-zh: #96968F;
   --w-accent: #8AB0E6; --w-accent-soft: rgba(138, 176, 230, .13); --w-accent-line: rgba(138, 176, 230, .35);
-  --w-err: #EC8379;    --w-err-soft: rgba(236, 131, 121, .12);
+  --w-err: #EC8379;    --w-err-soft: rgba(236, 131, 121, .12); --w-err-line: rgba(236, 131, 121, .32);
+  --w-ok: #7CC293;     --w-ok-soft: rgba(124, 194, 147, .11);  --w-ok-line: rgba(124, 194, 147, .30);
   --w-hl: rgba(247, 230, 168, .24); --w-hl-hover: rgba(247, 230, 168, .36);
   --w-tip-bg: #ECECEA; --w-tip-ink: #1F1F1F;
   --w-shadow-lg: 0 4px 16px rgba(0, 0, 0, .45);
@@ -382,6 +384,85 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
 #deleteImageBtn { height: 28px; padding: 0 12px; border: 1px solid rgba(255, 255, 255, .3); border-radius: var(--w-r-sm); background: transparent; color: #fff; font: 13px var(--w-cn); cursor: pointer; }
 #deleteImageBtn:hover { background: rgba(236, 131, 121, .25); border-color: rgba(236, 131, 121, .6); }
 
+/* ==================== 题目（九分学长导入的文章）：桌面在原文右边，窄屏用「原文 / 题目」切换 ==================== */
+.reader .ir-ptitle { margin: 0 0 24px; font: 600 22px/1.35 var(--w-en); color: var(--w-ink); }
+.reader p.para { margin-top: 28px; }
+.reader .ir-ptitle + p { margin-top: 0; }
+.reader p.ir-ev { background: var(--w-accent-soft); box-shadow: -10px 0 0 var(--w-accent-soft), 10px 0 0 var(--w-accent-soft); border-radius: 2px; transition: background .3s; }
+::highlight(jiufen) { text-decoration-line: underline; text-decoration-color: var(--w-accent); text-decoration-thickness: 2px; text-decoration-style: solid; }
+
+.ir-seg { display: none; }
+.ir-exam { display: none; flex: 0 0 min(46%, 540px); min-width: 0; overflow-y: auto; padding: 28px 28px 120px; background: var(--w-surface); border-left: 1px solid var(--w-line); }
+.ir-body.has-exam .ir-exam { display: block; }
+.ir-body.has-exam .ir-content.panel-open { margin-right: 0; }
+.ir-body.has-exam .ir-content .reader { padding: 40px 44px 48px; }
+
+.ir-exam-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding-bottom: 16px; border-bottom: 1px solid var(--w-line); }
+.ir-exam-part { font-size: 13px; color: var(--w-ink3); }
+.ir-exam-score { margin-top: 4px; font-size: 15px; font-weight: 600; color: var(--w-ink); font-variant-numeric: tabular-nums; }
+.ir-exam-score span { margin-left: 8px; font-size: 13px; font-weight: 400; color: var(--w-ink3); }
+.ir-exam-tools { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; }
+.ir-exam-tools .ir-icon-btn { height: 30px; padding: 0 10px; font-size: 13px; }
+
+.ir-group { padding: 22px 0 6px; }
+.ir-group + .ir-group { border-top: 1px solid var(--w-line); }
+.ir-group-range { margin: 0 0 6px; font-size: 15px; font-weight: 600; color: var(--w-ink); }
+.ir-group-inst { font-size: 13px; line-height: 1.6; color: var(--w-ink2); }
+.ir-group-inst strong { color: var(--w-ink); font-weight: 600; }
+.ir-group-img { display: block; max-width: 100%; margin: 12px 0 0; border: 1px solid var(--w-line); border-radius: var(--w-r-sm); }
+.ir-gopts { margin: 12px 0 0; padding: 10px 12px; list-style: none; background: var(--w-sunken); border-radius: var(--w-r-sm); font: 14px/1.6 var(--w-en); }
+.ir-gopts b { display: inline-block; min-width: 20px; }
+.ir-layout { margin-top: 12px; font-size: 13px; color: var(--w-ink2); }
+.ir-layout summary { cursor: pointer; color: var(--w-ink3); }
+.ir-layout-body { margin-top: 8px; padding: 10px 12px; overflow-x: auto; background: var(--w-sunken); border-radius: var(--w-r-sm); font: 14px/1.7 var(--w-en); color: var(--w-ink); }
+.ir-layout-body table { border-collapse: collapse; }
+.ir-layout-body td, .ir-layout-body th { padding: 4px 8px; vertical-align: top; text-align: left; }
+.ir-layout-body p { margin: 0 0 6px; }
+.ir-blank { display: inline-block; min-width: 28px; padding: 0 6px; border: 1px solid var(--w-line-strong); border-radius: 4px; background: var(--w-surface); font: 600 12px/20px var(--w-cn); text-align: center; color: var(--w-ink2); cursor: pointer; }
+
+.ir-q { position: relative; margin-top: 14px; padding: 12px 14px 10px 46px; border: 1px solid var(--w-line); border-radius: var(--w-r-card); transition: border-color .15s, box-shadow .15s; }
+.ir-q.is-active { border-color: var(--w-accent-line); box-shadow: var(--w-ring); }
+.ir-q-num { position: absolute; left: 12px; top: 12px; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font: 600 12px/1 var(--w-cn); background: var(--w-sunken); color: var(--w-ink2); font-variant-numeric: tabular-nums; }
+.ir-q.is-right .ir-q-num { background: var(--w-ok-soft); color: var(--w-ok); }
+.ir-q.is-wrong .ir-q-num { background: var(--w-err-soft); color: var(--w-err); }
+.ir-q-text { font: 15px/1.6 var(--w-en); color: var(--w-ink); }
+.ir-q-zh { margin-top: 2px; font: 13px/1.6 var(--w-cn); color: var(--w-zh); }
+.ir-viewer.hide-zh .ir-q-zh { display: none; }
+.ir-opts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; padding: 0; list-style: none; }
+.ir-opts.is-list { display: block; }
+.ir-opt { display: inline-flex; align-items: baseline; gap: 6px; padding: 2px 8px; border: 1px solid var(--w-line); border-radius: var(--w-r-sm); font: 13px/1.6 var(--w-en); color: var(--w-ink2); }
+.ir-opts.is-list .ir-opt { display: flex; margin-top: 4px; }
+.ir-opt b { font-weight: 600; }
+.ir-opt .ir-q-zh { margin: 0; font-size: 12px; }
+.ir-ans { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--w-ink3); }
+.ir-ans b { font: 500 13px/1.5 var(--w-en); color: var(--w-ink); }
+.ir-q.is-wrong .ir-ans .mine b { color: var(--w-err); text-decoration: line-through; }
+.ir-q.is-right .ir-ans .mine b, .ir-ans .right b { color: var(--w-ok); }
+.ir-exam:not(.hide-ans) .ir-opt.is-answer { border-color: var(--w-ok-line); background: var(--w-ok-soft); color: var(--w-ok); }
+.ir-exam:not(.hide-ans) .ir-opt.is-mine:not(.is-answer) { border-color: var(--w-err-line); background: var(--w-err-soft); color: var(--w-err); text-decoration: line-through; }
+.ir-q-actions { display: flex; gap: 2px; margin: 6px 0 0 -8px; }
+.ir-q-actions .ir-icon-btn { height: 28px; padding: 0 8px; font-size: 13px; color: var(--w-accent); }
+.ir-q-actions .ir-icon-btn svg { width: 14px; height: 14px; }
+.ir-analysis { margin: 6px 0 2px; padding: 10px 12px; background: var(--w-sunken); border-radius: var(--w-r-sm); font-size: 13px; line-height: 1.7; color: var(--w-ink2); }
+.ir-analysis p { margin: 0; }
+.ir-analysis p + p { margin-top: 6px; }
+.ir-analysis b { color: var(--w-ink); font-weight: 600; margin-right: 4px; }
+.ir-exam.hide-ans .ir-q .ir-q-num { background: var(--w-sunken); color: var(--w-ink2); }
+.ir-exam.hide-ans .ir-ans, .ir-exam.hide-ans .ir-analysis, .ir-exam.hide-ans .ir-q-actions { display: none !important; }
+.ir-exam.only-wrong .ir-q:not(.is-wrong):not(.is-blank) { display: none; }
+.ir-exam-empty { display: none; padding: 32px 0; text-align: center; font-size: 14px; color: var(--w-ink3); }
+.ir-exam.only-wrong.no-wrong .ir-exam-empty { display: block; }
+
+@media (max-width: 900px) {
+  .ir-body.has-exam .ir-exam { position: absolute; inset: 0; flex: none; border-left: none; display: none; padding: 20px 18px 120px; }
+  .ir-body.has-exam.show-q .ir-exam { display: block; }
+  .ir-body.has-exam.show-q .ir-content { visibility: hidden; }
+  .ir-viewer.has-exam .ir-seg { display: flex; flex: none; gap: 4px; padding: 6px 12px; background: var(--w-surface); border-bottom: 1px solid var(--w-line); }
+  .ir-seg button { flex: 1; height: 32px; border: none; border-radius: var(--w-r-sm); background: transparent; color: var(--w-ink3); font: 500 14px/1 var(--w-cn); cursor: pointer; }
+  .ir-seg button.active { background: var(--w-sunken); color: var(--w-ink); }
+  .ir-body.has-exam .ir-content .reader { padding: 20px 18px 32px; }
+}
+
 /* ==================== 手机 ==================== */
 @media (hover: none) {
   .ir-card-del { opacity: .6; }
@@ -472,6 +553,7 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
           <button id="moreBtn" class="ir-icon-btn" onclick="toggleMoreMenu(event)" title="更多" aria-label="更多"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
           <div class="ir-menu" id="moreMenu">
             <button id="uploadImageBtn" class="ir-menu-item" onclick="closeMoreMenu(); triggerImageUpload()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>上传图片</span></button>
+            <button class="ir-menu-item" id="jiufenMarksBtn" onclick="closeMoreMenu(); toggleJiufenMarks()" style="display: none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h16"/><path d="M7 16 15.5 7.5a2.1 2.1 0 0 1 3 3L10 19H7Z"/></svg><span>做题时的划线</span><span class="ir-badge" id="jiufenMarksState"></span></button>
             <button class="ir-menu-item" onclick="closeMoreMenu(); startEditTitle()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg><span>修改标题</span></button>
             <label class="ir-menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg><span>分类</span>
               <select id="vCategory" class="ir-select">
@@ -484,8 +566,12 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
         </div>
       </div>
     </div>
+    <div class="ir-seg" id="examTabs">
+      <button class="active" onclick="showExamTab('text')">原文</button><button onclick="showExamTab('questions')" id="examTabQ">题目</button>
+    </div>
     <div class="ir-body">
       <div class="ir-content" id="vContent"></div>
+      <section class="ir-exam" id="examPane" aria-label="题目"></section>
       <aside class="ir-panel" id="highlightsPanel">
         <div class="resize-handle" id="resizeHandle"></div>
         <div class="ir-panel-head">
@@ -638,7 +724,7 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       document.getElementById('vTitle').textContent = `${art.title || '未命名'}`;
       document.getElementById('vCategory').value = art.category || 'Reading';
       const contentDiv = document.getElementById('vContent');
-      contentDiv.innerHTML = `<div id="articleImages" class="ir-images" style="display: none;"><div class="ir-images-head">文章图片</div><div class="images-grid" id="imagesGrid"></div></div><div class=\"reader\"></div>`; renderReader(contentDiv.querySelector('.reader'), art);
+      contentDiv.innerHTML = `<div id="articleImages" class="ir-images" style="display: none;"><div class="ir-images-head">文章图片</div><div class="images-grid" id="imagesGrid"></div></div><div class=\"reader\"></div>`; renderReader(contentDiv.querySelector('.reader'), art); setupExam(art);
       document.getElementById('viewer').classList.add('active');
       loadArticleImages();
       restoreHighlights(contentDiv, art);
@@ -692,7 +778,8 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
         const title = escapeHtml(it.title||'未命名');
         const highlightCount = it.highlight_count||0;
         const createdDate = (it.created_at||'').slice(0,10);
-        div.innerHTML = `<h3>${title}</h3><div class="ir-meta"><span>${highlightCount} 个高亮</span><span>${createdDate}</span></div>`;
+        const score = it.exam && it.exam.total ? `<span>对 ${it.exam.correct}/${it.exam.total}</span>` : '';
+        div.innerHTML = `<h3>${title}</h3><div class="ir-meta">${score}<span>${highlightCount} 个高亮</span><span>${createdDate}</span></div>`;
 
         // 异步检查音频状态，有音频就在信息行末尾标一下
         checkExistingAudio(it.id).then(audioInfo => {
@@ -720,7 +807,7 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       // 设置URL hash以便刷新时保持状态
       window.location.hash = `#article-${id}`;
 
-      fetch(`/intensive_article/${id}`).then(r=>r.json()).then(d=>{ if(!d.success){ alert(d.error||'加载失败'); return; } const art=d.article; currentArticle=art; highlights = art.highlights||[]; currentImages = art.images||[]; document.getElementById('vTitle').textContent = `${art.title||'未命名'}`; document.getElementById('vCategory').value = art.category||'Reading'; const contentDiv=document.getElementById('vContent'); contentDiv.innerHTML = `<div id="articleImages" class="ir-images" style="display: none;"><div class="ir-images-head">文章图片</div><div class="images-grid" id="imagesGrid"></div></div><div class=\"reader\"></div>`; renderReader(contentDiv.querySelector('.reader'), art); document.getElementById('viewer').classList.add('active'); loadArticleImages(); restoreHighlights(contentDiv, art); closeHighlightsPanel(); checkForJumpHighlight(); 
+      fetch(`/intensive_article/${id}`).then(r=>r.json()).then(d=>{ if(!d.success){ alert(d.error||'加载失败'); return; } const art=d.article; currentArticle=art; highlights = art.highlights||[]; currentImages = art.images||[]; document.getElementById('vTitle').textContent = `${art.title||'未命名'}`; document.getElementById('vCategory').value = art.category||'Reading'; const contentDiv=document.getElementById('vContent'); contentDiv.innerHTML = `<div id="articleImages" class="ir-images" style="display: none;"><div class="ir-images-head">文章图片</div><div class="images-grid" id="imagesGrid"></div></div><div class=\"reader\"></div>`; renderReader(contentDiv.querySelector('.reader'), art); setupExam(art); document.getElementById('viewer').classList.add('active'); loadArticleImages(); restoreHighlights(contentDiv, art); closeHighlightsPanel(); checkForJumpHighlight(); 
       
       // 检查音频文件状态并更新按钮
       checkExistingAudio(id).then(audioInfo => {
@@ -779,6 +866,7 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       closeMoreMenu();
       closeHighlightsPanel();
       closeAudioPanel();
+      setupExam(null);
       currentAudioInfo=null;
       updateAudioButton(false);
       document.getElementById('resumeAudioBtn').style.display = 'none';
@@ -1023,7 +1111,7 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
     function restoreHighlights(container, art){ // 去重并清理已存在的 mark（释义气泡一起删掉，否则会作为孤儿节点留在段落里）
       container.querySelectorAll('mark.hl').forEach(function(n){ const p=n.parentNode; if(!p) return; n.querySelectorAll('.tooltip').forEach(t=>t.remove()); while(n.firstChild) p.insertBefore(n.firstChild, n); p.removeChild(n); p.normalize(); });
       const uniq=[]; (art.highlights||[]).forEach(function(h){ const key=h.start+'-'+h.end; if(!uniq.some(x=>x.start===h.start&&x.end===h.end)){ uniq.push(h); } });
-      uniq.sort((a,b)=>a.start-b.start).forEach(h=>{ applyOneHighlight(container, h); }); updateVocabCount(); }
+      uniq.sort((a,b)=>a.start-b.start).forEach(h=>{ applyOneHighlight(container, h); }); updateVocabCount(); paintExamMarks(); }
     function applyOneHighlight(container, h){ try{ const reader=container.querySelector('.reader'); if(!reader || !(h.end > h.start)) return; // 已存在则跳过
       if(container.querySelector(`mark.hl[data-hid="${h.id}"]`)) return; wrapOriginalRange(reader, h.start, h.end, h); }catch(e){} }
     function deleteHighlight(hid){ if(!currentArticle) return; fetch('/intensive_delete_highlight',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id: currentArticle.id, highlight_id: hid})}).then(r=>r.json()).then(d=>{ if(d.success){ // 重新加载文章以刷新 DOM
@@ -1031,6 +1119,145 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
         } else { alert(d.error||'删除失败'); } }); }
 
     function escapeHtml(s){ return (s||'').replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c])); }
+    // ===== 九分学长导入的文章：题目、作答、定位证据句、做题时的划线 =====
+    let examSentenceAt = {};   // 句号 → 这句英文在 content_text 里的下标
+    let jiufenMarks = (function(){ try{ return localStorage.getItem('intensiveJiufenMarks') !== '0'; }catch(e){ return true; } })();
+    function setupExam(art){
+      const exam = art && art.exam;
+      const viewer = document.getElementById('viewer'); const body = viewer.querySelector('.ir-body'); const pane = document.getElementById('examPane');
+      viewer.classList.toggle('has-exam', !!exam); body.classList.toggle('has-exam', !!exam);
+      document.getElementById('jiufenMarksBtn').style.display = exam && (exam.marks || []).length ? '' : 'none';
+      showExamTab('text');
+      examSentenceAt = {};
+      pane.classList.remove('only-wrong', 'no-wrong');
+      if(!exam){ pane.innerHTML = ''; if(window.CSS && CSS.highlights) CSS.highlights.delete('jiufen'); return; }
+      (exam.paragraphs || []).forEach(p => (p.sentences || []).forEach(s => { examSentenceAt[s.i] = s.o; }));
+      pane.innerHTML = examHtml(exam);
+      pane.scrollTop = 0; examPaneScroll = 0;
+      let hide = false; try{ hide = localStorage.getItem('intensiveHideAnswers') === '1'; }catch(e){}
+      setAnswersHidden(hide, true);
+      const a = exam.attempt;
+      document.getElementById('examTabQ').textContent = a ? `题目 · 对 ${a.correct}/${a.total}` : '题目';
+      pane.onclick = onExamClick;
+    }
+    function examQuestions(exam){ return (exam.groups || []).flatMap(g => g.questions || []); }
+    function fmtDuration(sec){ const m = Math.floor(sec / 60), s = sec % 60; return `${m}:${String(s).padStart(2, '0')}`; }
+    function examHtml(exam){
+      const a = exam.attempt; const qs = examQuestions(exam);
+      const missed = qs.filter(q => q.state === 'wrong' || q.state === 'blank').length;
+      let h = `<div class="ir-exam-head"><div><div class="ir-exam-part">${escapeHtml([exam.part, qs.length + ' 题'].filter(Boolean).join(' · '))}</div>`;
+      if(a) h += `<div class="ir-exam-score">对 ${a.correct} / ${a.total}<span>${a.elapsed_seconds ? '用时 ' + fmtDuration(a.elapsed_seconds) : ''}</span></div>`;
+      h += `</div><div class="ir-exam-tools">`;
+      if(a) h += `<button class="ir-icon-btn" data-act="only-wrong">只看错题${missed ? ' ' + missed : ''}</button>`;
+      h += `<button class="ir-icon-btn is-on" data-act="answers" title="隐藏答案可以重新做一遍">答案</button></div></div>`;
+      (exam.groups || []).forEach(g => { h += groupHtml(g); });
+      return h + `<div class="ir-exam-empty">这一篇没有错题</div>`;
+    }
+    function groupHtml(g){
+      let h = `<section class="ir-group">`;
+      if(g.range) h += `<h3 class="ir-group-range">${escapeHtml(g.range.replace(/(\d)\s*-\s*(\d)/, '$1–$2'))}</h3>`;
+      if(g.instruction_html) h += `<div class="ir-group-inst">${g.instruction_html}</div>`;
+      if(g.image) h += `<img class="ir-group-img" src="${escapeHtml(g.image)}" alt="" loading="lazy">`;
+      if((g.options || []).length) h += `<ul class="ir-gopts">` + g.options.map(o => `<li><b>${escapeHtml(o.key)}</b> ${escapeHtml(o.text)}${o.zh ? `<div class="ir-q-zh">${escapeHtml(o.zh)}</div>` : ''}</li>`).join('') + `</ul>`;
+      // 原题版式（表格 / 笔记 / 摘要）：每题都取到了像样的题干就先收起，不然展开
+      if(g.content_html){
+        const stemsOk = (g.questions || []).every(q => (q.text || '').replace(/_+/g, '').trim().length > 6);
+        h += `<details class="ir-layout"${stemsOk ? '' : ' open'}><summary>原题版式</summary><div class="ir-layout-body">${g.content_html}</div></details>`;
+      }
+      (g.questions || []).forEach(q => { h += questionHtml(g, q); });
+      return h + `</section>`;
+    }
+    function questionHtml(g, q){
+      const cls = { right: ' is-right', wrong: ' is-wrong', blank: ' is-blank' }[q.state] || '';
+      const answers = (q.answer || '').split('|').map(x => x.trim()).filter(Boolean);
+      let h = `<div class="ir-q${cls}" data-num="${escapeHtml(q.num)}"><span class="ir-q-num">${escapeHtml(q.num)}</span>`;
+      if(q.text) h += `<div class="ir-q-text">${escapeHtml(q.text)}</div>`;
+      if(q.zh) h += `<div class="ir-q-zh">${escapeHtml(q.zh)}</div>`;
+      if((q.options || []).length){
+        const list = g.kind === 'choice';
+        h += `<ul class="ir-opts${list ? ' is-list' : ''}">` + q.options.map(o => {
+          const c = (answers.includes(o.key) ? ' is-answer' : '') + (q.user_answer && q.user_answer === o.key ? ' is-mine' : '');
+          const body = list ? `<b>${escapeHtml(o.key)}</b><span>${escapeHtml(o.text)}${o.zh ? `<span class="ir-q-zh">${escapeHtml(o.zh)}</span>` : ''}</span>` : escapeHtml(o.text || o.key);
+          return `<li class="ir-opt${c}">${body}</li>`;
+        }).join('') + `</ul>`;
+        if(q.state === 'blank') h += `<div class="ir-ans"><span class="mine">没有作答</span></div>`;
+      } else {
+        // 填空、配对：直接写出你的答案和正确答案（配对题带上选项内容）
+        const opts = g.options || [];
+        const show = v => { const o = opts.find(o => o.key === v); return escapeHtml(o ? `${v} ${o.text}` : v); };
+        let ans = '';
+        if(q.user_answer || q.state) ans += `<span class="mine">你的答案 <b>${q.user_answer ? show(q.user_answer) : '（空）'}</b></span>`;
+        if(answers.length && q.state !== 'right') ans += `<span class="right">正确答案 <b>${answers.map(show).join(' / ')}</b></span>`;
+        if(ans) h += `<div class="ir-ans">${ans}</div>`;
+      }
+      const an = q.analysis || {};
+      const hasAnalysis = an.explain || an.trap || (an.extra || []).length;
+      if(q.evidence || hasAnalysis){
+        h += `<div class="ir-q-actions">`;
+        if(q.evidence) h += `<button class="ir-icon-btn" data-act="locate">${IC.jump}定位原文</button>`;
+        if(hasAnalysis) h += `<button class="ir-icon-btn" data-act="analysis">解析</button>`;
+        h += `</div>`;
+        if(hasAnalysis) h += `<div class="ir-analysis" hidden>` + (an.explain ? `<p><b>解析</b>${escapeHtml(an.explain)}</p>` : '') + (an.trap ? `<p><b>易错</b>${escapeHtml(an.trap)}</p>` : '') + (an.extra || []).map(x => `<p><b>${escapeHtml(x.label || '')}</b>${escapeHtml(x.text)}</p>`).join('') + `</div>`;
+      }
+      return h + `</div>`;
+    }
+    function onExamClick(e){
+      const pane = document.getElementById('examPane');
+      const blank = e.target.closest('.ir-blank');
+      if(blank){ const q = pane.querySelector(`.ir-q[data-num="${CSS.escape(blank.dataset.q || '')}"]`); if(q){ q.scrollIntoView({ behavior: 'smooth', block: 'center' }); markActiveQuestion(q); } return; }
+      const btn = e.target.closest('[data-act]'); if(!btn) return;
+      const qEl = btn.closest('.ir-q');
+      switch(btn.dataset.act){
+        case 'answers': setAnswersHidden(!pane.classList.contains('hide-ans')); break;
+        case 'only-wrong': { const on = pane.classList.toggle('only-wrong'); btn.classList.toggle('is-on', on); pane.classList.toggle('no-wrong', !pane.querySelector('.ir-q.is-wrong, .ir-q.is-blank')); break; }
+        case 'analysis': { const box = qEl.querySelector('.ir-analysis'); box.hidden = !box.hidden; btn.classList.toggle('is-on', !box.hidden); break; }
+        case 'locate': locateEvidence(qEl); break;
+      }
+    }
+    // 隐藏答案：对错、解析、定位一起藏起来，可以照着原文重新做一遍
+    function setAnswersHidden(hide, silent){
+      const pane = document.getElementById('examPane');
+      pane.classList.toggle('hide-ans', hide);
+      const btn = pane.querySelector('[data-act="answers"]'); if(btn) btn.classList.toggle('is-on', !hide);
+      if(!silent){ try{ localStorage.setItem('intensiveHideAnswers', hide ? '1' : '0'); }catch(e){} }
+    }
+    function markActiveQuestion(qEl){ document.querySelectorAll('#examPane .ir-q.is-active').forEach(x => x.classList.remove('is-active')); qEl.classList.add('is-active'); }
+    function locateEvidence(qEl){
+      const exam = currentArticle && currentArticle.exam; if(!exam) return;
+      const q = examQuestions(exam).find(x => x.num === qEl.dataset.num); if(!q || !q.evidence) return;
+      markActiveQuestion(qEl);
+      const reader = document.querySelector('#vContent .reader');
+      reader.querySelectorAll('p.ir-ev').forEach(p => p.classList.remove('ir-ev'));
+      const ps = [];
+      for(let i = q.evidence[0]; i <= q.evidence[1]; i++){ const p = reader.querySelector(`p[data-s="${i}"]`); if(p) ps.push(p); }
+      if(!ps.length) return;
+      ps.forEach(p => p.classList.add('ir-ev'));
+      if(window.innerWidth <= 900) showExamTab('text');
+      ps[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    let examPaneScroll = 0;   // 窄屏切走再切回「题目」时回到原来看到的位置
+    function showExamTab(tab){
+      const body = document.querySelector('#viewer .ir-body'); const pane = document.getElementById('examPane');
+      if(tab !== 'questions' && body.classList.contains('show-q')) examPaneScroll = pane.scrollTop;
+      body.classList.toggle('show-q', tab === 'questions');
+      if(tab === 'questions') pane.scrollTop = examPaneScroll;
+      const [t1, t2] = document.querySelectorAll('#examTabs button'); t1.classList.toggle('active', tab !== 'questions'); t2.classList.toggle('active', tab === 'questions');
+      if(tab === 'questions') cancelFloat();
+    }
+    // 做题时在九分学长里划的线：用 CSS Custom Highlight 画，不改 DOM，和自己的高亮互不干扰
+    function toggleJiufenMarks(){ jiufenMarks = !jiufenMarks; try{ localStorage.setItem('intensiveJiufenMarks', jiufenMarks ? '1' : '0'); }catch(e){} paintExamMarks(); }
+    function paintExamMarks(){
+      const exam = currentArticle && currentArticle.exam;
+      const state = document.getElementById('jiufenMarksState'); if(state) state.textContent = jiufenMarks ? '显示中' : '已隐藏';
+      if(!window.CSS || !CSS.highlights || typeof Highlight === 'undefined') return;
+      CSS.highlights.delete('jiufen');
+      const reader = document.querySelector('#vContent .reader');
+      if(!exam || !jiufenMarks || !reader) return;
+      const ranges = [];
+      (exam.marks || []).forEach(m => { const base = examSentenceAt[m.s]; if(base == null) return; const r = originalToDomRange(reader, base + m.start, base + m.end); if(r && !r.collapsed) ranges.push(r); });
+      if(ranges.length) CSS.highlights.set('jiufen', new Highlight(...ranges));
+    }
+
     // ===== 原文下标 <-> 页面位置 =====
     // 正文按 content_text 的行渲染：每个非空行一个 <p data-o>，data-o 是这一行在 content_text 里的起始下标，
     // 所以页面上任意位置都能精确换算成原文下标（行起点 + 行内偏移）。以前是把页面文字和原文逐字符模糊对齐，
@@ -1038,16 +1265,34 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
     function renderReader(reader, art){
       const text = art.content_text || '';
       if(!text){ reader.innerHTML = art.content_html || ''; return; }
+      // 九分学长导入的文章：每行是什么（段落编号 / 英文第几句 / 译文）存在 exam 里，不用猜
+      const kinds = {};
+      if(art.exam){
+        const h = document.createElement('h2'); h.className = 'ir-ptitle'; h.textContent = art.exam.title || art.title || '';
+        if(h.textContent) reader.appendChild(h);
+        (art.exam.paragraphs || []).forEach(function(para){
+          if(para.o != null) kinds[para.o] = { cls: 'hd' };
+          (para.sentences || []).forEach(function(s, k){
+            kinds[s.o] = { cls: 'en' + (!para.label && k === 0 ? ' para' : ''), s: s.i };
+            if(s.zo != null) kinds[s.zo] = { cls: 'zh' };
+          });
+        });
+      }
       let pos = 0;
       text.split('\n').forEach(function(line){
-        if(line.trim()){ const p=document.createElement('p'); p.dataset.o = pos; p.className = lineKind(line); p.textContent = line; reader.appendChild(p); }
+        if(line.trim()){
+          const p=document.createElement('p'); p.dataset.o = pos;
+          const k = kinds[pos]; p.className = k ? k.cls : lineKind(line);
+          if(k && k.s != null) p.dataset.s = k.s;
+          p.textContent = line; reader.appendChild(p);
+        }
         pos += line.length + 1;
       });
     }
     // 每行的类型决定样式：en 英文原文，zh 中文译文（可以一键隐藏），hd 「Paragraph A」「第1段」这类小标题
     function lineKind(line){
       const t = line.trim();
-      if(t.length <= 24 && /^(Paragraph\s+[A-Z0-9]+\b|第\s*[0-9一二三四五六七八九十]+\s*段|段落\S{0,6}题|(题目|范文|原文|译文)\s*[:：]?$)/i.test(t)) return 'hd';
+      if(t.length <= 24 && /^(Paragraph\s+[A-Z0-9]+\b|第\s*[0-9一二三四五六七八九十]+\s*段|段落\S{0,6}题|(题目|范文|原文|译文)\s*[:：]?$|[A-Z]$)/.test(t)) return 'hd';
       // 括号、书名号里的内容不算：「幻形虫（Hallucigenia）」「刊登在《High School Reporter》上」都是译文
       const core = t.replace(/[(（《][^()（）《》]*[)）》]/g, '').trim() || t;
       const cjk = (core.match(/[㐀-鿿豈-﫿]/g) || []).length;

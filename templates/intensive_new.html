@@ -22,9 +22,9 @@
   </script>
   <meta charset="UTF-8">
   <script src="/static/auth-fetch.js?v=20260927"></script>
-  <title>新增文章 - 文章精读</title>
+  <title>添加文章 - 文章精读</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  
+
   <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
@@ -32,148 +32,115 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/static/android-chrome-192x192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="/static/android-chrome-512x512.png">
-  
-  <link href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Crimson+Text:wght@400;600&display=swap" rel="stylesheet">
+
   <style>
-    * { box-sizing: border-box; }
-    body { font-family: 'PT Serif', 'Crimson Text', ui-serif, 'Times New Roman', 'Georgia', serif; background: #f6f8fb; margin:0; line-height: 1.6; color: #1f2937; letter-spacing: -0.05px; text-rendering: optimizeLegibility; font-kerning: normal; }
-    .container { max-width: 820px; margin: 0 auto; background:#fff; min-height: 100vh; }
-    h2 { text-align:center; color:#111827; margin:0 0 28px; font-size: 26px; font-weight: 400; letter-spacing: -0.2px; }
-    .toolbar { display:flex; justify-content:flex-start; align-items:center; padding: 24px 32px 16px; border-bottom: 1px solid #e6ebf2; background: #fff; }
-    .toolbar button { padding: 10px 20px; border:none; border-radius:12px; cursor:pointer; background:#f8fafc; color:#374151; font-weight:500; transition: all 0.2s; border: 1px solid #e2e8f0; }
-    .toolbar button:hover { background:#e2e8f0; transform: translateY(-1px); }
-    .section { padding: 32px; margin: 24px; background: #ffffff; border: 1px solid #e6ebf2; border-radius: 16px; box-shadow: 0 6px 18px rgba(15,23,42,0.04); }
-    label { font-weight:600; color:#374151; font-size:15px; display: block; margin: 24px 0 8px; }
-    label:first-of-type { margin-top: 0; }
-    input[type="text"], select, textarea { width:100%; padding:14px 18px; border-radius:12px; border:1px solid #e5eaf0; background:#fff; font-size:15px; transition: all 0.2s; outline:none; font-family: 'PT Serif', 'Crimson Text', ui-serif, 'Times New Roman', 'Georgia', serif; letter-spacing: -0.1px; }
-    input[type="text"]:focus, select:focus, textarea:focus { border-color:#667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.08); }
-    textarea { min-height: 280px; resize: vertical; line-height: 1.55; }
-    .btn { padding:14px 28px; border:none; border-radius:12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#fff; font-weight:600; cursor:pointer; font-size: 15px; transition: all 0.3s; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25); }
-    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4); }
-    .btn:active { transform: translateY(0); }
-    .muted { color:#6b7280; font-size:14px; margin-left: 16px; }
-    .form-actions { display: flex; align-items: center; margin-top: 32px; }
-    
-    /* 图片上传相关样式 */
-    .image-upload-section {
-      margin-top: 24px;
-      padding: 20px;
-      background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
-      border: 1px solid #e6ebf2;
-      border-radius: 12px;
-    }
-    
-    .upload-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 16px;
-      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 500;
-      transition: all 0.2s ease;
-    }
-    
-    .upload-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
-    }
-    
-    .upload-btn:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
-      transform: none;
-    }
-    
-    .images-preview {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      gap: 12px;
-      margin-top: 16px;
-    }
-    
-    .preview-item {
-      position: relative;
-      aspect-ratio: 1;
-      border-radius: 8px;
-      overflow: hidden;
-      background: #f8fafc;
-      border: 1px solid #e5eaf0;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-    
-    .preview-item:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(15,23,42,0.15);
-    }
-    
-    .preview-item img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    
-    .preview-delete-btn {
-      position: absolute;
-      top: 4px;
-      right: 4px;
-      width: 20px;
-      height: 20px;
-      background: rgba(239, 68, 68, 0.9);
-      color: white;
-      border: none;
-      border-radius: 50%;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      opacity: 0;
-      transition: all 0.2s ease;
-    }
-    
-    .preview-item:hover .preview-delete-btn {
-      opacity: 1;
-    }
-    
-    .preview-delete-btn:hover {
-      background: rgba(220, 38, 38, 0.95);
-      transform: scale(1.1);
-    }
-    
-    .upload-hint {
-      color: #6b7280;
-      font-size: 13px;
-      margin-top: 8px;
-    }
-    
-    @media (max-width: 768px) {
-      .container { margin: 0; }
-      .toolbar { padding: 16px 20px 12px; }
-      h2 { font-size: 24px; margin-bottom: 24px; }
-      .section { padding: 24px 20px; }
-      label { font-size: 14px; margin: 20px 0 8px; }
-      input[type="text"], select, textarea { padding: 14px 16px; font-size: 15px; }
-      textarea { min-height: 240px; }
-      .btn { padding: 14px 28px; font-size: 15px; }
-      .form-actions { flex-direction: column; align-items: stretch; gap: 12px; }
-      .muted { margin-left: 0; margin-top: 8px; text-align: center; }
-      .image-upload-section { padding: 16px; margin-top: 20px; }
-      .images-preview { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
-      .preview-delete-btn { opacity: 1; width: 18px; height: 18px; font-size: 9px; }
-    }
-    
-    @media (max-width: 480px) {
-      .toolbar { padding: 12px 16px; }
-      .section { padding: 20px 16px; }
-      input[type="text"], select, textarea { padding: 12px 14px; }
-      .btn { padding: 12px 24px; }
-    }
+/* 和文章精读页同一套令牌：系统字体、近白纸面 + 白卡、一个主色、无阴影、小圆角。
+   挂在 body.page-intensive-new 上，theme.css 在本页样式之后加载，:root 同名变量会被它盖掉；
+   组件类名一律 ir- 前缀，避开 theme.css 给旧版 .container / .section 写的暗色规则。 */
+* { box-sizing: border-box; }
+body.page-intensive-new {
+  --w-cn: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  --w-en: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --w-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --w-paper: #F7F7F5; --w-surface: #FFFFFF; --w-sunken: #F3F3F1; --w-line: #E3E3DF; --w-line-strong: #CFCFCA;
+  --w-ink: #1F1F1F; --w-ink2: #555555; --w-ink3: #8A8A85;
+  --w-accent: #2F5D9E; --w-accent-soft: #EEF3FA;
+  --w-err: #B3261E; --w-err-soft: #FBEFEE; --w-ok: #2E7D4F;
+  --w-r-card: 8px; --w-r-sm: 6px;
+  --w-ring: 0 0 0 3px rgba(47, 93, 158, .15);
+  --accent: var(--w-accent); --accent-hover: #244A80; --accent-soft: var(--w-accent-soft); --accent-contrast: #FFFFFF;
+  --bg-page: var(--w-paper); --bg-surface: var(--w-surface); --bg-elevated: var(--w-surface);
+  --bg-muted: var(--w-sunken); --bg-subtle: var(--w-sunken);
+  --text-primary: var(--w-ink); --text-secondary: var(--w-ink2); --text-muted: var(--w-ink3);
+  --border-default: var(--w-line); --border-strong: var(--w-line-strong);
+  --page-gradient: var(--w-paper); --surface-gradient: var(--w-surface);
+  margin: 0; background: var(--w-paper); color: var(--w-ink); font-family: var(--w-cn); line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+html[data-theme="dark"] body.page-intensive-new {
+  --w-paper: #161616; --w-surface: #1E1E1E; --w-sunken: #1A1A1A; --w-line: #2F2F2F; --w-line-strong: #404040;
+  --w-ink: #ECECEA; --w-ink2: #ADADA8; --w-ink3: #7C7C77;
+  --w-accent: #8AB0E6; --w-accent-soft: rgba(138, 176, 230, .13);
+  --w-err: #EC8379; --w-err-soft: rgba(236, 131, 121, .12); --w-ok: #7CC293;
+  --w-ring: 0 0 0 3px rgba(138, 176, 230, .22);
+  --accent-hover: #A7C4EE; --accent-contrast: #161616;
+}
+
+.ir-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 36px; padding: 0 16px;
+  border: 1px solid var(--w-line); border-radius: var(--w-r-sm); background: var(--w-surface); color: var(--w-ink);
+  font: 500 14px/1 var(--w-cn); text-decoration: none; white-space: nowrap; cursor: pointer; transition: background .15s, border-color .15s;
+}
+.ir-btn:hover { background: var(--w-sunken); border-color: var(--w-line-strong); }
+.ir-btn-primary { background: var(--w-accent); border-color: var(--w-accent); color: var(--accent-contrast); }
+.ir-btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+.ir-btn:disabled { opacity: .45; cursor: default; }
+.ir-btn:disabled:hover { background: var(--w-surface); border-color: var(--w-line); }
+.ir-btn-primary:disabled:hover { background: var(--w-accent); border-color: var(--w-accent); }
+.ir-btn:focus-visible, .ir-tabs button:focus-visible { outline: none; box-shadow: var(--w-ring); }
+.ir-spin { width: 14px; height: 14px; flex: none; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: ir-spin .8s linear infinite; }
+@keyframes ir-spin { to { transform: rotate(360deg); } }
+
+.ir-page { max-width: 760px; margin: 0 auto; padding: 32px 24px 80px; }
+.ir-back { display: inline-flex; align-items: center; gap: 2px; margin-left: -4px; font-size: 14px; color: var(--w-ink3); text-decoration: none; }
+.ir-back:hover { color: var(--w-ink); }
+.ir-back svg { width: 16px; height: 16px; }
+.ir-h1 { margin: 10px 0 4px; font-size: 22px; font-weight: 600; line-height: 1.3; }
+.ir-sub { font-size: 14px; color: var(--w-ink2); }
+
+.ir-tabs { display: flex; gap: 24px; margin: 28px 0 20px; border-bottom: 1px solid var(--w-line); }
+.ir-tabs button {
+  appearance: none; background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -1px; padding: 0 0 10px;
+  font: 500 15px/1.2 var(--w-cn); color: var(--w-ink3); cursor: pointer;
+}
+.ir-tabs button:hover { color: var(--w-ink); }
+.ir-tabs button.active { color: var(--w-ink); border-bottom-color: var(--w-accent); }
+
+.ir-card { padding: 20px; background: var(--w-surface); border: 1px solid var(--w-line); border-radius: var(--w-r-card); }
+.ir-hint { margin: 0 0 12px; font-size: 13px; line-height: 1.7; color: var(--w-ink2); }
+.ir-label { display: block; margin: 0 0 6px; font-size: 13px; font-weight: 500; color: var(--w-ink2); }
+body.page-intensive-new .ir-input, body.page-intensive-new .ir-textarea, body.page-intensive-new .ir-select {
+  width: 100%; border: 1px solid var(--w-line); border-radius: var(--w-r-sm); background: var(--w-surface); color: var(--w-ink);
+  font: 15px/1.6 var(--w-cn); outline: none; transition: border-color .15s, box-shadow .15s;
+}
+body.page-intensive-new .ir-input { height: 38px; padding: 0 12px; }
+body.page-intensive-new .ir-select { height: 38px; padding: 0 8px; width: auto; min-width: 140px; cursor: pointer; }
+body.page-intensive-new .ir-textarea { display: block; min-height: 220px; padding: 12px; resize: vertical; }
+body.page-intensive-new .ir-textarea.is-mono { min-height: 180px; font: 12px/1.6 var(--w-mono); color: var(--w-ink2); }
+body.page-intensive-new .ir-input:focus, body.page-intensive-new .ir-textarea:focus, body.page-intensive-new .ir-select:focus { border-color: var(--w-accent); box-shadow: var(--w-ring); }
+.ir-field + .ir-field { margin-top: 16px; }
+.ir-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; margin-top: 16px; }
+.ir-check { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--w-ink); cursor: pointer; }
+.ir-check input { width: 16px; height: 16px; margin: 0; accent-color: var(--w-accent); }
+.ir-check small { font-size: 13px; color: var(--w-ink3); }
+.ir-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-top: 20px; }
+.ir-msg { font-size: 13px; color: var(--w-ink2); }
+.ir-msg.is-err { color: var(--w-err); }
+.ir-msg.is-ok { color: var(--w-ok); }
+
+.ir-preview { margin-top: 16px; }
+.ir-preview:empty { display: none; }
+.ir-part { padding: 14px 16px; border: 1px solid var(--w-line); border-radius: var(--w-r-card); background: var(--w-sunken); }
+.ir-part + .ir-part { margin-top: 10px; }
+.ir-part-label { margin-bottom: 6px; font-size: 12px; color: var(--w-ink3); }
+body.page-intensive-new .ir-part .ir-input { font: 600 16px var(--w-en); background: var(--w-surface); }
+.ir-facts { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 10px; font-size: 13px; color: var(--w-ink2); }
+.ir-facts b { font-weight: 600; color: var(--w-ink); }
+.ir-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.ir-chip { padding: 1px 8px; border: 1px solid var(--w-line); border-radius: var(--w-r-sm); background: var(--w-surface); font-size: 12px; color: var(--w-ink2); }
+.ir-error { padding: 10px 12px; border-radius: var(--w-r-sm); background: var(--w-err-soft); color: var(--w-err); font-size: 13px; line-height: 1.6; }
+
+.ir-images { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.ir-images:empty { display: none; }
+.ir-thumb { position: relative; width: 88px; height: 88px; overflow: hidden; border: 1px solid var(--w-line); border-radius: var(--w-r-sm); background: var(--w-sunken); }
+.ir-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.ir-thumb button { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; border: none; border-radius: 50%; background: rgba(0, 0, 0, .55); color: #fff; font-size: 11px; line-height: 20px; cursor: pointer; }
+
+@media (max-width: 640px) {
+  .ir-page { padding: 20px 16px 60px; }
+  .ir-card { padding: 16px; }
+  .ir-tabs { margin-top: 20px; }
+}
   </style>
   <link rel="stylesheet" href="/static/theme.css?v=20260919">
   <script src="/static/theme.js?v=20260919" defer></script>
@@ -183,40 +150,66 @@
   <script src="/static/app-shell.js?v=20260927" defer></script>
 </head>
 <body class="theme-page page-intensive-new">
-  <div class="container">
-    <div class="toolbar">
-      <button onclick="location.href='/intensive'">返回文章列表</button>
+  <main class="ir-page">
+    <a class="ir-back" href="/intensive"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>文章精读</a>
+    <h1 class="ir-h1">添加文章</h1>
+    <div class="ir-sub">导入九分学长的做题记录，原文、题目和你的作答都会还原；也可以直接粘贴一篇文章。</div>
+
+    <div class="ir-tabs" role="tablist">
+      <button id="tab-json" class="active" role="tab" onclick="setMode('json')">九分学长 JSON</button>
+      <button id="tab-text" role="tab" onclick="setMode('text')">粘贴文本</button>
     </div>
-    <h2>新增文章</h2>
-    <div class="section">
-      <label>分类</label>
-      <select id="category">
-        <option value="Reading">Reading</option>
-        <option value="Listening">Listening</option>
-        <option value="Writing">Writing</option>
-      </select>
-      <label style="margin-top:10px;display:block;">标题</label>
-      <input id="title" type="text" placeholder="给你的文章起个标题（可选）">
-      <label style="margin-top:10px;display:block;">粘贴你的长文章</label>
-      <textarea id="content" placeholder="将整篇文章粘贴到这里。创建后正文不可修改，只能做高亮与注释。"></textarea>
-      
-      <!-- 图片上传区域 -->
-      <div class="image-upload-section">
-        <label style="margin:0 0 12px 0;">文章图片（可选）</label>
-        <button type="button" class="upload-btn" onclick="triggerImageUpload()" id="uploadBtn">
-          <span>📷</span>
-          <span>上传图片</span>
-        </button>
-        <div class="upload-hint">支持 JPG, PNG, GIF 格式，可选择多张图片</div>
-        <div class="images-preview" id="imagesPreview"></div>
+
+    <!-- 九分学长 JSON -->
+    <section id="pane-json" class="ir-card">
+      <p class="ir-hint">把九分学长作答结果接口返回的整段 JSON 粘贴进来（一般以 <code>{"code": "200"</code> 开头）。前后多带了几个字没关系，会自动认出来。</p>
+      <textarea id="raw" class="ir-textarea is-mono" spellcheck="false" placeholder='{"code": "200", "data": { "attempt": { ... } } }'></textarea>
+      <div id="preview" class="ir-preview"></div>
+      <div class="ir-row">
+        <label class="ir-label" for="jsonCategory" style="margin:0;">分类</label>
+        <select id="jsonCategory" class="ir-select">
+          <option value="Reading">Reading</option>
+          <option value="Listening">Listening</option>
+          <option value="Writing">Writing</option>
+        </select>
+        <label class="ir-check"><input type="checkbox" id="translate" checked>逐句翻译成中文 <small>导入时翻一次，约半分钟</small></label>
       </div>
-      
-      <div class="form-actions">
-        <button class="btn" onclick="createArticle()">创建文章</button>
-        <div id="createMsg" class="muted"></div>
+      <div class="ir-actions">
+        <button class="ir-btn ir-btn-primary" id="importBtn" onclick="importJson(true)" disabled>导入</button>
+        <button class="ir-btn" id="importNoZhBtn" onclick="importJson(false)" style="display: none;">不翻译，直接导入</button>
+        <span id="importMsg" class="ir-msg"></span>
       </div>
-    </div>
-  </div>
+    </section>
+
+    <!-- 粘贴文本 -->
+    <section id="pane-text" class="ir-card" hidden>
+      <div class="ir-field">
+        <label class="ir-label" for="title">标题</label>
+        <input id="title" class="ir-input" type="text" placeholder="可以不填">
+      </div>
+      <div class="ir-field">
+        <label class="ir-label" for="category">分类</label>
+        <select id="category" class="ir-select">
+          <option value="Reading">Reading</option>
+          <option value="Listening">Listening</option>
+          <option value="Writing">Writing</option>
+        </select>
+      </div>
+      <div class="ir-field">
+        <label class="ir-label" for="content">正文</label>
+        <textarea id="content" class="ir-textarea" placeholder="整篇粘贴进来。一句英文一行、译文紧跟在下一行，阅读时就是逐句对照。创建后正文不能再改，只能高亮和记释义。"></textarea>
+      </div>
+      <div class="ir-field">
+        <label class="ir-label">图片（可选）</label>
+        <button type="button" class="ir-btn" onclick="triggerImageUpload()">选择图片</button>
+        <div class="ir-images" id="imagesPreview"></div>
+      </div>
+      <div class="ir-actions">
+        <button class="ir-btn ir-btn-primary" id="createBtn" onclick="createArticle()">创建</button>
+        <span id="createMsg" class="ir-msg"></span>
+      </div>
+    </section>
+  </main>
 
   <!-- 隐藏的文件上传输入框 -->
   <input type="file" id="imageUpload" accept="image/*" multiple style="display: none;" onchange="handleImageUpload(event)">
@@ -234,196 +227,173 @@
         .then(d=>{ if(d && d.valid===false){ localStorage.removeItem('authToken'); return false; } return keep(); })
         .catch(keep);
     }
-    window.onload=function(){ checkStoredToken().then(valid=>{ if(!valid){ window.location.href='/login'; } }); }
+    window.onload=function(){ checkStoredToken().then(valid=>{ if(!valid){ window.location.href='/login'; } }); restoreMode(); }
 
-    function createArticle(){ 
-      const title=document.getElementById('title').value.trim(); 
-      const category=document.getElementById('category').value; 
-      const content=document.getElementById('content').value; 
-      
-      if(!content.trim()){ 
-        showCreateMsg('请粘贴文章内容', true); 
-        return; 
-      } 
-      
-      const createBtn = document.querySelector('.btn');
+    function escapeHtml(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c])); }
+    function setMsg(id, text, kind){ const el=document.getElementById(id); el.textContent=text||''; el.className='ir-msg' + (kind ? ' is-' + kind : ''); }
+
+    // 两种添加方式，记住上次用的
+    function setMode(mode){
+      ['json','text'].forEach(m => {
+        document.getElementById('tab-'+m).classList.toggle('active', m===mode);
+        document.getElementById('pane-'+m).hidden = m!==mode;
+      });
+      try{ localStorage.setItem('intensiveNewMode', mode); }catch(e){}
+    }
+    function restoreMode(){ let m='json'; try{ m = localStorage.getItem('intensiveNewMode') || 'json'; }catch(e){} setMode(m === 'text' ? 'text' : 'json'); }
+
+    // ===== 九分学长 JSON：粘贴后先解析一遍，给出概要再导入 =====
+    let previewParts = null;
+    let previewTimer = null;
+    let previewSeq = 0;
+    const KIND = { judge: '判断', choice: '选择', blank: '填空', match: '配对', other: '其他' };
+    document.getElementById('raw').addEventListener('input', function(){
+      clearTimeout(previewTimer);
+      previewParts = null; refreshImportButtons();
+      document.getElementById('importNoZhBtn').style.display = 'none'; setMsg('importMsg', '');
+      const raw = this.value;
+      if(!raw.trim()){ document.getElementById('preview').innerHTML=''; return; }
+      previewTimer = setTimeout(() => loadPreview(raw), 400);
+    });
+    function loadPreview(raw){
+      const seq = ++previewSeq;
+      fetch('/intensive_import_preview', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ raw }) })
+        .then(r => r.json().catch(() => ({ error: `服务器返回 ${r.status}` })))
+        .then(d => {
+          if(seq !== previewSeq) return;   // 又改过了，以最新一次为准
+          const box = document.getElementById('preview');
+          if(!d.success){ box.innerHTML = `<div class="ir-error">${escapeHtml(d.error || '解析失败')}</div>`; return; }
+          previewParts = d.parts;
+          box.innerHTML = d.parts.map((p, k) => partHtml(p, k, d.parts.length)).join('');
+          refreshImportButtons();
+        })
+        .catch(() => { if(seq === previewSeq) document.getElementById('preview').innerHTML = `<div class="ir-error">网络出错，没能解析，请稍后再试</div>`; });
+    }
+    function fmtDuration(sec){ const m = Math.floor(sec / 60), s = sec % 60; return `${m}:${String(s).padStart(2, '0')}`; }
+    function partHtml(p, k, n){
+      const facts = [
+        `<span><b>${p.paragraphs}</b> 段${p.labelled ? '（A–' + String.fromCharCode(64 + p.paragraphs) + '）' : ''}</span>`,
+        `<span><b>${p.sentences}</b> 句</span>`,
+        `<span><b>${p.questions}</b> 题</span>`,
+      ];
+      if(p.marks) facts.push(`<span>做题时划线 <b>${p.marks}</b> 处</span>`);
+      if(p.attempt) facts.push(`<span>你的成绩 <b>${p.attempt.correct}/${p.attempt.total}</b>${p.attempt.elapsed_seconds ? ' · 用时 ' + fmtDuration(p.attempt.elapsed_seconds) : ''}</span>`);
+      const chips = (p.groups || []).map(g => `<span class="ir-chip">${escapeHtml((KIND[g.kind] || g.kind) + ' ' + (g.range || '').replace(/^Questions?\s*/i, '').replace(/\s*-\s*/, '–'))}</span>`).join('');
+      const defaultTitle = n > 1 && p.part ? `${p.part} · ${p.title}` : p.title;
+      return `<div class="ir-part"><div class="ir-part-label">${escapeHtml(p.part || ('第 ' + (k + 1) + ' 篇'))} · 标题可以改</div>`
+        + `<input class="ir-input" data-part="${k}" value="${escapeHtml(defaultTitle || '')}" placeholder="标题">`
+        + `<div class="ir-facts">${facts.join('')}</div>`
+        + (chips ? `<div class="ir-chips">${chips}</div>` : '') + `</div>`;
+    }
+    function refreshImportButtons(){ document.getElementById('importBtn').disabled = !previewParts; }
+
+    function importJson(translate){
+      if(!previewParts) return;
+      if(!document.getElementById('translate').checked) translate = false;
+      const raw = document.getElementById('raw').value;
+      const titles = [...document.querySelectorAll('#preview .ir-input')].map(i => i.value.trim());
+      const btn = document.getElementById('importBtn'), noZh = document.getElementById('importNoZhBtn');
+      btn.disabled = true; noZh.disabled = true;
+      const label = btn.innerHTML;
+      btn.innerHTML = `<span class="ir-spin"></span>${translate ? '正在翻译' : '正在导入'}`;
+      setMsg('importMsg', translate ? '逐句翻译要半分钟左右，别关页面' : '');
+      fetch('/intensive_import', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ raw, titles, translate, category: document.getElementById('jsonCategory').value }) })
+        .then(r => r.json().catch(() => ({ error: `服务器返回 ${r.status}` })))
+        .then(d => {
+          if(d.success){
+            setMsg('importMsg', (d.warnings || []).join('；') || '导入好了，正在打开…', 'ok');
+            setTimeout(() => { location.href = '/intensive#article-' + d.ids[0]; }, (d.warnings || []).length ? 1500 : 300);
+            return;
+          }
+          setMsg('importMsg', d.error || '导入失败', 'err');
+          noZh.style.display = d.translate_failed ? '' : 'none';
+          btn.innerHTML = label; btn.disabled = false; noZh.disabled = false;
+        })
+        .catch(() => { setMsg('importMsg', '网络出错，没导入成功，可以再试一次', 'err'); btn.innerHTML = label; btn.disabled = false; noZh.disabled = false; });
+    }
+
+    // ===== 粘贴文本 =====
+    function createArticle(){
+      const title=document.getElementById('title').value.trim();
+      const category=document.getElementById('category').value;
+      const content=document.getElementById('content').value;
+      if(!content.trim()){ setMsg('createMsg', '请先粘贴正文', 'err'); return; }
+      const createBtn = document.getElementById('createBtn');
       const originalContent = createBtn.innerHTML;
-      
-      // 禁用按钮，显示创建状态
       createBtn.disabled = true;
-      createBtn.innerHTML = '创建中...';
-      createBtn.style.opacity = '0.7';
-      
-      fetch('/intensive_create',{
-        method:'POST', 
-        headers:{'Content-Type':'application/json'}, 
-        body: JSON.stringify({title, category, content})
-      })
+      createBtn.innerHTML = '<span class="ir-spin"></span>正在创建';
+      setMsg('createMsg', '');
+      fetch('/intensive_create',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({title, category, content}) })
       .then(r=>r.json())
-      .then(d=>{ 
-        if(d.success){ 
+      .then(d=>{
+        if(d.success){
           const articleId = d.id;
-          
-          // 如果有选中的图片，先上传图片
           if(selectedImages.length > 0) {
-            createBtn.innerHTML = `上传图片中... (0/${selectedImages.length})`;
+            createBtn.innerHTML = `<span class="ir-spin"></span>上传图片 0/${selectedImages.length}`;
             uploadImagesForArticle(articleId, createBtn, originalContent);
           } else {
-            showCreateMsg('创建成功', false); 
-            setTimeout(()=>{ 
-              location.href = '/intensive'; 
-            }, 600); 
+            setMsg('createMsg', '创建好了，正在打开…', 'ok');
+            setTimeout(()=>{ location.href = '/intensive#article-' + articleId; }, 300);
           }
-        } else { 
-          showCreateMsg(d.error||'创建失败', true);
-          // 重置按钮状态
-          createBtn.disabled = false;
-          createBtn.innerHTML = originalContent;
-          createBtn.style.opacity = '1';
-        } 
+        } else {
+          setMsg('createMsg', d.error||'创建失败', 'err');
+          createBtn.disabled = false; createBtn.innerHTML = originalContent;
+        }
       })
       .catch(error => {
         console.error('创建文章失败:', error);
-        showCreateMsg('创建失败', true);
-        // 重置按钮状态
-        createBtn.disabled = false;
-        createBtn.innerHTML = originalContent;
-        createBtn.style.opacity = '1';
+        setMsg('createMsg', '创建失败', 'err');
+        createBtn.disabled = false; createBtn.innerHTML = originalContent;
       });
     }
-    
     function uploadImagesForArticle(articleId, createBtn, originalContent) {
-      const promises = selectedImages.map((file, index) => {
+      let done = 0;
+      const promises = selectedImages.map(file => {
         const formData = new FormData();
         formData.append('image', file);
         formData.append('article_id', articleId);
-        
-        return fetch('/intensive_upload_image', {
-          method: 'POST',
-          body: formData
-        })
-        .then(response => response.json())
-        .then(result => {
-          // 更新进度
-          const completedCount = index + 1;
-          createBtn.innerHTML = `上传图片中... (${completedCount}/${selectedImages.length})`;
-          return result;
-        });
+        return fetch('/intensive_upload_image', { method: 'POST', body: formData })
+          .then(response => response.json())
+          .then(result => { done++; createBtn.innerHTML = `<span class="ir-spin"></span>上传图片 ${done}/${selectedImages.length}`; return result; });
       });
-      
       Promise.all(promises)
         .then(results => {
           const successCount = results.filter(r => r.success).length;
           const errorCount = results.length - successCount;
-          
-          if (successCount > 0) {
-            if (errorCount > 0) {
-              showCreateMsg(`创建成功，${successCount}张图片上传成功，${errorCount}张失败`, false);
-            } else {
-              showCreateMsg('创建成功，所有图片上传完毕', false);
-            }
-          } else {
-            showCreateMsg('创建成功，但图片上传失败', false);
-          }
-          
-          setTimeout(()=>{ 
-            location.href = '/intensive'; 
-          }, 1000);
+          if (successCount > 0) setMsg('createMsg', errorCount > 0 ? `创建好了，${successCount} 张图片上传成功，${errorCount} 张失败` : '创建好了，图片都传上去了', errorCount ? 'err' : 'ok');
+          else setMsg('createMsg', '创建好了，但图片没传上去', 'err');
         })
-        .catch(error => {
-          console.error('图片上传失败:', error);
-          showCreateMsg('创建成功，但图片上传失败', false);
-          setTimeout(()=>{ 
-            location.href = '/intensive'; 
-          }, 1000);
-        })
-        .finally(() => {
-          // 重置按钮状态
-          createBtn.disabled = false;
-          createBtn.innerHTML = originalContent;
-          createBtn.style.opacity = '1';
-        });
+        .catch(error => { console.error('图片上传失败:', error); setMsg('createMsg', '创建好了，但图片没传上去', 'err'); })
+        .finally(() => { setTimeout(()=>{ location.href = '/intensive#article-' + articleId; }, 1000); });
     }
-    function showCreateMsg(msg, isErr){ const el=document.getElementById('createMsg'); el.textContent=msg; el.style.color=isErr?'#ef4444':'#6b7280'; setTimeout(()=>{ el.textContent=''; }, 1500); }
-    
+
     // 图片相关功能
-    function triggerImageUpload() {
-      document.getElementById('imageUpload').click();
-    }
-    
+    function triggerImageUpload() { document.getElementById('imageUpload').click(); }
     function handleImageUpload(event) {
       const files = event.target.files;
       if (!files || files.length === 0) return;
-      
-      // 验证文件类型和大小
       const validFiles = Array.from(files).filter(file => {
-        const isValidType = file.type.startsWith('image/');
-        const isValidSize = file.size <= 10 * 1024 * 1024; // 10MB限制
-        
-        if (!isValidType) {
-          alert(`文件 ${file.name} 不是有效的图片格式`);
-          return false;
-        }
-        
-        if (!isValidSize) {
-          alert(`文件 ${file.name} 超过10MB大小限制`);
-          return false;
-        }
-        
+        if (!file.type.startsWith('image/')) { alert(`文件 ${file.name} 不是有效的图片格式`); return false; }
+        if (file.size > 10 * 1024 * 1024) { alert(`文件 ${file.name} 超过10MB大小限制`); return false; }
         return true;
       });
-      
-      if (validFiles.length === 0) return;
-      
-      // 添加到选中的图片列表
-      validFiles.forEach(file => {
-        // 创建一个唯一ID用于删除
-        file.previewId = Date.now() + Math.random();
-        selectedImages.push(file);
-      });
-      
-      // 更新预览
+      validFiles.forEach(file => selectedImages.push(file));
       updateImagesPreview();
-      
-      // 清空文件输入框
       event.target.value = '';
     }
-    
     function updateImagesPreview() {
-      const previewContainer = document.getElementById('imagesPreview');
-      previewContainer.innerHTML = '';
-      
+      const box = document.getElementById('imagesPreview');
+      box.innerHTML = '';
       selectedImages.forEach((file, index) => {
-        const previewItem = document.createElement('div');
-        previewItem.className = 'preview-item';
-        
+        const item = document.createElement('div'); item.className = 'ir-thumb';
         const img = document.createElement('img');
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'preview-delete-btn';
-        deleteBtn.innerHTML = '✕';
-        deleteBtn.onclick = (e) => {
-          e.stopPropagation();
-          removeImage(index);
-        };
-        
-        // 创建预览图
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-        
-        previewItem.appendChild(img);
-        previewItem.appendChild(deleteBtn);
-        previewContainer.appendChild(previewItem);
+        const del = document.createElement('button'); del.type = 'button'; del.textContent = '✕'; del.title = '移除';
+        del.onclick = (e) => { e.stopPropagation(); selectedImages.splice(index, 1); updateImagesPreview(); };
+        const reader = new FileReader(); reader.onload = e => { img.src = e.target.result; }; reader.readAsDataURL(file);
+        item.appendChild(img); item.appendChild(del); box.appendChild(item);
       });
-    }
-    
-    function removeImage(index) {
-      selectedImages.splice(index, 1);
-      updateImagesPreview();
     }
   </script>
 </body>
 </html>
-

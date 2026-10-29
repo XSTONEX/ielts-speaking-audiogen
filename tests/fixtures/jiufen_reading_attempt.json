@@ -1,0 +1,438 @@
+{
+ "code": "200",
+ "msg": "OK",
+ "data": {
+  "annotationSnapshot": {
+   "annotations": [
+    {
+     "id": "highlight-1",
+     "type": "highlight",
+     "partId": "900",
+     "area": "text",
+     "range": {
+      "start": 53,
+      "end": 65,
+      "text": "glass bridge",
+      "rootScope": "text-content-v3"
+     }
+    },
+    {
+     "id": "highlight-2",
+     "type": "highlight",
+     "partId": "900",
+     "area": "text",
+     "range": {
+      "start": 112,
+      "end": 117,
+      "text": "light",
+      "rootScope": "text-content-v3"
+     }
+    },
+    {
+     "id": "highlight-3",
+     "type": "highlight",
+     "partId": "900",
+     "area": "text",
+     "range": {
+      "start": 164,
+      "end": 171,
+      "text": "worried",
+      "rootScope": "text-content-v3"
+     }
+    },
+    {
+     "id": "highlight-4",
+     "type": "highlight",
+     "partId": "900",
+     "area": "text",
+     "range": {
+      "start": 336,
+      "end": 344,
+      "text": "Visitors",
+      "rootScope": "text-content-v3"
+     }
+    },
+    {
+     "id": "highlight-5",
+     "type": "highlight",
+     "partId": "900",
+     "area": "text",
+     "range": {
+      "start": 422,
+      "end": 428,
+      "text": "museum",
+      "rootScope": "text-content-v3"
+     }
+    },
+    {
+     "id": "highlight-6",
+     "type": "highlight",
+     "partId": "900",
+     "area": "question",
+     "range": {
+      "start": 4,
+      "end": 10,
+      "text": "bridge",
+      "rootScope": "question-group-static-v4:910"
+     }
+    }
+   ],
+   "source": "attempt",
+   "status": "recorded"
+  },
+  "attempt": {
+   "accuracy": 40.0,
+   "channel": "reading",
+   "correctCount": 2,
+   "totalCount": 5,
+   "elapsedSeconds": 600,
+   "submittedAt": "2026-10-29 08:00:00",
+   "status": "submitted",
+   "details": [
+    {
+     "qNumber": "1",
+     "questionId": "901",
+     "rightAnswer": "C",
+     "userAnswer": "C",
+     "state": "1",
+     "score": 1.0,
+     "type": "single-choice"
+    },
+    {
+     "qNumber": "2",
+     "questionId": "902",
+     "rightAnswer": "B",
+     "userAnswer": "A",
+     "state": "2",
+     "score": 0.0,
+     "type": "single-choice"
+    },
+    {
+     "qNumber": "3",
+     "questionId": "903",
+     "rightAnswer": "A",
+     "userAnswer": "A",
+     "state": "1",
+     "score": 1.0,
+     "type": "single-choice"
+    },
+    {
+     "qNumber": "4",
+     "questionId": "904",
+     "rightAnswer": "river|river below",
+     "userAnswer": "water",
+     "state": "2",
+     "score": 0.0,
+     "type": "fill-in-the-blank"
+    },
+    {
+     "qNumber": "5",
+     "questionId": "905",
+     "rightAnswer": "north bank",
+     "userAnswer": "",
+     "state": "0",
+     "score": 0.0,
+     "type": "fill-in-the-blank"
+    }
+   ],
+   "parts": [
+    {
+     "id": "900",
+     "partNum": "Part 1",
+     "label": "Part 1",
+     "sortNo": 0,
+     "title": "The Glass Bridge",
+     "article": null,
+     "articleJson": "{\n  \"language_code\": \"eng\",\n  \"title\": \"The Glass Bridge\",\n  \"segments\": [\n    {\n      \"sentences\": [\n        {\n          \"sentence_index\": 0,\n          \"text\": \"A The town of Marlow built its first glass bridge in 1998.\"\n        },\n        {\n          \"sentence_index\": 1,\n          \"text\": \"Engineers chose glass because it let light reach the river below.\"\n        }\n      ]\n    },\n    {\n      \"sentences\": [\n        {\n          \"sentence_index\": 2,\n          \"text\": \"B Local fishermen were worried at first.\"\n        },\n        {\n          \"sentence_index\": 3,\n          \"text\": \"They argued that the shadows would scare the fish away.\"\n        },\n        {\n          \"sentence_index\": 4,\n          \"text\": \"Within a year, however, catches had actually increased.\"\n        }\n      ]\n    },\n    {\n      \"sentences\": [\n        {\n          \"sentence_index\": 5,\n          \"text\": \"C The bridge is now a popular attraction.\"\n        },\n        {\n          \"sentence_index\": 6,\n          \"text\": \"Visitors come mainly in the evening, when the glass is lit from beneath.\"\n        },\n        {\n          \"sentence_index\": 7,\n          \"text\": \"A small museum on the north bank tells the story of its construction.\"\n        }\n      ]\n    }\n  ]\n}",
+     "partDescription": "You should spend about 10 minutes on Questions 1–5, which are based on the passage below.",
+     "groups": [
+      {
+       "id": "910",
+       "displayOrder": 1,
+       "qRange": "Questions 1-3",
+       "type": "single-choice",
+       "questionSubtype": null,
+       "contentHtml": null,
+       "options": [],
+       "description": "Choose <strong>TRUE</strong> if the statement agrees with the information, <strong>FALSE</strong> if it contradicts it, or <strong>NOT GIVEN</strong> if there is no information on this.",
+       "questions": [
+        {
+         "id": "901",
+         "qNumber": "1",
+         "question": "The bridge in Marlow was the first of its kind in the country.",
+         "rightAnswer": "C",
+         "userAnswer": "C",
+         "state": "1",
+         "sentenceIndex": "0-0",
+         "analyses": [
+          {
+           "content": "原文只说这是该镇第一座玻璃桥，没说是全国第一座。",
+           "displayOrder": 1,
+           "labelsOne": "解析",
+           "labelsTwo": "",
+           "questionId": "901"
+          },
+          {
+           "content": "first 只修饰 its，别扩大到全国。",
+           "displayOrder": 2,
+           "labelsOne": "",
+           "labelsTwo": "干扰",
+           "questionId": "901"
+          },
+          {
+           "content": "The town of Marlow built its first glass bridge in 1998.",
+           "displayOrder": 3,
+           "labelsOne": "句子",
+           "labelsTwo": "",
+           "questionId": "901"
+          }
+         ],
+         "displayOrder": 1,
+         "questionGroupId": "910",
+         "type": "single-choice",
+         "options": [
+          {
+           "displayOrder": 1,
+           "id": "9010",
+           "option": "TRUE",
+           "optionContent": "TRUE",
+           "optionNum": "A",
+           "questionId": "901"
+          },
+          {
+           "displayOrder": 2,
+           "id": "9011",
+           "option": "FALSE",
+           "optionContent": "FALSE",
+           "optionNum": "B",
+           "questionId": "901"
+          },
+          {
+           "displayOrder": 3,
+           "id": "9012",
+           "option": "NOT GIVEN",
+           "optionContent": "NOT GIVEN",
+           "optionNum": "C",
+           "questionId": "901"
+          }
+         ],
+         "bookmarked": false
+        },
+        {
+         "id": "902",
+         "qNumber": "2",
+         "question": "Fishermen supported the bridge from the beginning.",
+         "rightAnswer": "B",
+         "userAnswer": "A",
+         "state": "2",
+         "sentenceIndex": "2-3",
+         "analyses": [
+          {
+           "content": "渔民一开始是担心的（worried at first），和题目相反。",
+           "displayOrder": 1,
+           "labelsOne": "解析",
+           "labelsTwo": "",
+           "questionId": "902"
+          },
+          {
+           "content": "后面渔获增加了，不代表一开始就支持。",
+           "displayOrder": 2,
+           "labelsOne": "",
+           "labelsTwo": "干扰",
+           "questionId": "902"
+          },
+          {
+           "content": "Local fishermen were worried at first.",
+           "displayOrder": 3,
+           "labelsOne": "句子",
+           "labelsTwo": "",
+           "questionId": "902"
+          }
+         ],
+         "displayOrder": 2,
+         "questionGroupId": "910",
+         "type": "single-choice",
+         "options": [
+          {
+           "displayOrder": 1,
+           "id": "9020",
+           "option": "TRUE",
+           "optionContent": "TRUE",
+           "optionNum": "A",
+           "questionId": "902"
+          },
+          {
+           "displayOrder": 2,
+           "id": "9021",
+           "option": "FALSE",
+           "optionContent": "FALSE",
+           "optionNum": "B",
+           "questionId": "902"
+          },
+          {
+           "displayOrder": 3,
+           "id": "9022",
+           "option": "NOT GIVEN",
+           "optionContent": "NOT GIVEN",
+           "optionNum": "C",
+           "questionId": "902"
+          }
+         ],
+         "bookmarked": false
+        },
+        {
+         "id": "903",
+         "qNumber": "3",
+         "question": "The bridge attracts more visitors at night than during the day.",
+         "rightAnswer": "A",
+         "userAnswer": "A",
+         "state": "1",
+         "sentenceIndex": "6-6",
+         "analyses": [
+          {
+           "content": "mainly in the evening 对应 more ... at night。",
+           "displayOrder": 1,
+           "labelsOne": "解析",
+           "labelsTwo": "",
+           "questionId": "903"
+          },
+          {
+           "content": "evening 和 night 是同义替换。",
+           "displayOrder": 2,
+           "labelsOne": "",
+           "labelsTwo": "干扰",
+           "questionId": "903"
+          },
+          {
+           "content": "Visitors come mainly in the evening, when the glass is lit from beneath.",
+           "displayOrder": 3,
+           "labelsOne": "句子",
+           "labelsTwo": "",
+           "questionId": "903"
+          }
+         ],
+         "displayOrder": 3,
+         "questionGroupId": "910",
+         "type": "single-choice",
+         "options": [
+          {
+           "displayOrder": 1,
+           "id": "9030",
+           "option": "TRUE",
+           "optionContent": "TRUE",
+           "optionNum": "A",
+           "questionId": "903"
+          },
+          {
+           "displayOrder": 2,
+           "id": "9031",
+           "option": "FALSE",
+           "optionContent": "FALSE",
+           "optionNum": "B",
+           "questionId": "903"
+          },
+          {
+           "displayOrder": 3,
+           "id": "9032",
+           "option": "NOT GIVEN",
+           "optionContent": "NOT GIVEN",
+           "optionNum": "C",
+           "questionId": "903"
+          }
+         ],
+         "bookmarked": false
+        }
+       ]
+      },
+      {
+       "id": "911",
+       "displayOrder": 2,
+       "qRange": "Questions 4-5",
+       "type": "fill-in-the-blank",
+       "questionSubtype": null,
+       "contentHtml": "<table border=\"0\" style=\"border-collapse: collapse;\">\n  <tr><td style=\"vertical-align: middle;\">Why did engineers choose glass? To let light reach the <input placeholder=\"4\"></td></tr>\n  <tr><td style=\"vertical-align: middle;\">Where is the museum? On the <input placeholder=\"5\"></td></tr>\n</table>",
+       "options": [],
+       "description": "Answer the questions below. Choose <strong>NO MORE THAN TWO WORDS</strong> from the passage for each answer.",
+       "questions": [
+        {
+         "id": "904",
+         "qNumber": "4",
+         "question": null,
+         "rightAnswer": "river|river below",
+         "userAnswer": "water",
+         "state": "2",
+         "sentenceIndex": "1-1",
+         "analyses": [
+          {
+           "content": "让光照到下面的河上：river。",
+           "displayOrder": 1,
+           "labelsOne": "解析",
+           "labelsTwo": "",
+           "questionId": "904"
+          },
+          {
+           "content": "water 不是原文用词。",
+           "displayOrder": 2,
+           "labelsOne": "",
+           "labelsTwo": "干扰",
+           "questionId": "904"
+          },
+          {
+           "content": "Engineers chose glass because it let light reach the river below.",
+           "displayOrder": 3,
+           "labelsOne": "句子",
+           "labelsTwo": "",
+           "questionId": "904"
+          }
+         ],
+         "displayOrder": 4,
+         "questionGroupId": "911",
+         "type": "fill-in-the-blank",
+         "options": [],
+         "bookmarked": false
+        },
+        {
+         "id": "905",
+         "qNumber": "5",
+         "question": null,
+         "rightAnswer": "north bank",
+         "userAnswer": "",
+         "state": "0",
+         "sentenceIndex": "7-7",
+         "analyses": [
+          {
+           "content": "博物馆在北岸：north bank。",
+           "displayOrder": 1,
+           "labelsOne": "解析",
+           "labelsTwo": "",
+           "questionId": "905"
+          },
+          {
+           "content": "注意要写两个词。",
+           "displayOrder": 2,
+           "labelsOne": "",
+           "labelsTwo": "干扰",
+           "questionId": "905"
+          },
+          {
+           "content": "A small museum on the north bank tells the story of its construction.",
+           "displayOrder": 3,
+           "labelsOne": "句子",
+           "labelsTwo": "",
+           "questionId": "905"
+          }
+         ],
+         "displayOrder": 5,
+         "questionGroupId": "911",
+         "type": "fill-in-the-blank",
+         "options": [],
+         "bookmarked": false
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ }
+}
