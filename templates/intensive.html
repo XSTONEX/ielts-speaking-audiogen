@@ -804,7 +804,7 @@
         .then(d=>{ if(d && d.valid===false){ localStorage.removeItem('authToken'); return false; } return keep(); })
         .catch(keep);
     }
-    window.onload=function(){ checkStoredToken().then(valid=>{ if(valid){ loadList(); initPageState(); initResizeHandle(); } else { window.location.href='/login'; } }); }
+    window.onload=function(){ checkStoredToken().then(valid=>{ if(valid){ bindSelection(document.getElementById('vContent')); loadList(); initPageState(); initResizeHandle(); } else { window.location.href='/login'; } }); }
     function initPageState(){
       const hash = window.location.hash;
 
@@ -867,10 +867,9 @@
       document.getElementById('vTitle').textContent = `${art.title || '未命名'}`;
       document.getElementById('vCategory').value = art.category || 'Reading';
       const contentDiv = document.getElementById('vContent');
-      contentDiv.innerHTML = `<div id="articleImages" class="article-images" style="display: none;"><h4>📷 文章图片</h4><div class="images-grid" id="imagesGrid"></div></div><div class=\"reader\">${art.content_html || ''}</div>`;
+      contentDiv.innerHTML = `<div id="articleImages" class="article-images" style="display: none;"><h4>📷 文章图片</h4><div class="images-grid" id="imagesGrid"></div></div><div class=\"reader\"></div>`; renderReader(contentDiv.querySelector('.reader'), art);
       document.getElementById('viewer').classList.add('active');
       loadArticleImages();
-      bindSelection(contentDiv, art);
       restoreHighlights(contentDiv, art);
       closeHighlightsPanel();
       checkForJumpHighlight();
@@ -945,7 +944,7 @@
       // 设置URL hash以便刷新时保持状态
       window.location.hash = `#article-${id}`;
 
-      fetch(`/intensive_article/${id}`).then(r=>r.json()).then(d=>{ if(!d.success){ alert(d.error||'加载失败'); return; } const art=d.article; currentArticle=art; highlights = art.highlights||[]; currentImages = art.images||[]; document.getElementById('vTitle').textContent = `${art.title||'未命名'}`; document.getElementById('vCategory').value = art.category||'Reading'; const contentDiv=document.getElementById('vContent'); contentDiv.innerHTML = `<div id="articleImages" class="article-images" style="display: none;"><h4>📷 文章图片</h4><div class="images-grid" id="imagesGrid"></div></div><div class=\"reader\">${art.content_html || ''}</div>`; document.getElementById('viewer').classList.add('active'); loadArticleImages(); bindSelection(contentDiv, art); restoreHighlights(contentDiv, art); closeHighlightsPanel(); checkForJumpHighlight(); 
+      fetch(`/intensive_article/${id}`).then(r=>r.json()).then(d=>{ if(!d.success){ alert(d.error||'加载失败'); return; } const art=d.article; currentArticle=art; highlights = art.highlights||[]; currentImages = art.images||[]; document.getElementById('vTitle').textContent = `${art.title||'未命名'}`; document.getElementById('vCategory').value = art.category||'Reading'; const contentDiv=document.getElementById('vContent'); contentDiv.innerHTML = `<div id="articleImages" class="article-images" style="display: none;"><h4>📷 文章图片</h4><div class="images-grid" id="imagesGrid"></div></div><div class=\"reader\"></div>`; renderReader(contentDiv.querySelector('.reader'), art); document.getElementById('viewer').classList.add('active'); loadArticleImages(); restoreHighlights(contentDiv, art); closeHighlightsPanel(); checkForJumpHighlight(); 
       
       // 检查音频文件状态并更新按钮
       checkExistingAudio(id).then(audioInfo => {
@@ -1048,36 +1047,44 @@
     }
 
     // 文本选择与悬浮操作
-    function bindSelection(container, art){ container.addEventListener('mouseup', function(e){ const sel=window.getSelection(); if(!sel || sel.isCollapsed){ cancelFloat(); return; } const range=sel.getRangeAt(0); if(!container.contains(range.commonAncestorContainer)){ cancelFloat(); return; } const text=sel.toString().trim(); if(!text){ cancelFloat(); return; }
-        
+    // 只在页面初始化时绑定一次：#vContent 一直是同一个元素，换文章只换里面的内容。
+    // 每打开一篇就再绑一个的话，旧监听会拿上一篇文章的原文去算，算不出来就把选区清掉，当前文章就划不出词。
+    function bindSelection(container){ container.addEventListener('mouseup', function(){ handleReaderSelection(container); }); }
+    function handleReaderSelection(container){
+        const art=currentArticle; const reader=container.querySelector('.reader');
+        const sel=window.getSelection(); if(!art || !reader || !sel || sel.isCollapsed || !sel.rangeCount){ cancelFloat(); return; }
+        const range=sel.getRangeAt(0); if(!container.contains(range.commonAncestorContainer)){ cancelFloat(); return; }
+        const covered = selectionToOriginal(reader, range);
+        if(!covered){ cancelFloat(); return; }
+
         // 检查是否选中了已经高亮的词汇
-        const existingMark = findHighlightMarkInSelection(range);
-        if(existingMark){
+        if(covered.mark){
           // 如果选中了已高亮的词汇，显示移除选项
-          selectionRange = { existingHighlight: existingMark.getAttribute('data-hid'), text };
+          const hid = covered.mark.getAttribute('data-hid');
+          selectionRange = { existingHighlight: hid, text: ((highlights||[]).find(h => h.id === hid) || {}).text || '' };
           lastSelectionRect = range.getBoundingClientRect();
           showFloatAtRect(lastSelectionRect, true);
           return;
         }
 
-        // 限制只能在同一段落内高亮，避免跨块包裹导致错误
-        const sP = closestBlock(range.startContainer, 'p'); const eP = closestBlock(range.endContainer, 'p');
-        if(sP !== eP){ showTempTooltip('请在同一段内进行高亮', range.getBoundingClientRect()); cancelFloat(); return; }
-        
-        const off = getOffsetsFromRange(container, range);
-        if(!off){ cancelFloat(); return; }
-        const containerText = getContainerText(container);
-        const startOrig = containerToOriginalIndex(off.start, art.content_text||'', containerText);
-        const endOrig = containerToOriginalIndex(off.end, art.content_text||'', containerText);
-        if(startOrig==null || endOrig==null || endOrig<=startOrig){ cancelFloat(); return; }
-        
+        // 去掉选区两端的空白（双击、拖过头都会带上空格）
+        const original = art.content_text || '';
+        let start = covered.start, end = covered.end;
+        while(start < end && /\s/.test(original[start])) start++;
+        while(end > start && /\s/.test(original[end-1])) end--;
+        if(end <= start){ cancelFloat(); return; }
+        const text = original.slice(start, end);
+
+        // 限制只能在同一段落（同一行）内高亮，避免跨块包裹导致错误
+        if(text.includes('\n')){ showTempTooltip('请在同一段内进行高亮', range.getBoundingClientRect()); cancelFloat(); return; }
+
         // 检查是否为重复词汇
         const isDuplicate = (highlights||[]).some(h => h.text && h.text.toLowerCase() === text.toLowerCase());
-        
-        selectionRange = { start: startOrig, end: endOrig, text, isDuplicate };
+
+        selectionRange = { start, end, text, isDuplicate };
         lastSelectionRect = range.getBoundingClientRect();
         showFloatAtRect(lastSelectionRect, false, isDuplicate);
-    }); }
+    }
 
     function showFloatAtRect(rect, isExisting = false, isDuplicate = false){ 
       const box=document.getElementById('floatBox'); 
@@ -1109,29 +1116,6 @@
       box.style.display='block'; 
     }
     function positionBoxAtRect(el, rect){ const x = window.scrollX + rect.left + rect.width/2; const y = window.scrollY + rect.top; const r = el.getBoundingClientRect(); el.style.left = Math.max(8, x - r.width/2) + 'px'; el.style.top = Math.max(8, y - 48) + 'px'; }
-    
-    // 查找选区中是否包含高亮标记
-    function findHighlightMarkInSelection(range){
-      try{
-        const container = range.commonAncestorContainer;
-        if(container.nodeType === Node.TEXT_NODE){
-          let parent = container.parentNode;
-          while(parent && parent.tagName !== 'MARK'){
-            parent = parent.parentNode;
-          }
-          return parent && parent.classList.contains('hl') ? parent : null;
-        } else {
-          const marks = container.querySelectorAll ? container.querySelectorAll('mark.hl') : [];
-          for(let mark of marks){
-            if(range.intersectsNode && range.intersectsNode(mark)){
-              return mark;
-            }
-          }
-        }
-      }catch(e){}
-      return null;
-    }
-    
     // 显示临时提示
     function showTempTooltip(message, rect){
       const tooltip = document.createElement('div');
@@ -1230,8 +1214,7 @@
     // 滚动/窗口变化时保持浮动框跟随选区
     function repositionFloating(){ if(!selectionRange || !currentArticle || (!isVisible('floatBox') && !isVisible('meaningBox'))) return; const rect = computeRectFromSelectionRange(); if(!rect) return; lastSelectionRect = rect; if(isVisible('floatBox')) positionBoxAtRect(document.getElementById('floatBox'), rect); if(isVisible('meaningBox')) positionBoxAtRect(document.getElementById('meaningBox'), rect); }
     function isVisible(id){ const el=document.getElementById(id); return el && el.style.display!== 'none'; }
-    function computeRectFromSelectionRange(){ try{ const container=document.getElementById('vContent'); if(!container) return null; const containerText=getContainerText(container); const startC=originalToContainerIndex(selectionRange.start, currentArticle.content_text||'', containerText); const endC=originalToContainerIndex(selectionRange.end, currentArticle.content_text||'', containerText); if(startC==null||endC==null||endC<=startC) return null; // 建立临时range取rect
-      const walker=createWalker(container); let n,pos=0,sN=null,sO=0,eN=null,eO=0; while(n=walker.nextNode()){ const next=pos+n.nodeValue.length; if(sN===null && startC>=pos && startC<=next){ sN=n; sO=startC-pos; } if(eN===null && endC>=pos && endC<=next){ eN=n; eO=endC-pos; break; } pos=next; } if(!sN||!eN) return null; const r=document.createRange(); r.setStart(sN,sO); r.setEnd(eN,eO); return r.getBoundingClientRect(); }catch(e){ return null; } }
+    function computeRectFromSelectionRange(){ try{ const reader=document.querySelector('#vContent .reader'); if(!reader || selectionRange.start==null) return null; const r=originalToDomRange(reader, selectionRange.start, selectionRange.end); return r ? r.getBoundingClientRect() : null; }catch(e){ return null; } }
     window.addEventListener('scroll', function(){ repositionFloating(); }, true);
     window.addEventListener('resize', function(){ repositionFloating(); });
     
@@ -1246,23 +1229,69 @@
       }
     });
 
-    function restoreHighlights(container, art){ // 去重并清理已存在的 mark
-      container.querySelectorAll('mark.hl').forEach(function(n){ const p=n.parentNode; if(!p) return; while(n.firstChild) p.insertBefore(n.firstChild, n); p.removeChild(n); p.normalize(); });
+    function restoreHighlights(container, art){ // 去重并清理已存在的 mark（释义气泡一起删掉，否则会作为孤儿节点留在段落里）
+      container.querySelectorAll('mark.hl').forEach(function(n){ const p=n.parentNode; if(!p) return; n.querySelectorAll('.tooltip').forEach(t=>t.remove()); while(n.firstChild) p.insertBefore(n.firstChild, n); p.removeChild(n); p.normalize(); });
       const uniq=[]; (art.highlights||[]).forEach(function(h){ const key=h.start+'-'+h.end; if(!uniq.some(x=>x.start===h.start&&x.end===h.end)){ uniq.push(h); } });
-      uniq.sort((a,b)=>a.start-b.start).forEach(h=>{ applyOneHighlight(container, h, art.content_text); }); }
-    function applyOneHighlight(container, h, originalText){ try{ const containerText = getContainerText(container); const startC = originalToContainerIndex(h.start, originalText||'', containerText); const endC = originalToContainerIndex(h.end, originalText||'', containerText); if(startC==null || endC==null || endC<=startC) return; // 已存在则跳过
-      if(container.querySelector(`mark.hl[data-hid="${h.id}"]`)) return; wrapContainerOffsets(container, startC, endC, h); }catch(e){} }
+      uniq.sort((a,b)=>a.start-b.start).forEach(h=>{ applyOneHighlight(container, h); }); }
+    function applyOneHighlight(container, h){ try{ const reader=container.querySelector('.reader'); if(!reader || !(h.end > h.start)) return; // 已存在则跳过
+      if(container.querySelector(`mark.hl[data-hid="${h.id}"]`)) return; wrapOriginalRange(reader, h.start, h.end, h); }catch(e){} }
     function deleteHighlight(hid){ if(!currentArticle) return; fetch('/intensive_delete_highlight',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id: currentArticle.id, highlight_id: hid})}).then(r=>r.json()).then(d=>{ if(d.success){ // 重新加载文章以刷新 DOM
           openArticle(currentArticle.id);
         } else { alert(d.error||'删除失败'); } }); }
 
     function escapeHtml(s){ return (s||'').replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c])); }
-    function getContainerText(container){ const walker=createWalker(container); let t='', n; while(n=walker.nextNode()){ t+=n.nodeValue; } return t; }
-    function getOffsetsFromRange(container, range){ try{ const walker=createWalker(container); let pos=0, n; let sN=range.startContainer, eN=range.endContainer; let sO=range.startOffset, eO=range.endOffset; let start=-1,end=-1; while(n=walker.nextNode()){ if(n===sN){ start = pos + sO; } if(n===eN){ end = pos + eO; break; } pos += n.nodeValue.length; } if(start>=0 && end>start) return {start,end}; }catch(e){} return null; }
-    function wrapContainerOffsets(container, start, end, meta){ const walker=createWalker(container); let n, pos=0; let sN=null,sO=0,eN=null,eO=0; while(n=walker.nextNode()){ const next=pos + n.nodeValue.length; // 起点取"节点开头"一侧、终点取"节点结尾"一侧，避免偏移正好落在文本节点边界时把段间换行节点选进来，导致 surroundContents 跨段报错
-        if(sN===null && start>=pos && start<next){ sN=n; sO=start-pos; } if(eN===null && end>pos && end<=next){ eN=n; eO=end-pos; } if(sN && eN) break; pos=next; } if(!sN||!eN) return; const r=document.createRange(); r.setStart(sN, sO); r.setEnd(eN, eO); const mark=document.createElement('mark'); mark.className='hl'; mark.setAttribute('data-hid', meta.id); mark.style.cursor='pointer'; const tip=document.createElement('span'); tip.className='tooltip'; tip.textContent=meta.meaning||''; r.surroundContents(mark); mark.appendChild(tip); mark.addEventListener('contextmenu', function(ev){ ev.preventDefault(); if(confirm('删除该高亮/笔记？')){ deleteHighlight(meta.id); } }); mark.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); const word = meta.text || mark.textContent.replace(tip.textContent, '').trim(); if(word && window.playWordPronunciation){ window.playWordPronunciation(word, currentArticle?.id); } }); }
-    function createWalker(container){ return document.createTreeWalker(container, NodeFilter.SHOW_TEXT, { acceptNode: function(node){ let p=node.parentNode; while(p){ if(p.nodeType===1 && p.classList && (p.classList.contains('tooltip') || p.classList.contains('article-images'))) return NodeFilter.FILTER_REJECT; p=p.parentNode; } return NodeFilter.FILTER_ACCEPT; } }); }
-    function closestBlock(node, selector){ let el = node.nodeType===1 ? node : node.parentNode; if(!el) return null; if(el.closest) return el.closest(selector); while(el){ if(el.matches && el.matches(selector)) return el; el = el.parentNode; } return null; }
+    // ===== 原文下标 <-> 页面位置 =====
+    // 正文按 content_text 的行渲染：每个非空行一个 <p data-o>，data-o 是这一行在 content_text 里的起始下标，
+    // 所以页面上任意位置都能精确换算成原文下标（行起点 + 行内偏移）。以前是把页面文字和原文逐字符模糊对齐，
+    // 行首词、选区端点落在段与段之间（Safari、三击、从行外拖进来）、含不间断空格的文章都会算错，词就划不出来。
+    function renderReader(reader, art){
+      const text = art.content_text || '';
+      if(!text){ reader.innerHTML = art.content_html || ''; return; }
+      let pos = 0;
+      text.split('\n').forEach(function(line){
+        if(line.trim()){ const p=document.createElement('p'); p.dataset.o = pos; p.textContent = line; reader.appendChild(p); }
+        pos += line.length + 1;
+      });
+    }
+    // 一行里属于正文的文本节点（跳过高亮的释义气泡 .tooltip）
+    function lineTextNodes(p){ const out=[]; const walker=document.createTreeWalker(p, NodeFilter.SHOW_TEXT, { acceptNode: n => n.parentNode.closest('.tooltip') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT }); let n; while(n=walker.nextNode()) out.push(n); return out; }
+    // 选区真正覆盖到的正文字符 -> 原文下标 {start, end, mark}。只看被覆盖的字符，不看端点落在哪个节点上，
+    // 所以端点在元素上、在上一行末尾、在下一行开头都不影响结果。mark 是被覆盖到的已有高亮（有的话）。
+    function selectionToOriginal(reader, range){
+      let start=null, end=null, mark=null;
+      reader.querySelectorAll('p[data-o]').forEach(function(p){
+        if(!range.intersectsNode(p)) return;
+        let o = Number(p.dataset.o);
+        lineTextNodes(p).forEach(function(n){
+          const s = n === range.startContainer ? range.startOffset : 0;
+          const e = n === range.endContainer ? range.endOffset : n.length;
+          if(range.intersectsNode(n) && e > s){
+            if(start === null) start = o + s;
+            end = o + e;
+            if(!mark) mark = n.parentNode.closest('mark.hl');
+          }
+          o += n.length;
+        });
+      });
+      return start === null ? null : { start, end, mark };
+    }
+    // 原文下标 -> 页面上的 (文本节点, 偏移)。atEnd 为真时，正好落在两个节点交界处取前一个节点的末尾，
+    // 否则取后一个节点的开头，这样新高亮不会和紧挨着的已有 <mark> 搅在一起
+    function originalToDomPoint(reader, o, atEnd){
+      for(const p of reader.querySelectorAll('p[data-o]')){
+        let k = o - Number(p.dataset.o); if(k < 0) break;
+        const nodes = lineTextNodes(p);
+        if(k > nodes.reduce((s, n) => s + n.length, 0)) continue;
+        for(let i = 0; i < nodes.length; i++){
+          const n = nodes[i];
+          if(k < n.length || (k === n.length && (atEnd || i === nodes.length - 1))) return { node: n, offset: k };
+          k -= n.length;
+        }
+      }
+      return null;
+    }
+    function originalToDomRange(reader, start, end){ const s=originalToDomPoint(reader, start, false), e=originalToDomPoint(reader, end, true); if(!s || !e) return null; const r=document.createRange(); r.setStart(s.node, s.offset); r.setEnd(e.node, e.offset); return r; }
+    function wrapOriginalRange(reader, start, end, meta){ const r=originalToDomRange(reader, start, end); if(!r || r.collapsed) return; const mark=document.createElement('mark'); mark.className='hl'; mark.setAttribute('data-hid', meta.id); mark.style.cursor='pointer'; const tip=document.createElement('span'); tip.className='tooltip'; tip.textContent=meta.meaning||''; r.surroundContents(mark); mark.appendChild(tip); mark.addEventListener('contextmenu', function(ev){ ev.preventDefault(); if(confirm('删除该高亮/笔记？')){ deleteHighlight(meta.id); } }); mark.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); const word = meta.text || mark.textContent.replace(tip.textContent, '').trim(); if(word && window.playWordPronunciation){ window.playWordPronunciation(word, currentArticle?.id); } }); }
     // 音频生成相关功能
     let currentAudioUrl = null;
     let currentAudioInfo = null;
@@ -2379,136 +2408,6 @@
       });
     }
     
-    function originalToContainerIndex(oi, original, container){
-      let o=0, c=0;
-      const olen=original.length, clen=container.length;
-      
-      while(o < olen && c < clen){
-        // 如果已经到达目标位置
-        if(o === oi){
-          // 目标为非空白字符时，先跳过容器里被折叠的空白（如段间换行），对齐到该字符本身，
-          // 否则段首词会把前面的换行算进起点，导致首字母丢失或跨段包裹失败
-          if(oi < olen && !/\s/.test(original[oi])){
-            while(c < clen && /\s/.test(container[c]) && container[c] !== original[oi]) c++;
-          }
-          return c;
-        }
-
-        const origChar = original[o];
-        
-        // 跳过原文中的换行符、回车符和多余的空格
-        if(origChar === '\n' || origChar === '\r'){
-          o++;
-          continue;
-        }
-        
-        // 如果原文是空格，跳过连续的空格
-        if(origChar === ' '){
-          // 跳过原文中连续的空格
-          while(o < olen && original[o] === ' '){
-            o++;
-          }
-          // 跳过容器中的单个空格
-          if(c < clen && container[c] === ' '){
-            c++;
-          }
-          continue;
-        }
-        
-        // 跳过容器中连续的空白字符直到找到匹配或非空白字符
-        while(c < clen && /\s/.test(container[c]) && container[c] !== origChar){
-          c++;
-        }
-        
-        if(c >= clen) break;
-        
-        // 检查字符是否匹配
-        if(origChar === container[c]){
-          o++;
-          c++;
-        } else {
-          // 字符不匹配，可能是格式差异，继续尝试
-          o++;
-          // 在容器中寻找下一个匹配的字符
-          let found = false;
-          for(let j = c; j < Math.min(c + 10, clen); j++){
-            if(container[j] === origChar){
-              c = j + 1;
-              found = true;
-              break;
-            }
-          }
-          if(!found) c++;
-        }
-      }
-      
-      // 目标在原文末尾或超出
-      if(oi >= o) return clen;
-      return c;
-    }
-    function containerToOriginalIndex(ci, original, container){
-      let o=0, c=0;
-      const olen=original.length, clen=container.length;
-      
-      while(o < olen && c < clen){
-        // 如果已经到达目标容器位置
-        if(c === ci) return o;
-        
-        const origChar = original[o];
-        
-        // 跳过原文中的换行符、回车符
-        if(origChar === '\n' || origChar === '\r'){
-          o++;
-          continue;
-        }
-        
-        // 如果原文是空格，处理连续空格
-        if(origChar === ' '){
-          // 跳过原文中连续的空格
-          while(o < olen && original[o] === ' '){
-            o++;
-          }
-          // 跳过容器中的单个空格
-          if(c < clen && container[c] === ' '){
-            c++;
-          }
-          continue;
-        }
-        
-        // 跳过容器中连续的空白字符直到找到匹配或非空白字符
-        while(c < clen && /\s/.test(container[c]) && container[c] !== origChar){
-          c++;
-        }
-
-        // 跳过空白后可能正好落在目标位置（段首字符紧跟换行的情形），
-        // 此时必须在消费该字符前返回，否则段首词的首字母会被吞掉
-        if(c === ci) return o;
-
-        if(c >= clen) break;
-
-        // 检查字符是否匹配
-        if(origChar === container[c]){
-          o++;
-          c++;
-        } else {
-          // 字符不匹配，寻找下一个匹配
-          let found = false;
-          for(let j = c; j < Math.min(c + 10, clen); j++){
-            if(container[j] === origChar){
-              c = j + 1;
-              found = true;
-              break;
-            }
-          }
-          if(!found) c++;
-          o++;
-        }
-      }
-      
-      // 目标在容器末尾或超出
-      if(ci >= c) return o;
-      return o;
-    }
   </script>
 </body>
 </html>
