@@ -137,7 +137,8 @@ def _compress_text_responses(response):
         # 模式，早退就会漏掉它们 —— 而这些 HTML 恰恰是最大的一笔流量
         # （单词本页 182KB）。音频是 audio/mpeg，在这一步就被排除，不会被读进内存。
         ctype = (response.content_type or '').split(';')[0].strip()
-        if not ctype.startswith(_COMPRESSIBLE_PREFIXES):
+        # 流式批改（SSE）不能压：get_data() 会把整条流读完才发，边批边看就没了
+        if ctype == 'text/event-stream' or not ctype.startswith(_COMPRESSIBLE_PREFIXES):
             return response
         if response.direct_passthrough:
             response.direct_passthrough = False

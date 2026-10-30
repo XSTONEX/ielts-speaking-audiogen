@@ -7,15 +7,105 @@ import threading
 import time
 import uuid
 from datetime import datetime
-from flask import Blueprint, request, jsonify, send_file, send_from_directory
+from flask import Blueprint, Response, request, jsonify, send_file, send_from_directory
 from utils.json_store import load_json, save_json_atomic
 from core import (
     WRITING_CORRECTION_DIR, WRITING_DATA_DIR, WRITING_MD_FILE,
     WRITING_SMALL_MD_FILE, WRITING_IMAGES_DIR, WRITING_CHAT_DIR, WRITING_TEMPLATE_FILE,
-    is_token_valid, load_tokens, load_prompt, call_gemini_llm
+    is_token_valid, load_tokens, load_prompt, call_llm, stream_llm
 )
 
 writing_bp = Blueprint('writing', __name__)
+
+
+def _writing_cfg(cfg):
+    """WRITING_LLM_MODEL（如 deepseek-flash）整体覆盖各提示词 yaml 里写的模型，
+    不设时用 yaml 里的；改 .env 重启即可切换或回滚。"""
+    model = os.getenv('WRITING_LLM_MODEL', '').strip()
+    return {**cfg, 'model': model} if model else cfg
+
+
+def _writing_llm(cfg, messages):
+    """写作的批改和追问都从这里调模型。"""
+    return call_llm(_writing_cfg(cfg), messages)
+
+
+# ===================== 流式批改 =====================
+
+_SCORE_RE = re.compile(r'"score"\s*:\s*"?(\d+(?:\.\d+)?)"?\s*[,}\n]')
+_SUMMARY_RE = re.compile(r'"feedback_summary"\s*:\s*"((?:[^"\\]|\\.)*)"')
+_CORRECTIONS_RE = re.compile(r'"grammar_corrections"\s*:\s*\[')
+_JSON_DECODER = json.JSONDecoder()
+
+
+def _partial_feedback(text):
+    """从还没写完的批改 JSON 里摘出已经确定的部分：分数、总评、写完了的改错条目。
+
+    模型按 score → feedback_summary → grammar_corrections → … 的顺序输出，
+    所以分数和总评最先定下来，改错一条条补齐；corrections_done 表示改错列表已经闭合。
+    """
+    out = {}
+    m = _SCORE_RE.search(text)
+    if m:
+        out['score'] = m.group(1)
+    m = _SUMMARY_RE.search(text)
+    if m:
+        try:
+            out['feedback_summary'] = json.loads(f'"{m.group(1)}"')
+        except json.JSONDecodeError:
+            pass
+    m = _CORRECTIONS_RE.search(text)
+    if m:
+        items, pos, closed = [], m.end(), False
+        while True:
+            while pos < len(text) and text[pos] in ' \t\r\n,':
+                pos += 1
+            if pos >= len(text):
+                break
+            if text[pos] == ']':
+                closed = True
+                break
+            try:
+                item, pos = _JSON_DECODER.raw_decode(text, pos)
+            except json.JSONDecodeError:
+                break  # 这一条还没写完
+            items.append(item)
+        out['grammar_corrections'] = _normalize_feedback({'grammar_corrections': items})['grammar_corrections']
+        out['corrections_done'] = closed
+    return out
+
+
+def _sse(event, data):
+    return f'event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n'
+
+
+def _grade_stream(cfg, messages, reference):
+    """批改接口带 ?stream=1 时走这里：边生成边推给页面，不用干等整条 JSON。
+
+    事件：partial（_partial_feedback 的结果，字段逐步变多，变了才推）、
+    done（和非流式接口返回的一样）、error（{error}，页面收到后整条重试）。
+    X-Accel-Buffering 让 nginx 别攒着；app.py 的 gzip 也跳过 text/event-stream。
+    """
+    def events():
+        text, sent = '', None
+        try:
+            for piece in stream_llm(_writing_cfg(cfg), messages):
+                text += piece
+                partial = _partial_feedback(text)
+                if partial and partial != sent:
+                    sent = partial
+                    yield _sse('partial', partial)
+            yield _sse('done', _normalize_feedback(_parse_ai_json(text), reference))
+        except requests.exceptions.Timeout:
+            yield _sse('error', {'error': 'AI 服务超时，请重试'})
+        except json.JSONDecodeError:
+            yield _sse('error', {'error': 'AI 返回格式异常'})
+        except Exception as e:
+            logging.exception('流式批改失败')
+            yield _sse('error', {'error': str(e) or '批改失败'})
+
+    return Response(events(), mimetype='text/event-stream',
+                    headers={'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no'})
 
 
 # ===================== 写作批改模块 =====================
@@ -79,8 +169,10 @@ def _split_numbered(text):
     return [x for x in parts if x]
 
 
-def _normalize_feedback(result):
+def _normalize_feedback(result, reference=''):
     """把批改结果统一成固定结构，不依赖模型是否严格遵守格式。
+
+    reference 是题目自带的参考答案；给了就直接当「标准答案」，没给才用模型自己写的 native_standard。
 
     - grammar_corrections → [{original, corrected, type, reason}]，丢掉改了等于没改的条目
     - vocabulary_upgrade → [{original, replacement, reason}]（模型返回 "1. [a] -> [b] (c)" 字符串也能拆开）
@@ -132,7 +224,9 @@ def _normalize_feedback(result):
                 it['original'] = right
         result['vocabulary_upgrade'] = fixed
 
-    std = str(result.pop('native_standard', '') or '').strip()
+    # 有参考答案时模型不再抄写 native_standard（省约 15% 的输出、快一点），这里直接用原文
+    std = (reference or '').strip() or str(result.pop('native_standard', '') or '').strip()
+    result.pop('native_standard', None)
     opt = str(result.pop('native_optimized', '') or '').strip()
     nv = result.get('native_version')
     if isinstance(nv, dict):
@@ -676,12 +770,16 @@ def small_writing_correct():
         translation=translation,
     )
 
+    messages = [
+        {'role': 'system', 'content': cfg['system_prompt']},
+        {'role': 'user', 'content': user_prompt},
+    ]
+    if request.args.get('stream') == '1':
+        return _grade_stream(cfg, messages, reference)
+
     try:
-        content = call_gemini_llm(cfg, [
-            {'role': 'system', 'content': cfg['system_prompt']},
-            {'role': 'user', 'content': user_prompt},
-        ])
-        result = _normalize_feedback(_parse_ai_json(content))
+        content = _writing_llm(cfg, messages)
+        result = _normalize_feedback(_parse_ai_json(content), reference)
         return jsonify(result)
     except requests.exceptions.Timeout:
         return jsonify({'error': 'AI 服务超时，请重试'}), 504
@@ -925,12 +1023,16 @@ def writing_correct():
         translation=translation,
     )
 
+    messages = [
+        {'role': 'system', 'content': cfg['system_prompt']},
+        {'role': 'user', 'content': user_prompt},
+    ]
+    if request.args.get('stream') == '1':
+        return _grade_stream(cfg, messages, reference)
+
     try:
-        content = call_gemini_llm(cfg, [
-            {'role': 'system', 'content': cfg['system_prompt']},
-            {'role': 'user', 'content': user_prompt},
-        ])
-        result = _normalize_feedback(_parse_ai_json(content))
+        content = _writing_llm(cfg, messages)
+        result = _normalize_feedback(_parse_ai_json(content), reference)
         return jsonify(result)
         
     except requests.exceptions.Timeout:
@@ -1467,7 +1569,7 @@ def _find_session_by_key(username, sentence_key):
 
 def _call_ai_chat(messages, cfg):
     """调用 AI 聊天接口，返回完整回复文本"""
-    return call_gemini_llm(cfg, messages)
+    return _writing_llm(cfg, messages)
 
 
 # ===================== AI 聊天 API 路由 =====================
@@ -1936,21 +2038,26 @@ def template_correct():
         if template_text:
             question += f'\n对应的模板骨架：{template_text}'
 
+    reference = (data.get('reference') or '').strip()
     cfg = load_prompt('writing_small_correct' if task == 'task1' else 'writing_correct')
     user_prompt = cfg['user_prompt'].format(
         question=question,
         target=(data.get('target_chinese') or '').strip() or '（无中文提示）',
-        reference=(data.get('reference') or '').strip() or '（无参考答案）',
+        reference=reference or '（无参考答案）',
         translation=translation,
     )
 
+    messages = [
+        {'role': 'system', 'content': cfg['system_prompt']},
+        {'role': 'user', 'content': user_prompt},
+    ]
+    if request.args.get('stream') == '1':
+        return _grade_stream(cfg, messages, reference)
+
     content = ''
     try:
-        content = call_gemini_llm(cfg, [
-            {'role': 'system', 'content': cfg['system_prompt']},
-            {'role': 'user', 'content': user_prompt},
-        ])
-        return jsonify(_normalize_feedback(_parse_ai_json(content)))
+        content = _writing_llm(cfg, messages)
+        return jsonify(_normalize_feedback(_parse_ai_json(content), reference))
     except requests.exceptions.Timeout:
         return jsonify({'error': 'AI 服务超时，请重试'}), 504
     except json.JSONDecodeError:

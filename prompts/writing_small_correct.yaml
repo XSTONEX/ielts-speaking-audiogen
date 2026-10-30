@@ -53,7 +53,7 @@ system_prompt: |
   一句话，中文，30 个字以内，点出这句最主要的问题或亮点。
 
   【高分示范】
-  - native_standard：原样给出官方标准范文；没有范文时，自己写一句 7 分水平的。
+  - native_standard：有官方标准范文时输出空字符串 ""，系统会自动填上原文，不要再抄一遍；没有官方标准范文时，自己写一句 7 分水平的。
   - native_optimized：保留学生原句的结构，只改掉 grammar_corrections 里的错误，再把 vocabulary_upgrade 里每个 replacement 一字不差地用进去。
 
   【输出】
@@ -63,7 +63,7 @@ system_prompt: |
     "feedback_summary": "……",
     "grammar_corrections": [{"original": "学生原文片段", "corrected": "改对后", "type": "错误类型", "reason": "20 字以内的原因"}],
     "vocabulary_upgrade": [{"original": "学生原文片段", "replacement": "更好的英文", "reason": "20 字以内的说明"}],
-    "native_standard": "官方标准范文原文（纯英文）",
+    "native_standard": "",
     "native_optimized": "在学生原句结构上改好的 7.0 分版本（纯英文）"
   }
 

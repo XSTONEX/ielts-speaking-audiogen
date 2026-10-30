@@ -2381,6 +2381,23 @@ html[data-theme="dark"] body.page-writing-practice .review-overlay .review-overl
 }
 .grading-mask-box .spinner { flex-shrink: 0; border-color: var(--w-line-strong); border-top-color: var(--w-big); }
 .grading-mask-sub { display: block; font-size: var(--w-fs-meta); color: var(--w-ink3); }
+/* 流式批改：分数、总评、改错一出来就先放进提示框，整条批完再换成正式的反馈卡片 */
+.grading-mask-box.has-preview {
+  flex-wrap: wrap; top: 14vh; margin-top: 32px;
+  width: min(620px, calc(100% - 32px)); cursor: default;
+}
+.grading-preview {
+  flex-basis: 100%; display: grid; gap: 10px;
+  padding-top: 12px; border-top: 1px solid var(--w-line);
+}
+.gp-head { display: flex; align-items: baseline; gap: 12px; }
+.gp-score { font-family: var(--w-display); font-size: var(--w-fs-title); font-weight: 600; line-height: 1.2; }
+.gp-score.high { color: var(--w-ok); }
+.gp-score.mid { color: var(--w-warn); }
+.gp-score.low { color: var(--w-err); }
+.gp-summary { font-size: var(--w-fs-ui); color: var(--w-ink2); }
+.grading-preview .fb-gc-list { display: grid; gap: 8px; }
+.gp-none { font-size: var(--w-fs-meta); color: var(--w-ink3); }
 
 /* 刷新后正在回到原来那页：正文先藏起来（布局照算，滚动位置能提前设好），中间给一句提示 */
 html.wp-restoring #app { visibility: hidden; }
@@ -3437,19 +3454,65 @@ function gradeSleep(ms, signal) {
   });
 }
 
+/* 读流式批改的事件流（SSE）：partial 交给 onPartial，done 返回 { data }，
+   error 事件或流在半路断掉返回 { error }，交给 postGrading 按可重试处理。 */
+async function readGradingStream(stream, onPartial) {
+  const reader = stream.getReader();
+  const decoder = new TextDecoder();
+  let buf = '';
+  for (;;) {
+    const { value, done } = await reader.read();
+    buf += decoder.decode(value || new Uint8Array(), { stream: !done });
+    let cut;
+    while ((cut = buf.indexOf('\n\n')) !== -1) {
+      const block = buf.slice(0, cut);
+      buf = buf.slice(cut + 2);
+      let event = 'message', data = '';
+      for (const line of block.split('\n')) {
+        if (line.startsWith('event:')) event = line.slice(6).trim();
+        else if (line.startsWith('data:')) data += line.slice(5).trim();
+      }
+      let payload;
+      try { payload = JSON.parse(data); } catch (e) { continue; }
+      if (event === 'partial') {
+        try { onPartial(payload); } catch (e) { console.error(e); }   // 预览画坏了不影响批改本身
+      } else if (event === 'done') {
+        reader.cancel().catch(() => {});
+        return { data: payload };
+      } else if (event === 'error') {
+        reader.cancel().catch(() => {});
+        return { error: (payload && payload.error) || '批改失败' };
+      }
+    }
+    if (done) return { error: '连接中断' };
+  }
+}
+
 /* 批改请求。断网、服务器 5xx / 408 / 429、返回的不是 JSON（Cloudflare 超时页）
    都是再来一次可能就好的，自动重试；400 / 401 这类请求本身的问题直接报错。
-   成功返回解析好的 JSON；最终失败抛 Error，message 是给人看的原因，attempts 是一共试了几次。 */
-async function postGrading(url, body, { signal, onRetry } = {}) {
+   成功返回解析好的 JSON；最终失败抛 Error，message 是给人看的原因，attempts 是一共试了几次。
+   传了 onPartial 就走流式（?stream=1）：边批边把半截结果交给 onPartial，
+   重试前先 onPartial(null) 清掉上一轮的半截内容；服务器回的不是事件流时照旧按 JSON 处理。 */
+async function postGrading(url, body, { signal, onRetry, onPartial } = {}) {
+  const stream = typeof onPartial === 'function';
+  const target = stream ? url + (url.includes('?') ? '&' : '?') + 'stream=1' : url;
   for (let attempt = 0; ; attempt++) {
     let msg, retryable;
     try {
-      const r = await fetch(url, { method: 'POST', headers: API.headers(), body: JSON.stringify(body), signal });
-      let data = null;
-      try { data = await r.json(); } catch (e) { if (e.name === 'AbortError') throw e; }
-      if (r.ok && data && !data.error) return data;
-      msg = (data && data.error) || `服务器返回 ${r.status}`;
-      retryable = !data || r.status >= 500 || r.status === 408 || r.status === 429;
+      const r = await fetch(target, { method: 'POST', headers: API.headers(), body: JSON.stringify(body), signal });
+      const ctype = (r.headers && r.headers.get('content-type')) || '';
+      if (stream && r.ok && r.body && ctype.includes('text/event-stream')) {
+        const res = await readGradingStream(r.body, onPartial);
+        if (res.data && !res.data.error) return res.data;
+        msg = res.error || (res.data && res.data.error);
+        retryable = true;
+      } else {
+        let data = null;
+        try { data = await r.json(); } catch (e) { if (e.name === 'AbortError') throw e; }
+        if (r.ok && data && !data.error) return data;
+        msg = (data && data.error) || `服务器返回 ${r.status}`;
+        retryable = !data || r.status >= 500 || r.status === 408 || r.status === 429;
+      }
     } catch (e) {
       if (e.name === 'AbortError') throw e;
       msg = '网络连接失败';
@@ -3460,6 +3523,7 @@ async function postGrading(url, body, { signal, onRetry } = {}) {
       err.attempts = attempt + 1;
       throw err;
     }
+    if (stream) onPartial(null);
     if (onRetry) onRetry(attempt + 1, GRADE_RETRY_DELAYS.length);
     await gradeSleep(GRADE_RETRY_DELAYS[attempt], signal);
   }
@@ -3504,6 +3568,36 @@ const Grading = {
   retrying(job, n, total) {
     const el = job && job.mask && job.mask.querySelector('.grading-mask-text');
     if (el) el.textContent = `批改没成功，正在自动重试（${n}/${total}）…`;
+  },
+
+  // 流式批改的半截结果：分数、总评、已写完的改错先放进提示框；partial 为 null（要重试了）就收起
+  preview(job, partial) {
+    const box = job && job.mask && job.mask.querySelector('.grading-mask-box');
+    if (!box) return;
+    let pv = box.querySelector('.grading-preview');
+    if (!partial) {
+      if (pv) pv.remove();
+      box.classList.remove('has-preview');
+      return;
+    }
+    if (!pv) {
+      pv = document.createElement('div');
+      pv.className = 'grading-preview';
+      box.appendChild(pv);
+      box.classList.add('has-preview');
+    }
+    const score = partial.score ? escHtml(partial.score) : '';
+    const gc = Array.isArray(partial.grammar_corrections) ? fbGrammarList(partial.grammar_corrections).html : '';
+    pv.innerHTML = `
+      ${score || partial.feedback_summary ? `<div class="gp-head">
+        ${score ? `<span class="gp-score ${scoreClassOf(parseFloat(partial.score) || 0)}">${score}</span>` : ''}
+        ${partial.feedback_summary ? `<span class="gp-summary">${escHtml(partial.feedback_summary)}</span>` : ''}
+      </div>` : ''}
+      ${gc || (partial.corrections_done ? '<div class="gp-none">没有需要改的错误</div>' : '')}`;
+    const text = box.querySelector('.grading-mask-text');
+    const sub = box.querySelector('.grading-mask-sub');
+    if (text) text.textContent = partial.corrections_done ? '改错已出，正在补词汇提升和高分示范…' : '正在批改…';
+    if (sub) sub.textContent = partial.corrections_done ? '马上就好' : '结果边出边显示';
   },
 
   // 可重复调用
@@ -4745,7 +4839,8 @@ async function submitSmallTranslation() {
       target_chinese: s.translation,
       user_translation: text,
       standard_reference: s.original || ''
-    }, { signal: job.signal, onRetry: (n, total) => Grading.retrying(job, n, total) });
+    }, { signal: job.signal, onRetry: (n, total) => Grading.retrying(job, n, total),
+        onPartial: p => Grading.preview(job, p) });
     // 批改期间离开了，或从复习中心跳去了别的题：结果已不属于眼前这句
     if (job.signal.aborted || state.small.exampleData !== data || state.small.activeSentIdx !== sentIdx) return;
     result._userInput = text;
@@ -5955,7 +6050,8 @@ async function submitTranslation() {
   try {
     const result = await postGrading('/api/writing/correct', {
       question_text: ex.question, target_chinese: s.chinese, user_translation: text, standard_reference: s.english || ''
-    }, { signal: job.signal, onRetry: (n, total) => Grading.retrying(job, n, total) });
+    }, { signal: job.signal, onRetry: (n, total) => Grading.retrying(job, n, total),
+        onPartial: p => Grading.preview(job, p) });
     // 批改期间离开了，或从复习中心跳去了别的题：结果已不属于眼前这句
     if (job.signal.aborted || state.subData !== subData || state.currentExIdx !== exIdx || state.activeSentIdx !== sentIdx) return;
     result._userInput = text; result._gradedAt = Date.now();
@@ -8163,7 +8259,8 @@ var Tpl = {
     let failed = false;
     try {
       const res = await postGrading('/api/writing/template/correct', payload,
-        { signal: job.signal, onRetry: (n, total) => Grading.retrying(job, n, total) });
+        { signal: job.signal, onRetry: (n, total) => Grading.retrying(job, n, total),
+        onPartial: p => Grading.preview(job, p) });
       if (job.signal.aborted || this.s.prac !== p || p.token !== token) return;  // 批改期间用户已经切走
       res._payload = payload;
       res._gradedAt = Date.now();

@@ -92,6 +92,46 @@ function fakeFetch(script, calls) {
     await new Promise(r => setTimeout(r, 400));
     out.results.aborted_while_waiting = { error: name, calls: calls.n };
   }
+
+  // 流式（传了 onPartial）：服务器回 SSE，事件可能被拆在任意字节处
+  const enc = new TextEncoder();
+  const ev = (e, d) => `event: ${e}\ndata: ${JSON.stringify(d)}\n\n`;
+  const bytesOf = (text, size) => {
+    const all = enc.encode(text), parts = [];
+    for (let i = 0; i < all.length; i += size) parts.push(all.slice(i, i + size));
+    return parts;
+  };
+  const sse = parts => () => ({
+    ok: true, status: 200,
+    headers: { get: k => (k.toLowerCase() === 'content-type' ? 'text/event-stream; charset=utf-8' : null) },
+    body: new ReadableStream({ start(c) { parts.forEach(p => c.enqueue(typeof p === 'string' ? enc.encode(p) : p)); c.close(); } }),
+    json: async () => { throw new SyntaxError('not json'); },
+  });
+  const plainJson = data => () => ({
+    ok: true, status: 200, headers: { get: () => 'application/json' }, body: null, json: async () => data,
+  });
+  const WHOLE = ev('partial', { score: '6.5' })
+    + ev('partial', { score: '6.5', feedback_summary: '好的', grammar_corrections: [], corrections_done: true })
+    + ev('done', { score: '6.5', feedback_summary: '好的' });
+  const STREAMS = {
+    split_bytes: [sse(bytesOf(WHOLE, 5))],
+    error_then_ok: [sse([ev('partial', { score: '5.0' }), ev('error', { error: 'AI 服务超时，请重试' })]), sse([WHOLE])],
+    cut_then_ok: [sse([ev('partial', { score: '5.0' })]), sse([WHOLE])],
+    json_fallback: [plainJson({ score: '7.0' })],
+    error_every_time: [sse([ev('error', { error: 'AI 服务超时，请重试' })])],
+  };
+  out.stream = {};
+  GRADE_RETRY_DELAYS.fill(1);
+  for (const [name, replies] of Object.entries(STREAMS)) {
+    const calls = { n: 0, urls: [] }, partials = [], retries = [];
+    globalThis.fetch = async url => { calls.urls.push(url); return replies[Math.min(calls.n++, replies.length - 1)](); };
+    try {
+      const data = await postGrading('/api/x', {}, { onPartial: p => partials.push(p), onRetry: (n, t) => retries.push([n, t]) });
+      out.stream[name] = { ok: true, data, calls: calls.n, urls: calls.urls, partials, retries };
+    } catch (e) {
+      out.stream[name] = { ok: false, message: e.message, attempts: e.attempts, calls: calls.n, partials, retries };
+    }
+  }
   process.stdout.write(JSON.stringify(out));
 })();
 """
@@ -130,6 +170,34 @@ class PostGradingRetryTest(unittest.TestCase):
             with self.subTest(name=name):
                 self.assertTrue(self.r[name]['ok'])
                 self.assertEqual(self.r[name]['calls'], 2)
+
+    def test_stream_reassembles_events_split_mid_character(self):
+        r = self.out['stream']['split_bytes']
+        self.assertTrue(r['ok'])
+        self.assertEqual(r['urls'], ['/api/x?stream=1'])
+        self.assertEqual(r['data'], {'score': '6.5', 'feedback_summary': '好的'})
+        self.assertEqual([p.get('score') for p in r['partials']], ['6.5', '6.5'])
+        self.assertEqual(r['partials'][1]['feedback_summary'], '好的')
+
+    def test_stream_error_or_cut_retries_and_clears_preview(self):
+        for name in ('error_then_ok', 'cut_then_ok'):
+            with self.subTest(name=name):
+                r = self.out['stream'][name]
+                self.assertTrue(r['ok'])
+                self.assertEqual(r['calls'], 2)
+                self.assertEqual(r['retries'], [[1, 3]])
+                self.assertEqual(r['partials'][:2], [{'score': '5.0'}, None])   # 重试前先清掉半截结果
+
+    def test_stream_falls_back_to_plain_json(self):
+        r = self.out['stream']['json_fallback']
+        self.assertTrue(r['ok'])
+        self.assertEqual(r['data'], {'score': '7.0'})
+
+    def test_stream_gives_up_with_server_message(self):
+        r = self.out['stream']['error_every_time']
+        self.assertFalse(r['ok'])
+        self.assertEqual(r['calls'], 4)
+        self.assertEqual(r['message'], 'AI 服务超时，请重试')
 
     def test_client_errors_are_not_retried(self):
         for name, msg in (('unauthorized', '未登录'), ('bad_request', '翻译内容不能为空')):

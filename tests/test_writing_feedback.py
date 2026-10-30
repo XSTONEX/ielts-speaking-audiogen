@@ -27,6 +27,19 @@ class NormalizeFeedbackTest(unittest.TestCase):
         self.assertEqual(r['native_version'], '1. 标准答案：A.\n\n2. 你的结构优化版：B.')
         self.assertNotIn('native_standard', r)
 
+    def test_reference_fills_standard_when_model_leaves_it_empty(self):
+        r = _normalize_feedback({'native_standard': '', 'native_optimized': 'B.'}, ' Ref. ')
+        self.assertEqual(r['native_version'], '1. 标准答案：Ref.\n\n2. 你的结构优化版：B.')
+        self.assertNotIn('native_standard', r)
+
+    def test_reference_wins_over_model_copy(self):
+        r = _normalize_feedback({'native_standard': 'Ref (miscopied).', 'native_optimized': 'B.'}, 'Ref.')
+        self.assertTrue(r['native_version'].startswith('1. 标准答案：Ref.\n'))
+
+    def test_no_reference_keeps_model_sentence(self):
+        r = _normalize_feedback({'native_standard': 'Own.', 'native_optimized': 'B.'}, '')
+        self.assertTrue(r['native_version'].startswith('1. 标准答案：Own.\n'))
+
     def test_legacy_single_line_native_gets_line_breaks(self):
         r = _normalize_feedback({'native_version': '1. 标准答案： A. 2. 你的结构优化版： B.'})
         self.assertEqual(r['native_version'], '1. 标准答案： A.\n\n2. 你的结构优化版： B.')

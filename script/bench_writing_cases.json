@@ -1,0 +1,641 @@
+[
+ {
+  "id": "plant_t2_0",
+  "kind": "correct",
+  "task": "task2",
+  "source": "planted",
+  "question": "Some people believe children should have organized activities in their free time. Others believe children should decide what to do in their free time on their own. Discuss both views and give your own opinion.",
+  "target": "一方面，有些人认为学龄前的孩子应该参加有组织的活动。",
+  "reference": "On the one hand, some people believe that young children should take part in organized activities.",
+  "answer": "On the one hand, some people believes that young children should take part on organized activitys.",
+  "planted": [
+   [
+    "believes",
+    "believe"
+   ],
+   [
+    "on",
+    "in"
+   ],
+   [
+    "activitys",
+    "activities"
+   ]
+  ]
+ },
+ {
+  "id": "plant_t2_25",
+  "kind": "correct",
+  "task": "task2",
+  "source": "planted",
+  "question": "Some people say job satisfaction is more important than job security, while others believe that having a permanent job is better than enjoying the job. Discuss both views and give your own opinion.",
+  "target": "这是因为他们需要养家，包括孩子和年迈的父母，所以拥有一份稳定的工作变得非常重要。",
+  "reference": "This is because they need to support their families, including both children and elderly parents, so having a stable job becomes essential.",
+  "answer": "This is because they need to support their families, include both children and elderly parents, so have a stable job become essential.",
+  "planted": [
+   [
+    "include",
+    "including"
+   ],
+   [
+    "have",
+    "having"
+   ],
+   [
+    "become",
+    "becomes"
+   ]
+  ]
+ },
+ {
+  "id": "plant_t2_50",
+  "kind": "correct",
+  "task": "task2",
+  "source": "planted",
+  "question": "In most countries, with the widespread use of the Internet, people have more freedom to choose to work and study at home instead of traveling to work or college. Do the advantages outweigh the disadvantages?",
+  "target": "互联网可以使这一点更加便利，因为它让他们减少不必要的出行，甚至可以服务多个国家的客户。",
+  "reference": "The internet can make this more convenient, as it allows them to reduce unnecessary travel and even serve clients from multiple countries.",
+  "answer": "The internet can make this more convenience, as it allow them reducing unnecessary travels and even serve clients from multiple countries.",
+  "planted": [
+   [
+    "convenience",
+    "convenient"
+   ],
+   [
+    "allow",
+    "allows"
+   ],
+   [
+    "reducing",
+    "to reduce"
+   ],
+   [
+    "travels",
+    "travel"
+   ]
+  ]
+ },
+ {
+  "id": "plant_t2_75",
+  "kind": "correct",
+  "task": "task2",
+  "source": "planted",
+  "question": "In many countries, children are becoming overweight and unhealthy. Some people think that it is the government's responsibility. To what extent do you agree or disagree?",
+  "target": "例如，政府可以通过地铁上的宣传海报来推广健康饮食习惯。这些海报可以列出垃圾食品的潜在健康风险，例如肥胖和心脏病。",
+  "reference": "For instance, the government can promote healthy eating habits through informational posters on the subway. The posters can list the potential health risks of junk food, such as obesity and heart disease.",
+  "answer": "For example, the government can through posters on the subway to promote healthy eating habit. The posters can list the potential health risks of junk food, for example fat and heart disease.",
+  "planted": [
+   [
+    "through",
+    "promote ... through"
+   ],
+   [
+    "habit",
+    "habits"
+   ],
+   [
+    "fat",
+    "obesity"
+   ]
+  ]
+ },
+ {
+  "id": "plant_t2_100",
+  "kind": "correct",
+  "task": "task2",
+  "source": "planted",
+  "question": "The international community should act immediately to reduce the use of fossil fuels. Do you agree or disagree?",
+  "target": "支持减少化石燃料使用的一个论点是它有助于缓解国际冲突。",
+  "reference": "An argument for reducing fossil fuel use is its potential to mitigate international conflicts.",
+  "answer": "A argument for reduce fossil fuel use is it's potential to mitigate international conflicts.",
+  "planted": [
+   [
+    "A argument",
+    "An argument"
+   ],
+   [
+    "reduce",
+    "reducing"
+   ],
+   [
+    "it's",
+    "its"
+   ]
+  ]
+ },
+ {
+  "id": "plant_t2_125",
+  "kind": "correct",
+  "task": "task2",
+  "source": "planted",
+  "question": "Children are the target of a large amount of advertising today. Some people believe that this should be prohibited since it may harm children. To what extent do you agree or disagree?",
+  "target": "当某一产品的需求疲软时，公司常常依赖过度的营销策略来提升销量。这种营销策略有时会导致冲动购买。",
+  "reference": "When demand for a product is weak, companies often rely on excessive marketing tactics to boost sales. This marketing strategy can sometimes lead to impulse buying.",
+  "answer": "When the demand of a product is weak, companies often rely excessive marketing tactics to boost sales. This marketing strategy can sometimes lead to impulse buy.",
+  "planted": [
+   [
+    "of",
+    "for"
+   ],
+   [
+    "rely",
+    "rely on"
+   ],
+   [
+    "buy",
+    "buying"
+   ]
+  ]
+ },
+ {
+  "id": "plant_t2_200",
+  "kind": "correct",
+  "task": "task2",
+  "source": "planted",
+  "question": "Nowadays, some parents put a lot of pressure on their children. Why is the reason for doing that? Is this a positive or negative development for children?",
+  "target": "就我而言，这一趋势能够为孩子们带来进一步的益处。",
+  "reference": "In my opinion, this trend can bring further benefits to the children.",
+  "answer": "In my view, this trend can bring more benefits to children.",
+  "planted": []
+ },
+ {
+  "id": "plant_t2_225",
+  "kind": "correct",
+  "task": "task2",
+  "source": "planted",
+  "question": "Some countries invest more money to make it easier to use bicycles in cities. Why? Is it the best way to solve the transport problem?",
+  "target": "由于自行车体积紧凑，骑自行车的通勤者占用的道路空间显著少于汽车。",
+  "reference": "Since bicycles are compact, commuters who ride bikes occupy significantly less road space than cars.",
+  "answer": "Since bicycles are compact, commuters who ride bikes occupy significantly fewer road space than cars.",
+  "planted": [
+   [
+    "fewer",
+    "less"
+   ]
+  ]
+ },
+ {
+  "id": "plant_t2_250",
+  "kind": "correct",
+  "task": "task2",
+  "source": "planted",
+  "question": "Many people believe that countries should produce food for the whole population and import as little as possible. To what extent do you agree or disagree?",
+  "target": "因此，进口食品常常是国家实现饮食多样化的唯一实际可行的解决方案。",
+  "reference": "Therefore, importing food is often the only practical solution for countries to diversify people's diets.",
+  "answer": "Therefore, import food is often the only practical solution for countries to diversify peoples' diets.",
+  "planted": [
+   [
+    "import",
+    "importing"
+   ],
+   [
+    "peoples'",
+    "people's"
+   ]
+  ]
+ },
+ {
+  "id": "plant_t2_300",
+  "kind": "correct",
+  "task": "task2",
+  "source": "planted",
+  "question": "Some people think employers should not care about the way their employees dress, but the quality of their work. To what extent do you agree or disagree?",
+  "target": "支持这一观点的一个论点是它能够满足员工多样化的需求和偏好。",
+  "reference": "One argument in support of this idea is that it can meet employees' diverse needs and preferences.",
+  "answer": "One argument in support of this idea is that it can satisfy employees' diverse needs and preferences.",
+  "planted": []
+ },
+ {
+  "id": "plant_t2_325",
+  "kind": "correct",
+  "task": "task2",
+  "source": "planted",
+  "question": "In today's world of advanced science and technology, we still greatly value our artists, such as musicians, painters and writers. What can arts tell us about life that science and technology cannot?",
+  "target": "当所有社区成员都遵循文化传统时，个人很可能会发展出强烈的归属感和身份认同。",
+  "reference": "When all community members adhere to cultural traditions, individuals are likely to develop a strong sense of belonging and identity.",
+  "answer": "When all community members adhere cultural traditions, individuals are likely to develop a strong sense of belong and identity.",
+  "planted": [
+   [
+    "adhere",
+    "adhere to"
+   ],
+   [
+    "belong",
+    "belonging"
+   ]
+  ]
+ },
+ {
+  "id": "plant_t2_350",
+  "kind": "correct",
+  "task": "task2",
+  "source": "planted",
+  "question": "Some people think the increasing business and cultural contact between countries brings many positive effects. Others say it causes the loss of national identities. Discuss both views and give your own opinion.",
+  "target": "随着时间的推移，这可能导致长期以来的习俗被侵蚀甚至灭绝。",
+  "reference": "Over time, this can lead to the erosion and even extinction of long-standing customs.",
+  "answer": "As time goes by, this can lead to the erosion and even extinct of long-standing customs.",
+  "planted": [
+   [
+    "extinct",
+    "extinction"
+   ]
+  ]
+ },
+ {
+  "id": "plant_t2_400",
+  "kind": "correct",
+  "task": "task2",
+  "source": "planted",
+  "question": "In many countries, a high proportion of criminal acts are committed by teenagers. Why has this happened? What can be done to deal with this?",
+  "target": "青少年犯罪的另一个原因与他们的认知发展有关。",
+  "reference": "Another reason for juvenile crime is related to teenagers' cognitive development.",
+  "answer": "Another reason of juvenile crime is relate to teenagers' cognitive development.",
+  "planted": [
+   [
+    "of",
+    "for"
+   ],
+   [
+    "relate",
+    "related"
+   ]
+  ]
+ },
+ {
+  "id": "plant_t2_475",
+  "kind": "correct",
+  "task": "task2",
+  "source": "planted",
+  "question": "Major cities in the world are growing fast, and so are their problems. What are the problems that young people living in those cities face? What are the possible solutions to these problems?",
+  "target": "年轻的城市居民面临的挑战之一是交通问题。",
+  "reference": "One of the challenges faced by young urban dwellers is the traffic problem.",
+  "answer": "One of the challenge faced by young urban dwellers are the traffic problem.",
+  "planted": [
+   [
+    "challenge",
+    "challenges"
+   ],
+   [
+    "are",
+    "is"
+   ]
+  ]
+ },
+ {
+  "id": "plant_t2_copy",
+  "kind": "correct",
+  "task": "task2",
+  "source": "planted",
+  "question": "In some countries, some criminal trials in court are shown on TV and the general public can watch them. Do you think the advantages outweigh the disadvantages?",
+  "target": "否则，偏见很可能发生。",
+  "reference": "Otherwise, bias is likely to occur.",
+  "answer": "Otherwise, bias is likely to occur.",
+  "planted": []
+ },
+ {
+  "id": "plant_t1_22",
+  "kind": "correct",
+  "task": "task1",
+  "source": "planted",
+  "question": "The chart shows the level of individuals of the distinctive age groups who went to the cinema once every month in Great Britain. Summarise the information by selecting and reporting the main features, and make comparisons where relevant.",
+  "target": "总体而言，在所给的时期内，每月去电影院的人口比例持续上升，",
+  "reference": "Overall, the percentage of people who went to the cinema every month rose continuously during the given period,",
+  "answer": "Overall, the percentage of people who go to cinema every month raised continuously during the given period,",
+  "planted": [
+   [
+    "go",
+    "went"
+   ],
+   [
+    "cinema",
+    "the cinema"
+   ],
+   [
+    "raised",
+    "rose"
+   ]
+  ]
+ },
+ {
+  "id": "plant_t1_44",
+  "kind": "correct",
+  "task": "task1",
+  "source": "planted",
+  "question": "The graph below shows the types of transport used by tourists who visited New Zealand from five countries in 2004. Summarise the information by selecting and reporting the main features, and make comparisons where relevant.",
+  "target": "日本游客使用渡轮的比例最低，为10%。",
+  "reference": "The use of ferries was the lowest among the Japanese at 10%.",
+  "answer": "The use of ferries was the lowest between the Japanese at 10%.",
+  "planted": [
+   [
+    "between",
+    "among"
+   ]
+  ]
+ },
+ {
+  "id": "plant_t1_66",
+  "kind": "correct",
+  "task": "task1",
+  "source": "planted",
+  "question": "The graphs below show the methods used by international students when booking the online English courses in three different countries in 2009 and 2010. Summarise the information by selecting and reporting the main features, and make comparisons where relevant.",
+  "target": "在美国，抵达后预订的学生比例在这两年中保持不变，为24%。",
+  "reference": "The proportion of students booking on arrival in the USA remained unchanged at 24% over the two years.",
+  "answer": "The proportion of students booking on arrival in USA was remained unchanged at 24% over the two year.",
+  "planted": [
+   [
+    "USA",
+    "the USA"
+   ],
+   [
+    "was remained",
+    "remained"
+   ],
+   [
+    "year",
+    "years"
+   ]
+  ]
+ },
+ {
+  "id": "plant_t1_88",
+  "kind": "correct",
+  "task": "task1",
+  "source": "planted",
+  "question": "The charts below shows the percentage of male and female workers in country A and B. Summarise the information by selecting and reporting the main features, and make comparisons where relevant.",
+  "target": "在B国，服务业中男性工人和女性工人的数据最为显著，分别为65%和88%。",
+  "reference": "In country B, the figures for male workers and female workers in services are the most significant, at 65% and 88%, respectively.",
+  "answer": "In country B, the service sector had the highest figures for both male and female workers, at 65% and 88% respectively.",
+  "planted": []
+ },
+ {
+  "id": "plant_t1_110",
+  "kind": "correct",
+  "task": "task1",
+  "source": "planted",
+  "question": "The table below shows the income and expenditure of Brooklyn Hall, the building used to hire in over the period of three years. Summarise the information by selecting and reporting the main features, and make comparisons where relevant.",
+  "target": "总体而言，很明显其支出的增长远超过总收入，因此在此期间利润骤降。",
+  "reference": "Overall, it is clear that its expenditure had increased far more considerably than overall revenue, so profit had plummeted over this period.",
+  "answer": "Overall, it is clear that its expenditure had increased much more than overall revenue, so the profit had plummet over this period.",
+  "planted": [
+   [
+    "plummet",
+    "plummeted"
+   ]
+  ]
+ },
+ {
+  "id": "plant_t1_132",
+  "kind": "correct",
+  "task": "task1",
+  "source": "planted",
+  "question": "The chart below gives information about the high-speed continuous internet connection of households in five countries in 2001 and 2002. Summarise the information by selecting and reporting the main features, and make comparisons where relevant.",
+  "target": "对于其他三个国家，在2001年，英国每1000人中拥有的高速连续互联网连接数最少（仅为3.3）。",
+  "reference": "For the other three countries, in 2001, Britain had the fewest high-speed continuous internet connections per 1,000 people (only 3.3).",
+  "answer": "For the other three countries, in 2001, Britain had the least high-speed continuous internet connections per 1,000 people (only 3.3).",
+  "planted": [
+   [
+    "least",
+    "fewest"
+   ]
+  ]
+ },
+ {
+  "id": "plant_t1_154",
+  "kind": "correct",
+  "task": "task1",
+  "source": "planted",
+  "question": "The chart below shows the temperature and rainfall in Equatorial and Mediterranean climates. Summarise the information by selecting and reporting the main features, and make comparisons where relevant.",
+  "target": "11月至次年3月的降雨量最高，在50至100毫米之间。",
+  "reference": "Rainfall is highest from November to March, ranging from 50 to 100 mm.",
+  "answer": "The rainfall is highest from November to March, range from 50 to 100 mm.",
+  "planted": [
+   [
+    "range",
+    "ranging"
+   ]
+  ]
+ },
+ {
+  "id": "plant_t1_198",
+  "kind": "correct",
+  "task": "task1",
+  "source": "planted",
+  "question": "The maps below show a beachfront area in Australia in 1950 and today. Summarise the information by selecting and reporting the main features, and make comparisons where relevant.",
+  "target": "1950 年，沙滩位于整个地区的中心。",
+  "reference": "In 1950, the beach was located in the center of the entire area.",
+  "answer": "In 1950, the beach is located at the center of the whole area.",
+  "planted": [
+   [
+    "is",
+    "was"
+   ]
+  ]
+ },
+ {
+  "id": "plant_t1_242",
+  "kind": "correct",
+  "task": "task1",
+  "source": "planted",
+  "question": "The diagram describes the structure of a home smokery and how it works. Summarise the information by selecting and reporting the main features, and make comparisons where relevant.",
+  "target": "盖子的一侧稍微打开，以便空气进入。",
+  "reference": "One side of the lid is slightly open for the air to enter.",
+  "answer": "One side of the lid is slightly opened for air entering.",
+  "planted": [
+   [
+    "entering",
+    "to enter"
+   ]
+  ]
+ },
+ {
+  "id": "plant_t1_264",
+  "kind": "correct",
+  "task": "task1",
+  "source": "planted",
+  "question": "The diagram below show the process of making wool. Summarise the information by selecting and reporting the main features and make comparisons where relevant.",
+  "target": "该过程中的一个主要步骤是梳理，它发生在清洗之后。",
+  "reference": "A major step in this process is carding, which occurs after cleaning.",
+  "answer": "A major step in this process is carding, which is occurred after cleaning.",
+  "planted": [
+   [
+    "is occurred",
+    "occurs"
+   ]
+  ]
+ },
+ {
+  "id": "plant_t1_308",
+  "kind": "correct",
+  "task": "task1",
+  "source": "planted",
+  "question": "The diagram below shows how tea leaves are processed into five tea types. Summarise the information by selecting and reporting the main features, and make comparisons where relevant.",
+  "target": "总体而言，该过程涉及八种不同的技术，从采摘茶叶开始，到生产出不同种类的茶结束。",
+  "reference": "Overall, the process involves eight distinct techniques, starting with harvesting tea leaves and ending with the production of different types of tea.",
+  "answer": "Overall, the process involve eight distinct technique, start with harvesting tea leaves and end with the production of different type of tea.",
+  "planted": [
+   [
+    "involve",
+    "involves"
+   ],
+   [
+    "technique",
+    "techniques"
+   ],
+   [
+    "start",
+    "starting"
+   ],
+   [
+    "end",
+    "ending"
+   ],
+   [
+    "type",
+    "types"
+   ]
+  ]
+ },
+ {
+  "id": "plant_t1_330",
+  "kind": "correct",
+  "task": "task1",
+  "source": "planted",
+  "question": "The diagram below shows the recycling process of aluminum cans. Summarise the information by selecting and reporting the main features, and make comparisons where relevant.",
+  "target": "主要步骤是将旧罐子变成铝板。",
+  "reference": "The major step is to turn used cans into aluminum sheets.",
+  "answer": "The major step is to turn used cans into aluminum sheets.",
+  "planted": []
+ },
+ {
+  "id": "chat_few",
+  "kind": "chat",
+  "source": "planted",
+  "target": "很少有学生意识到睡眠的重要性。",
+  "answer": "Few students realise the importance of sleep.",
+  "feedback_summary": "句子正确，表达简洁。",
+  "grammar_corrections": "[]",
+  "query": "这里用 a few 可以吗？",
+  "expect": "a few=有几个（偏肯定），few=很少、几乎没有（偏否定）；换成 a few 意思就变了，这里只能用 few。"
+ },
+ {
+  "id": "chat_dramatically",
+  "kind": "chat",
+  "source": "planted",
+  "target": "游客数量大幅增加。",
+  "answer": "The number of tourists increased dramatically.",
+  "feedback_summary": "句子正确。",
+  "grammar_corrections": "[]",
+  "query": "dramatically 和 significantly 有区别吗？可以互换吗？",
+  "expect": "两者都对，但程度/语气不同：dramatically 更强、更突然剧烈；significantly 是\"明显、显著\"，程度弱一些。不能说完全一样。"
+ },
+ {
+  "id": "chat_a_number_of",
+  "kind": "chat",
+  "source": "planted",
+  "target": "许多学生选择在线学习。",
+  "answer": "A number of students was choosing online learning.",
+  "feedback_summary": "主谓一致错误。",
+  "grammar_corrections": "[{\"original\": \"was choosing\", \"corrected\": \"choose\", \"type\": \"主谓一致\", \"reason\": \"a number of 后接复数谓语\"}]",
+  "query": "为什么 a number of 后面不能用 was？",
+  "expect": "a number of = many，谓语看后面的复数名词，用复数；the number of 才用单数。"
+ },
+ {
+  "id": "chat_raise",
+  "kind": "chat",
+  "source": "planted",
+  "target": "价格上涨到了5美元。",
+  "answer": "The price raised to $5.",
+  "feedback_summary": "动词用错。",
+  "grammar_corrections": "[{\"original\": \"raised\", \"corrected\": \"rose\", \"type\": \"用词\", \"reason\": \"rise 不及物，raise 及物\"}]",
+  "query": "raise 和 rise 有什么区别？",
+  "expect": "rise（rose, risen）不及物，自己上升；raise（raised）及物，要接宾语，\"提高某物\"。价格自己上涨用 rose。"
+ },
+ {
+  "id": "chat_affect",
+  "kind": "chat",
+  "source": "planted",
+  "target": "空气污染影响人们的健康。",
+  "answer": "Air pollution effects people's health.",
+  "feedback_summary": "词性错误。",
+  "grammar_corrections": "[{\"original\": \"effects\", \"corrected\": \"affects\", \"type\": \"词性\", \"reason\": \"affect 是动词，effect 是名词\"}]",
+  "query": "affect 和 effect 我老搞混，怎么记？",
+  "expect": "affect 通常是动词（影响），effect 通常是名词（影响/效果），have an effect on = affect。"
+ },
+ {
+  "id": "chat_which_that",
+  "kind": "chat",
+  "source": "planted",
+  "target": "该过程中的一个主要步骤是梳理，它发生在清洗之后。",
+  "answer": "A major step in this process is carding, that occurs after cleaning.",
+  "feedback_summary": "关系代词用错。",
+  "grammar_corrections": "[{\"original\": \"that\", \"corrected\": \"which\", \"type\": \"句子结构\", \"reason\": \"逗号后的非限制性从句不能用 that\"}]",
+  "query": "为什么这里不能用 that？",
+  "expect": "逗号后面是非限制性定语从句（补充说明），只能用 which，不能用 that。"
+ },
+ {
+  "id": "chat_despite",
+  "kind": "chat",
+  "source": "planted",
+  "target": "尽管价格很高，许多人仍然购买。",
+  "answer": "Despite the price was high, many people still bought it.",
+  "feedback_summary": "连词用错。",
+  "grammar_corrections": "[{\"original\": \"Despite\", \"corrected\": \"Although\", \"type\": \"句子结构\", \"reason\": \"despite 是介词，后面不能接句子\"}]",
+  "query": "despite 后面为什么不能接句子？",
+  "expect": "despite/in spite of 是介词，后接名词或动名词（despite the high price）；接完整句子要用 although，或 despite the fact that。"
+ },
+ {
+  "id": "chat_compared",
+  "kind": "chat",
+  "source": "planted",
+  "target": "与2000年相比，2010年的数字翻了一番。",
+  "answer": "Compared to 2000, the figure doubled in 2010.",
+  "feedback_summary": "句子正确。",
+  "grammar_corrections": "[]",
+  "query": "这里用 compared with 还是 compared to？",
+  "expect": "两个都可以，雅思写作里都能接受；传统上 compared with 偏\"对比差异\"，compared to 偏\"类比\"，但现在基本通用，不算错。"
+ },
+ {
+  "id": "chat_peak",
+  "kind": "chat",
+  "source": "planted",
+  "target": "男性囚犯人数在2001年达到了48,000人的峰值。",
+  "answer": "The number of male prisoners reached a peak at 48,000 in 2001.",
+  "feedback_summary": "介词搭配错误。",
+  "grammar_corrections": "[{\"original\": \"at\", \"corrected\": \"of\", \"type\": \"介词\", \"reason\": \"reach a peak of + 数值\"}]",
+  "query": "reach a peak at 48,000 为什么不对？",
+  "expect": "数值前用 reach a peak of 48,000，或者 peak at 48,000（peak 作动词）；reach a peak at 后面接的是时间/位置更自然。"
+ },
+ {
+  "id": "chat_account_for",
+  "kind": "chat",
+  "source": "planted",
+  "target": "汽车占了总数的40%。",
+  "answer": "Cars accounted 40% of the total.",
+  "feedback_summary": "缺少介词。",
+  "grammar_corrections": "[{\"original\": \"accounted\", \"corrected\": \"accounted for\", \"type\": \"搭配\", \"reason\": \"account for 表示占比\"}]",
+  "query": "为什么一定要加 for？",
+  "expect": "account for 是固定搭配，表示\"占（比例）\"；不加 for 的 account 意思不对。"
+ },
+ {
+  "id": "chat_fewer",
+  "kind": "chat",
+  "source": "planted",
+  "target": "骑自行车的通勤者占用的道路空间显著少于汽车。",
+  "answer": "Commuters who ride bikes occupy significantly fewer road space than cars.",
+  "feedback_summary": "量词用错。",
+  "grammar_corrections": "[{\"original\": \"fewer\", \"corrected\": \"less\", \"type\": \"用词\", \"reason\": \"space 不可数用 less\"}]",
+  "query": "为什么不能用 fewer？",
+  "expect": "fewer 修饰可数名词复数，less 修饰不可数名词；space（空间）在这里不可数，所以用 less。"
+ },
+ {
+  "id": "chat_that_of",
+  "kind": "chat",
+  "source": "planted",
+  "target": "法国的数字略高于德国。",
+  "answer": "The figure for France was slightly higher than that of Germany.",
+  "feedback_summary": "句子正确，表达规范。",
+  "grammar_corrections": "[]",
+  "query": "这里用 that of 对吗？会不会应该用 those of？",
+  "expect": "对，that of 正确：that 指代前面的单数 figure；只有前面是复数（figures）时才用 those of。（学生原句没有错，回答不能判错）"
+ }
+]

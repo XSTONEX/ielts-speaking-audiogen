@@ -85,16 +85,89 @@ def load_prompt(name):
         return yaml.safe_load(f)
 
 
-# ==================== WildAPI Gemini 出站 LLM（写作 / 听力精听共用） ====================
+# ==================== 出站 LLM（写作 / 听力精听共用） ====================
 
-# 统一走 WildAPI 中转的 Gemini 原生接口。
+# Gemini 统一走 WildAPI 中转的原生接口。
 # gemini-3.8-flash 不支持 OpenAI 兼容的 /v1/chat/completions
 # （WildAPI 直接返回 "does not support this API (call_methods must include chat)"），
 # 只能用 /v1beta/models/<model>:generateContent，请求体和鉴权头都不一样。
 WILDAPI_DEFAULT_BASE = 'https://api.gptsapi.net/v1'
+# deepseek-* 直连 DeepSeek 官方 API（OpenAI 兼容格式），国内机房可直连
+DEEPSEEK_DEFAULT_BASE = 'https://api.deepseek.com'
 # 中转偶发 ReadTimeout，实测约一成，重试一次基本能救回来
-GEMINI_LLM_ATTEMPTS = 2
-GEMINI_LLM_RETRY_WAIT = 1
+LLM_ATTEMPTS = 2
+LLM_RETRY_WAIT = 1
+
+
+def call_llm(cfg, messages):
+    """按 cfg.model 选上游：deepseek-* 走 DeepSeek 官方 API，其余走 WildAPI 的 Gemini。"""
+    if (cfg.get('model') or '').startswith('deepseek'):
+        return call_deepseek_llm(cfg, messages)
+    return call_gemini_llm(cfg, messages)
+
+
+def _post_llm(label, url, headers, body, timeout, extract):
+    """发请求并带一次重试；extract(resp_json) 返回 (回复文本, 结束原因)。"""
+    last_error = None
+    for attempt in range(LLM_ATTEMPTS):
+        try:
+            resp = requests.post(url, headers=headers, json=body, timeout=timeout)
+            resp.raise_for_status()
+            text, finish_reason = extract(resp.json())
+            if text:
+                return text
+            last_error = RuntimeError(f'模型未返回内容（finish_reason={finish_reason}）')
+        except requests.exceptions.HTTPError as exc:
+            # 4xx 是请求本身的问题，重试没有意义；429 除外，等一下往往就过了
+            status = exc.response.status_code if exc.response is not None else None
+            if status is not None and 400 <= status < 500 and status != 429:
+                raise
+            last_error = exc
+        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError,
+                requests.exceptions.ChunkedEncodingError, requests.exceptions.ContentDecodingError,
+                UnicodeDecodeError, json.JSONDecodeError) as exc:
+            # WildAPI 前面是 Cloudflare，单次请求超过约 60 秒会被拦腰切断：
+            # 运气好收到 504，运气差只收到半截 body——截断点落在中文字符中间时
+            # 解码就报 'utf-8' codec can't decode ... unexpected end of data，
+            # 落在别处则是 JSON 解析失败。这几种都是传输层被掐，值得重试。
+            last_error = exc
+        if attempt + 1 < LLM_ATTEMPTS:
+            logging.warning('%s 调用失败，准备重试：%s', label, last_error)
+            time.sleep(LLM_RETRY_WAIT)
+
+    raise last_error
+
+
+def _deepseek_request(cfg, messages):
+    body = {
+        'model': cfg.get('model') or 'deepseek-flash',
+        'messages': [{'role': m['role'], 'content': m['content']}
+                     for m in messages if m.get('role') in ('system', 'user', 'assistant') and m.get('content')],
+        'temperature': cfg.get('temperature', 0.3),
+        'thinking': {'type': 'disabled'},
+    }
+    if cfg.get('response_format') == 'json_object':
+        body['response_format'] = {'type': 'json_object'}
+    if cfg.get('max_output_tokens'):
+        body['max_tokens'] = cfg['max_output_tokens']
+    base = (os.getenv('DEEPSEEK_BASE_URL') or DEEPSEEK_DEFAULT_BASE).rstrip('/')
+    headers = {'Authorization': f"Bearer {os.getenv('DEEPSEEK_API_KEY')}", 'Content-Type': 'application/json'}
+    return f'{base}/chat/completions', headers, body
+
+
+def call_deepseek_llm(cfg, messages):
+    """调用 DeepSeek 官方 API（/chat/completions）并返回回复文本。
+
+    官方 API 默认开思考，显式关掉才是最快档（和 llm_context_translator 的 deepseek-flash 一致）。
+    response_format=json_object 对应 DeepSeek 的 JSON 模式，它要求提示词里出现 json 字样；
+    max_output_tokens 对应 max_tokens。
+    """
+    def extract(data):
+        choice = (data.get('choices') or [{}])[0]
+        return ((choice.get('message') or {}).get('content') or '').strip(), choice.get('finish_reason')
+
+    url, headers, body = _deepseek_request(cfg, messages)
+    return _post_llm('DeepSeek', url, headers, body, cfg.get('timeout', 60), extract)
 
 
 def _gemini_endpoint(model):
@@ -103,20 +176,7 @@ def _gemini_endpoint(model):
     return f'{root}/v1beta/models/{model}:generateContent'
 
 
-def call_gemini_llm(cfg, messages):
-    """调用 WildAPI 中转的 Gemini 模型并返回回复文本。
-
-    messages 沿用 OpenAI 的 [{'role','content'}] 写法，这里转成 Gemini 的
-    systemInstruction + contents（assistant 在 Gemini 里叫 model）。
-
-    thinkingBudget 置 0：gemini-3.8-flash 默认每次要额外思考几百个 token，
-    关掉后延迟从中位 10 秒降到 6 秒、长尾也收窄，批改质量没有可见差别，
-    还省下思考 token 的费用。需要时可用 cfg.thinking_budget 调回来。
-
-    cfg 里另有两个可选项，给听力精听这种长 JSON 输出用：
-    response_format=json_object 会开 responseMimeType，省掉模型自己加的代码块围栏；
-    max_output_tokens 抬高输出上限，避免整份字幕被截断成半截 JSON。
-    """
+def _gemini_request(cfg, messages):
     model = cfg.get('model') or 'gemini-3.8-flash'
     system = '\n\n'.join(m['content'] for m in messages
                           if m.get('role') == 'system' and m.get('content'))
@@ -134,25 +194,77 @@ def call_gemini_llm(cfg, messages):
     body = {'contents': contents, 'generationConfig': generation_config}
     if system:
         body['systemInstruction'] = {'parts': [{'text': system}]}
-
-    url = _gemini_endpoint(model)
     headers = {'x-goog-api-key': os.getenv('WILDAPI_API_KEY'), 'Content-Type': 'application/json'}
-    timeout = cfg.get('timeout', 60)
-    last_error = None
+    return _gemini_endpoint(model), headers, body
 
-    for attempt in range(GEMINI_LLM_ATTEMPTS):
+
+def call_gemini_llm(cfg, messages):
+    """调用 WildAPI 中转的 Gemini 模型并返回回复文本。
+
+    messages 沿用 OpenAI 的 [{'role','content'}] 写法，这里转成 Gemini 的
+    systemInstruction + contents（assistant 在 Gemini 里叫 model）。
+
+    thinkingBudget 置 0：gemini-3.8-flash 默认每次要额外思考几百个 token，
+    关掉后延迟从中位 10 秒降到 6 秒、长尾也收窄，批改质量没有可见差别，
+    还省下思考 token 的费用。需要时可用 cfg.thinking_budget 调回来。
+
+    cfg 里另有两个可选项，给听力精听这种长 JSON 输出用：
+    response_format=json_object 会开 responseMimeType，省掉模型自己加的代码块围栏；
+    max_output_tokens 抬高输出上限，避免整份字幕被截断成半截 JSON。
+    """
+    def extract(data):
+        candidate = (data.get('candidates') or [{}])[0]
+        parts = (candidate.get('content') or {}).get('parts') or []
+        return ''.join(part.get('text', '') for part in parts).strip(), candidate.get('finishReason')
+
+    url, headers, body = _gemini_request(cfg, messages)
+    return _post_llm('Gemini', url, headers, body, cfg.get('timeout', 60), extract)
+
+
+def stream_llm(cfg, messages):
+    """流式版 call_llm：边生成边 yield 回复片段。两家都走 SSE（每行 data: {json}）。
+
+    Gemini 用 :streamGenerateContent?alt=sse，实测 WildAPI 真的是边生成边发（一次批改十几段）。
+    一个字都还没收到就失败的，和 call_llm 一样重试一次；已经吐出一部分再断的直接抛出，
+    由调用方整条重来——半截内容没法和重试的结果拼起来。
+    """
+    if (cfg.get('model') or '').startswith('deepseek'):
+        label = 'DeepSeek'
+        url, headers, body = _deepseek_request(cfg, messages)
+        body['stream'] = True
+
+        def pieces(event):
+            return ((event.get('choices') or [{}])[0].get('delta') or {}).get('content') or ''
+    else:
+        label = 'Gemini'
+        url, headers, body = _gemini_request(cfg, messages)
+        url = url.replace(':generateContent', ':streamGenerateContent') + '?alt=sse'
+
+        def pieces(event):
+            parts = ((event.get('candidates') or [{}])[0].get('content') or {}).get('parts') or []
+            return ''.join(p.get('text', '') for p in parts if not p.get('thought'))
+
+    last_error = None
+    for attempt in range(LLM_ATTEMPTS):
+        got_text = False
         try:
-            resp = requests.post(url, headers=headers, json=body, timeout=timeout)
-            resp.raise_for_status()
-            candidate = (resp.json().get('candidates') or [{}])[0]
-            parts = (candidate.get('content') or {}).get('parts') or []
-            text = ''.join(part.get('text', '') for part in parts).strip()
-            if text:
-                return text
-            last_error = RuntimeError(
-                f"模型未返回内容（finishReason={candidate.get('finishReason')}）")
+            with requests.post(url, headers=headers, json=body, timeout=cfg.get('timeout', 60), stream=True) as resp:
+                resp.raise_for_status()
+                # chunk_size=None：收到多少给多少，不等凑满一块，否则会攒着不发
+                for line in resp.iter_lines(chunk_size=None):
+                    if not line.startswith(b'data:'):
+                        continue
+                    data = line[5:].strip()
+                    if data == b'[DONE]':
+                        break
+                    text = pieces(json.loads(data))
+                    if text:
+                        got_text = True
+                        yield text
+            if got_text:
+                return
+            last_error = RuntimeError('模型未返回内容')
         except requests.exceptions.HTTPError as exc:
-            # 4xx 是请求本身的问题，重试没有意义；429 除外，等一下往往就过了
             status = exc.response.status_code if exc.response is not None else None
             if status is not None and 400 <= status < 500 and status != 429:
                 raise
@@ -160,14 +272,12 @@ def call_gemini_llm(cfg, messages):
         except (requests.exceptions.Timeout, requests.exceptions.ConnectionError,
                 requests.exceptions.ChunkedEncodingError, requests.exceptions.ContentDecodingError,
                 UnicodeDecodeError, json.JSONDecodeError) as exc:
-            # WildAPI 前面是 Cloudflare，单次请求超过约 60 秒会被拦腰切断：
-            # 运气好收到 504，运气差只收到半截 body——截断点落在中文字符中间时
-            # 解码就报 'utf-8' codec can't decode ... unexpected end of data，
-            # 落在别处则是 JSON 解析失败。这几种都是传输层被掐，值得重试。
+            if got_text:
+                raise
             last_error = exc
-        if attempt + 1 < GEMINI_LLM_ATTEMPTS:
-            logging.warning('Gemini 调用失败，准备重试：%s', last_error)
-            time.sleep(GEMINI_LLM_RETRY_WAIT)
+        if attempt + 1 < LLM_ATTEMPTS:
+            logging.warning('%s 流式调用失败，准备重试：%s', label, last_error)
+            time.sleep(LLM_RETRY_WAIT)
 
     raise last_error
 
