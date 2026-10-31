@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, send_file
 import os, json, re, uuid, threading, shutil, requests, time
 from concurrent.futures import ThreadPoolExecutor
+from functools import wraps
 from datetime import datetime
 from openai import OpenAI
 from core import (
@@ -8,8 +9,18 @@ from core import (
     get_openai_http_client, load_prompt, is_safe_path_segment, call_gemini_llm,
 )
 from utils.audio_segment import transcribe_segmented
+from utils.json_store import save_json_atomic
 
 listening_review_bp = Blueprint('listening_review', __name__)
+
+# 转录线程和请求会同时读改写 {user}_projects.json / data.json, 统一用这把锁串行;
+# 生产是单进程 (python app.py), 线程锁就够
+_store_lock = threading.RLock()
+# 本进程里正在跑的转录任务 {project_id: Thread}; 服务重启后为空,
+# 列表里还标着转录中/翻译中却不在这里的项目, 就是被重启打断的
+_active_jobs = {}
+BUSY_STATUSES = ('processing', 'translating')
+INTERRUPTED_ERROR = '服务器重启打断了处理，点重试继续'
 
 ALLOWED_EXTENSIONS = {'.mp3', '.wav', '.m4a', '.flac', '.ogg', '.mp4', '.webm'}
 MAX_FILE_SIZE = 25 * 1024 * 1024  # 25MB
@@ -41,14 +52,31 @@ def _load_user_projects(username):
     return []
 
 def _save_user_projects(username, projects):
-    with open(_user_projects_path(username), 'w', encoding='utf-8') as f:
-        json.dump(projects, f, ensure_ascii=False, indent=2)
+    # 先写临时文件再替换: 写到一半时别的请求读到空文件会当成没有项目, 再一保存就全丢了
+    save_json_atomic(_user_projects_path(username), projects)
 
 def _project_dir(project_id):
     return os.path.join(LISTENING_REVIEW_DIR, project_id)
 
 def _project_data_path(project_id):
     return os.path.join(_project_dir(project_id), 'data.json')
+
+def _transcript_path(project_id):
+    """转录成功后先存一份原始字幕, 只是润色翻译失败时重试直接用它, 不再花钱重新转录"""
+    return os.path.join(_project_dir(project_id), 'transcript.json')
+
+def _load_saved_transcript(project_id):
+    path = _transcript_path(project_id)
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            saved = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return None
+    if not isinstance(saved, dict) or not isinstance(saved.get('segments'), list) or not saved['segments']:
+        return None
+    return saved
 
 def _load_project_data(project_id):
     path = _project_data_path(project_id)
@@ -61,8 +89,7 @@ def _load_project_data(project_id):
     return None
 
 def _save_project_data(project_id, data):
-    with open(_project_data_path(project_id), 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    save_json_atomic(_project_data_path(project_id), data)
 
 def _generate_project_id():
     return f"lr_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{str(uuid.uuid4())[:8]}"
@@ -84,6 +111,51 @@ def _find_user_project(username, project_id):
         if p['id'] == project_id:
             return projects, i
     return projects, -1
+
+
+def _recover_interrupted_projects(username):
+    """
+    把被服务重启打断的项目 (还标着转录中/翻译中, 但本进程没有对应线程) 改成失败, 好让用户点重试
+    字幕已经存下来的记成润色失败, 重试时直接从翻译开始
+    """
+    with _store_lock:
+        projects = _load_user_projects(username)
+        changed = False
+        for p in projects:
+            if p.get('status') in BUSY_STATUSES and p['id'] not in _active_jobs:
+                has_transcript = _load_saved_transcript(p['id']) is not None
+                p.update(
+                    status='error',
+                    error=INTERRUPTED_ERROR,
+                    error_phase='polish' if has_transcript or p.get('status') == 'translating' else 'transcribe',
+                    updated_at=datetime.now().isoformat(),
+                )
+                changed = True
+        if changed:
+            _save_user_projects(username, projects)
+        return projects
+
+
+def _start_job(project_id, audio_path, username, reuse_transcript=False):
+    """登记并启动转录线程; 调用方要在同一次持锁里先把状态存成转录中/翻译中"""
+    thread = threading.Thread(
+        target=_transcribe_async,
+        args=(project_id, audio_path, username, reuse_transcript),
+        daemon=True,
+    )
+    with _store_lock:
+        _active_jobs[project_id] = thread
+    thread.start()
+    return thread
+
+
+def _serialized(view):
+    """整个请求持锁执行: 读改写项目文件的接口都要串行, 不然并发时会丢一次修改"""
+    @wraps(view)
+    def wrapper(*args, **kwargs):
+        with _store_lock:
+            return view(*args, **kwargs)
+    return wrapper
 
 
 def _canonical_error_tag(tag):
@@ -450,28 +522,36 @@ def _download_audio_from_url(url_str, save_path):
 
 
 def _update_project_status(username, project_id, **fields):
-    """Update a project's fields in the user projects list and save."""
-    projects = _load_user_projects(username)
-    for i, p in enumerate(projects):
-        if p['id'] == project_id:
-            projects[i].update(fields, updated_at=datetime.now().isoformat())
-            break
-    _save_user_projects(username, projects)
+    """Update a project's fields in the user projects list and save. 项目已被删除时返回 False"""
+    with _store_lock:
+        projects, idx = _find_user_project(username, project_id)
+        if idx == -1:
+            return False
+        projects[idx].update(fields, updated_at=datetime.now().isoformat())
+        _save_user_projects(username, projects)
+        return True
 
 
-def _transcribe_async(project_id, audio_path, username):
+def _transcribe_async(project_id, audio_path, username, reuse_transcript=False):
     """Run transcription + LLM polish/translate in background thread."""
     try:
-        # Phase 1: ASR transcription（默认 WildAPI，可 LISTENING_ASR_PROVIDER=groq 回切）
-        # 按长静音切段送，避免 Whisper 在看题停顿处崩成重复循环
-        result, error = _transcribe(audio_path)
-        if not result:
-            _update_project_status(username, project_id, status='error',
-                                   error=error, error_phase='transcribe')
-            return
+        result = _load_saved_transcript(project_id) if reuse_transcript else None
+        if result is None:
+            # Phase 1: ASR transcription（默认 WildAPI，可 LISTENING_ASR_PROVIDER=groq 回切）
+            # 按长静音切段送，避免 Whisper 在看题停顿处崩成重复循环
+            result, error = _transcribe(audio_path)
+            if not result:
+                _update_project_status(username, project_id, status='error',
+                                       error=error, error_phase='transcribe')
+                return
 
-        # Mark translating and save duration
-        _update_project_status(username, project_id, status='translating', duration=result['duration'])
+            with _store_lock:
+                # 转录期间项目被删了就别再写回文件, 免得把目录又建出来
+                if _find_user_project(username, project_id)[1] == -1:
+                    return
+                save_json_atomic(_transcript_path(project_id), result)
+                # Mark translating and save duration
+                _update_project_status(username, project_id, status='translating', duration=result['duration'])
 
         # Phase 2: LLM polish + translate（默认 WildAPI，可 LISTENING_LLM_PROVIDER=deerapi 回切）
         polished_segments, translate_error = _polish_and_translate(result['segments'])
@@ -490,19 +570,27 @@ def _transcribe_async(project_id, audio_path, username):
                 seg['text'] = polished.get('text', seg['text'])
                 seg['translation'] = polished.get('translation', '')
 
-        _save_project_data(project_id, {
-            'segments': result['segments'],
-            'starred_segments': [],
-            'vocab_annotations': [],
-            'notes': [],
-            'error_tags': {},
-        })
-        _update_project_status(username, project_id, status='completed', error_phase=None)
+        with _store_lock:
+            if _find_user_project(username, project_id)[1] == -1:
+                return
+            _save_project_data(project_id, {
+                'segments': result['segments'],
+                'starred_segments': [],
+                'vocab_annotations': [],
+                'notes': [],
+                'error_tags': {},
+            })
+            _update_project_status(username, project_id, status='completed', error_phase=None)
         print(f"Listening review done: {project_id}")
 
     except Exception as e:
         print(f"Listening review failed: {e}")
         _update_project_status(username, project_id, status='error', error=str(e), error_phase='unknown')
+    finally:
+        with _store_lock:
+            # 重试可能已经登记了新线程, 只摘掉自己
+            if _active_jobs.get(project_id) is threading.current_thread():
+                del _active_jobs[project_id]
 
 
 # ==================== Routes ====================
@@ -564,12 +652,11 @@ def upload_audio():
         'error': None
     }
 
-    projects = _load_user_projects(username)
-    projects.append(project_record)
-    _save_user_projects(username, projects)
-
-    thread = threading.Thread(target=_transcribe_async, args=(project_id, audio_path, username), daemon=True)
-    thread.start()
+    with _store_lock:
+        projects = _load_user_projects(username)
+        projects.append(project_record)
+        _save_user_projects(username, projects)
+        _start_job(project_id, audio_path, username)
 
     return jsonify({'success': True, 'project_id': project_id, 'message': '音频上传成功，正在转录中...'})
 
@@ -624,12 +711,11 @@ def download_url_audio():
         'error': None
     }
 
-    projects = _load_user_projects(username)
-    projects.append(project_record)
-    _save_user_projects(username, projects)
-
-    thread = threading.Thread(target=_transcribe_async, args=(project_id, audio_path, username), daemon=True)
-    thread.start()
+    with _store_lock:
+        projects = _load_user_projects(username)
+        projects.append(project_record)
+        _save_user_projects(username, projects)
+        _start_job(project_id, audio_path, username)
 
     return jsonify({'success': True, 'project_id': project_id, 'message': '音频下载成功，正在转录中...'})
 
@@ -640,7 +726,7 @@ def list_projects():
     if not username:
         return jsonify({'error': '未登录或token无效'}), 401
 
-    projects = _load_user_projects(username)
+    projects = _recover_interrupted_projects(username)
     projects.sort(key=lambda x: x.get('created_at', ''), reverse=True)
 
     for p in projects:
@@ -723,6 +809,7 @@ def all_notes():
 
 
 @listening_review_bp.route('/api/listening_review/project/<project_id>', methods=['GET'])
+@_serialized
 def get_project(project_id):
     username = _get_auth_username()
     if not username:
@@ -745,6 +832,7 @@ def get_project(project_id):
 
 
 @listening_review_bp.route('/api/listening_review/project/<project_id>', methods=['DELETE'])
+@_serialized
 def delete_project(project_id):
     username = _get_auth_username()
     if not username:
@@ -766,11 +854,14 @@ def delete_project(project_id):
 
 
 @listening_review_bp.route('/api/listening_review/project/<project_id>/retry', methods=['POST'])
+@_serialized
 def retry_transcription(project_id):
     username = _get_auth_username()
     if not username:
         return jsonify({'error': '未登录或token无效'}), 401
 
+    # 被重启打断、还卡在转录中的项目先改成失败, 才能重试
+    _recover_interrupted_projects(username)
     projects, idx = _find_user_project(username, project_id)
     if idx == -1:
         return jsonify({'error': '项目不存在'}), 404
@@ -783,18 +874,23 @@ def retry_transcription(project_id):
     if not os.path.exists(audio_path):
         return jsonify({'error': '原始音频文件不存在'}), 404
 
-    projects[idx]['status'] = 'processing'
+    # 字幕已经存过就只重做润色翻译, 不再花钱重新转录
+    reuse = _load_saved_transcript(project_id) is not None
+    projects[idx]['status'] = 'translating' if reuse else 'processing'
     projects[idx]['error'] = None
     projects[idx]['updated_at'] = datetime.now().isoformat()
     _save_user_projects(username, projects)
+    _start_job(project_id, audio_path, username, reuse_transcript=reuse)
 
-    thread = threading.Thread(target=_transcribe_async, args=(project_id, audio_path, username), daemon=True)
-    thread.start()
-
-    return jsonify({'success': True, 'message': '重新转录已开始'})
+    return jsonify({
+        'success': True,
+        'phase': 'polish' if reuse else 'transcribe',
+        'message': '重新翻译已开始' if reuse else '重新转录已开始',
+    })
 
 
 @listening_review_bp.route('/api/listening_review/project/<project_id>/mastered', methods=['PUT'])
+@_serialized
 def toggle_mastered(project_id):
     username = _get_auth_username()
     if not username:
@@ -812,6 +908,7 @@ def toggle_mastered(project_id):
 
 
 @listening_review_bp.route('/api/listening_review/project/<project_id>/checkin', methods=['POST'])
+@_serialized
 def checkin_project(project_id):
     username = _get_auth_username()
     if not username:
@@ -829,6 +926,7 @@ def checkin_project(project_id):
 
 
 @listening_review_bp.route('/api/listening_review/project/<project_id>/star', methods=['PUT'])
+@_serialized
 def toggle_star(project_id):
     username = _get_auth_username()
     if not username:
@@ -859,6 +957,7 @@ def toggle_star(project_id):
 
 
 @listening_review_bp.route('/api/listening_review/project/<project_id>/error_tag', methods=['PUT'])
+@_serialized
 def toggle_error_tag(project_id):
     """
     切换某句的一个错误分类
@@ -911,6 +1010,7 @@ def toggle_error_tag(project_id):
 
 
 @listening_review_bp.route('/api/listening_review/project/<project_id>/vocab', methods=['PUT'])
+@_serialized
 def add_vocab(project_id):
     username = _get_auth_username()
     if not username:
@@ -961,6 +1061,7 @@ def add_vocab(project_id):
 
 
 @listening_review_bp.route('/api/listening_review/project/<project_id>/vocab/<word_id>', methods=['DELETE'])
+@_serialized
 def delete_vocab(project_id, word_id):
     username = _get_auth_username()
     if not username:
@@ -982,6 +1083,7 @@ def delete_vocab(project_id, word_id):
 
 
 @listening_review_bp.route('/api/listening_review/project/<project_id>/note', methods=['PUT'])
+@_serialized
 def add_note(project_id):
     """Add a new note (on a word or sentence) or update an existing note's body."""
     username = _get_auth_username()
@@ -1040,6 +1142,7 @@ def add_note(project_id):
 
 
 @listening_review_bp.route('/api/listening_review/project/<project_id>/note/<note_id>', methods=['DELETE'])
+@_serialized
 def delete_note(project_id, note_id):
     username = _get_auth_username()
     if not username:
@@ -1068,6 +1171,11 @@ def serve_audio(project_id, filename):
 
     if not is_safe_path_segment(project_id) or not is_safe_path_segment(filename):
         return jsonify({'error': '无效的路径'}), 400
+
+    # 只给项目主人放出这个项目的音频; 同目录下的 data.json 等文件不对外
+    projects, idx = _find_user_project(username, project_id)
+    if idx == -1 or filename != projects[idx].get('audio_filename'):
+        return jsonify({'error': '文件不存在'}), 404
 
     proj_dir = _project_dir(project_id)
     file_path = os.path.join(proj_dir, filename)

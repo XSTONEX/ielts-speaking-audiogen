@@ -561,7 +561,7 @@ async function deleteProject(id) {
 
 async function retryProject(id) {
   const r = await API.post('/api/listening_review/project/' + id + '/retry', {});
-  if (r.success) { showToast('已重新开始转录'); await loadProjects(); }
+  if (r.success) { showToast(r.phase === 'polish' ? '字幕还在，已重新开始翻译' : '已重新开始转录'); await loadProjects(); }
   else showToast(r.error || '重试失败', 'error');
 }
 
