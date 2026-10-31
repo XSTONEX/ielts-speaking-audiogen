@@ -821,8 +821,11 @@ def checkin_project(project_id):
     if idx == -1:
         return jsonify({'error': '项目不存在'}), 404
 
+    now = datetime.now().isoformat()
     projects[idx]['checkin_count'] = projects[idx].get('checkin_count', 0) + 1
-    projects[idx]['updated_at'] = datetime.now().isoformat()
+    # 记下每次打卡的时间，首页才算得出「本周打卡几次」；只留最近 200 次
+    projects[idx]['checkins'] = (projects[idx].get('checkins') or [])[-199:] + [now]
+    projects[idx]['updated_at'] = now
     _save_user_projects(username, projects)
 
     return jsonify({'success': True, 'checkin_count': projects[idx]['checkin_count']})

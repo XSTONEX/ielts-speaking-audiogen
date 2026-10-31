@@ -73,8 +73,7 @@
     var userName = rawName === displayName ? '' : rawName;
     var initial = displayName.trim().charAt(0) || '学';
     var active = currentModule();
-    // 首页自己有一整排「系统/浅色/深色」开关，栏上就不再放一个月亮重复了
-    var wantsTheme = !!window.IELTSTheme && window.location.pathname !== '/';
+    var wantsTheme = !!window.IELTSTheme;
 
     var nav = document.createElement('nav');
     nav.className = 'app-shell-nav';

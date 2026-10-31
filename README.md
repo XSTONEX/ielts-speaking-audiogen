@@ -76,16 +76,30 @@
 
 ## 🎨 设计稿（在线画布）
 
-全站样式以写作逻辑训练页为准，整理成一套设计系统：
+页面样式都先画在 claude.ai 的设计画布上。**改样式时先改画布，再改代码**，改完让画布和线上保持一致。每个页面文件的第一行注释里也写了它对应的画布。
 
-* [IELTS Lab 设计系统](https://claude.ai/artifact/7P4rmuAtB389e4FDcYLFMC)：配色 / 字号 / 圆角等令牌（亮色 + 暗色）、导航栏与通用组件、「名称与导航」对照表。令牌在 `static/theme.css` 顶部（每个页面都有），组件在 `static/plain.css`（改版后的页面在 theme.css 之后加载它，并给 body 加 `ui-plain`）。改样式时设计系统和这两个文件一起改。
+| 页面 | 设计稿 | 代码 |
+|---|---|---|
+| 全站令牌、导航栏、通用组件 | [IELTS Lab 设计系统](https://claude.ai/artifact/7P4rmuAtB389e4FDcYLFMC) | `static/theme.css` 顶部（令牌，每页都有）、`static/plain.css`（组件）、`static/app-shell.js`（导航栏） |
+| 首页 | [首页 · 改版](https://claude.ai/artifact/WmSUNPMJpDoLx7dtMiMN4F) | `templates/modules.html`，数据来自 `routers/home.py` 的 `/api/home` |
+| 口语音频库 | [口语 TTS 工作台 · 界面重设计](https://claude.ai/artifact/XiNrNwwwy5XGbSh19iK8Wk) | `templates/speaking.html` |
+| 写作逻辑训练 | [写作逻辑训练 · 当前线上样式](https://claude.ai/artifact/HRkUGCw4bpjoub42N6MYFt) | `templates/writing_practice.html` |
+| 听力精听复习、听力笔记本 | [听力精听复习 · 改版](https://claude.ai/artifact/C9L5fr3bpG1fbo7LPVb9JB) | `templates/listening.html`、`templates/listening_notes.html`、`static/listening.css` |
+| 单词本 | [单词本 · 改版](https://claude.ai/artifact/DdH1UvUcm5uZREciG59yuK) | `templates/vocabulary.html` |
+| 学习技巧 | [学习技巧 · 改版](https://claude.ai/artifact/JBZLPZnqnFwX6HmFybiBt4) | `templates/study_techniques.html` |
+| 学习交流小天地 | [学习交流小天地 · 改版](https://claude.ai/artifact/K2TS66ABkrU6WCRkdvsrhM) | `templates/message_board.html` |
 
-写作模块（`templates/writing_practice.html`）的界面画在 claude.ai 的设计画布上，调样式先在画布里改，再改代码：
+* **文章精读**（`templates/intensive.html`、`intensive_new.html`）、**登录页**、**词汇汇总**（`vocab_summary.html`）没有单独的画布，照着设计系统和写作页的样式写。
+* 合集播放（`/combined`）和 Reading 真题（`/reading`）不在首页和导航栏放入口，网址照常能开。
 
-* [写作逻辑训练 · 当前线上样式](https://claude.ai/artifact/HRkUGCw4bpjoub42N6MYFt)：2026-10-19 按线上页面（提交 `ac89a72`）原样搬过去的，桌面 23 块、手机 6 块、暗色 3 块画板，顶部导航条是共用组件。
-* [写作逻辑训练 · 课堂 Focus 全站设计](https://claude.ai/artifact/6bz4MnRnVDdJQDmToRi4hA)：2026-09 改版用的设计稿（暖色、衬线标题）。10-16 页面改成朴素风格后，它已经和线上对不上了，只作历史参考。
+只作历史参考、不再跟着改的画布：
+
+* [写作逻辑训练 · 课堂 Focus 全站设计](https://claude.ai/artifact/6bz4MnRnVDdJQDmToRi4hA)：2026-09 写作改版用的设计稿（暖色、衬线标题）。10-16 写作页改成朴素风格后，它已经和线上对不上了。
+* [手机端顶部导航 · 修复设计](https://claude.ai/artifact/ArscsPoWd3qkckiBX174Gr)：2026-09-19 手机导航面板的设计（提交 `d4fa7b5`）。导航栏现在的样式以设计系统为准。
 
 这些画布都是私有的，只有作者的 claude.ai 账号能打开。
+
+各页面的浏览器测试和造假数据的脚本在 `tests/e2e/`，跑法见那里的 README。
 
 ## 🛠️ 近期重构纪要 (v2.0)
 

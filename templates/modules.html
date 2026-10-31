@@ -1,413 +1,489 @@
 <!DOCTYPE html>
+<!-- 设计稿：https://claude.ai/artifact/WmSUNPMJpDoLx7dtMiMN4F 「首页 · 改版」。改样式先改画布，再改这个文件；数据来自 /api/home（routers/home.py）。 -->
 <html lang="zh-CN">
 <head>
-  <script>
-    (function () {
-      try {
-        var preference = localStorage.getItem('ui-theme');
-        if (preference !== 'light' && preference !== 'dark' && preference !== 'system') preference = 'system';
-        var isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        var theme = preference === 'system' ? (isDark ? 'dark' : 'light') : preference;
-        var root = document.documentElement;
-        root.dataset.themePreference = preference;
-        root.dataset.theme = theme;
-        root.style.colorScheme = theme;
-        root.classList.toggle('dark', theme === 'dark');
-      } catch (error) {
-        document.documentElement.dataset.themePreference = 'system';
-        document.documentElement.dataset.theme = 'light';
-        document.documentElement.style.colorScheme = 'light';
-      }
-    })();
-  </script>
-  <meta charset="UTF-8" />
-  <script src="/static/auth-fetch.js?v=20260927"></script>
-  <title>模块选择</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-  <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="/static/android-chrome-192x192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="/static/android-chrome-512x512.png">
-
-  <link href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Crimson+Text:wght@400;600&display=swap" rel="stylesheet">
-  <style>
-    body {
-      font-family: 'PT Serif', 'Crimson Text', ui-serif, 'Times New Roman', 'Georgia', serif;
-      background: linear-gradient(135deg, #e0e7ff 0%, #f4f6fa 100%);
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 14px;
-      box-sizing: border-box;
+<script>
+  (function () {
+    try {
+      var preference = localStorage.getItem('ui-theme');
+      if (preference !== 'light' && preference !== 'dark' && preference !== 'system') preference = 'system';
+      var isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var theme = preference === 'system' ? (isDark ? 'dark' : 'light') : preference;
+      var root = document.documentElement;
+      root.dataset.themePreference = preference;
+      root.dataset.theme = theme;
+      root.style.colorScheme = theme;
+      root.classList.toggle('dark', theme === 'dark');
+    } catch (error) {
+      document.documentElement.dataset.themePreference = 'system';
+      document.documentElement.dataset.theme = 'light';
+      document.documentElement.style.colorScheme = 'light';
     }
+  })();
+</script>
+<meta charset="UTF-8">
+<script src="/static/auth-fetch.js?v=20260927"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IELTS Lab</title>
+<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/static/android-chrome-192x192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="/static/android-chrome-512x512.png">
+<style>
+/* 首页：三列网格，所有框的上下左右边线对齐（设计稿见 README「设计稿」一节）。
+   令牌用 theme.css 的 --w-*，组件类名一律 home- 前缀，避开 theme.css 给旧页面写的 .card / .section 规则。 */
+.home { padding: 34px 0 56px; }
 
-    .wrap {
-      background: #fff;
-      border-radius: 20px;
-      box-shadow: 0 16px 48px rgba(31, 38, 135, 0.20);
-      padding: 22px;
-      width: min(980px, 100%);
-    }
+.home-head { padding-bottom: 24px; }
+.home-head__date { margin-bottom: 7px; font-size: var(--w-fs-meta); letter-spacing: 2px; color: var(--w-ink3); }
+.home-head h1 { margin: 0; font-size: var(--w-fs-title); font-weight: 600; line-height: 1.35; color: var(--w-ink); }
+.home-head__week { margin: 8px 0 0; min-height: 1.65em; font-size: var(--w-fs-ui); color: var(--w-ink2); }
 
-    .module-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 16px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
+.home b.num { font-weight: 600; color: var(--w-ink); font-variant-numeric: tabular-nums; }
+.home b.num.is-warn { color: var(--w-warn); }
 
-    h1 {
-      margin: 0;
-      text-align: center;
-      color: #1f2937;
-      letter-spacing: 0.3px;
-      font-size: 24px;
-    }
+.home-resume {
+  display: flex; align-items: center; gap: 26px; margin-bottom: 32px;
+  padding: var(--pad-card-y) var(--pad-card-x);
+  background: var(--w-big-soft); border: 1px solid var(--w-big-line); border-radius: var(--w-r-card);
+}
+.home-resume__text { flex: 1 1 auto; min-width: 0; }
+.home-resume__eyebrow { margin-bottom: 8px; font-size: var(--w-fs-meta); color: var(--w-ink2); }
+.home-resume__title { margin-bottom: 6px; font-size: var(--w-fs-en); font-weight: 600; color: var(--w-ink); }
+.home-resume__detail { font-size: var(--w-fs-ui); color: var(--w-ink2); }
+.home-resume__title, .home-resume__detail { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.home-resume__go { flex-shrink: 0; }
 
-    .user-tools {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      text-align: right;
-    }
+.home-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 16px; }
+.home-grid--skills { grid-template-rows: auto 1fr 1fr; }
+.home-grid + .home-grid { margin-top: 32px; }
 
-    .user-display {
-      text-align: right;
-    }
+.home-sec { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.home-sec__dot { width: 10px; height: 10px; flex-shrink: 0; border-radius: 3px; background: var(--w-big); }
+.home-sec h2 { margin: 0; font-size: var(--w-fs-en); font-weight: 600; line-height: 1.65; color: var(--w-ink); }
+.home-sec__sub { font-size: var(--w-fs-meta); color: var(--w-ink3); }
+.home-sec__aside { margin-left: auto; font-size: var(--w-fs-meta); color: var(--w-ink2); white-space: nowrap; }
+.home-sec--review .home-sec__dot { background: var(--w-warn); }
+.home-sec--more .home-sec__dot { background: var(--w-ink3); }
 
-    .user-display__profile {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
+.home-card {
+  display: flex; flex-direction: column; min-width: 0; min-height: 150px; box-sizing: border-box;
+  padding: var(--pad-card-y) var(--pad-card-x);
+  background: var(--w-surface); border: 1px solid var(--w-line); border-radius: var(--w-r-card);
+  color: var(--w-ink); text-decoration: none;
+  transition: border-color .15s;
+}
+.home-card:hover { border-color: var(--w-big-line); }
+.home-card:focus-visible { outline: none; border-color: var(--w-big-line); box-shadow: var(--w-ring); }
+.home-card--sunken { background: var(--w-sunken); }
+.home-card__top { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 10px; }
+.home-card__name { font-size: var(--w-fs-en); font-weight: 600; }
+.home-card__go {
+  width: 30px; height: 30px; flex-shrink: 0; border-radius: var(--w-r-round);
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--w-big-soft); color: var(--w-big);
+  transition: background .15s, color .15s;
+}
+.home-card--sunken .home-card__go { background: var(--w-surface); color: var(--w-ink2); }
+.home-card:hover .home-card__go { background: var(--w-big); color: var(--w-on-big); }
+.home-card__desc { margin-bottom: 16px; font-size: var(--w-fs-ui); line-height: 1.65; color: var(--w-ink2); }
+.home-card__desc.is-one-line { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-    .user-display__avatar {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-    }
+/* 卡片底部的数据行：上面一条细线，同一排卡片的细线落在同一条水平线上 */
+.home-foot {
+  display: block; margin-top: auto; padding-top: 12px; border-top: 1px solid var(--w-line);
+  font-size: var(--w-fs-meta); line-height: 1.65; color: var(--w-ink2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.home-foot.is-muted { color: var(--w-ink3); }
 
-    .user-display__name {
-      color: #374151;
-      font-weight: 600;
-    }
+.home-at-speaking { grid-area: 2 / 1; }
+.home-at-intensive { grid-area: 2 / 2; }
+.home-at-writing { grid-area: 3 / 1; }
+.home-at-listening { grid-area: 3 / 2; }
+.home-sec--skills { grid-area: 1 / 1 / 2 / 3; }
+.home-sec--review { grid-area: 1 / 3; }
+.home-review { grid-area: 2 / 3 / 4 / 4; }
 
-    .logout-btn {
-      background: #f3f4f6;
-      border: 1px solid #d1d5db;
-      padding: 6px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 12px;
-      color: #6b7280;
-      font-family: inherit;
-    }
+.home-review {
+  display: flex; flex-direction: column; min-width: 0; box-sizing: border-box;
+  padding: var(--pad-card-y) var(--pad-card-x);
+  background: var(--w-surface); border: 1px solid var(--w-line); border-radius: var(--w-r-card);
+}
+.home-review__list { display: flex; flex-direction: column; }
+.home-review__row {
+  display: flex; align-items: center; gap: 10px; padding: 10px 0;
+  border-top: 1px solid var(--w-line); color: var(--w-ink); text-decoration: none;
+}
+.home-review__row:first-child { padding-top: 0; border-top: 0; }
+.home-review__row:hover .home-review__title { color: var(--w-big); }
+.home-review__row:focus-visible { outline: none; box-shadow: var(--w-ring); border-radius: var(--w-r-inner); }
+.home-review__tag {
+  flex-shrink: 0; padding: 2px 9px; border-radius: var(--w-r-chip);
+  font-size: var(--w-fs-meta); font-weight: 600; line-height: 1.5;
+  color: var(--w-ink2); background: var(--w-big-track);
+}
+.home-review__tag--vocabulary { color: var(--w-big); background: var(--w-big-soft); }
+.home-review__tag--writing { color: var(--w-warn); background: var(--w-warn-soft); }
+.home-review__title { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--w-fs-ui); }
+.home-review__title.is-en { font-family: var(--font-en); }
+.home-review__meta { flex-shrink: 0; font-size: var(--w-fs-meta); color: var(--w-ink2); font-variant-numeric: tabular-nums; }
+.home-review__meta.is-warn { color: var(--w-warn); }
+.home-review .home-foot { color: var(--w-ink3); }
+.home-review__empty { margin: auto 0; text-align: center; }
+.home-review__empty p { margin: 0; font-size: var(--w-fs-meta); line-height: 1.7; color: var(--w-ink3); }
+.home-review__empty p:first-child { margin-bottom: 6px; font-size: var(--w-fs-ui); font-weight: 600; color: var(--w-ink2); }
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 14px;
-    }
-
-    .card {
-      position: relative;
-      border: 1.5px solid #e5e7eb;
-      border-radius: 16px;
-      padding: 18px;
-      background: #fafafa;
-      transition: transform 0.15s ease, box-shadow 0.18s ease, border-color 0.15s ease;
-      cursor: pointer;
-      display: flex;
-      gap: 14px;
-      align-items: center;
-      min-height: 92px;
-      overflow: hidden;
-      text-decoration: none;
-    }
-
-    .card::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      opacity: 0.08;
-      background:
-        radial-gradient(1200px 1200px at -10% -10%, #4f46e5 10%, transparent 40%),
-        radial-gradient(1200px 1200px at 110% 110%, #06b6d4 10%, transparent 40%);
-      pointer-events: none;
-    }
-
-    .card:hover {
-      transform: translateY(-3px);
-      border-color: #c7d2fe;
-      box-shadow: 0 14px 32px rgba(31, 38, 135, 0.18);
-    }
-
-    .card.speaking {
-      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-    }
-
-    .card.reading {
-      background: linear-gradient(180deg, #ffffff 0%, #f0f9ff 100%);
-    }
-
-    .card.combined {
-      background: linear-gradient(180deg, #ffffff 0%, #fefce8 100%);
-    }
-
-    .icon {
-      font-size: 28px;
-      width: 42px;
-      height: 42px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 12px;
-      background: #f1f5f9;
-      flex: 0 0 auto;
-    }
-
-    .card.speaking .icon {
-      background: #eef2ff;
-    }
-
-    .card.reading .icon {
-      background: #ecfeff;
-    }
-
-    .card.combined .icon {
-      background: #fef9c3;
-    }
-
-    .title {
-      font-weight: 800;
-      color: #111827;
-      letter-spacing: 0.2px;
-      font-size: 18px;
-    }
-
-    .desc {
-      color: #6b7280;
-      margin-top: 4px;
-      font-size: 13px;
-      line-height: 1.5;
-    }
-
-    @media (max-width: 700px) {
-      .wrap {
-        padding: 16px;
-        border-radius: 16px;
-      }
-
-      .module-header {
-        margin-bottom: 12px;
-      }
-
-      h1 {
-        font-size: 20px;
-      }
-
-      .card {
-        padding: 14px;
-        border-radius: 14px;
-        min-height: 82px;
-      }
-
-      .icon {
-        width: 38px;
-        height: 38px;
-        font-size: 24px;
-        border-radius: 10px;
-      }
-
-      .title {
-        font-size: 16px;
-      }
-
-      .desc {
-        font-size: 12px;
-      }
-    }
-  </style>
-  <script>
-    var currentToken = null;
-    var currentUser = null;
-
-    function checkStoredToken() {
-      var token = localStorage.getItem('authToken');
-      if (!token) {
-        return Promise.resolve(false);
-      }
-
-      return fetch('/verify_token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: token })
-      })
-        .then(function (response) { return response.json(); })
-        // 断网、服务器重启时的 502 页面：说明不了凭证失效，当作"没拿到结论"
-        .catch(function () { return null; })
-        .then(function (data) {
-          // 只有服务器明确回答"无效"才清掉登录状态
-          if (data && data.valid === false) {
-            clearSession();
-            return false;
-          }
-          currentToken = token;
-          if (data && data.user) {
-            currentUser = data.user;
-            try {
-              localStorage.setItem('currentUser', JSON.stringify(data.user));
-            } catch (error) {
-              // 存储不可用时只影响缓存的用户信息
-            }
-          } else {
-            try {
-              currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
-            } catch (error) {
-              currentUser = null;
-            }
-          }
-          return true;
-        });
-    }
-
-    function clearSession() {
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('currentUser');
-      currentToken = null;
-      currentUser = null;
-    }
-
-    function redirectToLogin() {
-      window.location.href = '/login';
-    }
-
-    function showUserInfo() {
-      var userDisplay = document.getElementById('userDisplay');
-      if (!currentUser || !userDisplay) {
-        return;
-      }
-
-      userDisplay.innerHTML = [
-        '<div class="user-display__profile">',
-        '<img class="user-display__avatar" src="/static/' + encodeURIComponent(currentUser.avatar || 'avatar_admin.svg') + '" alt="">',
-        '<span class="user-display__name"></span>',
-        '</div>',
-        '<button class="logout-btn" type="button">退出登录</button>'
-      ].join('');
-      userDisplay.querySelector('.user-display__name').textContent = currentUser.display_name || currentUser.username || '学习者';
-      userDisplay.querySelector('.logout-btn').addEventListener('click', logout);
-    }
-
-    function logout() {
-      clearSession();
-      redirectToLogin();
-    }
-
-    window.addEventListener('load', function () {
-      checkStoredToken().then(function (valid) {
-        if (valid) {
-          showUserInfo();
-        } else {
-          redirectToLogin();
-        }
-      });
-    });
-  </script>
-  <link rel="stylesheet" href="/static/theme.css?v=20260919">
-  <script src="/static/theme.js?v=20260919" defer></script>
+/* 窄屏：两列，待复习挪到四张技能卡下面整行显示 */
+@media (max-width: 1000px) {
+  .home-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .home-grid--skills { grid-template-rows: none; }
+  .home-at-speaking, .home-at-intensive, .home-at-writing, .home-at-listening { grid-area: auto; }
+  .home-sec--skills, .home-sec--review, .home-review { grid-area: auto / 1 / auto / -1; }
+  .home-sec--review { margin-top: 20px; }
+  .home-grid--more > .home-card:last-child { grid-column: 1 / -1; }
+}
+@media (max-width: 640px) {
+  .home { padding: 22px 0 40px; }
+  .home-grid { grid-template-columns: minmax(0, 1fr); }
+  .home-grid--more > .home-card:last-child { grid-column: auto; }
+  .home-card { min-height: 0; }
+  .home-resume { flex-wrap: wrap; gap: 16px; }
+  .home-resume__go { width: 100%; }
+  .home-sec { flex-wrap: wrap; }
+}
+</style>
+<link rel="stylesheet" href="/static/theme.css?v=20260919">
+<link rel="stylesheet" href="/static/plain.css?v=20261031">
+<script src="/static/theme.js?v=20260919" defer></script>
+<script src="/static/api-client.js?v=20260919" defer></script>
+<script src="/static/auth.js?v=20260927" defer></script>
+<script src="/static/app-shell.js?v=20261031" defer></script>
 </head>
-<body class="theme-page page-modules" data-app-shell="off">
-  <div class="wrap">
-    <div class="module-header">
-      <h1>请选择模块</h1>
-      <div class="user-tools">
-        <div class="user-display" id="userDisplay"></div>
-        <div id="themeSwitcherMount"></div>
+<body class="theme-page page-home ui-plain">
+<main class="home ui-page">
+
+  <header class="home-head">
+    <div class="home-head__date" id="homeDate"></div>
+    <h1 id="homeGreeting">你好</h1>
+    <p class="home-head__week" id="homeWeek">&nbsp;</p>
+  </header>
+
+  <section class="home-resume" id="homeResume" aria-label="继续上次" hidden>
+    <div class="home-resume__text">
+      <div class="home-resume__eyebrow" id="resumeEyebrow"></div>
+      <div class="home-resume__title" id="resumeTitle"></div>
+      <div class="home-resume__detail" id="resumeDetail"></div>
+    </div>
+    <a class="ui-btn ui-btn--primary home-resume__go" id="resumeGo" href="/">接着练</a>
+  </section>
+
+  <div class="home-grid home-grid--skills">
+    <div class="home-sec home-sec--skills">
+      <span class="home-sec__dot" aria-hidden="true"></span>
+      <h2>听说读写</h2>
+      <span class="home-sec__sub">四项技能的主训练</span>
+    </div>
+
+    <a class="home-card home-at-speaking" href="/speaking">
+      <span class="home-card__top"><span class="home-card__name">口语音频库</span><span class="home-card__go" aria-hidden="true">→</span></span>
+      <span class="home-card__desc">按话题生成答案音频，搜索、连播、合集播放。</span>
+      <span class="home-foot" data-foot="speaking">&nbsp;</span>
+    </a>
+
+    <a class="home-card home-at-intensive" href="/intensive">
+      <span class="home-card__top"><span class="home-card__name">文章精读</span><span class="home-card__go" aria-hidden="true">→</span></span>
+      <span class="home-card__desc">逐句精读，高亮生词，导入九分学长做题记录。</span>
+      <span class="home-foot" data-foot="intensive">&nbsp;</span>
+    </a>
+
+    <a class="home-card home-at-writing" href="/writing_practice">
+      <span class="home-card__top"><span class="home-card__name">写作逻辑训练</span><span class="home-card__go" aria-hidden="true">→</span></span>
+      <span class="home-card__desc">背逻辑链、逐句中译英，AI 按考官标准批改。</span>
+      <span class="home-foot" data-foot="writing">&nbsp;</span>
+    </a>
+
+    <a class="home-card home-at-listening" href="/listening_review">
+      <span class="home-card__top"><span class="home-card__name">听力精听复习</span><span class="home-card__go" aria-hidden="true">→</span></span>
+      <span class="home-card__desc">上传音频自动转录，逐句精听、标生词、记笔记。</span>
+      <span class="home-foot" data-foot="listening">&nbsp;</span>
+    </a>
+
+    <div class="home-sec home-sec--review">
+      <span class="home-sec__dot" aria-hidden="true"></span>
+      <h2>待复习</h2>
+      <span class="home-sec__aside" id="reviewTotal"></span>
+    </div>
+
+    <section class="home-review" aria-label="待复习">
+      <div class="home-review__list" id="reviewList"></div>
+      <div class="home-review__empty" id="reviewEmpty" hidden>
+        <p>现在没有要复习的</p>
+        <p>挑战答错的单词、6 分以下的句子、<br>还没标熟的听力会出现在这里。</p>
       </div>
-    </div>
-
-    <div class="grid">
-      <a class="card speaking" href="/speaking">
-        <div class="icon">🎤</div>
-        <div>
-          <div class="title">Speaking</div>
-          <div class="desc">原有口语练习与音频管理界面</div>
-        </div>
-      </a>
-
-      <a class="card combined" href="/combined">
-        <div class="icon">🎵</div>
-        <div>
-          <div class="title">Speaking 合集播放</div>
-          <div class="desc">从各话题生成/播放合集音频与字幕</div>
-        </div>
-      </a>
-
-      <a class="card reading" href="/reading">
-        <div class="icon">📖</div>
-        <div>
-          <div class="title">Reading</div>
-          <div class="desc">真题目录检索、HTML 内嵌全屏预览、PDF 下载</div>
-        </div>
-      </a>
-
-      <a class="card reading" href="/intensive">
-        <div class="icon">📝</div>
-        <div>
-          <div class="title">文章精读</div>
-          <div class="desc">提交长文、对词汇高亮并添加释义，悬停查看</div>
-        </div>
-      </a>
-
-      <a class="card speaking" href="/message_board">
-        <div class="icon">📚</div>
-        <div>
-          <div class="title">学习交流小天地</div>
-          <div class="desc">分享学习心得、音频内容和精读文章，互相交流</div>
-        </div>
-      </a>
-
-      <a class="card reading" href="/vocabulary">
-        <div class="icon">📚</div>
-        <div>
-          <div class="title">单词本</div>
-          <div class="desc">按听说读写分类管理词汇，支持发音播放和批量导入</div>
-        </div>
-      </a>
-
-      <a class="card speaking" href="/study_techniques">
-        <div class="icon">🎯</div>
-        <div>
-          <div class="title">学习技巧</div>
-          <div class="desc">记录听说读写的词汇替换、上下义词和做题技巧</div>
-        </div>
-      </a>
-
-      <a class="card combined" href="/writing_practice">
-        <div class="icon">✍️</div>
-        <div>
-          <div class="title">写作逻辑链训练</div>
-          <div class="desc">逻辑链语料学习、单句翻译实战与 AI 批改</div>
-        </div>
-      </a>
-
-      <a class="card speaking" href="/listening_review">
-        <div class="icon">🎧</div>
-        <div>
-          <div class="title">听力精听复习</div>
-          <div class="desc">上传音频自动转录，歌词滚动播放，生词标注与长难句收藏</div>
-        </div>
-      </a>
-    </div>
+      <span class="home-foot" id="reviewFoot" hidden></span>
+    </section>
   </div>
+
+  <div class="home-grid home-grid--more">
+    <div class="home-sec home-sec--more" style="grid-column: 1 / -1;">
+      <span class="home-sec__dot" aria-hidden="true"></span>
+      <h2>积累与交流</h2>
+      <span class="home-sec__sub">平时攒下来的东西</span>
+    </div>
+
+    <a class="home-card home-card--sunken" href="/vocabulary">
+      <span class="home-card__top"><span class="home-card__name">单词本</span><span class="home-card__go" aria-hidden="true">→</span></span>
+      <span class="home-card__desc">按听说读写分类收词，收藏的词反复看。</span>
+      <span class="home-foot" data-foot="vocabulary">&nbsp;</span>
+    </a>
+
+    <a class="home-card home-card--sunken" href="/study_techniques">
+      <span class="home-card__top"><span class="home-card__name">学习技巧</span><span class="home-card__go" aria-hidden="true">→</span></span>
+      <span class="home-card__desc">记同义替换、上下义词和做题方法。</span>
+      <span class="home-foot" data-foot="tips">&nbsp;</span>
+    </a>
+
+    <a class="home-card home-card--sunken" href="/message_board">
+      <span class="home-card__top"><span class="home-card__name">学习交流小天地</span><span class="home-card__go" aria-hidden="true">→</span></span>
+      <span class="home-card__desc is-one-line" id="boardLatest">分享学习心得、发起词汇挑战。</span>
+      <span class="home-foot" data-foot="board">&nbsp;</span>
+    </a>
+  </div>
+
+</main>
+
+<script>
+(function () {
+  var WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六'];
+
+  function byId(id) { return document.getElementById(id); }
+
+  function esc(value) {
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  // 数字一律加粗、等宽；warn 用于「未标熟」「待完成」这类要处理的数
+  function num(value, warn) {
+    return '<b class="num' + (warn ? ' is-warn' : '') + '">' + Number(value || 0).toLocaleString('en-US') + '</b>';
+  }
+
+  function score(value) {
+    return Number(value).toFixed(1);
+  }
+
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+
+  // 服务器给的是不带时区的本地时间；微秒截到毫秒，老版 Safari 认不了六位小数
+  function parseTime(iso) {
+    if (!iso) return null;
+    var d = new Date(String(iso).replace(' ', 'T').replace(/(\.\d{3})\d+/, '$1'));
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  function when(iso) {
+    var d = parseTime(iso);
+    if (!d) return '';
+    var now = new Date();
+    var dayMs = 86400000;
+    var days = Math.round((new Date(now.getFullYear(), now.getMonth(), now.getDate()) -
+      new Date(d.getFullYear(), d.getMonth(), d.getDate())) / dayMs);
+    var hm = pad(d.getHours()) + ':' + pad(d.getMinutes());
+    if (days <= 0) {
+      var minutes = Math.round((now - d) / 60000);
+      if (minutes < 1) return '刚刚';
+      if (minutes < 60) return minutes + ' 分钟前';
+      return '今天 ' + hm;
+    }
+    if (days === 1) return '昨天 ' + hm;
+    if (days < 7) return days + ' 天前';
+    var md = (d.getMonth() + 1) + ' 月 ' + d.getDate() + ' 日';
+    return d.getFullYear() === now.getFullYear() ? md : d.getFullYear() + ' 年 ' + md;
+  }
+
+  function duration(seconds) {
+    var minutes = Math.round((seconds || 0) / 60);
+    if (!minutes) return '';
+    var hours = Math.floor(minutes / 60);
+    return hours ? '共 ' + hours + ' 小时 ' + (minutes % 60) + ' 分' : '共 ' + minutes + ' 分钟';
+  }
+
+  function setFoot(name, html, muted) {
+    var foot = document.querySelector('[data-foot="' + name + '"]');
+    if (!foot) return;
+    foot.innerHTML = html;
+    foot.classList.toggle('is-muted', !!muted);
+  }
+
+  function renderHead() {
+    var now = new Date();
+    byId('homeDate').textContent = (now.getMonth() + 1) + ' 月 ' + now.getDate() + ' 日 · 星期' + WEEKDAYS[now.getDay()];
+    var hour = now.getHours();
+    var hello = hour >= 5 && hour < 11 ? '早上好' : hour >= 11 && hour < 13 ? '中午好' : hour >= 13 && hour < 18 ? '下午好' : '晚上好';
+    var user = window.IELTSAuth && window.IELTSAuth.getUser ? window.IELTSAuth.getUser() : null;
+    var name = user && (user.display_name || user.username);
+    byId('homeGreeting').textContent = name ? hello + '，' + name : hello;
+  }
+
+  function renderWeek(week) {
+    var parts = [];
+    if (week.writing) parts.push('写了 ' + num(week.writing) + ' 句');
+    if (week.vocabulary) parts.push('单词本新加 ' + num(week.vocabulary) + ' 个词');
+    if (week.listening_checkins) parts.push('听力打卡 ' + num(week.listening_checkins) + ' 次');
+    byId('homeWeek').innerHTML = parts.length ? '这周' + parts.join('、') + '。' : '这周还没开始练，今天从哪里开始？';
+  }
+
+  function renderResume(resume) {
+    var box = byId('homeResume');
+    if (!resume) { box.hidden = true; return; }
+    var at = when(resume.at);
+    var detail;
+    if (resume.module === 'writing') {
+      var sentence = String(resume.sentence || '').replace(/[。．.！？!?\s]+$/, '');
+      detail = (at ? at + ' ' : '') + (sentence ? '练到「' + sentence + '」' : '练到这里') +
+        (resume.score != null ? ' · ' + score(resume.score) + ' 分' : '');
+      byId('resumeGo').textContent = '接着练';
+    } else {
+      detail = (at ? at + ' ' : '') + '听过' +
+        (resume.checkins ? ' · 打卡 ' + resume.checkins + ' 次' : '') +
+        (resume.mastered ? ' · 已标熟' : '');
+      byId('resumeGo').textContent = '接着听';
+    }
+    byId('resumeEyebrow').textContent = '继续上次 · ' + resume.module_name;
+    byId('resumeTitle').textContent = resume.title;
+    byId('resumeDetail').textContent = detail;
+    byId('resumeGo').setAttribute('href', resume.url);
+    box.hidden = false;
+  }
+
+  function renderModules(data) {
+    var s = data.speaking;
+    setFoot('speaking', s.topics
+      ? [num(s.topics) + ' 个话题', num(s.audios) + ' 条音频', duration(s.seconds)].filter(Boolean).join(' · ')
+      : '还没有音频', !s.topics);
+
+    var r = data.intensive;
+    setFoot('intensive', r.articles
+      ? num(r.articles) + ' 篇文章' + (r.latest_title ? ' · 最近在读 ' + esc(r.latest_title) : '')
+      : '还没有文章', !r.articles);
+
+    var w = data.writing;
+    setFoot('writing', w.total
+      ? ['已练 ' + num(w.total) + ' 句', '本周 ' + num(w.week) + ' 句',
+         w.avg_score != null ? '平均 <b class="num">' + score(w.avg_score) + '</b> 分' : ''].filter(Boolean).join(' · ')
+      : '还没练过，点进去开始', !w.total);
+
+    var l = data.listening;
+    setFoot('listening', l.projects
+      ? [num(l.projects) + ' 个项目', l.unmastered ? num(l.unmastered, true) + ' 个未标熟' : '',
+         l.checkins ? '打卡 ' + num(l.checkins) + ' 次' : ''].filter(Boolean).join(' · ')
+      : '还没有听力项目，上传一段音频开始', !l.projects);
+
+    var v = data.vocabulary;
+    setFoot('vocabulary', v.words
+      ? [num(v.words) + ' 个词', '收藏 ' + num(v.favorites), v.week ? '本周新加 ' + num(v.week) : ''].filter(Boolean).join(' · ')
+      : '还没有单词', !v.words);
+
+    var t = data.tips;
+    var tipsTotal = t.synonyms + t.hypernyms + t.techniques;
+    setFoot('tips', tipsTotal
+      ? '替换 ' + num(t.synonyms) + ' · 上下义 ' + num(t.hypernyms) + ' · 技巧 ' + num(t.techniques)
+      : '还没有记录', !tipsTotal);
+
+    var b = data.board;
+    setFoot('board', b.posts
+      ? num(b.posts) + ' 个帖子' + (b.pending_challenges ? ' · ' + num(b.pending_challenges, true) + ' 个挑战待完成' : '')
+      : '还没有帖子', !b.posts);
+    if (b.latest) {
+      byId('boardLatest').textContent = '最新：' + b.latest.who +
+        (b.latest.kind === 'text' ? ' 说「' + b.latest.text + '」' : ' ' + b.latest.text);
+    }
+  }
+
+  var TAGS = { vocabulary: '单词', writing: '写作', listening: '听力' };
+
+  function renderReview(review) {
+    var list = byId('reviewList');
+    var foot = byId('reviewFoot');
+    list.innerHTML = '';
+    if (!review.total) {
+      byId('reviewTotal').textContent = '';
+      byId('reviewEmpty').hidden = false;
+      foot.hidden = true;
+      return;
+    }
+    byId('reviewEmpty').hidden = true;
+    byId('reviewTotal').innerHTML = '共 ' + num(review.total) + ' 项' +
+      (review.total > review.items.length ? '，先看这 ' + review.items.length + ' 项' : '');
+    review.items.forEach(function (item) {
+      var row = document.createElement('a');
+      row.className = 'home-review__row';
+      row.href = item.url;
+      var meta = '';
+      var warn = false;
+      if (item.source === 'vocabulary') meta = '挑战答错 ' + (item.wrong_count || 1) + ' 次';
+      else if (item.source === 'writing') { meta = score(item.score) + ' 分'; warn = true; }
+      else meta = '未标熟';
+      row.innerHTML =
+        '<span class="home-review__tag home-review__tag--' + esc(item.source) + '">' + esc(TAGS[item.source] || '复习') + '</span>' +
+        '<span class="home-review__title' + (item.source === 'vocabulary' ? ' is-en' : '') + '">' + esc(item.title) + '</span>' +
+        '<span class="home-review__meta' + (warn ? ' is-warn' : '') + '">' + esc(meta) + '</span>';
+      list.appendChild(row);
+    });
+    var c = review.counts;
+    foot.textContent = [
+      c.vocabulary ? '答错单词 ' + c.vocabulary : '',
+      c.writing ? '低分句子 ' + c.writing : '',
+      c.listening ? '未标熟听力 ' + c.listening : ''
+    ].filter(Boolean).join(' · ');
+    foot.hidden = false;
+  }
+
+  function renderError() {
+    byId('homeWeek').textContent = '数据暂时没取到，模块入口照常能用。';
+    document.querySelectorAll('[data-foot]').forEach(function (foot) {
+      foot.textContent = '—';
+      foot.classList.add('is-muted');
+    });
+  }
+
+  function load() {
+    renderHead();
+    fetch('/api/home', { cache: 'no-store' })
+      .then(function (response) {
+        if (response.status === 401) {
+          if (window.IELTSAuth) window.IELTSAuth.logout();
+          return null;
+        }
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        return response.json();
+      })
+      .then(function (data) {
+        if (!data) return;
+        if (!data.success) throw new Error('bad payload');
+        renderHead(); // 导航那边核对完凭证后会更新缓存的用户名
+        renderWeek(data.week);
+        renderResume(data.resume);
+        renderModules(data);
+        renderReview(data.review);
+      })
+      .catch(function (error) {
+        console.error('首页数据加载失败', error);
+        renderError();
+      });
+  }
+
+  // 没登录时导航脚本会跳去登录页，这里就不发请求了
+  try {
+    if (!localStorage.getItem('authToken')) return;
+  } catch (e) {}
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', load, { once: true });
+  else load();
+})();
+</script>
 </body>
 </html>

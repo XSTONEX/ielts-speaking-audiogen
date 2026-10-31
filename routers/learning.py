@@ -3,6 +3,7 @@ import io
 import os
 import uuid
 from datetime import datetime
+from urllib.parse import quote
 
 from flask import Blueprint, Response, jsonify, request
 
@@ -159,20 +160,8 @@ def _vocabulary_review_items(username, vocab_words):
     by_id = {word.get("id"): word for word in vocab_words}
     by_text = {str(word.get("word", "")).lower(): word for word in vocab_words}
 
-    for word in vocab_words:
-        if word.get("is_favorited"):
-            items.append(
-                {
-                    "id": word.get("id"),
-                    "source": "vocabulary",
-                    "priority": "medium",
-                    "title": word.get("word", ""),
-                    "description": word.get("meaning", ""),
-                    "url": "/vocabulary",
-                    "created_at": word.get("created_at", ""),
-                }
-            )
-
+    # 只收挑战里答错的词。收藏不等于要复习：以前把收藏的词也全算进来，
+    # 600 多个收藏把真正答错的词淹没了
     wrong_words = load_json(_challenge_wrong_words_path(username), {})
     if isinstance(wrong_words, dict):
         for key, wrong in wrong_words.items():
@@ -208,7 +197,7 @@ def _listening_review_items(projects):
                     "priority": "medium",
                     "title": project.get("title", "听力精听"),
                     "description": f"{len(starred or [])} 个收藏片段待复习",
-                    "url": "/listening_review",
+                    "url": "/listening_review?project=" + quote(str(project.get("id", "")), safe=""),
                     "created_at": project.get("updated_at") or project.get("created_at", ""),
                 }
             )
@@ -225,7 +214,7 @@ def _review_queue(username):
     items.extend(_listening_review_items(listening_projects))
     priority_rank = {"high": 0, "medium": 1, "low": 2}
     items.sort(key=lambda item: (priority_rank.get(item.get("priority"), 9), item.get("created_at") or ""), reverse=False)
-    return items[:20]
+    return items
 
 
 def _learning_tasks(username):
@@ -312,7 +301,7 @@ def learning_dashboard():
 @learning_bp.route("/api/learning/review_queue", methods=["GET"])
 @require_auth
 def learning_review_queue():
-    return jsonify({"success": True, "items": _review_queue(request.username)})
+    return jsonify({"success": True, "items": _review_queue(request.username)[:20]})
 
 
 @learning_bp.route("/api/learning/tasks", methods=["GET"])
