@@ -353,9 +353,11 @@ body.page-intensive-new .ir-part .ir-input { font: 600 16px var(--w-en); backgro
         const formData = new FormData();
         formData.append('image', file);
         formData.append('article_id', articleId);
+        // 每张图单独兜底：一张的回复读不出来（断网、502 页面），不能把别的图也算成失败
         return fetch('/intensive_upload_image', { method: 'POST', body: formData })
           .then(response => response.json())
-          .then(result => { done++; createBtn.innerHTML = `<span class="ir-spin"></span>上传图片 ${done}/${selectedImages.length}`; return result; });
+          .catch(() => ({ success: false }))
+          .then(result => { done++; createBtn.innerHTML = `<span class="ir-spin"></span>上传图片 ${done}/${selectedImages.length}`; return result || { success: false }; });
       });
       Promise.all(promises)
         .then(results => {
