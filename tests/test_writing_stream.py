@@ -3,6 +3,7 @@
 模型调用全部打桩，不发任何网络请求，用的也是假 key。
 """
 
+import itertools
 import json
 import os
 import sys
@@ -31,6 +32,13 @@ FULL = json.dumps({
 
 def chunks(text, size=17):
     return [text[i:i + size] for i in range(0, len(text), size)]
+
+
+def fake_stream(pieces):
+    """替身 stream_llm：和真的一样是生成器（_grade_stream 用完会 close 它）。"""
+    def gen(cfg, messages):
+        yield from pieces
+    return gen
 
 
 class PartialFeedbackTest(unittest.TestCase):
@@ -147,6 +155,26 @@ class StreamLlmTest(unittest.TestCase):
         self.assertEqual(got, ['a'])
         self.assertEqual(post.call_count, 1)
 
+    def test_stall_after_first_piece_times_out_even_with_heartbeats(self):
+        # 每读一次时钟走 10 秒：收到 'a' 之后只有心跳，第二个心跳时已经 20 秒没有新内容
+        lines = gemini_sse(['a'])[:1] + [b'', b': ping', b': ping'] + gemini_sse(['late'])
+        clock = mock.patch.object(core.time, 'monotonic', side_effect=itertools.count(0, 10))
+        with clock, mock.patch.object(core.requests, 'post', return_value=FakeStreamResp(lines)) as post:
+            got = []
+            with self.assertRaises(requests.exceptions.ReadTimeout):
+                for piece in core.stream_llm({'model': 'gemini-3.8-flash', 'timeout': 40}, MESSAGES):
+                    got.append(piece)
+        self.assertEqual(got, ['a'])
+        self.assertEqual(post.call_count, 1)
+        self.assertEqual(post.call_args.kwargs['timeout'], (40, core.STREAM_STALL_SECONDS))
+
+    def test_stall_before_first_piece_is_retried(self):
+        replies = [FakeStreamResp([b': ping', b': ping', b': ping']), FakeStreamResp(gemini_sse(['ok']))]
+        clock = mock.patch.object(core.time, 'monotonic', side_effect=itertools.count(0, 10))
+        with clock, mock.patch.object(core.requests, 'post', side_effect=replies) as post:
+            self.assertEqual(list(core.stream_llm({'model': 'gemini-3.8-flash'}, MESSAGES)), ['ok'])
+        self.assertEqual(post.call_count, 2)
+
     def test_4xx_not_retried(self):
         with mock.patch.object(core.requests, 'post', return_value=FakeStreamResp([], status=401)) as post:
             with self.assertRaises(requests.exceptions.HTTPError):
@@ -176,7 +204,7 @@ class GradeStreamRouteTest(AppTestBase):
         return self.client.post(url, json=body, headers=headers)
 
     def test_stream_pushes_partials_then_normalized_result(self):
-        self._patch(self.writing, 'stream_llm', lambda cfg, messages: iter(chunks(FULL)))
+        self._patch(self.writing, 'stream_llm', fake_stream(chunks(FULL)))
         r = self.post('/api/writing/correct?stream=1',
                       {'question_text': 'Q', 'target_chinese': '中', 'user_translation': 'It allow travels.',
                        'standard_reference': 'Ref sentence.'}, gzip=True)
@@ -202,8 +230,36 @@ class GradeStreamRouteTest(AppTestBase):
         events = parse_sse(r.get_data(as_text=True))
         self.assertEqual(events[-1], ('error', {'error': 'AI 服务超时，请重试'}))
 
+    def test_done_sent_as_soon_as_json_closes(self):
+        # 内容发完了上游还不断开：不该再等，直接出结果并把上游关掉
+        closed = []
+
+        def lingering(cfg, messages):
+            try:
+                yield from chunks(FULL)
+                raise AssertionError('JSON 已经闭合，不该再读上游')
+            finally:
+                closed.append(True)
+        self._patch(self.writing, 'stream_llm', lingering)
+        r = self.post('/api/writing/small/correct?stream=1',
+                      {'question_text': 'Q', 'target_chinese': '中', 'user_translation': 'It allow travels.'})
+        events = parse_sse(r.get_data(as_text=True))
+        self.assertEqual(events[-1][0], 'done')
+        self.assertEqual(events[-1][1]['score'], '6.0')
+        self.assertEqual(closed, [True])
+
+    def test_dropped_connection_mid_stream_becomes_retryable_error(self):
+        def dropped(cfg, messages):
+            yield '{"score": "6.0",'
+            raise requests.exceptions.ConnectionError('Read timed out.')
+        self._patch(self.writing, 'stream_llm', dropped)
+        r = self.post('/api/writing/small/correct?stream=1',
+                      {'question_text': 'Q', 'target_chinese': '中', 'user_translation': 'x'})
+        events = parse_sse(r.get_data(as_text=True))
+        self.assertEqual(events[-1], ('error', {'error': 'AI 服务超时，请重试'}))
+
     def test_template_route_streams_too(self):
-        self._patch(self.writing, 'stream_llm', lambda cfg, messages: iter([FULL]))
+        self._patch(self.writing, 'stream_llm', fake_stream([FULL]))
         r = self.post('/api/writing/template/correct?stream=1',
                       {'task': 'task2', 'user_translation': 'It allow travels.', 'reference': 'Ref.'})
         events = parse_sse(r.get_data(as_text=True))

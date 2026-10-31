@@ -75,6 +75,17 @@ def _partial_feedback(text):
     return out
 
 
+def _json_closed(text):
+    """整条批改 JSON 已经写完（最外层花括号闭合、能解析成对象）。"""
+    text = text.rstrip()
+    if not text.endswith('}'):
+        return False
+    try:
+        return isinstance(json.loads(text), dict)
+    except json.JSONDecodeError:
+        return False
+
+
 def _sse(event, data):
     return f'event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n'
 
@@ -84,25 +95,34 @@ def _grade_stream(cfg, messages, reference):
 
     事件：partial（_partial_feedback 的结果，字段逐步变多，变了才推）、
     done（和非流式接口返回的一样）、error（{error}，页面收到后整条重试）。
+    JSON 一闭合就推 done，不等上游断开：中转偶尔内容发完了还拖一分多钟才收尾。
     X-Accel-Buffering 让 nginx 别攒着；app.py 的 gzip 也跳过 text/event-stream。
     """
     def events():
         text, sent = '', None
+        started = time.monotonic()
+        pieces = stream_llm(_writing_cfg(cfg), messages)
         try:
-            for piece in stream_llm(_writing_cfg(cfg), messages):
+            for piece in pieces:
                 text += piece
+                if _json_closed(text):
+                    break
                 partial = _partial_feedback(text)
                 if partial and partial != sent:
                     sent = partial
                     yield _sse('partial', partial)
             yield _sse('done', _normalize_feedback(_parse_ai_json(text), reference))
-        except requests.exceptions.Timeout:
+        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError,
+                requests.exceptions.ChunkedEncodingError) as e:
+            logging.warning('流式批改中断（%.1f 秒，已收到 %d 字）：%s', time.monotonic() - started, len(text), e)
             yield _sse('error', {'error': 'AI 服务超时，请重试'})
         except json.JSONDecodeError:
             yield _sse('error', {'error': 'AI 返回格式异常'})
         except Exception as e:
             logging.exception('流式批改失败')
             yield _sse('error', {'error': str(e) or '批改失败'})
+        finally:
+            pieces.close()   # 提前出结果时顺手断开上游连接
 
     return Response(events(), mimetype='text/event-stream',
                     headers={'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no'})

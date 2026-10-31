@@ -97,6 +97,9 @@ DEEPSEEK_DEFAULT_BASE = 'https://api.deepseek.com'
 # 中转偶发 ReadTimeout，实测约一成，重试一次基本能救回来
 LLM_ATTEMPTS = 2
 LLM_RETRY_WAIT = 1
+# 流式调用里这么久没收到新内容就算卡住。正常首段 2–3 秒、之后每段不到 1 秒；
+# requests 的 timeout 只管两次收到字节的间隔，中转边发心跳边卡住时一分多钟都不会超时
+STREAM_STALL_SECONDS = 15
 
 
 def call_llm(cfg, messages):
@@ -227,6 +230,7 @@ def stream_llm(cfg, messages):
     Gemini 用 :streamGenerateContent?alt=sse，实测 WildAPI 真的是边生成边发（一次批改十几段）。
     一个字都还没收到就失败的，和 call_llm 一样重试一次；已经吐出一部分再断的直接抛出，
     由调用方整条重来——半截内容没法和重试的结果拼起来。
+    超过 STREAM_STALL_SECONDS 没有新内容（心跳不算）按 ReadTimeout 处理。
     """
     if (cfg.get('model') or '').startswith('deepseek'):
         label = 'DeepSeek'
@@ -248,10 +252,14 @@ def stream_llm(cfg, messages):
     for attempt in range(LLM_ATTEMPTS):
         got_text = False
         try:
-            with requests.post(url, headers=headers, json=body, timeout=cfg.get('timeout', 60), stream=True) as resp:
+            with requests.post(url, headers=headers, json=body, stream=True,
+                               timeout=(cfg.get('timeout', 60), STREAM_STALL_SECONDS)) as resp:
                 resp.raise_for_status()
+                last_text_at = time.monotonic()
                 # chunk_size=None：收到多少给多少，不等凑满一块，否则会攒着不发
                 for line in resp.iter_lines(chunk_size=None):
+                    if time.monotonic() - last_text_at > STREAM_STALL_SECONDS:
+                        raise requests.exceptions.ReadTimeout(f'{STREAM_STALL_SECONDS} 秒没有新内容')
                     if not line.startswith(b'data:'):
                         continue
                     data = line[5:].strip()
@@ -261,6 +269,7 @@ def stream_llm(cfg, messages):
                     if text:
                         got_text = True
                         yield text
+                        last_text_at = time.monotonic()
             if got_text:
                 return
             last_error = RuntimeError('模型未返回内容')
