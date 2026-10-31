@@ -142,6 +142,9 @@ class ImportRouteTest(unittest.TestCase):
         import routers.intensive_reading as intensive
         self.intensive = intensive
         self._saved = []
+        # 加高亮会顺手去生成单词发音（付费 TTS，音频还会写进没换成临时目录的 vocab_audio），换成空操作
+        self._saved.append((intensive, "generate_vocab_audio_async", intensive.generate_vocab_audio_async))
+        intensive.generate_vocab_audio_async = lambda *a, **k: None
         for module in (core, auth, intensive):
             for name, value in {
                 "INTENSIVE_DIR": os.path.join(self.tmp, "intensive_articles"),

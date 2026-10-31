@@ -57,6 +57,9 @@ class AppTestBase(unittest.TestCase):
         # 转写接口换成桩（万一校验失效，也不会真的去调付费 API）
         asr = sys.modules["routers.asr_transcription"]
         self._patch(asr, "call_transcription_api", lambda *a, **k: (None, "stubbed in tests"))
+        # 精读加高亮会顺手去生成单词发音，同样是付费 TTS
+        intensive = sys.modules["routers.intensive_reading"]
+        self._patch(intensive, "generate_vocab_audio_async", lambda *a, **k: None)
 
         core.init_directories()
         import app

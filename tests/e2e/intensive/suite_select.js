@@ -128,6 +128,42 @@ module.exports = async function suiteSelect({ cfg, browser, t, lib }) {
     } catch (e) {
       t.ok(false, `[save+reload] crashed: ${e.message.split('\n')[0]}`);
     }
+
+    // 4) emoji 文章最后面的词也能存高亮：页面按 UTF-16 下标发，emoji 占两个单位，
+    //    服务器以前按 Python 字符数校验，末尾几个字会被当成越界（「选择范围无效」）
+    try {
+      await lib.openArticle(page, IDS.emoji);
+      await reset(page);
+      const picked = await page.evaluate(() => {
+        const walker = document.createTreeWalker(document.querySelector('#vContent .reader'), NodeFilter.SHOW_TEXT);
+        let node = null; let n;
+        while ((n = walker.nextNode())) if (n.nodeValue.includes('微笑') && !n.parentElement.closest('mark, .tooltip')) node = n;
+        if (!node) return null;
+        const at = node.nodeValue.lastIndexOf('微笑');
+        node.parentElement.scrollIntoView({ block: 'center' });
+        const r = document.createRange(); r.setStart(node, at); r.setEnd(node, at + 2);
+        const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+        document.getElementById('vContent').dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+        return selectionRange && { text: selectionRange.text, start: selectionRange.start, end: selectionRange.end };
+      });
+      t.ok(picked && picked.text === '微笑', `emoji article: selected the last 微笑 (${JSON.stringify(picked)})`);
+      await page.evaluate(() => confirmHighlight());
+      await page.fill('#meaningInput', 'e2e-emoji');
+      await page.click('#meaningBox button:has-text("保存")');
+      const outcome = await page.waitForFunction(() => {
+        const h = (highlights || []).find(x => x.meaning === 'e2e-emoji');
+        const tips = [...document.querySelectorAll('.temp-tooltip')].map(x => x.textContent).join(' ');
+        return h ? { id: h.id, text: h.text } : (tips ? { tips } : null);
+      }, null, { timeout: 8000 }).then(h => h.jsonValue()).catch(() => ({ timeout: true }));
+      t.ok(outcome.text === '微笑', `emoji article: last 微笑 saved as a highlight (${JSON.stringify(outcome)})`);
+      if (outcome.id) {
+        await lib.settle(page);
+        await page.evaluate(id => fetch('/intensive_delete_highlight', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: currentArticle.id, highlight_id: id }) }), outcome.id);
+        await lib.settle(page);
+      }
+    } catch (e) {
+      t.ok(false, `[emoji end highlight] crashed: ${e.message.split('\n')[0]}`);
+    }
     t.ok(errors.length === 0, `page errors: ${errors.join(' | ')}`);
   } catch (e) {
     await page.screenshot({ path: `${cfg.out}/select-crash-${t.engine}.png` }).catch(() => {});

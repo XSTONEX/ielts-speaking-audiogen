@@ -482,8 +482,9 @@ def intensive_add_highlight():
     try:
         with open(path, 'r', encoding='utf-8') as f:
             obj = json.load(f)
-        # 简单校验范围
-        text_len = len(obj.get('content_text') or '')
+        # 页面按 JS 的 UTF-16 下标发 start/end；emoji 这类字符在 UTF-16 里占两个单位，
+        # 按 Python 字符数查的话，有 emoji 的文章最后几个字会被当成越界
+        text_len = len((obj.get('content_text') or '').encode('utf-16-le')) // 2
         if not (0 <= int(start) < int(end) <= text_len):
             return jsonify({'error': '选择范围无效'}), 400
         highlights = obj.setdefault('highlights', [])
