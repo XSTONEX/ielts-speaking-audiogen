@@ -398,7 +398,6 @@ body.has-app-shell.page-intensive .viewer { z-index: 1300; }
 body.has-app-shell.page-intensive .highlights-panel { z-index: 1400; }
 body.has-app-shell.page-writing-practice .review-overlay { z-index: 1300; }
 body.has-app-shell.page-vocabulary .modal { z-index: 1300; }
-body.has-app-shell.page-message-board .modal-overlay { z-index: 1300; }
 body.has-app-shell.page-listening #uploadModal,
 body.has-app-shell.page-listening #notesView { z-index: 1300; }
 
@@ -889,7 +888,6 @@ html[data-theme="dark"] body.page-vocabulary .main-content,
 html[data-theme="dark"] body.page-intensive .container,
 html[data-theme="dark"] body.page-intensive-new .container,
 html[data-theme="dark"] body.page-vocab-summary .container,
-html[data-theme="dark"] body.page-message-board .container,
 html[data-theme="dark"] body.page-study-techniques .container {
   background: var(--surface-gradient) !important;
   color: var(--text-primary);
@@ -922,8 +920,7 @@ html[data-theme="dark"] body.page-login .login-title,
 html[data-theme="dark"] body.page-intensive h2,
 html[data-theme="dark"] body.page-intensive-new h2,
 html[data-theme="dark"] body.page-vocab-summary .header .title,
-html[data-theme="dark"] body.page-study-techniques .header h1,
-html[data-theme="dark"] body.page-message-board .header h1 {
+html[data-theme="dark"] body.page-study-techniques .header h1 {
   color: var(--text-primary) !important;
 }
 
@@ -944,9 +941,6 @@ html[data-theme="dark"] body.page-vocab-summary .sidebar,
 html[data-theme="dark"] body.page-vocab-summary .content,
 html[data-theme="dark"] body.page-vocab-summary .article-item,
 html[data-theme="dark"] body.page-vocab-summary .vocab-item,
-html[data-theme="dark"] body.page-message-board .post-card,
-html[data-theme="dark"] body.page-message-board .comments-section,
-html[data-theme="dark"] body.page-message-board .comment-form,
 html[data-theme="dark"] body.page-study-techniques .module,
 html[data-theme="dark"] body.page-study-techniques .item,
 html[data-theme="dark"] body.page-audio-transcription .mode-selector,
@@ -985,12 +979,10 @@ html[data-theme="dark"] body.page-vocab-summary .article-item.active,
 html[data-theme="dark"] body.page-vocab-summary .challenge-header,
 html[data-theme="dark"] body.page-audio-transcription .mode-btn.active,
 html[data-theme="dark"] body.page-study-techniques .category-tab.active,
-html[data-theme="dark"] body.page-message-board .header,
 html[data-theme="dark"] body.page-audio-transcription .header {
   background: var(--accent-soft) !important;
 }
 
-html[data-theme="dark"] body.page-message-board .header,
 html[data-theme="dark"] body.page-audio-transcription .header,
 html[data-theme="dark"] body.page-vocabulary .header,
 html[data-theme="dark"] body.page-vocab-summary .challenge-header,
@@ -1010,18 +1002,11 @@ html[data-theme="dark"] body.page-vocabulary .back-btn,
 html[data-theme="dark"] body.page-audio-transcription .header,
 html[data-theme="dark"] body.page-audio-transcription .header h1,
 html[data-theme="dark"] body.page-audio-transcription .header p,
-html[data-theme="dark"] body.page-audio-transcription .back-btn,
-html[data-theme="dark"] body.page-message-board .header,
-html[data-theme="dark"] body.page-message-board .header h1,
-html[data-theme="dark"] body.page-message-board .user-info,
-html[data-theme="dark"] body.page-message-board .new-post-btn,
-html[data-theme="dark"] body.page-message-board .back-btn {
+html[data-theme="dark"] body.page-audio-transcription .back-btn {
   color: #fff !important;
 }
 
 html[data-theme="dark"] body.page-vocabulary .back-btn,
-html[data-theme="dark"] body.page-message-board .new-post-btn,
-html[data-theme="dark"] body.page-message-board .back-btn,
 html[data-theme="dark"] body.page-audio-transcription .back-btn {
   border-color: rgba(255, 255, 255, 0.32) !important;
 }
@@ -1050,8 +1035,6 @@ html[data-theme="dark"] body.page-intensive .muted,
 html[data-theme="dark"] body.page-intensive .viewer .title,
 html[data-theme="dark"] body.page-vocab-summary .article-meta,
 html[data-theme="dark"] body.page-vocab-summary .vocab-meaning,
-html[data-theme="dark"] body.page-message-board .post-time,
-html[data-theme="dark"] body.page-message-board .post-content,
 html[data-theme="dark"] body.page-study-techniques .module-title,
 html[data-theme="dark"] body.page-study-techniques .word-primary,
 html[data-theme="dark"] body.page-study-techniques .word-group-title,
@@ -1069,7 +1052,6 @@ html[data-theme="dark"] body.page-intensive h2,
 html[data-theme="dark"] body.page-intensive .viewer .title,
 html[data-theme="dark"] body.page-vocab-summary .article-title,
 html[data-theme="dark"] body.page-vocab-summary .vocab-word,
-html[data-theme="dark"] body.page-message-board .user-name,
 html[data-theme="dark"] body.page-study-techniques .module-title,
 html[data-theme="dark"] body.page-audio-transcription .header h1,
 html[data-theme="dark"] body.page-listening .lyrics-line.active .line-text {
@@ -1317,14 +1299,12 @@ html[data-theme="dark"] body.page-vocabulary .sidebar,
 html[data-theme="dark"] body.page-intensive .card,
 html[data-theme="dark"] body.page-intensive .section,
 html[data-theme="dark"] body.page-vocab-summary .article-item,
-html[data-theme="dark"] body.page-message-board .post-card,
 html[data-theme="dark"] body.page-study-techniques .module,
 html[data-theme="dark"] body.page-audio-transcription .recording-section {
   background: var(--bg-muted) !important;
 }
 
 html[data-theme="dark"] body.page-vocabulary .back-btn,
-html[data-theme="dark"] body.page-message-board .write-comment-btn,
 html[data-theme="dark"] body.page-study-techniques .back-btn,
 html[data-theme="dark"] body.page-modules #userDisplay button,
 html[data-theme="dark"] body.page-reading .btn.outline,
@@ -1481,78 +1461,6 @@ html[data-theme="dark"] body.page-vocabulary .audio-status.audio-ready {
 
 html[data-theme="dark"] body.page-vocabulary .audio-status.audio-generating {
   color: #fbbf24 !important;
-}
-
-html[data-theme="dark"] body.page-message-board .comment-item {
-  background: var(--bg-surface) !important;
-  border-color: var(--border-default) !important;
-}
-
-html[data-theme="dark"] body.page-message-board .comment-avatar {
-  border-color: var(--border-default) !important;
-}
-
-html[data-theme="dark"] body.page-message-board .comment-user-name,
-html[data-theme="dark"] body.page-message-board .comment-content,
-html[data-theme="dark"] body.page-message-board .card-title {
-  color: var(--text-primary) !important;
-}
-
-html[data-theme="dark"] body.page-message-board .comment-time,
-html[data-theme="dark"] body.page-message-board .card-desc,
-html[data-theme="dark"] body.page-message-board .card-meta {
-  color: var(--text-secondary) !important;
-}
-
-html[data-theme="dark"] body.page-message-board .comment-delete-btn {
-  color: var(--text-muted) !important;
-}
-
-html[data-theme="dark"] body.page-message-board .comment-delete-btn:hover {
-  background: rgba(248, 113, 113, 0.16) !important;
-  color: #f87171 !important;
-}
-
-html[data-theme="dark"] body.page-message-board .audio-card,
-html[data-theme="dark"] body.page-message-board .article-card {
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.14) 0%, rgba(59, 130, 246, 0.08) 100%) !important;
-  border-color: rgba(96, 165, 250, 0.42) !important;
-  box-shadow: 0 10px 24px rgba(var(--shadow-rgb), 0.16) !important;
-}
-
-html[data-theme="dark"] body.page-message-board .audio-card:hover,
-html[data-theme="dark"] body.page-message-board .article-card:hover {
-  box-shadow: 0 16px 32px rgba(var(--shadow-rgb), 0.22) !important;
-}
-
-html[data-theme="dark"] body.page-message-board .challenge-card {
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.96) 0%, rgba(17, 24, 39, 0.98) 100%) !important;
-  border-color: var(--border-default) !important;
-  box-shadow: 0 14px 30px rgba(var(--shadow-rgb), 0.2) !important;
-}
-
-html[data-theme="dark"] body.page-message-board .challenge-card:hover {
-  border-color: var(--accent) !important;
-}
-
-html[data-theme="dark"] body.page-message-board .challenge-card .card-title {
-  color: #f8fafc !important;
-}
-
-html[data-theme="dark"] body.page-message-board .challenge-card .card-desc,
-html[data-theme="dark"] body.page-message-board .challenge-card .card-meta {
-  color: #cbd5e1 !important;
-}
-
-html[data-theme="dark"] body.page-message-board .challenge-card [data-challenge-btn] {
-  background: rgba(52, 211, 153, 0.16) !important;
-  border-color: rgba(52, 211, 153, 0.5) !important;
-  color: #86efac !important;
-}
-
-html[data-theme="dark"] body.page-message-board .challenge-card [data-challenge-btn] span,
-html[data-theme="dark"] body.page-message-board .challenge-card .card-meta span[style] {
-  color: inherit !important;
 }
 
 html[data-theme="dark"] body.page-intensive .audio-panel {
