@@ -162,25 +162,28 @@ def delete_message(message_id):
         if message_to_delete.get('user', {}).get('username') != username:
             return jsonify({'error': '只能删除自己的消息'}), 403
 
-        # 检查是否有关联的挑战需要删除
-        challenge_id = None
-        if (message_to_delete.get('type') == 'mixed_content' and
-            message_to_delete.get('content', {}).get('challenge')):
-            challenge_id = message_to_delete['content']['challenge'].get('id')
-
         # 删除消息
         messages.pop(message_index)
         save_messages(messages)
 
-        # 删除关联的挑战记录
-        if challenge_id:
+        # 帖子下面的评论（不管是谁写的）一起删掉，不然会永远留在 comments.json 里
+        comments = load_comments()
+        removed_comments = [c for c in comments if c.get('post_id') == message_id]
+        if removed_comments:
+            comments = [c for c in comments if c.get('post_id') != message_id]
+            save_comments(comments)
+
+        # 删除帖子和这些评论里带的挑战；还被别的帖子或评论引用的挑战留着
+        challenge_ids = {_attached_challenge_id(item) for item in [message_to_delete] + removed_comments}
+        still_used = {_attached_challenge_id(item) for item in messages + comments}
+        for challenge_id in challenge_ids - still_used - {None}:
             try:
                 delete_challenge_record(challenge_id)
             except Exception as e:
                 # 挑战删除失败不影响消息删除，只记录错误
                 print(f"删除挑战记录失败: {e}")
 
-        return jsonify({'success': True})
+        return jsonify({'success': True, 'deleted_comments': len(removed_comments)})
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -380,6 +383,14 @@ def save_comments(comments):
 def generate_comment_id():
     """生成评论ID"""
     return f"comment_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{str(uuid.uuid4())[:8]}"
+
+def _attached_challenge_id(item):
+    """帖子或评论里带的挑战 ID，没有就返回 None"""
+    if item.get('type') != 'mixed_content':
+        return None
+    content = item.get('content')
+    challenge = content.get('challenge') if isinstance(content, dict) else None
+    return challenge.get('id') if isinstance(challenge, dict) else None
 
 @community_bp.route('/api/comments/<post_id>', methods=['GET'])
 def get_comments(post_id):
