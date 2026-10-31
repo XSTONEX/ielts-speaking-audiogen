@@ -321,6 +321,14 @@
     .mb-btn-danger { border-color: var(--w-err-line); background: var(--w-err-soft); color: var(--w-err); font-weight: 600; }
     .mb-btn-danger:hover { border-color: var(--w-err); color: var(--w-err); }
 
+    /* ==================== 窄一点的电脑屏幕 ==================== */
+    @media (min-width: 821px) and (max-width: 1080px) {
+      .mb-layout { grid-template-columns: minmax(0, 1fr) 280px; }
+      .mb-composer__row { flex-wrap: wrap; }
+      .mb-composer__fake { flex-basis: calc(100% - 48px); }
+      .mb-composer__row > .mb-tools { margin-left: 48px; }
+    }
+
     /* ==================== 手机 ==================== */
     @media (max-width: 820px) {
       .mb-page { width: auto; margin: 0 16px; }
