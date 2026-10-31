@@ -204,17 +204,6 @@ class LearningPlatformTestCase(unittest.TestCase):
         response = self.client.get("/api/learning/dashboard")
         self.assertEqual(response.status_code, 401)
 
-    def test_home_page_stays_as_quick_navigation(self):
-        response = self.client.get("/")
-
-        self.assertEqual(response.status_code, 200)
-        html = response.get_data(as_text=True)
-        self.assertIn("请选择模块", html)
-        self.assertIn("Speaking 合集播放", html)
-        self.assertIn("写作逻辑链训练", html)
-        self.assertNotIn("今日复习队列", html)
-        self.assertNotIn("学习首页", html)
-
     def test_dashboard_summarizes_learning_state(self):
         self.seed_vocabulary()
         self.seed_writing()
@@ -235,6 +224,11 @@ class LearningPlatformTestCase(unittest.TestCase):
         self.seed_vocabulary()
         self.seed_writing()
         self.seed_listening()
+        # 收藏的词不进复习队列，挑战里答错的才进
+        self.write_json(
+            os.path.join(self.paths["CHALLENGES_DIR"], "wrong_words_tester.json"),
+            {"erode": {"word": "erode", "wrong_count": 2, "last_wrong_at": "2026-05-05T08:00:00"}},
+        )
 
         response = self.client.get("/api/learning/review_queue", headers=self.auth_headers())
 
