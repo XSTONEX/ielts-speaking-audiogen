@@ -325,8 +325,9 @@ class LearningPlatformTestCase(unittest.TestCase):
         self.assertNotIn("id: 'liaison'", html)
         self.assertNotIn("id: 'attention'", html)
         self.assertIn("/error_tag", html)
-        self.assertIn("bindErrorTagZoneAudio", html)
+        self.assertIn("openErrorPicker", html)
         self.assertIn("beginErrorTagAudioPause", html)
+        self.assertIn("endErrorTagAudioPause", html)
         self.assertNotIn("show-error-bubbles", html)
         self.assertNotIn("hintErrorBubbles", html)
 

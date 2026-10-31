@@ -270,7 +270,6 @@ html[data-theme="dark"] body.theme-page .review-overlay-header,
 html[data-theme="dark"] body.theme-page .review-overlay-tabs,
 html[data-theme="dark"] body.theme-page .highlights-panel,
 html[data-theme="dark"] body.theme-page #playerBar,
-html[data-theme="dark"] body.theme-page #topBar,
 html[data-theme="dark"] body.theme-page .theme-surface {
   background: var(--bg-surface);
   color: var(--text-primary);
@@ -386,7 +385,6 @@ body.has-app-shell {
    ============================================================ */
 
 /* Page top bars → drop below the nav so they stay fully visible */
-body.has-app-shell #topBar { top: var(--app-shell-h); }                                /* listening.html, listening_notes.html */
 body.has-app-shell.page-writing-practice .practice-header { top: var(--app-shell-h); } /* sticky essay header */
 
 /* Top-anchored toasts → nudge below the nav so notifications aren't hidden behind it */
@@ -398,8 +396,6 @@ body.has-app-shell.page-intensive .viewer { z-index: 1300; }
 body.has-app-shell.page-intensive .highlights-panel { z-index: 1400; }
 body.has-app-shell.page-writing-practice .review-overlay { z-index: 1300; }
 body.has-app-shell.page-vocabulary .modal { z-index: 1300; }
-body.has-app-shell.page-listening #uploadModal,
-body.has-app-shell.page-listening #notesView { z-index: 1300; }
 
 .app-shell-brand {
   flex: 0 0 auto;
@@ -947,10 +943,7 @@ html[data-theme="dark"] body.page-audio-transcription .mode-selector,
 html[data-theme="dark"] body.page-audio-transcription .recording-section,
 html[data-theme="dark"] body.page-audio-transcription .recording-status,
 html[data-theme="dark"] body.page-audio-transcription .audio-preview,
-html[data-theme="dark"] body.page-audio-transcription .upload-section,
-html[data-theme="dark"] body.page-listening #playerBar,
-html[data-theme="dark"] body.page-listening #topBar,
-html[data-theme="dark"] body.page-listening #vocabPopover {
+html[data-theme="dark"] body.page-audio-transcription .upload-section {
   background: var(--bg-surface) !important;
   color: var(--text-primary);
   border-color: var(--border-default) !important;
@@ -1039,8 +1032,7 @@ html[data-theme="dark"] body.page-study-techniques .module-title,
 html[data-theme="dark"] body.page-study-techniques .word-primary,
 html[data-theme="dark"] body.page-study-techniques .word-group-title,
 html[data-theme="dark"] body.page-audio-transcription .recording-text,
-html[data-theme="dark"] body.page-audio-transcription .recording-hint,
-html[data-theme="dark"] body.page-listening .translation-line {
+html[data-theme="dark"] body.page-audio-transcription .recording-hint {
   color: var(--text-secondary) !important;
 }
 
@@ -1053,147 +1045,8 @@ html[data-theme="dark"] body.page-intensive .viewer .title,
 html[data-theme="dark"] body.page-vocab-summary .article-title,
 html[data-theme="dark"] body.page-vocab-summary .vocab-word,
 html[data-theme="dark"] body.page-study-techniques .module-title,
-html[data-theme="dark"] body.page-audio-transcription .header h1,
-html[data-theme="dark"] body.page-listening .lyrics-line.active .line-text {
+html[data-theme="dark"] body.page-audio-transcription .header h1 {
   color: var(--text-primary) !important;
-}
-
-html[data-theme="dark"] body.page-listening .lyrics-line .line-text {
-  color: var(--text-secondary);
-}
-
-html[data-theme="dark"] body.page-listening .lyrics-line.active {
-  background: rgba(55, 120, 255, 0.18);
-  border-left-color: var(--accent);
-}
-
-html[data-theme="dark"] body.page-listening .lyrics-line.starred:not(.active) {
-  background: linear-gradient(90deg, rgba(245, 158, 11, 0.18), transparent 60%);
-}
-
-html[data-theme="dark"] body.page-listening .lyrics-line.active.starred {
-  background: linear-gradient(90deg, rgba(245, 158, 11, 0.2) 0%, rgba(55, 120, 255, 0.18) 40%);
-}
-
-html[data-theme="dark"] body.page-listening .error-bubble {
-  background:
-    radial-gradient(120% 80% at 30% 18%, rgb(255 255 255 / .1), transparent 50%),
-    rgb(15 23 42 / .78);
-  color: rgb(186 198 214);
-  border-color: rgb(var(--bubble) / .38);
-  box-shadow: 0 6px 14px rgb(0 0 0 / .22), inset 0 1px 0 rgb(255 255 255 / .08);
-}
-
-html[data-theme="dark"] body.page-listening .error-bubble.selected {
-  color: #f8fafc;
-  background:
-    radial-gradient(120% 80% at 28% 14%, rgb(255 255 255 / .14), transparent 48%),
-    rgb(var(--bubble) / .78);
-  border-color: transparent;
-}
-
-html[data-theme="dark"] body.page-listening .error-rest-chip {
-  background: rgb(var(--bubble) / .2);
-  color: rgb(186 198 214);
-  border-color: rgb(var(--bubble) / .32);
-}
-
-html[data-theme="dark"] body.page-listening .lyrics-line.starred::after {
-  background: #64748b;
-}
-
-html[data-theme="dark"] body.page-listening #topBar,
-html[data-theme="dark"] body.page-listening #playerBar {
-  background: rgba(10, 18, 32, 0.82) !important;
-  border-color: rgba(61, 79, 110, 0.65) !important;
-}
-
-html[data-theme="dark"] body.page-listening #uploadModal > div,
-html[data-theme="dark"] body.page-listening #vocabPopover,
-html[data-theme="dark"] body.page-listening #toast {
-  background: var(--bg-surface) !important;
-  color: var(--text-primary) !important;
-  border-color: var(--border-default) !important;
-}
-
-html[data-theme="dark"] body.page-listening #toast {
-  background: #0f172a !important;
-}
-
-html[data-theme="dark"] body.page-listening #projectGrid > div,
-html[data-theme="dark"] body.page-listening #lyricsContainer > div,
-html[data-theme="dark"] body.page-listening .speed-btn,
-html[data-theme="dark"] body.page-listening .modal-tab,
-html[data-theme="dark"] body.page-listening #selectionBadge button {
-  border-color: var(--border-default) !important;
-}
-
-html[data-theme="dark"] body.page-listening #projectGrid > div {
-  background: var(--bg-surface) !important;
-  color: var(--text-primary) !important;
-}
-
-html[data-theme="dark"] body.page-listening .text-slate-800,
-html[data-theme="dark"] body.page-listening .text-slate-700,
-html[data-theme="dark"] body.page-listening .text-slate-600,
-html[data-theme="dark"] body.page-listening .text-slate-500,
-html[data-theme="dark"] body.page-listening .text-slate-400 {
-  color: var(--text-secondary) !important;
-}
-
-html[data-theme="dark"] body.page-listening .bg-white,
-html[data-theme="dark"] body.page-listening .bg-slate-50,
-html[data-theme="dark"] body.page-listening .bg-slate-100 {
-  background: var(--bg-surface) !important;
-}
-
-html[data-theme="dark"] body.page-listening .border-slate-200,
-html[data-theme="dark"] body.page-listening .border-slate-300 {
-  border-color: var(--border-default) !important;
-}
-
-html[data-theme="dark"] body.page-listening .hover\:bg-slate-100:hover,
-html[data-theme="dark"] body.page-listening .hover\:bg-slate-200:hover,
-html[data-theme="dark"] body.page-listening .hover\:bg-blue-50:hover {
-  background: var(--bg-subtle) !important;
-}
-
-html[data-theme="dark"] body.page-listening .bg-blue-50,
-html[data-theme="dark"] body.page-listening .bg-blue-100 {
-  background: var(--accent-soft) !important;
-}
-
-html[data-theme="dark"] body.page-listening .bg-emerald-50 {
-  background: rgba(52, 211, 153, 0.16) !important;
-}
-
-html[data-theme="dark"] body.page-listening .bg-amber-50 {
-  background: rgba(245, 158, 11, 0.16) !important;
-}
-
-html[data-theme="dark"] body.page-listening .bg-red-50 {
-  background: rgba(248, 113, 113, 0.16) !important;
-}
-
-html[data-theme="dark"] body.page-listening .bg-purple-50 {
-  background: rgba(168, 85, 247, 0.16) !important;
-}
-
-html[data-theme="dark"] body.page-listening .text-emerald-600 {
-  color: #6ee7b7 !important;
-}
-
-html[data-theme="dark"] body.page-listening .text-amber-600,
-html[data-theme="dark"] body.page-listening .text-amber-500 {
-  color: #fbbf24 !important;
-}
-
-html[data-theme="dark"] body.page-listening .text-red-600 {
-  color: #fca5a5 !important;
-}
-
-html[data-theme="dark"] body.page-listening .text-purple-600 {
-  color: #d8b4fe !important;
 }
 
 html[data-theme="dark"] body.theme-page [style*="background:#fff"],
