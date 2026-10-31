@@ -8,6 +8,7 @@ from core import (
     VOCABULARY_TASKS_DIR, VOCABULARY_CHALLENGE_DIR,
     is_safe_path_segment
 )
+from utils.json_store import save_json_atomic
 
 vocabulary_bp = Blueprint('vocabulary', __name__)
 
@@ -32,8 +33,7 @@ def load_category_data(category):
                 # 如果有更新，直接保存数据（避免递归调用）
                 if updated:
                     data['metadata']['last_updated'] = datetime.now().isoformat()
-                    with open(category_file, 'w', encoding='utf-8') as f:
-                        json.dump(data, f, ensure_ascii=False, indent=2)
+                    save_json_atomic(category_file, data)
 
                 return data
         except:
@@ -43,7 +43,9 @@ def load_category_data(category):
     now = datetime.now().isoformat()
     return {
         "name": category.capitalize(),
-        "icon": {"listening": "\ud83c\udfa7", "speaking": "\ud83d\udde3\ufe0f", "reading": "\ud83d\udcd6", "writing": "\u270d\ufe0f"}[category],
+        # 以前这里写成 "\ud83c\udfa7" 这样的代理对转义：Python 里那是两个落单的代理字符，
+        # 存 UTF-8 时直接报错，所以还没有文件的分类加第一个词会 500
+        "icon": {"listening": "🎧", "speaking": "🗣️", "reading": "📖", "writing": "✍️"}[category],
         "subcategories": {
             "default": {
                 "name": "\u9ed8\u8ba4\u5206\u7c7b",
@@ -61,8 +63,8 @@ def save_category_data(category, data):
     """保存单个分类的数据"""
     category_file = os.path.join(VOCABULARY_CATEGORIES_DIR, f'{category}.json')
     data['metadata']['last_updated'] = datetime.now().isoformat()
-    with open(category_file, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    # 先写临时文件再换上去：写到一半出错时旧文件原样还在，不会被清空
+    save_json_atomic(category_file, data)
 
 def load_vocabulary_data():
     """加载完整的词汇数据（兼容旧接口）"""

@@ -135,6 +135,32 @@ class VocabularyBookTest(AppTestBase):
         self.assertEqual(response.data, b"ID3fake-mp3")
         response.close()
 
+    def add(self, word, category="listening"):
+        return self.client.post("/api/vocabulary/add", headers=self.auth(),
+                                json={"category": category, "subcategory_id": "default",
+                                      "word": word, "meaning": "示例释义"})
+
+    def test_first_word_in_a_category_without_a_file_is_saved(self):
+        # 新装好、或者某个分类从没加过词时，分类文件还不存在：以前这里报 500，还留下半截文件
+        path = os.path.join(self.core.VOCABULARY_CATEGORIES_DIR, "reading.json")
+        self.assertFalse(os.path.exists(path))
+        response = self.add("arid", category="reading")
+        self.assertEqual(response.status_code, 200, response.get_json())
+        self.assertEqual([w["word"] for w in self.words("reading")], ["arid"])
+        self.assertEqual(self.read_json(path)["icon"], "📖")
+
+    def test_every_category_can_start_from_no_file(self):
+        for category in ("speaking", "reading", "writing"):
+            with self.subTest(category=category):
+                self.assertEqual(self.add("first", category=category).status_code, 200)
+
+    def test_a_failed_save_keeps_the_words_already_on_disk(self):
+        self.assertEqual(self.add("refund").status_code, 200)
+        # 写到一半出错（磁盘满、编码出错）：以前先把文件清空再写，旧词全丢
+        with mock.patch("json.dump", side_effect=RuntimeError("disk full")):
+            self.assertEqual(self.add("deposit").status_code, 500)
+        self.assertEqual([w["word"] for w in self.words()], ["refund"])
+
 
 if __name__ == "__main__":
     unittest.main()

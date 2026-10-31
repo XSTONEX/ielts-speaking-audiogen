@@ -554,6 +554,34 @@ async function desktopSuite(browser) {
   await ctx.close();
 }
 
+// ============================================================ category with no data file yet (bug 15)
+async function missingCategoryFile(browser) {
+  resetData();
+  // 新装好、或某个分类从没加过词时还没有分类文件：以前往里加第一个词报 500，还留下半截文件
+  fs.rmSync(path.join(SANDBOX, 'vocabulary_book/categories/speaking.json'));
+  const { ctx, page } = await newPage(browser);
+  await open(page);
+  await clickCat(page, 'speaking');
+  check('missing file: category opens on 默认分类', (await text(page, '#vbSubName')) === '默认分类', await text(page, '#vbSubName'));
+  // 空子分类显示空状态、整块列表藏起来（上一个子分类的卡片还留在 DOM 里，但看不见）
+  const emptyState = await page.evaluate(() => ({
+    empty: !document.getElementById('vbEmpty').hidden, list: !document.getElementById('vbList').hidden,
+    title: document.getElementById('vbEmptyTitle').textContent.trim(),
+  }));
+  check('missing file: shows the empty state', emptyState.empty && !emptyState.list && emptyState.title === '「默认分类」还没有单词', emptyState);
+  await page.fill('#vbWord', 'hospitable');
+  await page.fill('#vbMeaning', 'adj. 好客的');
+  await page.press('#vbMeaning', 'Enter');
+  check('missing file: first word added', await toastSeen(page, '已添加「hospitable」'));
+  check('missing file: card shows', (await cards(page)).includes('hospitable'), await cards(page));
+  let saved = null;
+  try { saved = readCategory('speaking'); } catch (e) { saved = { error: e.message }; }
+  check('missing file: file written with the word',
+    saved && saved.icon === '🗣️' && saved.subcategories && saved.subcategories.default.words.some(w => w.word === 'hospitable'), saved);
+  check('no page errors (missing file)', page.errors.length === 0, page.errors);
+  await ctx.close();
+}
+
 // ============================================================ prefs migration + dark + phone
 async function prefsAndThemes(browser) {
   resetData();
@@ -672,6 +700,7 @@ async function prefsAndThemes(browser) {
     try {
       await desktopSuite(browser);
       await prefsAndThemes(browser);
+      await missingCategoryFile(browser);
     } catch (e) {
       check('suite crashed', false, e.stack.split('\n').slice(0, 4).join(' | '));
     }
