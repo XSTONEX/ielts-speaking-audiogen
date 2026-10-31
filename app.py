@@ -155,9 +155,5 @@ def _compress_text_responses(response):
     return response
 
 
-# 启动词汇音频后台任务处理器
-from routers.vocabulary import start_audio_task_processor
-start_audio_task_processor()
-
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001)

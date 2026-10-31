@@ -54,9 +54,7 @@ class AppTestBase(unittest.TestCase):
                     self._patch(module, name, patched)
         self._patch(core, "_DURATION_CACHE_FILE", os.path.join(self.tmp, "audio_files", ".durations.json"))
 
-        # 不启动后台音频线程；转写接口换成桩（万一校验失效，也不会真的去调付费 API）
-        vocabulary = sys.modules["routers.vocabulary"]
-        self._patch(vocabulary, "start_audio_task_processor", lambda: None)
+        # 转写接口换成桩（万一校验失效，也不会真的去调付费 API）
         asr = sys.modules["routers.asr_transcription"]
         self._patch(asr, "call_transcription_api", lambda *a, **k: (None, "stubbed in tests"))
 

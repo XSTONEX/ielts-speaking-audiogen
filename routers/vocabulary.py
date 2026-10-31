@@ -1,11 +1,11 @@
 from flask import Blueprint, request, jsonify, send_file, send_from_directory
-import os, json, uuid, threading, time, requests
+import os, json, uuid
 from datetime import datetime
 from werkzeug.utils import secure_filename
 
 from core import (
     VOCABULARY_BOOK_DIR, VOCABULARY_CATEGORIES_DIR, VOCABULARY_AUDIO_DIR,
-    VOCABULARY_TASKS_DIR, VOCABULARY_CHALLENGE_DIR, generate_tts,
+    VOCABULARY_TASKS_DIR, VOCABULARY_CHALLENGE_DIR,
     is_safe_path_segment
 )
 
@@ -84,163 +84,16 @@ def save_vocabulary_data(vocab_data):
     for category, data in vocab_data['categories'].items():
         save_category_data(category, data)
 
-def add_audio_task(word_id, word, category, subcategory_id):
-    """添加音频生成任务到持久化队列"""
-    task = {
-        'id': str(uuid.uuid4()),
-        'word_id': word_id,
-        'word': word,
-        'category': category,
-        'subcategory_id': subcategory_id,
-        'status': 'pending',
-        'created_at': datetime.now().isoformat(),
-        'attempts': 0,
-        'max_attempts': 3
-    }
+CSV_HEADER_WORDS = {'单词', 'word', 'words'}
+CSV_HEADER_MEANINGS = {'词义', '释义', 'meaning', 'meanings', 'definition'}
 
-    task_file = os.path.join(VOCABULARY_TASKS_DIR, f'{task["id"]}.json')
-    with open(task_file, 'w', encoding='utf-8') as f:
-        json.dump(task, f, ensure_ascii=False, indent=2)
 
-    return task['id']
-
-def get_pending_audio_tasks():
-    """获取所有待处理的音频任务。
-    除 pending 外，也回收 failed（未达最大重试次数，等待重试）
-    和 processing（进程崩溃/重启遗留的孤儿任务）状态的任务，
-    否则失败任务永远不会被重试。"""
-    tasks = []
-    if not os.path.exists(VOCABULARY_TASKS_DIR):
-        return tasks
-
-    RETRYABLE_STATUSES = {'pending', 'failed', 'processing'}
-    for filename in os.listdir(VOCABULARY_TASKS_DIR):
-        if filename.endswith('.json'):
-            try:
-                task_file = os.path.join(VOCABULARY_TASKS_DIR, filename)
-                with open(task_file, 'r', encoding='utf-8') as f:
-                    task = json.load(f)
-                    if task['status'] in RETRYABLE_STATUSES and task['attempts'] < task['max_attempts']:
-                        tasks.append(task)
-            except:
-                continue
-
-    # 按创建时间排序
-    tasks.sort(key=lambda x: x['created_at'])
-    return tasks
-
-def update_audio_task_status(task_id, status, error_msg=None):
-    """更新音频任务状态"""
-    task_file = os.path.join(VOCABULARY_TASKS_DIR, f'{task_id}.json')
-    if os.path.exists(task_file):
-        try:
-            with open(task_file, 'r', encoding='utf-8') as f:
-                task = json.load(f)
-
-            task['status'] = status
-            task['last_updated'] = datetime.now().isoformat()
-
-            if status == 'failed':
-                task['attempts'] += 1
-                task['error'] = error_msg
-                if task['attempts'] >= task['max_attempts']:
-                    task['status'] = 'max_attempts_reached'
-
-            with open(task_file, 'w', encoding='utf-8') as f:
-                json.dump(task, f, ensure_ascii=False, indent=2)
-
-            # 如果任务完成或失败达到最大次数，删除任务文件
-            if status in ['completed', 'max_attempts_reached']:
-                os.remove(task_file)
-
-        except Exception as e:
-            print(f"更新任务状态失败: {e}")
-
-def generate_word_audio(word, word_id, category):
-    """为单词生成音频文件"""
-    try:
-        # 使用现有的TTS API生成音频
-        api_key = os.getenv('DEER_API_KEY')
-        if not api_key:
-            return False
-
-        url = "https://api.deerapi.com/v1/audio/speech"
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json"
-        }
-        data = {
-            "model": "tts-1",
-            "input": word,
-            "voice": "nova",
-            "response_format": "mp3"
-        }
-
-        response = requests.post(url, headers=headers, json=data)
-        if response.status_code == 200:
-            # 按分类存储音频文件
-            category_audio_dir = os.path.join(VOCABULARY_AUDIO_DIR, category)
-            audio_path = os.path.join(category_audio_dir, f"{word_id}.mp3")
-            with open(audio_path, 'wb') as f:
-                f.write(response.content)
-            return True
+def is_csv_header(row):
+    """第一行是不是表头：页面导出的是「单词,词义,…」，也认英文的 word,meaning"""
+    if not row or row[0].strip().lower() not in CSV_HEADER_WORDS:
         return False
-    except Exception as e:
-        print(f"生成单词音频失败: {e}")
-        return False
+    return len(row) < 2 or row[1].strip().lower() in CSV_HEADER_MEANINGS
 
-def process_audio_tasks():
-    """处理音频生成任务队列"""
-    tasks = get_pending_audio_tasks()
-
-    for task in tasks[:5]:  # 每次最多处理5个任务
-        try:
-            # 更新任务状态为处理中
-            update_audio_task_status(task['id'], 'processing')
-
-            # 生成音频
-            success = generate_word_audio(task['word'], task['word_id'], task['category'])
-
-            if success:
-                # 更新数据库中的音频状态
-                category_data = load_category_data(task['category'])
-                if task['subcategory_id'] in category_data['subcategories']:
-                    for word in category_data['subcategories'][task['subcategory_id']]['words']:
-                        if word['id'] == task['word_id']:
-                            word['audio_generated'] = True
-                            break
-                    save_category_data(task['category'], category_data)
-
-                # 标记任务完成
-                update_audio_task_status(task['id'], 'completed')
-                print(f"音频生成成功: {task['word']}")
-            else:
-                # 标记任务失败
-                update_audio_task_status(task['id'], 'failed', '音频生成API调用失败')
-                print(f"音频生成失败: {task['word']}")
-
-            # 避免API限制
-            time.sleep(0.5)
-
-        except Exception as e:
-            update_audio_task_status(task['id'], 'failed', str(e))
-            print(f"处理音频任务失败: {e}")
-
-# 启动后台任务处理线程
-def start_audio_task_processor():
-    """启动音频任务处理器"""
-    def task_processor():
-        while True:
-            try:
-                process_audio_tasks()
-                time.sleep(10)  # 每10秒检查一次任务队列
-            except Exception as e:
-                print(f"音频任务处理器错误: {e}")
-                time.sleep(30)  # 发生错误时等待更长时间
-
-    processor_thread = threading.Thread(target=task_processor, daemon=True)
-    processor_thread.start()
-    print("音频任务处理器已启动")
 
 # ==================== 单词挑战相关 Helper Functions ====================
 
@@ -512,12 +365,9 @@ def add_vocabulary_word():
             'is_favorited': False  # 默认未收藏
         }
 
-        # 添加到对应子分类
+        # 添加到对应子分类（发音由页面点击时实时取有道词典，不再提前用 TTS 生成）
         category_data['subcategories'][subcategory_id]['words'].append(word_obj)
         save_category_data(category, category_data)
-
-        # 添加到音频生成任务队列
-        add_audio_task(word_id, word, category, subcategory_id)
 
         return jsonify({'success': True, 'data': word_obj})
     except Exception as e:
@@ -540,7 +390,7 @@ def upload_vocabulary_csv():
         if file.filename == '':
             return jsonify({'success': False, 'error': '没有选择文件'}), 400
 
-        if not file.filename.endswith('.csv'):
+        if not file.filename.lower().endswith('.csv'):
             return jsonify({'success': False, 'error': '只支持CSV文件'}), 400
 
         # 读取CSV文件
@@ -561,8 +411,14 @@ def upload_vocabulary_csv():
 
         added_words = []
         skipped_words = []
+        invalid_rows = 0  # 只有一列（没有释义那一列）的行
+        first_row = True
 
         for row in csv_reader:
+            is_first_row, first_row = first_row, False
+            # 页面导出的 CSV 第一行是表头「单词,词义,…」，再导入时跳过，别当成一个单词
+            if is_first_row and is_csv_header(row):
+                continue
             if len(row) >= 2:
                 word = row[0].strip()
                 meaning = row[1].strip()
@@ -589,9 +445,16 @@ def upload_vocabulary_csv():
                 category_data['subcategories'][subcategory_id]['words'].append(word_obj)
                 added_words.append(word_obj)
                 existing_words.add(word.lower())
+            elif row and row[0].strip():
+                invalid_rows += 1
 
-                # 添加到音频生成任务队列
-                add_audio_task(word_id, word, category, subcategory_id)
+        # 一行能用的都没有、却有只写了一列的行：多半是用了中文逗号或漏了释义列，明确告诉用户而不是静默导入 0 个
+        if not added_words and not skipped_words and invalid_rows:
+            return jsonify({
+                'success': False,
+                'error': '没有读到单词：每行要有两列，第一列单词、第二列释义，中间用英文逗号分隔',
+                'invalid_count': invalid_rows
+            }), 400
 
         save_category_data(category, category_data)
 
@@ -599,7 +462,8 @@ def upload_vocabulary_csv():
             'success': True,
             'added_count': len(added_words),
             'skipped_count': len(skipped_words),
-            'skipped_words': skipped_words[:10]  # 只返回前10个重复的单词
+            'skipped_words': skipped_words[:10],  # 只返回前10个重复的单词
+            'invalid_count': invalid_rows
         })
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -763,36 +627,3 @@ def serve_vocabulary_audio(word_id):
         return jsonify({'error': '音频文件不存在'}), 404
     except Exception as e:
         return jsonify({'error': str(e)}), 404
-
-@vocabulary_bp.route('/api/vocabulary/regenerate_audio/<word_id>', methods=['POST'])
-def regenerate_vocabulary_audio(word_id):
-    """重新生成单词音频"""
-    try:
-        # 查找单词
-        target_word = None
-        target_category = None
-        target_subcategory = None
-
-        for category in ['listening', 'speaking', 'reading', 'writing']:
-            category_data = load_category_data(category)
-            for subcategory_id in category_data['subcategories']:
-                for word_obj in category_data['subcategories'][subcategory_id]['words']:
-                    if word_obj['id'] == word_id:
-                        target_word = word_obj
-                        target_category = category
-                        target_subcategory = subcategory_id
-                        break
-                if target_word:
-                    break
-            if target_word:
-                break
-
-        if not target_word:
-            return jsonify({'success': False, 'error': '单词不存在'}), 404
-
-        # 添加到音频生成任务队列
-        add_audio_task(word_id, target_word['word'], target_category, target_subcategory)
-
-        return jsonify({'success': True, 'message': '音频重新生成任务已添加到队列'})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
