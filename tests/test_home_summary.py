@@ -255,7 +255,10 @@ class HomeSummaryTestCase(unittest.TestCase):
         self.assertEqual(resume["title"], "模板写作 · 观点类 · 第二段")
         self.assertEqual(resume["sentence"], "城市越来越拥挤。")
         self.assertEqual(resume["score"], 5.5)
-        self.assertEqual(resume["at"], self.this_week_later)
+        # 带上服务器时区，浏览器在别的时区也能算对「几天前」
+        sent = datetime.fromisoformat(resume["at"])
+        self.assertIsNotNone(sent.tzinfo)
+        self.assertEqual(sent.replace(tzinfo=None), datetime.fromisoformat(self.this_week_later))
 
     def test_resume_falls_back_to_listening(self):
         self.seed_all()

@@ -44,6 +44,13 @@ def _parse_time(value):
     return moment
 
 
+def _with_zone(value):
+    """各模块存的是不带时区的服务器本地时间；发给浏览器前补上时区，
+    浏览器在别的时区也能把「昨天 21:40」「2 天前」算对。"""
+    moment = _parse_time(value)
+    return moment.astimezone().isoformat() if moment else ""
+
+
 def _since(value, start):
     moment = _parse_time(value)
     return moment is not None and moment >= start
@@ -207,7 +214,7 @@ def _post_brief(post):
         kind, summary = "image", "分享了图片"
     else:
         kind, summary = "other", "发了一条帖子"
-    return {"who": who, "kind": kind, "text": summary, "at": post.get("timestamp", "")}
+    return {"who": who, "kind": kind, "text": summary, "at": _with_zone(post.get("timestamp"))}
 
 
 def _board_stats(username):
@@ -273,7 +280,7 @@ def _resume(writing_records, projects):
             "title": _writing_resume_title(last_writing),
             "sentence": last_writing.get("target_chinese") or "",
             "score": _score_value(last_writing.get("score")),
-            "at": last_writing["timestamp"],
+            "at": _with_zone(last_writing["timestamp"]),
             "url": "/writing_practice",
         })
     done = [p for p in projects if p.get("status") == "completed" and p.get("id")]
@@ -285,10 +292,10 @@ def _resume(writing_records, projects):
             "title": last_listening.get("title") or "听力精听",
             "checkins": _int(last_listening.get("checkin_count")),
             "mastered": bool(last_listening.get("mastered")),
-            "at": last_listening.get("updated_at") or last_listening.get("created_at") or "",
+            "at": _with_zone(last_listening.get("updated_at") or last_listening.get("created_at")),
             "url": "/listening_review?project=" + quote(str(last_listening["id"]), safe=""),
         })
-    return max(candidates, key=lambda c: str(c["at"]), default=None)
+    return max(candidates, key=lambda c: _parse_time(c["at"]) or datetime.min, default=None)
 
 
 @home_bp.route("/api/home", methods=["GET"])
