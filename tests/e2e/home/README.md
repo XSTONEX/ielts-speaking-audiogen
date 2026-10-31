@@ -30,7 +30,7 @@ for d in /tmp/home_full /tmp/home_empty; do mkdir -p $d && git ls-files -co --ex
 2. 两个沙盒各起一个服务。启动时断网、清空 API 密钥，免得调用付费接口：
 
 ```bash
-cd /tmp/home_full && env -u NO_PROXY HTTP_PROXY=http://127.0.0.1:9 HTTPS_PROXY=http://127.0.0.1:9 ALL_PROXY=http://127.0.0.1:9 http_proxy=http://127.0.0.1:9 https_proxy=http://127.0.0.1:9 all_proxy=http://127.0.0.1:9 DEER_API_KEY= WILDAPI_API_KEY= GROQ_API_KEY= SILICONFLOW_API_KEY= PYTHONDONTWRITEBYTECODE=1 /Users/shiqiwen/my_project/ielts-speaking-audiogen/.venv/bin/python -c 'from app import app; app.run(port=5062)'
+cd /tmp/home_full && env -u NO_PROXY HTTP_PROXY=http://127.0.0.1:9 HTTPS_PROXY=http://127.0.0.1:9 ALL_PROXY=http://127.0.0.1:9 http_proxy=http://127.0.0.1:9 https_proxy=http://127.0.0.1:9 all_proxy=http://127.0.0.1:9 DEER_API_KEY= WILDAPI_API_KEY= GROQ_API_KEY= SILICONFLOW_API_KEY= DEEPSEEK_API_KEY= PYTHONDONTWRITEBYTECODE=1 /Users/shiqiwen/my_project/ielts-speaking-audiogen/.venv/bin/python -c 'from app import app; app.run(port=5062)'
 ```
 
 另一个沙盒命令相同，把目录换成 `/tmp/home_empty`、端口换成 5063。不要用 5060 / 5061，Chrome 认为那两个端口不安全，会直接拒绝打开。
