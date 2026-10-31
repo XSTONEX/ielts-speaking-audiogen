@@ -388,14 +388,12 @@ body.has-app-shell {
 body.has-app-shell.page-writing-practice .practice-header { top: var(--app-shell-h); } /* sticky essay header */
 
 /* Top-anchored toasts → nudge below the nav so notifications aren't hidden behind it */
-body.has-app-shell.page-vocabulary .notification { top: calc(var(--app-shell-h) + 16px); }
 body.has-app-shell.page-audio-transcription .toast { top: calc(var(--app-shell-h) + 16px); }
 
 /* Full-screen / side overlays → lift above the nav so their own controls aren't covered */
 body.has-app-shell.page-intensive .viewer { z-index: 1300; }
 body.has-app-shell.page-intensive .highlights-panel { z-index: 1400; }
 body.has-app-shell.page-writing-practice .review-overlay { z-index: 1300; }
-body.has-app-shell.page-vocabulary .modal { z-index: 1300; }
 
 .app-shell-brand {
   flex: 0 0 auto;
@@ -880,7 +878,6 @@ html[data-theme="dark"] body.page-modules .wrap,
 html[data-theme="dark"] body.page-speaking .container,
 html[data-theme="dark"] body.page-combined .container,
 html[data-theme="dark"] body.page-reading .container,
-html[data-theme="dark"] body.page-vocabulary .main-content,
 html[data-theme="dark"] body.page-intensive .container,
 html[data-theme="dark"] body.page-intensive-new .container,
 html[data-theme="dark"] body.page-vocab-summary .container,
@@ -889,23 +886,6 @@ html[data-theme="dark"] body.page-study-techniques .container {
   color: var(--text-primary);
   border: 1px solid var(--border-default);
   box-shadow: 0 20px 48px rgba(var(--shadow-rgb), 0.26);
-}
-
-html[data-theme="dark"] body.page-vocabulary .word-card,
-html[data-theme="dark"] body.page-vocabulary .subcategory-link,
-html[data-theme="dark"] body.page-vocabulary .quick-add,
-html[data-theme="dark"] body.page-vocabulary .quick-input,
-html[data-theme="dark"] body.page-vocabulary .sort-select,
-html[data-theme="dark"] body.page-vocabulary .sort-label,
-html[data-theme="dark"] body.page-vocabulary .word-title,
-html[data-theme="dark"] body.page-vocabulary .word-meaning,
-html[data-theme="dark"] body.page-vocabulary .word-meta,
-html[data-theme="dark"] body.page-vocabulary .audio-status,
-html[data-theme="dark"] body.page-vocabulary .subcategory-name,
-html[data-theme="dark"] body.page-vocabulary .subcategory-count,
-html[data-theme="dark"] body.page-vocabulary .subcategory-action,
-html[data-theme="dark"] body.page-vocabulary .word-action-btn {
-  color: var(--text-primary);
 }
 
 html[data-theme="dark"] body.page-modules h1,
@@ -925,9 +905,6 @@ html[data-theme="dark"] body.page-speaking .audio-folder,
 html[data-theme="dark"] body.page-combined .folder-card,
 html[data-theme="dark"] body.page-reading .card,
 html[data-theme="dark"] body.page-reading .item,
-html[data-theme="dark"] body.page-vocabulary .sidebar,
-html[data-theme="dark"] body.page-vocabulary .tab.active,
-html[data-theme="dark"] body.page-vocabulary .word-item-card,
 html[data-theme="dark"] body.page-intensive .section,
 html[data-theme="dark"] body.page-intensive .viewer,
 html[data-theme="dark"] body.page-intensive .viewer .header,
@@ -977,7 +954,6 @@ html[data-theme="dark"] body.page-audio-transcription .header {
 }
 
 html[data-theme="dark"] body.page-audio-transcription .header,
-html[data-theme="dark"] body.page-vocabulary .header,
 html[data-theme="dark"] body.page-vocab-summary .challenge-header,
 html[data-theme="dark"] body.page-login .logo,
 html[data-theme="dark"] body.page-combined .category-btn.active,
@@ -987,11 +963,6 @@ html[data-theme="dark"] body.page-audio-transcription .record-btn.primary {
   background-image: var(--header-gradient) !important;
 }
 
-html[data-theme="dark"] body.page-vocabulary .header,
-html[data-theme="dark"] body.page-vocabulary .header h1,
-html[data-theme="dark"] body.page-vocabulary .header p,
-html[data-theme="dark"] body.page-vocabulary .header kbd,
-html[data-theme="dark"] body.page-vocabulary .back-btn,
 html[data-theme="dark"] body.page-audio-transcription .header,
 html[data-theme="dark"] body.page-audio-transcription .header h1,
 html[data-theme="dark"] body.page-audio-transcription .header p,
@@ -999,7 +970,6 @@ html[data-theme="dark"] body.page-audio-transcription .back-btn {
   color: #fff !important;
 }
 
-html[data-theme="dark"] body.page-vocabulary .back-btn,
 html[data-theme="dark"] body.page-audio-transcription .back-btn {
   border-color: rgba(255, 255, 255, 0.32) !important;
 }
@@ -1020,9 +990,6 @@ html[data-theme="dark"] body.page-combined .folder-info,
 html[data-theme="dark"] body.page-reading .user-info,
 html[data-theme="dark"] body.page-reading .card h3,
 html[data-theme="dark"] body.page-reading .btn.outline,
-html[data-theme="dark"] body.page-vocabulary .sort-subcategories-select,
-html[data-theme="dark"] body.page-vocabulary .tab,
-html[data-theme="dark"] body.page-vocabulary .sidebar *,
 html[data-theme="dark"] body.page-intensive .muted,
 html[data-theme="dark"] body.page-intensive .muted,
 html[data-theme="dark"] body.page-intensive .viewer .title,
@@ -1039,7 +1006,6 @@ html[data-theme="dark"] body.page-audio-transcription .recording-hint {
 html[data-theme="dark"] body.page-modules .title,
 html[data-theme="dark"] body.page-speaking h2,
 html[data-theme="dark"] body.page-reading .card h3,
-html[data-theme="dark"] body.page-vocabulary .header h1,
 html[data-theme="dark"] body.page-intensive h2,
 html[data-theme="dark"] body.page-intensive .viewer .title,
 html[data-theme="dark"] body.page-vocab-summary .article-title,
@@ -1147,8 +1113,6 @@ html[data-theme="dark"] body.page-speaking .audio-question,
 html[data-theme="dark"] body.page-combined .folder-card,
 html[data-theme="dark"] body.page-reading .card,
 html[data-theme="dark"] body.page-reading .item,
-html[data-theme="dark"] body.page-vocabulary .tabs,
-html[data-theme="dark"] body.page-vocabulary .sidebar,
 html[data-theme="dark"] body.page-intensive .card,
 html[data-theme="dark"] body.page-intensive .section,
 html[data-theme="dark"] body.page-vocab-summary .article-item,
@@ -1157,7 +1121,6 @@ html[data-theme="dark"] body.page-audio-transcription .recording-section {
   background: var(--bg-muted) !important;
 }
 
-html[data-theme="dark"] body.page-vocabulary .back-btn,
 html[data-theme="dark"] body.page-study-techniques .back-btn,
 html[data-theme="dark"] body.page-modules #userDisplay button,
 html[data-theme="dark"] body.page-reading .btn.outline,
@@ -1171,7 +1134,6 @@ html[data-theme="dark"] body.page-audio-transcription .record-btn.secondary {
   border-color: var(--border-default) !important;
 }
 
-html[data-theme="dark"] body.page-vocabulary .tab.active,
 html[data-theme="dark"] body.page-vocab-summary .btn.primary,
 html[data-theme="dark"] body.page-intensive .toolbar .btn,
 html[data-theme="dark"] body.page-intensive .action-btn.primary,
@@ -1186,134 +1148,6 @@ html[data-theme="dark"] body.page-combined audio,
 html[data-theme="dark"] body.page-intensive audio,
 html[data-theme="dark"] body.page-audio-transcription audio {
   filter: brightness(0.9);
-}
-
-html[data-theme="dark"] body.page-vocabulary .subcategory-link {
-  background: var(--bg-surface) !important;
-  color: var(--text-primary) !important;
-  border: 2px solid transparent !important;
-}
-
-html[data-theme="dark"] body.page-vocabulary .subcategory-link:hover {
-  border-color: var(--border-strong) !important;
-  background: var(--bg-muted) !important;
-}
-
-html[data-theme="dark"] body.page-vocabulary .subcategory-link.active {
-  border-color: var(--accent) !important;
-  background: var(--accent-soft) !important;
-  color: var(--accent-hover) !important;
-}
-
-html[data-theme="dark"] body.page-vocabulary .subcategory-count,
-html[data-theme="dark"] body.page-vocabulary .word-meta {
-  color: var(--text-muted) !important;
-}
-
-html[data-theme="dark"] body.page-vocabulary .quick-add {
-  background: var(--bg-muted) !important;
-  border-color: var(--border-default) !important;
-}
-
-html[data-theme="dark"] body.page-vocabulary .quick-add:hover {
-  background: var(--accent-soft) !important;
-  border-color: var(--accent) !important;
-}
-
-html[data-theme="dark"] body.page-vocabulary .quick-input,
-html[data-theme="dark"] body.page-vocabulary .sort-select {
-  background: var(--bg-surface) !important;
-  color: var(--text-primary) !important;
-  border-color: var(--border-default) !important;
-}
-
-html[data-theme="dark"] body.page-vocabulary .word-card {
-  background: var(--bg-surface) !important;
-  border-color: var(--border-default) !important;
-  box-shadow: 0 12px 28px rgba(var(--shadow-rgb), 0.18) !important;
-}
-
-html[data-theme="dark"] body.page-vocabulary .word-card:hover {
-  border-color: var(--accent) !important;
-  box-shadow: 0 18px 36px rgba(var(--shadow-rgb), 0.24) !important;
-}
-
-html[data-theme="dark"] body.page-vocabulary .word-card.playing {
-  border-color: var(--success) !important;
-  background: rgba(52, 211, 153, 0.12) !important;
-}
-
-html[data-theme="dark"] body.page-vocabulary .word-card.favorited {
-  border-color: #fbbf24 !important;
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.14) 0%, rgba(251, 191, 36, 0.08) 100%) !important;
-  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.12) !important;
-}
-
-html[data-theme="dark"] body.page-vocabulary .word-card.favorited:hover {
-  border-color: #fcd34d !important;
-  box-shadow: 0 14px 28px rgba(245, 158, 11, 0.18) !important;
-}
-
-html[data-theme="dark"] body.page-vocabulary .word-title {
-  color: var(--text-primary) !important;
-}
-
-html[data-theme="dark"] body.page-vocabulary .word-meaning {
-  color: var(--text-secondary) !important;
-}
-
-html[data-theme="dark"] body.page-vocabulary .word-action-btn {
-  background: transparent !important;
-}
-
-html[data-theme="dark"] body.page-vocabulary .favorite-btn {
-  /* 原 #475569 压在卡片底色 #101b2d 上只有 2.28，未收藏的星标几乎看不见 */
-  color: var(--text-muted) !important;
-}
-
-html[data-theme="dark"] body.page-vocabulary .favorite-btn:hover {
-  background: rgba(251, 191, 36, 0.16) !important;
-  color: #fbbf24 !important;
-}
-
-html[data-theme="dark"] body.page-vocabulary .favorite-btn.favorited {
-  color: #fbbf24 !important;
-  text-shadow: 0 0 8px rgba(251, 191, 36, 0.28) !important;
-}
-
-html[data-theme="dark"] body.page-vocabulary .delete-btn {
-  color: #fca5a5 !important;
-}
-
-html[data-theme="dark"] body.page-vocabulary .delete-btn:hover {
-  background: rgba(248, 113, 113, 0.16) !important;
-  color: #f87171 !important;
-}
-
-html[data-theme="dark"] body.page-vocabulary .edit-subcategory-btn {
-  background: #c2410c !important;
-  color: #fff !important;
-}
-
-html[data-theme="dark"] body.page-vocabulary .edit-subcategory-btn:hover {
-  background: #ea580c !important;
-}
-
-html[data-theme="dark"] body.page-vocabulary .delete-subcategory-btn {
-  background: #b91c1c !important;
-  color: #fff !important;
-}
-
-html[data-theme="dark"] body.page-vocabulary .delete-subcategory-btn:hover {
-  background: #dc2626 !important;
-}
-
-html[data-theme="dark"] body.page-vocabulary .audio-status.audio-ready {
-  color: #86efac !important;
-}
-
-html[data-theme="dark"] body.page-vocabulary .audio-status.audio-generating {
-  color: #fbbf24 !important;
 }
 
 html[data-theme="dark"] body.page-intensive .audio-panel {
