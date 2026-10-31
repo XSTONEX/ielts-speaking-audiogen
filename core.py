@@ -548,8 +548,9 @@ def get_vocab_audio_path(article_id, word):
     # article_id 会被拼进路径（还会 makedirs），必须是单段安全文件名
     if not is_safe_path_segment(article_id):
         raise ValueError(f'无效的文章ID: {article_id!r}')
+    # 只算路径，不建目录：/vocab_audio/<文章>/<词> 不用登录就能访问，
+    # 以前每请求一个不存在的文章都会留下一个空文件夹。目录在真正写文件时再建。
     article_audio_dir = os.path.join(VOCAB_AUDIO_DIR, article_id)
-    os.makedirs(article_audio_dir, exist_ok=True)
 
     word_hash = hashlib.md5(word.lower().encode('utf-8')).hexdigest()
     filename = f"{word_hash}.mp3"
@@ -578,6 +579,7 @@ def generate_and_save_vocab_audio(article_id, word):
     try:
         response = requests.post(url, headers=headers, data=payload, timeout=10)
         if response.status_code == 200:
+            os.makedirs(os.path.dirname(audio_path), exist_ok=True)
             with open(audio_path, 'wb') as f:
                 f.write(response.content)
             print(f"Generated audio for word '{word}' in article '{article_id}'")

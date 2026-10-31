@@ -1108,21 +1108,9 @@ def create_vocab_summary_challenge():
             'word_count': len(vocabulary)
         }
 
-        # 异步生成所有词汇的音频
-        def _generate_vocab_summary_audio():
-            try:
-                for vocab in vocabulary:
-                    word = vocab.get('word', '').strip()
-                    if word:
-                        generate_challenge_vocab_audio(challenge_id, word)
-                        time.sleep(0.5)  # 避免API频率限制
-                print(f"词汇汇总挑战 {challenge_id} 的音频生成完成")
-            except Exception as e:
-                print(f"词汇汇总挑战 {challenge_id} 音频生成失败: {e}")
-
-        thread = threading.Thread(target=_generate_vocab_summary_audio, daemon=True)
-        thread.start()
-
+        # 不再给挑战单独生成发音：以前每开一局都给这局的每个词调一次付费 TTS（存进新的
+        # challenge_<id> 文件夹），可这些词在精读里划高亮时已经生成过发音了。
+        # 词汇汇总页现在直接放 /vocab_audio/<文章ID>/<词>，没有的再用有道词典的发音。
         return jsonify({
             'success': True,
             'challenge': challenge_data
