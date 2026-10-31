@@ -302,7 +302,7 @@ async function testDetail(browser) {
   check('detail meta 1:03 · 16 句', (await page.textContent('#detailMeta')) === '1:03 · 16 句', await page.textContent('#detailMeta'));
   check('16 lines', (await page.$$('.lr-line')).length === 16);
   check('side panel visible at 1280', await visible(page, '#notesSide'));
-  const nums = await page.$$eval('.lr-side__num', els => els.map(e => e.textContent));
+  const nums = await page.$$eval('.lr-side__num', els => els.filter(e => e.offsetParent !== null).map(e => e.textContent));   // 导入的篇才有的「答对」格平时藏着
   check('side nums 打卡3 收藏3 笔记/生词5', nums.join(',') === '3,3,5', nums);
   check('side lists 5 entries', (await page.$$('#notesViewBody .lr-entry')).length === 5);
   check('notes button count 5', (await page.textContent('#notesCount')) === '5');

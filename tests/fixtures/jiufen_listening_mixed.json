@@ -1,0 +1,437 @@
+{
+ "code": 0,
+ "msg": "ok",
+ "data": {
+  "channel": "listening",
+  "sessionType": "user_mixed_composition",
+  "title": "组卷练习 · Listening",
+  "submittedAt": "2026-10-31 16:27:31",
+  "elapsedSeconds": 1800,
+  "details": [],
+  "parts": [
+   {
+    "id": "9200000000000000002",
+    "partNum": "Part 2",
+    "title": null,
+    "sortNo": 1,
+    "channel": "listening",
+    "audioUrl": "https://static.example.com/practice/part/ferry.mp3",
+    "article": null,
+    "articleJson": "{\r\n  \"language_code\": \"eng\",\r\n  \"segments\": [\r\n    {\r\n      \"text\": \"Part 2.\",\r\n      \"start_time\": 3.9,\r\n      \"end_time\": 5.0,\r\n      \"speaker\": {\r\n        \"id\": \"speaker_0\",\r\n        \"name\": \"Speaker 0\"\r\n      },\r\n      \"words\": [\r\n        {\r\n          \"text\": \"Part\",\r\n          \"start_time\": 3.9,\r\n          \"end_time\": 4.2,\r\n          \"sentence_index\": 0\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 4.2,\r\n          \"end_time\": 4.2,\r\n          \"sentence_index\": 0\r\n        },\r\n        {\r\n          \"text\": \"2.\",\r\n          \"start_time\": 4.2,\r\n          \"end_time\": 4.5,\r\n          \"sentence_index\": 0\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 4.5,\r\n          \"end_time\": 4.5,\r\n          \"sentence_index\": 0\r\n        }\r\n      ],\r\n      \"sentences\": [\r\n        {\r\n          \"sentence_index\": 0,\r\n          \"text\": \"Part 2.\",\r\n          \"start_time\": 3.9,\r\n          \"end_time\": 5.0,\r\n          \"word_count\": 2\r\n        }\r\n      ]\r\n    },\r\n    {\r\n      \"text\": \"You will hear a guide talking about a harbour ferry tour.\",\r\n      \"start_time\": 5.2,\r\n      \"end_time\": 9.8,\r\n      \"speaker\": {\r\n        \"id\": \"speaker_0\",\r\n        \"name\": \"Speaker 0\"\r\n      },\r\n      \"words\": [\r\n        {\r\n          \"text\": \"You\",\r\n          \"start_time\": 5.2,\r\n          \"end_time\": 5.5,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 5.5,\r\n          \"end_time\": 5.5,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \"will\",\r\n          \"start_time\": 5.5,\r\n          \"end_time\": 5.8,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 5.8,\r\n          \"end_time\": 5.8,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \"hear\",\r\n          \"start_time\": 5.8,\r\n          \"end_time\": 6.1,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 6.1,\r\n          \"end_time\": 6.1,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \"a\",\r\n          \"start_time\": 6.1,\r\n          \"end_time\": 6.4,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 6.4,\r\n          \"end_time\": 6.4,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \"guide\",\r\n          \"start_time\": 6.4,\r\n          \"end_time\": 6.7,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 6.7,\r\n          \"end_time\": 6.7,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \"talking\",\r\n          \"start_time\": 6.7,\r\n          \"end_time\": 7.0,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 7.0,\r\n          \"end_time\": 7.0,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \"about\",\r\n          \"start_time\": 7.0,\r\n          \"end_time\": 7.3,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 7.3,\r\n          \"end_time\": 7.3,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \"a\",\r\n          \"start_time\": 7.3,\r\n          \"end_time\": 7.6,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 7.6,\r\n          \"end_time\": 7.6,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \"harbour\",\r\n          \"start_time\": 7.6,\r\n          \"end_time\": 7.9,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 7.9,\r\n          \"end_time\": 7.9,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \"ferry\",\r\n          \"start_time\": 7.9,\r\n          \"end_time\": 8.2,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 8.2,\r\n          \"end_time\": 8.2,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \"tour.\",\r\n          \"start_time\": 8.2,\r\n          \"end_time\": 8.5,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 8.5,\r\n          \"end_time\": 8.5,\r\n          \"sentence_index\": 1\r\n        }\r\n      ],\r\n      \"sentences\": [\r\n        {\r\n          \"sentence_index\": 1,\r\n          \"text\": \"You will hear a guide talking about a harbour ferry tour.\",\r\n          \"start_time\": 5.2,\r\n          \"end_time\": 9.8,\r\n          \"word_count\": 11\r\n        }\r\n      ]\r\n    },\r\n    {\r\n      \"text\": \"Now listen carefully and answer questions 11 to 14.\",\r\n      \"start_time\": 10.0,\r\n      \"end_time\": 41.0,\r\n      \"speaker\": {\r\n        \"id\": \"speaker_0\",\r\n        \"name\": \"Speaker 0\"\r\n      },\r\n      \"words\": [\r\n        {\r\n          \"text\": \"Now\",\r\n          \"start_time\": 10.0,\r\n          \"end_time\": 37.5,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 37.5,\r\n          \"end_time\": 37.5,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \"listen\",\r\n          \"start_time\": 37.5,\r\n          \"end_time\": 37.8,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 37.8,\r\n          \"end_time\": 37.8,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \"carefully\",\r\n          \"start_time\": 37.8,\r\n          \"end_time\": 38.1,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 38.1,\r\n          \"end_time\": 38.1,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \"and\",\r\n          \"start_time\": 38.1,\r\n          \"end_time\": 38.4,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 38.4,\r\n          \"end_time\": 38.4,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \"answer\",\r\n          \"start_time\": 38.4,\r\n          \"end_time\": 38.7,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 38.7,\r\n          \"end_time\": 38.7,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \"questions\",\r\n          \"start_time\": 38.7,\r\n          \"end_time\": 39.0,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 39.0,\r\n          \"end_time\": 39.0,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \"11\",\r\n          \"start_time\": 39.0,\r\n          \"end_time\": 39.3,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 39.3,\r\n          \"end_time\": 39.3,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \"to\",\r\n          \"start_time\": 39.3,\r\n          \"end_time\": 39.6,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 39.6,\r\n          \"end_time\": 39.6,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \"14.\",\r\n          \"start_time\": 39.6,\r\n          \"end_time\": 39.9,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 39.9,\r\n          \"end_time\": 39.9,\r\n          \"sentence_index\": 2\r\n        }\r\n      ],\r\n      \"sentences\": [\r\n        {\r\n          \"sentence_index\": 2,\r\n          \"text\": \"Now listen carefully and answer questions 11 to 14.\",\r\n          \"start_time\": 10.0,\r\n          \"end_time\": 41.0,\r\n          \"word_count\": 9\r\n        }\r\n      ]\r\n    },\r\n    {\r\n      \"text\": \"For now the island can only be reached by the little ferry.\",\r\n      \"start_time\": 41.4,\r\n      \"end_time\": 46.0,\r\n      \"speaker\": {\r\n        \"id\": \"speaker_1\",\r\n        \"name\": \"Speaker 1\"\r\n      },\r\n      \"words\": [\r\n        {\r\n          \"text\": \"For\",\r\n          \"start_time\": 41.4,\r\n          \"end_time\": 41.7,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 41.7,\r\n          \"end_time\": 41.7,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \"now\",\r\n          \"start_time\": 41.7,\r\n          \"end_time\": 42.0,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 42.0,\r\n          \"end_time\": 42.0,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \"the\",\r\n          \"start_time\": 42.0,\r\n          \"end_time\": 42.3,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 42.3,\r\n          \"end_time\": 42.3,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \"island\",\r\n          \"start_time\": 42.3,\r\n          \"end_time\": 42.6,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 42.6,\r\n          \"end_time\": 42.6,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \"can\",\r\n          \"start_time\": 42.6,\r\n          \"end_time\": 42.9,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 42.9,\r\n          \"end_time\": 42.9,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \"only\",\r\n          \"start_time\": 42.9,\r\n          \"end_time\": 43.2,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 43.2,\r\n          \"end_time\": 43.2,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \"be\",\r\n          \"start_time\": 43.2,\r\n          \"end_time\": 43.5,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 43.5,\r\n          \"end_time\": 43.5,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \"reached\",\r\n          \"start_time\": 43.5,\r\n          \"end_time\": 43.8,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 43.8,\r\n          \"end_time\": 43.8,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \"by\",\r\n          \"start_time\": 43.8,\r\n          \"end_time\": 44.1,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 44.1,\r\n          \"end_time\": 44.1,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \"the\",\r\n          \"start_time\": 44.1,\r\n          \"end_time\": 44.4,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 44.4,\r\n          \"end_time\": 44.4,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \"little\",\r\n          \"start_time\": 44.4,\r\n          \"end_time\": 44.7,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 44.7,\r\n          \"end_time\": 44.7,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \"ferry.\",\r\n          \"start_time\": 44.7,\r\n          \"end_time\": 45.0,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 45.0,\r\n          \"end_time\": 45.0,\r\n          \"sentence_index\": 3\r\n        }\r\n      ],\r\n      \"sentences\": [\r\n        {\r\n          \"sentence_index\": 3,\r\n          \"text\": \"For now the island can only be reached by the little ferry.\",\r\n          \"start_time\": 41.4,\r\n          \"end_time\": 46.0,\r\n          \"word_count\": 12\r\n        }\r\n      ]\r\n    },\r\n    {\r\n      \"text\": \"The west bay is the best place for boat hire.\",\r\n      \"start_time\": 46.4,\r\n      \"end_time\": 49.9,\r\n      \"speaker\": {\r\n        \"id\": \"speaker_1\",\r\n        \"name\": \"Speaker 1\"\r\n      },\r\n      \"words\": [\r\n        {\r\n          \"text\": \"The\",\r\n          \"start_time\": 46.4,\r\n          \"end_time\": 46.7,\r\n          \"sentence_index\": 4\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 46.7,\r\n          \"end_time\": 46.7,\r\n          \"sentence_index\": 4\r\n        },\r\n        {\r\n          \"text\": \"west\",\r\n          \"start_time\": 46.7,\r\n          \"end_time\": 47.0,\r\n          \"sentence_index\": 4\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 47.0,\r\n          \"end_time\": 47.0,\r\n          \"sentence_index\": 4\r\n        },\r\n        {\r\n          \"text\": \"bay\",\r\n          \"start_time\": 47.0,\r\n          \"end_time\": 47.3,\r\n          \"sentence_index\": 4\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 47.3,\r\n          \"end_time\": 47.3,\r\n          \"sentence_index\": 4\r\n        },\r\n        {\r\n          \"text\": \"is\",\r\n          \"start_time\": 47.3,\r\n          \"end_time\": 47.6,\r\n          \"sentence_index\": 4\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 47.6,\r\n          \"end_time\": 47.6,\r\n          \"sentence_index\": 4\r\n        },\r\n        {\r\n          \"text\": \"the\",\r\n          \"start_time\": 47.6,\r\n          \"end_time\": 47.9,\r\n          \"sentence_index\": 4\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 47.9,\r\n          \"end_time\": 47.9,\r\n          \"sentence_index\": 4\r\n        },\r\n        {\r\n          \"text\": \"best\",\r\n          \"start_time\": 47.9,\r\n          \"end_time\": 48.2,\r\n          \"sentence_index\": 4\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 48.2,\r\n          \"end_time\": 48.2,\r\n          \"sentence_index\": 4\r\n        },\r\n        {\r\n          \"text\": \"place\",\r\n          \"start_time\": 48.2,\r\n          \"end_time\": 48.5,\r\n          \"sentence_index\": 4\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 48.5,\r\n          \"end_time\": 48.5,\r\n          \"sentence_index\": 4\r\n        },\r\n        {\r\n          \"text\": \"for\",\r\n          \"start_time\": 48.5,\r\n          \"end_time\": 48.8,\r\n          \"sentence_index\": 4\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 48.8,\r\n          \"end_time\": 48.8,\r\n          \"sentence_index\": 4\r\n        },\r\n        {\r\n          \"text\": \"boat\",\r\n          \"start_time\": 48.8,\r\n          \"end_time\": 49.1,\r\n          \"sentence_index\": 4\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 49.1,\r\n          \"end_time\": 49.1,\r\n          \"sentence_index\": 4\r\n        },\r\n        {\r\n          \"text\": \"hire.\",\r\n          \"start_time\": 49.1,\r\n          \"end_time\": 49.4,\r\n          \"sentence_index\": 4\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 49.4,\r\n          \"end_time\": 49.4,\r\n          \"sentence_index\": 4\r\n        }\r\n      ],\r\n      \"sentences\": [\r\n        {\r\n          \"sentence_index\": 4,\r\n          \"text\": \"The west bay is the best place for boat hire.\",\r\n          \"start_time\": 46.4,\r\n          \"end_time\": 49.9,\r\n          \"word_count\": 10\r\n        }\r\n      ]\r\n    },\r\n    {\r\n      \"text\": \"Campsites are mostly near the old harbour.\",\r\n      \"start_time\": 50.3,\r\n      \"end_time\": 53.8,\r\n      \"speaker\": {\r\n        \"id\": \"speaker_1\",\r\n        \"name\": \"Speaker 1\"\r\n      },\r\n      \"words\": [\r\n        {\r\n          \"text\": \"Campsites\",\r\n          \"start_time\": 50.3,\r\n          \"end_time\": 50.6,\r\n          \"sentence_index\": 5\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 50.6,\r\n          \"end_time\": 50.6,\r\n          \"sentence_index\": 5\r\n        },\r\n        {\r\n          \"text\": \"are\",\r\n          \"start_time\": 50.6,\r\n          \"end_time\": 50.9,\r\n          \"sentence_index\": 5\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 50.9,\r\n          \"end_time\": 50.9,\r\n          \"sentence_index\": 5\r\n        },\r\n        {\r\n          \"text\": \"mostly\",\r\n          \"start_time\": 50.9,\r\n          \"end_time\": 51.2,\r\n          \"sentence_index\": 5\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 51.2,\r\n          \"end_time\": 51.2,\r\n          \"sentence_index\": 5\r\n        },\r\n        {\r\n          \"text\": \"near\",\r\n          \"start_time\": 51.2,\r\n          \"end_time\": 51.5,\r\n          \"sentence_index\": 5\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 51.5,\r\n          \"end_time\": 51.5,\r\n          \"sentence_index\": 5\r\n        },\r\n        {\r\n          \"text\": \"the\",\r\n          \"start_time\": 51.5,\r\n          \"end_time\": 51.8,\r\n          \"sentence_index\": 5\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 51.8,\r\n          \"end_time\": 51.8,\r\n          \"sentence_index\": 5\r\n        },\r\n        {\r\n          \"text\": \"old\",\r\n          \"start_time\": 51.8,\r\n          \"end_time\": 52.1,\r\n          \"sentence_index\": 5\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 52.1,\r\n          \"end_time\": 52.1,\r\n          \"sentence_index\": 5\r\n        },\r\n        {\r\n          \"text\": \"harbour.\",\r\n          \"start_time\": 52.1,\r\n          \"end_time\": 52.4,\r\n          \"sentence_index\": 5\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 52.4,\r\n          \"end_time\": 52.4,\r\n          \"sentence_index\": 5\r\n        }\r\n      ],\r\n      \"sentences\": [\r\n        {\r\n          \"sentence_index\": 5,\r\n          \"text\": \"Campsites are mostly near the old harbour.\",\r\n          \"start_time\": 50.3,\r\n          \"end_time\": 53.8,\r\n          \"word_count\": 7\r\n        }\r\n      ]\r\n    },\r\n    {\r\n      \"text\": \"You can visit the bird hides by the lighthouse.\",\r\n      \"start_time\": 54.1,\r\n      \"end_time\": 57.0,\r\n      \"speaker\": {\r\n        \"id\": \"speaker_1\",\r\n        \"name\": \"Speaker 1\"\r\n      },\r\n      \"words\": [\r\n        {\r\n          \"text\": \"You\",\r\n          \"start_time\": 54.1,\r\n          \"end_time\": 54.4,\r\n          \"sentence_index\": 6\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 54.4,\r\n          \"end_time\": 54.4,\r\n          \"sentence_index\": 6\r\n        },\r\n        {\r\n          \"text\": \"can\",\r\n          \"start_time\": 54.4,\r\n          \"end_time\": 54.7,\r\n          \"sentence_index\": 6\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 54.7,\r\n          \"end_time\": 54.7,\r\n          \"sentence_index\": 6\r\n        },\r\n        {\r\n          \"text\": \"visit\",\r\n          \"start_time\": 54.7,\r\n          \"end_time\": 55.0,\r\n          \"sentence_index\": 6\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 55.0,\r\n          \"end_time\": 55.0,\r\n          \"sentence_index\": 6\r\n        },\r\n        {\r\n          \"text\": \"the\",\r\n          \"start_time\": 55.0,\r\n          \"end_time\": 55.3,\r\n          \"sentence_index\": 6\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 55.3,\r\n          \"end_time\": 55.3,\r\n          \"sentence_index\": 6\r\n        },\r\n        {\r\n          \"text\": \"bird\",\r\n          \"start_time\": 55.3,\r\n          \"end_time\": 55.6,\r\n          \"sentence_index\": 6\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 55.6,\r\n          \"end_time\": 55.6,\r\n          \"sentence_index\": 6\r\n        },\r\n        {\r\n          \"text\": \"hides\",\r\n          \"start_time\": 55.6,\r\n          \"end_time\": 55.9,\r\n          \"sentence_index\": 6\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 55.9,\r\n          \"end_time\": 55.9,\r\n          \"sentence_index\": 6\r\n        },\r\n        {\r\n          \"text\": \"by\",\r\n          \"start_time\": 55.9,\r\n          \"end_time\": 56.2,\r\n          \"sentence_index\": 6\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 56.2,\r\n          \"end_time\": 56.2,\r\n          \"sentence_index\": 6\r\n        },\r\n        {\r\n          \"text\": \"the\",\r\n          \"start_time\": 56.2,\r\n          \"end_time\": 56.5,\r\n          \"sentence_index\": 6\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 56.5,\r\n          \"end_time\": 56.5,\r\n          \"sentence_index\": 6\r\n        },\r\n        {\r\n          \"text\": \"lighthouse.\",\r\n          \"start_time\": 56.5,\r\n          \"end_time\": 56.8,\r\n          \"sentence_index\": 6\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 56.8,\r\n          \"end_time\": 56.8,\r\n          \"sentence_index\": 6\r\n        }\r\n      ],\r\n      \"sentences\": [\r\n        {\r\n          \"sentence_index\": 6,\r\n          \"text\": \"You can visit the bird hides by the lighthouse.\",\r\n          \"start_time\": 54.1,\r\n          \"end_time\": 57.0,\r\n          \"word_count\": 9\r\n        }\r\n      ]\r\n    }\r\n  ]\r\n}",
+    "groups": [
+     {
+      "id": "9200000000000000201",
+      "displayOrder": 1,
+      "type": "single-choice",
+      "qRange": "Question 11",
+      "title": null,
+      "description": "Choose the correct letter, <strong>A, B</strong> or <strong>C</strong>.",
+      "contentHtml": null,
+      "options": [],
+      "questions": [
+       {
+        "id": "9200000000000002011",
+        "questionGroupId": "9200000000000000201",
+        "qNumber": "11",
+        "displayOrder": 1,
+        "question": "Right now, visitors can get to the island by ",
+        "options": [
+         {
+          "optionNum": "A",
+          "option": "seaplane. ",
+          "displayOrder": 0
+         },
+         {
+          "optionNum": "B",
+          "option": "bridge. ",
+          "displayOrder": 1
+         },
+         {
+          "optionNum": "C",
+          "option": "ferry. ",
+          "displayOrder": 2
+         }
+        ],
+        "rightAnswer": "C",
+        "userAnswer": "A",
+        "state": "2",
+        "sentenceIndex": "3",
+        "analyses": [
+         {
+          "content": "现在只能坐小渡轮上岛。",
+          "displayOrder": 0,
+          "labelsOne": "解析",
+          "labelsTwo": null
+         },
+         {
+          "content": "Speaker: (evidence sentence)",
+          "displayOrder": 1,
+          "labelsOne": "句子",
+          "labelsTwo": null
+         },
+         {
+          "content": "水上飞机是以后的计划。",
+          "displayOrder": 2,
+          "labelsOne": null,
+          "labelsTwo": "干扰"
+         }
+        ],
+        "type": null
+       }
+      ]
+     },
+     {
+      "id": "9200000000000000202",
+      "displayOrder": 2,
+      "type": "matching",
+      "qRange": "Questions 12–14",
+      "title": null,
+      "description": "Where can visitors find the following?",
+      "contentHtml": "<table>\n <tr>\n  <td><strong>12.</strong> boat hire <input placeholder=\"12\"></td>\n </tr>\n <tr>\n  <td><strong>13.</strong> campsites <input placeholder=\"13\"></td>\n </tr>\n <tr>\n  <td><strong>14.</strong> bird hides <input placeholder=\"14\"></td>\n </tr>\n</table>",
+      "options": [
+       {
+        "optionNum": "A",
+        "option": "The West Bay ",
+        "displayOrder": 0
+       },
+       {
+        "optionNum": "B",
+        "option": "The Old Harbour ",
+        "displayOrder": 1
+       },
+       {
+        "optionNum": "C",
+        "option": "The Lighthouse ",
+        "displayOrder": 2
+       }
+      ],
+      "questions": [
+       {
+        "id": "9200000000000002012",
+        "questionGroupId": "9200000000000000202",
+        "qNumber": "12",
+        "displayOrder": 1,
+        "question": null,
+        "options": [
+         {
+          "optionNum": "A",
+          "option": "The West Bay ",
+          "displayOrder": 0
+         },
+         {
+          "optionNum": "B",
+          "option": "The Old Harbour ",
+          "displayOrder": 1
+         },
+         {
+          "optionNum": "C",
+          "option": "The Lighthouse ",
+          "displayOrder": 2
+         }
+        ],
+        "rightAnswer": "A",
+        "userAnswer": "A",
+        "state": "1",
+        "sentenceIndex": "4",
+        "analyses": [
+         {
+          "content": "西湾租船最方便。",
+          "displayOrder": 0,
+          "labelsOne": "解析",
+          "labelsTwo": null
+         },
+         {
+          "content": "Speaker: (evidence sentence)",
+          "displayOrder": 1,
+          "labelsOne": "句子",
+          "labelsTwo": null
+         }
+        ],
+        "type": null
+       },
+       {
+        "id": "9200000000000002013",
+        "questionGroupId": "9200000000000000202",
+        "qNumber": "13",
+        "displayOrder": 2,
+        "question": null,
+        "options": [
+         {
+          "optionNum": "A",
+          "option": "The West Bay ",
+          "displayOrder": 0
+         },
+         {
+          "optionNum": "B",
+          "option": "The Old Harbour ",
+          "displayOrder": 1
+         },
+         {
+          "optionNum": "C",
+          "option": "The Lighthouse ",
+          "displayOrder": 2
+         }
+        ],
+        "rightAnswer": "B",
+        "userAnswer": "C",
+        "state": "2",
+        "sentenceIndex": "5",
+        "analyses": [
+         {
+          "content": "营地大多在老港口附近。",
+          "displayOrder": 0,
+          "labelsOne": "解析",
+          "labelsTwo": null
+         },
+         {
+          "content": "Speaker: (evidence sentence)",
+          "displayOrder": 1,
+          "labelsOne": "句子",
+          "labelsTwo": null
+         }
+        ],
+        "type": null
+       },
+       {
+        "id": "9200000000000002014",
+        "questionGroupId": "9200000000000000202",
+        "qNumber": "14",
+        "displayOrder": 3,
+        "question": null,
+        "options": [
+         {
+          "optionNum": "A",
+          "option": "The West Bay ",
+          "displayOrder": 0
+         },
+         {
+          "optionNum": "B",
+          "option": "The Old Harbour ",
+          "displayOrder": 1
+         },
+         {
+          "optionNum": "C",
+          "option": "The Lighthouse ",
+          "displayOrder": 2
+         }
+        ],
+        "rightAnswer": "C",
+        "userAnswer": "C",
+        "state": "1",
+        "sentenceIndex": "6",
+        "analyses": [
+         {
+          "content": "观鸟屋在灯塔旁边。",
+          "displayOrder": 0,
+          "labelsOne": "解析",
+          "labelsTwo": null
+         },
+         {
+          "content": "Speaker: (evidence sentence)",
+          "displayOrder": 1,
+          "labelsOne": "句子",
+          "labelsTwo": null
+         }
+        ],
+        "type": null
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "9200000000000000004",
+    "partNum": "Part 4",
+    "title": null,
+    "sortNo": 3,
+    "channel": "listening",
+    "audioUrl": "https://static.example.com/practice/part/beekeeping.mp3",
+    "article": null,
+    "articleJson": "{\r\n  \"language_code\": \"eng\",\r\n  \"segments\": [\r\n    {\r\n      \"text\": \"Part 4.\",\r\n      \"start_time\": 3.7,\r\n      \"end_time\": 4.8,\r\n      \"speaker\": {\r\n        \"id\": \"speaker_0\",\r\n        \"name\": \"Speaker 0\"\r\n      },\r\n      \"words\": [\r\n        {\r\n          \"text\": \"Part\",\r\n          \"start_time\": 3.7,\r\n          \"end_time\": 4.0,\r\n          \"sentence_index\": 0\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 4.0,\r\n          \"end_time\": 4.0,\r\n          \"sentence_index\": 0\r\n        },\r\n        {\r\n          \"text\": \"4.\",\r\n          \"start_time\": 4.0,\r\n          \"end_time\": 4.3,\r\n          \"sentence_index\": 0\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 4.3,\r\n          \"end_time\": 4.3,\r\n          \"sentence_index\": 0\r\n        }\r\n      ],\r\n      \"sentences\": [\r\n        {\r\n          \"sentence_index\": 0,\r\n          \"text\": \"Part 4.\",\r\n          \"start_time\": 3.7,\r\n          \"end_time\": 4.8,\r\n          \"word_count\": 2\r\n        }\r\n      ]\r\n    },\r\n    {\r\n      \"text\": \"You will hear a talk about keeping bees in cities.\",\r\n      \"start_time\": 5.0,\r\n      \"end_time\": 8.0,\r\n      \"speaker\": {\r\n        \"id\": \"speaker_0\",\r\n        \"name\": \"Speaker 0\"\r\n      },\r\n      \"words\": [\r\n        {\r\n          \"text\": \"You\",\r\n          \"start_time\": 5.0,\r\n          \"end_time\": 5.3,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 5.3,\r\n          \"end_time\": 5.3,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \"will\",\r\n          \"start_time\": 5.3,\r\n          \"end_time\": 5.6,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 5.6,\r\n          \"end_time\": 5.6,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \"hear\",\r\n          \"start_time\": 5.6,\r\n          \"end_time\": 5.9,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 5.9,\r\n          \"end_time\": 5.9,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \"a\",\r\n          \"start_time\": 5.9,\r\n          \"end_time\": 6.2,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 6.2,\r\n          \"end_time\": 6.2,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \"talk\",\r\n          \"start_time\": 6.2,\r\n          \"end_time\": 6.5,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 6.5,\r\n          \"end_time\": 6.5,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \"about\",\r\n          \"start_time\": 6.5,\r\n          \"end_time\": 6.8,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 6.8,\r\n          \"end_time\": 6.8,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \"keeping\",\r\n          \"start_time\": 6.8,\r\n          \"end_time\": 7.1,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 7.1,\r\n          \"end_time\": 7.1,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \"bees\",\r\n          \"start_time\": 7.1,\r\n          \"end_time\": 7.4,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 7.4,\r\n          \"end_time\": 7.4,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \"in\",\r\n          \"start_time\": 7.4,\r\n          \"end_time\": 7.7,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 7.7,\r\n          \"end_time\": 7.7,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \"cities.\",\r\n          \"start_time\": 7.7,\r\n          \"end_time\": 8.0,\r\n          \"sentence_index\": 1\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 8.0,\r\n          \"end_time\": 8.0,\r\n          \"sentence_index\": 1\r\n        }\r\n      ],\r\n      \"sentences\": [\r\n        {\r\n          \"sentence_index\": 1,\r\n          \"text\": \"You will hear a talk about keeping bees in cities.\",\r\n          \"start_time\": 5.0,\r\n          \"end_time\": 8.0,\r\n          \"word_count\": 10\r\n        }\r\n      ]\r\n    },\r\n    {\r\n      \"text\": \"Now listen carefully and answer questions 31 to 32.\",\r\n      \"start_time\": 8.2,\r\n      \"end_time\": 50.0,\r\n      \"speaker\": {\r\n        \"id\": \"speaker_0\",\r\n        \"name\": \"Speaker 0\"\r\n      },\r\n      \"words\": [\r\n        {\r\n          \"text\": \"Now\",\r\n          \"start_time\": 8.2,\r\n          \"end_time\": 46.4,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 46.4,\r\n          \"end_time\": 46.4,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \"listen\",\r\n          \"start_time\": 46.4,\r\n          \"end_time\": 46.7,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 46.7,\r\n          \"end_time\": 46.7,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \"carefully\",\r\n          \"start_time\": 46.7,\r\n          \"end_time\": 47.0,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 47.0,\r\n          \"end_time\": 47.0,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \"and\",\r\n          \"start_time\": 47.0,\r\n          \"end_time\": 47.3,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 47.3,\r\n          \"end_time\": 47.3,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \"answer\",\r\n          \"start_time\": 47.3,\r\n          \"end_time\": 47.6,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 47.6,\r\n          \"end_time\": 47.6,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \"questions\",\r\n          \"start_time\": 47.6,\r\n          \"end_time\": 47.9,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 47.9,\r\n          \"end_time\": 47.9,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \"31\",\r\n          \"start_time\": 47.9,\r\n          \"end_time\": 48.2,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 48.2,\r\n          \"end_time\": 48.2,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \"to\",\r\n          \"start_time\": 48.2,\r\n          \"end_time\": 48.5,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 48.5,\r\n          \"end_time\": 48.5,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \"32.\",\r\n          \"start_time\": 48.5,\r\n          \"end_time\": 48.8,\r\n          \"sentence_index\": 2\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 48.8,\r\n          \"end_time\": 48.8,\r\n          \"sentence_index\": 2\r\n        }\r\n      ],\r\n      \"sentences\": [\r\n        {\r\n          \"sentence_index\": 2,\r\n          \"text\": \"Now listen carefully and answer questions 31 to 32.\",\r\n          \"start_time\": 8.2,\r\n          \"end_time\": 50.0,\r\n          \"word_count\": 9\r\n        }\r\n      ]\r\n    },\r\n    {\r\n      \"text\": \"Most city hives are kept on rooftops.\",\r\n      \"start_time\": 50.4,\r\n      \"end_time\": 53.5,\r\n      \"speaker\": {\r\n        \"id\": \"speaker_1\",\r\n        \"name\": \"Speaker 1\"\r\n      },\r\n      \"words\": [\r\n        {\r\n          \"text\": \"Most\",\r\n          \"start_time\": 50.4,\r\n          \"end_time\": 50.7,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 50.7,\r\n          \"end_time\": 50.7,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \"city\",\r\n          \"start_time\": 50.7,\r\n          \"end_time\": 51.0,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 51.0,\r\n          \"end_time\": 51.0,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \"hives\",\r\n          \"start_time\": 51.0,\r\n          \"end_time\": 51.3,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 51.3,\r\n          \"end_time\": 51.3,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \"are\",\r\n          \"start_time\": 51.3,\r\n          \"end_time\": 51.6,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 51.6,\r\n          \"end_time\": 51.6,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \"kept\",\r\n          \"start_time\": 51.6,\r\n          \"end_time\": 51.9,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 51.9,\r\n          \"end_time\": 51.9,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \"on\",\r\n          \"start_time\": 51.9,\r\n          \"end_time\": 52.2,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 52.2,\r\n          \"end_time\": 52.2,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \"rooftops.\",\r\n          \"start_time\": 52.2,\r\n          \"end_time\": 52.5,\r\n          \"sentence_index\": 3\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 52.5,\r\n          \"end_time\": 52.5,\r\n          \"sentence_index\": 3\r\n        }\r\n      ],\r\n      \"sentences\": [\r\n        {\r\n          \"sentence_index\": 3,\r\n          \"text\": \"Most city hives are kept on rooftops.\",\r\n          \"start_time\": 50.4,\r\n          \"end_time\": 53.5,\r\n          \"word_count\": 7\r\n        }\r\n      ]\r\n    },\r\n    {\r\n      \"text\": \"Beekeepers say it makes them feel calm.\",\r\n      \"start_time\": 53.9,\r\n      \"end_time\": 56.6,\r\n      \"speaker\": {\r\n        \"id\": \"speaker_1\",\r\n        \"name\": \"Speaker 1\"\r\n      },\r\n      \"words\": [\r\n        {\r\n          \"text\": \"Beekeepers\",\r\n          \"start_time\": 53.9,\r\n          \"end_time\": 54.2,\r\n          \"sentence_index\": 4\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 54.2,\r\n          \"end_time\": 54.2,\r\n          \"sentence_index\": 4\r\n        },\r\n        {\r\n          \"text\": \"say\",\r\n          \"start_time\": 54.2,\r\n          \"end_time\": 54.5,\r\n          \"sentence_index\": 4\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 54.5,\r\n          \"end_time\": 54.5,\r\n          \"sentence_index\": 4\r\n        },\r\n        {\r\n          \"text\": \"it\",\r\n          \"start_time\": 54.5,\r\n          \"end_time\": 54.8,\r\n          \"sentence_index\": 4\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 54.8,\r\n          \"end_time\": 54.8,\r\n          \"sentence_index\": 4\r\n        },\r\n        {\r\n          \"text\": \"makes\",\r\n          \"start_time\": 54.8,\r\n          \"end_time\": 55.1,\r\n          \"sentence_index\": 4\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 55.1,\r\n          \"end_time\": 55.1,\r\n          \"sentence_index\": 4\r\n        },\r\n        {\r\n          \"text\": \"them\",\r\n          \"start_time\": 55.1,\r\n          \"end_time\": 55.4,\r\n          \"sentence_index\": 4\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 55.4,\r\n          \"end_time\": 55.4,\r\n          \"sentence_index\": 4\r\n        },\r\n        {\r\n          \"text\": \"feel\",\r\n          \"start_time\": 55.4,\r\n          \"end_time\": 55.7,\r\n          \"sentence_index\": 4\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 55.7,\r\n          \"end_time\": 55.7,\r\n          \"sentence_index\": 4\r\n        },\r\n        {\r\n          \"text\": \"calm.\",\r\n          \"start_time\": 55.7,\r\n          \"end_time\": 56.0,\r\n          \"sentence_index\": 4\r\n        },\r\n        {\r\n          \"text\": \" \",\r\n          \"start_time\": 56.0,\r\n          \"end_time\": 56.0,\r\n          \"sentence_index\": 4\r\n        }\r\n      ],\r\n      \"sentences\": [\r\n        {\r\n          \"sentence_index\": 4,\r\n          \"text\": \"Beekeepers say it makes them feel calm.\",\r\n          \"start_time\": 53.9,\r\n          \"end_time\": 56.6,\r\n          \"word_count\": 7\r\n        }\r\n      ]\r\n    }\r\n  ]\r\n}",
+    "groups": [
+     {
+      "id": "9200000000000000401",
+      "displayOrder": 1,
+      "type": "fill-in-the-blank",
+      "qRange": "Questions 31–32",
+      "title": "Urban Beekeeping",
+      "title1": "Urban Beekeeping",
+      "description": "Complete the notes below.",
+      "contentHtml": "<p>• City hives are usually placed on <input placeholder=\"31\">.</p>\n<p>• Keeping bees makes people feel <input placeholder=\"32\">.</p>",
+      "options": [],
+      "questions": [
+       {
+        "id": "9200000000000004031",
+        "questionGroupId": "9200000000000000401",
+        "qNumber": "31",
+        "displayOrder": 1,
+        "question": null,
+        "options": [],
+        "rightAnswer": "rooftops",
+        "userAnswer": "rooftops",
+        "state": "1",
+        "sentenceIndex": "3",
+        "analyses": [
+         {
+          "content": "城里的蜂箱大多放在屋顶上。",
+          "displayOrder": 0,
+          "labelsOne": "解析",
+          "labelsTwo": null
+         },
+         {
+          "content": "Speaker: (evidence sentence)",
+          "displayOrder": 1,
+          "labelsOne": "句子",
+          "labelsTwo": null
+         }
+        ],
+        "type": null
+       },
+       {
+        "id": "9200000000000004032",
+        "questionGroupId": "9200000000000000401",
+        "qNumber": "32",
+        "displayOrder": 2,
+        "question": null,
+        "options": [],
+        "rightAnswer": "calm",
+        "userAnswer": "happy",
+        "state": "2",
+        "sentenceIndex": "4",
+        "analyses": [
+         {
+          "content": "养蜂人说这让他们觉得平静。",
+          "displayOrder": 0,
+          "labelsOne": "解析",
+          "labelsTwo": null
+         },
+         {
+          "content": "Speaker: (evidence sentence)",
+          "displayOrder": 1,
+          "labelsOne": "句子",
+          "labelsTwo": null
+         },
+         {
+          "content": "happy 是自己猜的，录音里没说。",
+          "displayOrder": 2,
+          "labelsOne": null,
+          "labelsTwo": "干扰"
+         }
+        ],
+        "type": null
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "children": [
+   {
+    "slot": "P4",
+    "partId": "9200000000000000004",
+    "resultId": "9200000000000000704",
+    "accuracy": 50.0,
+    "attempt": {
+     "id": "9200000000000000704",
+     "correctCount": 1,
+     "totalCount": 2,
+     "elapsedSeconds": null,
+     "submittedAt": "2026-10-31 16:27:31",
+     "parts": [
+      {
+       "id": "9200000000000000004"
+      }
+     ],
+     "details": []
+    },
+    "annotationSnapshot": {
+     "annotations": [
+      {
+       "id": "highlight-1",
+       "type": "highlight",
+       "partId": "9200000000000000004",
+       "area": "question",
+       "range": {
+        "start": 25,
+        "end": 31,
+        "text": "placed",
+        "rootScope": "question-group-static-v4:9200000000000000401"
+       }
+      },
+      {
+       "id": "highlight-2",
+       "type": "highlight",
+       "partId": "9200000000000000004",
+       "area": "question",
+       "range": {
+        "start": 65,
+        "end": 69,
+        "text": "feel",
+        "rootScope": "question-group-static-v4:9200000000000000401"
+       }
+      }
+     ]
+    }
+   },
+   {
+    "slot": "P2",
+    "partId": "9200000000000000002",
+    "resultId": "9200000000000000702",
+    "accuracy": 50.0,
+    "attempt": {
+     "id": "9200000000000000702",
+     "correctCount": 2,
+     "totalCount": 4,
+     "elapsedSeconds": null,
+     "submittedAt": "2026-10-31 16:27:31",
+     "parts": [
+      {
+       "id": "9200000000000000002"
+      }
+     ],
+     "details": []
+    },
+    "annotationSnapshot": {
+     "annotations": [
+      {
+       "id": "highlight-1",
+       "type": "highlight",
+       "partId": "9200000000000000002",
+       "area": "question",
+       "range": {
+        "start": 11,
+        "end": 19,
+        "text": "visitors",
+        "rootScope": "question-group-static-v4:9200000000000000201"
+       }
+      },
+      {
+       "id": "highlight-2",
+       "type": "highlight",
+       "partId": "9200000000000000002",
+       "area": "question",
+       "range": {
+        "start": 63,
+        "end": 68,
+        "text": "ferry",
+        "rootScope": "question-group-static-v4:9200000000000000201"
+       }
+      },
+      {
+       "id": "highlight-3",
+       "type": "highlight",
+       "partId": "9200000000000000002",
+       "area": "question",
+       "range": {
+        "start": 30,
+        "end": 39,
+        "text": "campsites",
+        "rootScope": "question-group-static-v4:9200000000000000202"
+       }
+      }
+     ]
+    }
+   }
+  ]
+ }
+}

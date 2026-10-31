@@ -242,7 +242,7 @@ def _learning_tasks(username):
 
     for project in _load_listening_projects(username):
         status = project.get("status", "")
-        if status in {"processing", "translating", "error"}:
+        if status in {"downloading", "processing", "translating", "error"}:
             tasks.append(
                 {
                     "id": project.get("id"),

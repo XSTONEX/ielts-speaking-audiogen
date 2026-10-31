@@ -10,6 +10,9 @@
 | `seed.py` | 灌编造的数据：用户 `demo`（5 个项目）和 `demo2`（无项目），音频用 macOS `say` 合成；登录 token 写进 `<沙盒>/e2e_tokens.json` |
 | `serve.sh` | 在沙盒里起服务：代理指向不存在的端口、API key 全部置空 |
 | `e2e.js` | 检查脚本 |
+| `jiufen_data.py` | 九分学长 JSON 导入用：把 `tests/fixtures/jiufen_listening_*.json`（编造的）配上 `say` 合成的音频，写进 `<沙盒>/static/e2e/` |
+| `jiufen_fake_translate.py` | 沙盒里没有翻译接口，导入的篇会停在「润色翻译失败」；这个脚本补上编的译文，把它改成完成 |
+| `jiufen_e2e.js` | 九分学长 JSON 导入的检查：粘贴 → 预解析 → 导入 → 字幕上的题号和出处 → 题目栏 → 再导入第二次做题 |
 
 ## 准备
 
@@ -50,3 +53,13 @@ python3 tests/e2e/listening/seed.py "$SB" && LR_SANDBOX="$SB" PLAYWRIGHT_CORE=/p
 - `LR_OUT_DIR`：截图和结果 JSON（`e2e-<内核>.json`）的输出目录，默认 `$TMPDIR/listening-e2e`
 
 每一项打印 `PASS` / `FAIL`，最后一行是通过数；有失败时退出码为 1。2026-10-31 两个内核都是 217 项全过。
+
+## 4. 九分学长 JSON 导入
+
+`serve.sh` 只放行本机地址，所以导入时音频从沙盒服务自己的 `/static/e2e/` 下载，碰不到外网；转录不会发生（字幕直接用 JSON 里的），翻译因为没有 key 会失败，脚本接着用 `jiufen_fake_translate.py` 补成完成再看精听页。同样每跑一次前先重灌：
+
+```bash
+python3 tests/e2e/listening/seed.py "$SB" && python3 tests/e2e/listening/jiufen_data.py "$SB" && LR_SANDBOX="$SB" PLAYWRIGHT_CORE=/path/to/node_modules/playwright-core node tests/e2e/listening/jiufen_e2e.js webkit
+```
+
+2026-10-31 两个内核都是 17 项全过。

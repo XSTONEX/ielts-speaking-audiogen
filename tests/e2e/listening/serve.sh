@@ -22,7 +22,8 @@ fi
 
 export HTTPS_PROXY=http://127.0.0.1:9 HTTP_PROXY=http://127.0.0.1:9 ALL_PROXY=http://127.0.0.1:9
 export https_proxy=http://127.0.0.1:9 http_proxy=http://127.0.0.1:9 all_proxy=http://127.0.0.1:9
-export NO_PROXY= no_proxy=
+# 只放行本机：九分学长导入的浏览器检查从沙盒服务自己下载音频；别的地址照样走不通的代理
+export NO_PROXY=127.0.0.1,localhost no_proxy=127.0.0.1,localhost
 export DEER_API_KEY= WILDAPI_API_KEY= GROQ_API_KEY= SILICONFLOW_API_KEY= GEMINI_API_KEY= OPENAI_API_KEY= DEEPSEEK_API_KEY=
 export PYTHONDONTWRITEBYTECODE=1
 

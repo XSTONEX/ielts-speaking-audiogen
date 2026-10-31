@@ -8,8 +8,10 @@ from core import (
     LISTENING_REVIEW_DIR, is_token_valid, load_tokens, get_proxies,
     get_openai_http_client, load_prompt, is_safe_path_segment, call_gemini_llm,
 )
-from utils.audio_segment import transcribe_segmented
+from utils.audio_segment import transcribe_segmented, probe_duration
 from utils.json_store import save_json_atomic
+from utils import jiufen_listening
+from utils.jiufen_import import JiufenFormatError
 
 listening_review_bp = Blueprint('listening_review', __name__)
 
@@ -19,8 +21,13 @@ _store_lock = threading.RLock()
 # 本进程里正在跑的转录任务 {project_id: Thread}; 服务重启后为空,
 # 列表里还标着转录中/翻译中却不在这里的项目, 就是被重启打断的
 _active_jobs = {}
-BUSY_STATUSES = ('processing', 'translating')
+BUSY_STATUSES = ('downloading', 'processing', 'translating')
 INTERRUPTED_ERROR = '服务器重启打断了处理，点重试继续'
+# 九分学长 JSON 预解析的结果先放在内存里，点「导入」时按 key 取，不用再传一遍几 MB 的 JSON
+# {key: {'user', 'at', 'parsed'}}; 服务重启就没了, 前端提示重新粘贴
+_jiufen_previews = {}
+PREVIEW_TTL = 2 * 3600
+PREVIEWS_PER_USER = 3
 
 ALLOWED_EXTENSIONS = {'.mp3', '.wav', '.m4a', '.flac', '.ogg', '.mp4', '.webm'}
 MAX_FILE_SIZE = 25 * 1024 * 1024  # 25MB
@@ -64,6 +71,21 @@ def _project_data_path(project_id):
 def _transcript_path(project_id):
     """转录成功后先存一份原始字幕, 只是润色翻译失败时重试直接用它, 不再花钱重新转录"""
     return os.path.join(_project_dir(project_id), 'transcript.json')
+
+def _exam_path(project_id):
+    """九分学长导入的篇：题目 + 每次做题记录（答案、划线）; 和 data.json 分开存, 处理中也能合并新的做题记录"""
+    return os.path.join(_project_dir(project_id), 'exam.json')
+
+def _load_exam(project_id):
+    path = _exam_path(project_id)
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            exam = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return None
+    return exam if isinstance(exam, dict) else None
 
 def _load_saved_transcript(project_id):
     path = _transcript_path(project_id)
@@ -124,10 +146,16 @@ def _recover_interrupted_projects(username):
         for p in projects:
             if p.get('status') in BUSY_STATUSES and p['id'] not in _active_jobs:
                 has_transcript = _load_saved_transcript(p['id']) is not None
+                if p.get('status') == 'downloading':
+                    phase = 'download'
+                elif has_transcript or p.get('status') == 'translating':
+                    phase = 'polish'
+                else:
+                    phase = 'transcribe'
                 p.update(
                     status='error',
                     error=INTERRUPTED_ERROR,
-                    error_phase='polish' if has_transcript or p.get('status') == 'translating' else 'transcribe',
+                    error_phase=phase,
                     updated_at=datetime.now().isoformat(),
                 )
                 changed = True
@@ -138,11 +166,11 @@ def _recover_interrupted_projects(username):
 
 def _start_job(project_id, audio_path, username, reuse_transcript=False):
     """登记并启动转录线程; 调用方要在同一次持锁里先把状态存成转录中/翻译中"""
-    thread = threading.Thread(
-        target=_transcribe_async,
-        args=(project_id, audio_path, username, reuse_transcript),
-        daemon=True,
-    )
+    return _start_thread(project_id, _transcribe_async, (project_id, audio_path, username, reuse_transcript))
+
+
+def _start_thread(project_id, target, args):
+    thread = threading.Thread(target=target, args=args, daemon=True)
     with _store_lock:
         _active_jobs[project_id] = thread
     thread.start()
@@ -505,6 +533,9 @@ def _download_audio_from_url(url_str, save_path):
     try:
         resp = requests.get(url_str, stream=True, timeout=60)
         resp.raise_for_status()
+    except requests.exceptions.HTTPError as e:
+        # 原始异常里带着整条链接, 太长; 只报状态码
+        return None, f'下载失败: HTTP {e.response.status_code if e.response is not None else "错误"}'
     except Exception as e:
         return None, f'下载失败: {e}'
 
@@ -591,6 +622,166 @@ def _transcribe_async(project_id, audio_path, username, reuse_transcript=False):
             # 重试可能已经登记了新线程, 只摘掉自己
             if _active_jobs.get(project_id) is threading.current_thread():
                 del _active_jobs[project_id]
+
+
+# ==================== 九分学长 JSON 导入 ====================
+
+def _download_error_text(error):
+    text = (error or '').replace('下载失败: ', '', 1)
+    if re.search(r'HTTP (403|404|410)\b', text):
+        text += '，可能是链接过期了'
+    return text
+
+
+def _audio_matches(audio_path, transcript):
+    """JSON 里的字幕和下载的音频长度对得上才直接用; 查不了时长 (没装 ffprobe) 就当对得上"""
+    try:
+        duration = probe_duration(audio_path)
+    except Exception:
+        return True
+    if not duration:
+        return True
+    last_end = transcript['segments'][-1]['end']
+    return last_end <= duration + 3 and duration <= last_end + 90
+
+
+def _jiufen_async(project_id, username):
+    """下载 JSON 里的音频 → 字幕直接用 JSON 的逐句字幕 (导入时已存成 transcript.json) → 只做润色翻译"""
+    try:
+        with _store_lock:
+            projects, idx = _find_user_project(username, project_id)
+            if idx == -1:
+                return
+            record = dict(projects[idx])
+        audio_path = os.path.join(_project_dir(project_id), record['audio_filename'])
+        if not os.path.exists(audio_path):
+            partial = audio_path + '.part'
+            _, error = _download_audio_from_url(record.get('source_url') or '', partial)
+            if error:
+                _update_project_status(username, project_id, status='error',
+                                       error=_download_error_text(error), error_phase='download')
+                return
+            os.replace(partial, audio_path)
+
+        transcript = _load_saved_transcript(project_id)
+        if transcript and not _audio_matches(audio_path, transcript):
+            # 音频和字幕对不上: 字幕作废、改成重新转录; 句子编号不再是 JSON 里的, 题目出处也就不往字幕上标了
+            with _store_lock:
+                os.remove(_transcript_path(project_id))
+                exam = _load_exam(project_id)
+                if exam:
+                    exam['aligned'] = False
+                    save_json_atomic(_exam_path(project_id), exam)
+            transcript = None
+        if transcript:
+            _update_project_status(username, project_id, status='translating', duration=transcript['duration'])
+        else:
+            _update_project_status(username, project_id, status='processing')
+        _transcribe_async(project_id, audio_path, username, reuse_transcript=True)
+    except Exception as e:
+        print(f"Listening jiufen import failed: {e}")
+        _update_project_status(username, project_id, status='error', error=str(e), error_phase='unknown')
+    finally:
+        with _store_lock:
+            if _active_jobs.get(project_id) is threading.current_thread():
+                del _active_jobs[project_id]
+
+
+def _prune_previews(username):
+    now = time.time()
+    for key in [k for k, v in _jiufen_previews.items() if now - v['at'] > PREVIEW_TTL]:
+        del _jiufen_previews[key]
+    mine = sorted((v['at'], k) for k, v in _jiufen_previews.items() if v['user'] == username)
+    for _, key in mine[:max(0, len(mine) - PREVIEWS_PER_USER + 1)]:
+        del _jiufen_previews[key]
+
+
+def _imported_project(projects, part_id):
+    """同一个九分学长 Part 导入过的那篇 (导入过几次就取最新的一篇)"""
+    if not part_id:
+        return None
+    found = [p for p in projects if p.get('source_type') == 'jiufen' and p.get('jiufen_part_id') == part_id]
+    return max(found, key=lambda p: p.get('created_at', '')) if found else None
+
+
+def _attempt_record(part):
+    return dict(part['attempt'], imported_at=datetime.now().isoformat())
+
+
+def _score(attempts):
+    latest = attempts[-1] if attempts else {}
+    return {'correct': latest.get('correct', 0), 'total': latest.get('total', 0)}
+
+
+def _sort_attempts(attempts):
+    attempts.sort(key=lambda a: (a.get('submitted_at') or '', a.get('imported_at') or ''))
+
+
+def _project_title(part, name):
+    name = re.sub(r'\s+', ' ', str(name or '')).strip()
+    label = part['label']
+    if not name:
+        return label
+    if name.lower().startswith(label.lower()):
+        return name
+    return f'{label} · {name}'
+
+
+def _create_jiufen_project(username, part, title):
+    project_id = _generate_project_id()
+    os.makedirs(_project_dir(project_id), exist_ok=True)
+    attempts = [_attempt_record(part)]
+    save_json_atomic(_exam_path(project_id), {
+        'source': 'jiufen',
+        'part_id': part['part_id'],
+        'label': part['label'],
+        'aligned': bool(part['segments']),
+        'groups': part['groups'],
+        'attempts': attempts,
+    })
+    if part['segments']:
+        save_json_atomic(_transcript_path(project_id), {'segments': part['segments'], 'duration': part['duration']})
+    from urllib.parse import urlparse, unquote
+    ext = os.path.splitext(urlparse(unquote(part['audio_url'])).path)[1].lower()
+    now = datetime.now().isoformat()
+    return {
+        'id': project_id,
+        'title': title,
+        'username': username,
+        'status': 'downloading',
+        'created_at': now,
+        'updated_at': now,
+        'duration': part['duration'],
+        'audio_filename': f"original{ext if ext in ALLOWED_EXTENSIONS else '.mp3'}",
+        'source_type': 'jiufen',
+        'source_url': part['audio_url'],
+        'error': None,
+        'jiufen_part_id': part['part_id'],
+        'score': _score(attempts),
+        'attempt_count': 1,
+    }
+
+
+def _merge_jiufen_attempt(record, part):
+    """把这次的做题记录并进导入过的那篇: 同一次记录换成新的答案和划线, 新的一次记成第 N 次。
+    字幕、笔记、生词、收藏句、听错原因都不动。返回 'replaced' / 'added'"""
+    project_id = record['id']
+    exam = _load_exam(project_id) or {
+        'source': 'jiufen', 'part_id': part['part_id'], 'label': part['label'], 'aligned': False, 'attempts': [],
+    }
+    attempts = [a for a in exam.get('attempts') or [] if isinstance(a, dict)]
+    new = _attempt_record(part)
+    same = next((k for k, a in enumerate(attempts) if new['id'] and a.get('id') == new['id']), None)
+    if same is None:
+        attempts.append(new)
+    else:
+        attempts[same] = new
+    _sort_attempts(attempts)
+    exam['attempts'] = attempts
+    exam['groups'] = part['groups']
+    save_json_atomic(_exam_path(project_id), exam)
+    record.update(score=_score(attempts), attempt_count=len(attempts), updated_at=datetime.now().isoformat())
+    return 'added' if same is None else 'replaced'
 
 
 # ==================== Routes ====================
@@ -720,6 +911,98 @@ def download_url_audio():
     return jsonify({'success': True, 'project_id': project_id, 'message': '音频下载成功，正在转录中...'})
 
 
+@listening_review_bp.route('/api/listening_review/jiufen/preview', methods=['POST'])
+def jiufen_preview():
+    """预解析九分学长 JSON: 请求体就是整段 JSON 原文 (几 MB 也直接发, 不再包一层)"""
+    username = _get_auth_username()
+    if not username:
+        return jsonify({'error': '未登录或token无效'}), 401
+
+    raw = request.get_data(as_text=True)
+    if request.is_json:
+        raw = (request.get_json(silent=True) or {}).get('raw') or ''
+    if not raw.strip():
+        return jsonify({'error': '没有内容：把九分学长的 JSON 粘贴进来，或者选一个 .json 文件'}), 400
+    try:
+        parsed = jiufen_listening.parse(raw)
+    except JiufenFormatError as e:
+        return jsonify({'error': str(e), 'format_error': True}), 400
+
+    key = uuid.uuid4().hex
+    with _store_lock:
+        _prune_previews(username)
+        _jiufen_previews[key] = {'user': username, 'at': time.time(), 'parsed': parsed}
+        projects = _load_user_projects(username)
+
+    parts = []
+    for k, part in enumerate(parsed['parts']):
+        summary = dict(jiufen_listening.summarize(part), index=k)
+        existing = _imported_project(projects, part['part_id'])
+        if existing:
+            exam = _load_exam(existing['id']) or {}
+            attempts = exam.get('attempts') or []
+            summary['existing'] = {
+                'id': existing['id'],
+                'title': existing.get('title'),
+                'created_at': existing.get('created_at'),
+                'status': existing.get('status'),
+                'attempt_count': len(attempts),
+                'previous': _score(attempts) if attempts else existing.get('score'),
+                'same_attempt': bool(part['attempt']['id']) and any(a.get('id') == part['attempt']['id'] for a in attempts),
+            }
+        parts.append(summary)
+    return jsonify({
+        'success': True,
+        'key': key,
+        'kind': parsed['kind'],
+        'submitted_at': parsed['submitted_at'],
+        'elapsed_seconds': parsed['elapsed_seconds'],
+        'parts': parts,
+    })
+
+
+@listening_review_bp.route('/api/listening_review/jiufen/import', methods=['POST'])
+def jiufen_import_parts():
+    """按预解析的结果导入: 新的 Part 各建一篇 (后台下载音频、翻译), 导入过的 Part 把这次的做题记录并进原来那篇"""
+    username = _get_auth_username()
+    if not username:
+        return jsonify({'error': '未登录或token无效'}), 401
+
+    body = request.get_json(silent=True) or {}
+    choices = [c for c in body.get('parts') or [] if isinstance(c, dict)]
+    with _store_lock:
+        entry = _jiufen_previews.get(body.get('key') or '')
+        if not entry or entry['user'] != username:
+            return jsonify({'error': '预解析已经过期了（服务器可能重启过），请重新粘贴或选文件', 'expired': True}), 410
+        parts = entry['parsed']['parts']
+        projects = _load_user_projects(username)
+        created, updated, skipped = [], [], []
+        for choice in choices:
+            try:
+                part = parts[int(choice.get('index'))]
+            except (TypeError, ValueError, IndexError):
+                continue
+            existing = _imported_project(projects, part['part_id']) if choice.get('mode') == 'update' else None
+            if existing:
+                how = _merge_jiufen_attempt(existing, part)
+                updated.append({'id': existing['id'], 'label': part['label'], 'how': how,
+                                'attempt_count': existing['attempt_count']})
+            elif not part['audio_url']:
+                skipped.append(part['label'])
+            else:
+                record = _create_jiufen_project(username, part, _project_title(part, choice.get('title')))
+                projects.append(record)
+                created.append({'id': record['id'], 'label': part['label']})
+        if not created and not updated:
+            return jsonify({'error': '没有可以导入的 Part' + (f'（{"、".join(skipped)} 的 JSON 里没有音频链接）' if skipped else '')}), 400
+        _save_user_projects(username, projects)
+        for item in created:
+            _start_thread(item['id'], _jiufen_async, (item['id'], username))
+        _jiufen_previews.pop(body.get('key'), None)
+
+    return jsonify({'success': True, 'created': created, 'updated': updated, 'skipped': skipped})
+
+
 @listening_review_bp.route('/api/listening_review/list', methods=['GET'])
 def list_projects():
     username = _get_auth_username()
@@ -827,7 +1110,8 @@ def get_project(project_id):
     return jsonify({
         'success': True,
         'project': project,
-        'data': data  # may be None if still processing
+        'data': data,  # may be None if still processing
+        'exam': _load_exam(project_id),  # 九分学长导入的篇才有: 题目 + 每次做题记录
     })
 
 
@@ -871,6 +1155,12 @@ def retry_transcription(project_id):
         return jsonify({'error': '只能重试失败的项目'}), 400
 
     audio_path = os.path.join(_project_dir(project_id), project['audio_filename'])
+    if project.get('source_type') == 'jiufen' and not os.path.exists(audio_path):
+        # 九分学长导入的篇音频还没下好: 重新下载, 下好后接着用 JSON 里的字幕翻译
+        projects[idx].update(status='downloading', error=None, updated_at=datetime.now().isoformat())
+        _save_user_projects(username, projects)
+        _start_thread(project_id, _jiufen_async, (project_id, username))
+        return jsonify({'success': True, 'phase': 'download', 'message': '重新下载已开始'})
     if not os.path.exists(audio_path):
         return jsonify({'error': '原始音频文件不存在'}), 404
 

@@ -31,7 +31,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
   <link rel="stylesheet" href="/static/theme.css?v=20261031">
   <link rel="stylesheet" href="/static/plain.css">
-  <link rel="stylesheet" href="/static/listening.css?v=20261031">
+  <link rel="stylesheet" href="/static/listening.css?v=20261031b">
   <script src="/static/theme.js?v=20260919" defer></script>
   <script src="/static/api-client.js?v=20260919" defer></script>
   <script src="/static/auth.js?v=20260927" defer></script>
@@ -113,10 +113,20 @@
             <div class="lr-row"><h2 class="lr-side__title">本篇</h2><span class="lr-spacer"></span><span id="sideUploaded" class="lr-meta"></span>
               <button class="lr-icon lr-side__close" type="button" aria-label="收起本篇栏" onclick="toggleSide(false)"><svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
             </div>
-            <div class="lr-side__nums">
-              <div><div id="sideCheckinNum" class="lr-side__num">0</div><div class="lr-side__numlabel">打卡次数</div></div>
+            <div id="sideNums" class="lr-side__nums">
+              <div id="sideScoreCell" hidden><div id="sideScoreNum" class="lr-side__num">0</div><div class="lr-side__numlabel">答对</div></div>
+              <div><div id="sideCheckinNum" class="lr-side__num">0</div><div id="sideCheckinLabel" class="lr-side__numlabel">打卡次数</div></div>
               <div><div id="sideStarNum" class="lr-side__num">0</div><div class="lr-side__numlabel">收藏句</div></div>
-              <div><div id="sideNotesNum" class="lr-side__num">0</div><div class="lr-side__numlabel">笔记 / 生词</div></div>
+              <div><div id="sideNotesNum" class="lr-side__num">0</div><div id="sideNotesLabel" class="lr-side__numlabel">笔记 / 生词</div></div>
+            </div>
+            <div id="sideSrc" class="lr-side__src" hidden></div>
+            <div id="attemptBox" hidden>
+              <div class="lr-att">
+                <span class="lr-meta">做题记录</span>
+                <button id="attemptBtn" class="lr-att__btn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="attemptMenu" onclick="toggleAttemptMenu()"><span id="attemptBtnText"></span><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 6 8 10.5 12.5 6"/></svg></button>
+              </div>
+              <div id="attemptMenu" class="lr-att__menu" role="listbox" aria-label="做题记录" hidden></div>
+              <p id="attemptHint" class="lr-att__hint" hidden>换一次记录，题目栏就显示那一次的答案和划线。笔记、生词、收藏句和听错原因不分次，一直都在。</p>
             </div>
             <div class="lr-side__btns">
               <button id="checkinBtn" class="ui-btn ui-btn--md" type="button" onclick="doCheckin()">
@@ -127,7 +137,13 @@
           </section>
 
           <section class="lr-side__card" style="padding-bottom: 8px;">
-            <div class="lr-row"><h2 class="lr-side__title">本篇笔记</h2><span class="lr-spacer"></span><span id="notesViewCount" class="lr-meta ui-num"></span></div>
+            <div id="sideTabs" class="ui-seg lr-side__tabs" role="tablist" aria-label="右栏内容" hidden>
+              <button class="ui-seg__btn side-tab" type="button" role="tab" data-tab="questions" aria-controls="questionsPane">题目<span id="sideTabQCount" class="ui-seg__count"></span></button>
+              <button class="ui-seg__btn side-tab" type="button" role="tab" data-tab="notes" aria-controls="notesPane">本篇笔记<span id="sideTabNCount" class="ui-seg__count"></span></button>
+            </div>
+            <div id="questionsPane" role="tabpanel" hidden></div>
+            <div id="notesPane">
+            <div id="notesHeadRow" class="lr-row"><h2 class="lr-side__title">本篇笔记</h2><span class="lr-spacer"></span><span id="notesViewCount" class="lr-meta ui-num"></span></div>
             <div class="ui-seg lr-side__filter" role="group" aria-label="筛选本篇笔记">
               <button class="ui-seg__btn notes-filter-btn" type="button" data-filter="all">全部</button>
               <button class="ui-seg__btn notes-filter-btn" type="button" data-filter="note">笔记</button>
@@ -135,6 +151,7 @@
             </div>
             <div id="notesViewBody" class="lr-entries"></div>
             <a class="lr-link" href="/listening_review/notes" style="display: inline-block; padding: 8px 0 6px 0;">去听力笔记本复习 →</a>
+            </div>
           </section>
         </aside>
       </div>
@@ -162,12 +179,13 @@
 
   <!-- ==================== 上传弹窗 ==================== -->
   <div id="uploadModal" class="ui-dialog-backdrop" hidden>
-    <div class="ui-dialog" role="dialog" aria-modal="true" aria-labelledby="uploadTitle">
+    <div id="uploadDialog" class="ui-dialog" role="dialog" aria-modal="true" aria-labelledby="uploadTitle">
       <div class="ui-dialog__head"><h3 class="ui-dialog__title" id="uploadTitle">上传听力音频</h3><button class="ui-dialog__close" type="button" aria-label="关闭" onclick="closeUploadModal()">×</button></div>
       <div class="ui-dialog__body">
-        <div class="ui-seg" role="tablist" aria-label="音频来源" style="align-self: flex-start;">
+        <div class="ui-seg lr-src-tabs" role="tablist" aria-label="音频来源">
           <button class="ui-seg__btn modal-tab" type="button" role="tab" data-tab="file" onclick="switchTab('file')">本地文件</button>
           <button class="ui-seg__btn modal-tab" type="button" role="tab" data-tab="url" onclick="switchTab('url')">音频链接</button>
+          <button class="ui-seg__btn modal-tab" type="button" role="tab" data-tab="json" onclick="switchTab('json')">九分学长 JSON</button>
         </div>
         <div id="tabFile" style="display: flex; flex-direction: column; gap: 16px;">
           <label id="fileDropLabel" class="lr-drop">
@@ -182,11 +200,32 @@
           <label class="ui-field"><span class="ui-field__label">音频链接</span><input id="urlInput" class="ui-input" placeholder="https://example.com/audio.mp3" inputmode="url" /><span class="ui-field__hint">要能直接下载的音频地址，最大 25 MB。</span></label>
           <label class="ui-field"><span class="ui-field__label">标题（可选）</span><input id="urlTitle" class="ui-input" placeholder="不填就用链接里的文件名" /></label>
         </div>
+        <!-- 九分学长 JSON：粘贴或选文件 → 预解析 → 导入；粘进来的内容不铺在框里（几 MB 会卡），只显示大小 -->
+        <div id="tabJson" style="display: flex; flex-direction: column; gap: 16px;" hidden>
+          <textarea id="jsonPaste" class="ui-textarea lr-paste" aria-label="粘贴九分学长 JSON" placeholder="把整段 JSON 粘贴到这里（⌘ / Ctrl + V）。&#10;几 MB 也没关系：粘进来只显示大小，不把内容铺在框里，不会卡。"></textarea>
+          <div id="jsonOr" class="lr-or">或者</div>
+          <label id="jsonDrop" class="lr-drop lr-drop--sm">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2.5h5l3 3v8H4z"/><path d="M9 2.5v3h3"/></svg>
+            <span class="lr-drop__name">选 .json 文件，或把文件拖进来</span>
+            <input type="file" id="jsonFileInput" accept=".json,.txt,application/json,text/plain" onchange="onJsonFile(this.files[0]); this.value = '';" />
+          </label>
+          <span id="jsonHint" class="ui-field__hint">九分学长交卷后的整段 JSON，单篇练习和组卷都可以，最大 25 MB。</span>
+          <div id="jsonFileBar" class="lr-imp__file" hidden>
+            <svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2.5h5l3 3v8H4z"/><path d="M9 2.5v3h3"/></svg>
+            <span id="jsonFileName" class="lr-imp__fname"></span>
+            <span id="jsonFileSize" class="lr-meta"></span>
+            <button class="ui-btn ui-btn--sm" type="button" onclick="resetJsonTab(true)">清空</button>
+          </div>
+          <div id="jsonError" class="lr-imp__err" role="alert" hidden><strong id="jsonErrorTitle"></strong><span id="jsonErrorText"></span></div>
+          <div id="jsonPreview" hidden></div>
+        </div>
       </div>
       <div class="ui-dialog__foot">
+        <span id="jsonFootnote" class="lr-imp__footnote" hidden></span>
         <button class="ui-btn ui-btn--md" type="button" onclick="closeUploadModal()">取消</button>
         <button id="uploadFileBtn" class="ui-btn ui-btn--md ui-btn--primary" type="button" onclick="doUploadFile()" disabled>上传并转录</button>
         <button id="uploadUrlBtn" class="ui-btn ui-btn--md ui-btn--primary" type="button" onclick="doUploadUrl()" hidden>下载并转录</button>
+        <button id="uploadJsonBtn" class="ui-btn ui-btn--md ui-btn--primary" type="button" onclick="doImportJson()" hidden disabled>导入</button>
       </div>
     </div>
   </div>
@@ -260,6 +299,12 @@ const state = {
   viewingNote: null,      // the note object currently shown in the popover
   editingNote: null,      // the note object currently being edited
   notesFilter: 'all',
+  exam: null,             // 九分学长导入的篇：{ groups, attempts, aligned, ... }
+  attemptIdx: -1,         // 正在看第几次做题记录
+  selQ: null,             // 题目栏里选中的题号
+  sideTab: 'questions',   // 导入的篇右栏：题目 / 本篇笔记
+  playUntil: null,        // 「播放这一段」播到这里自动停
+  json: null,             // 上传弹窗 JSON 页：{ raw, name, size, preview, choices }
   lastPointer: 'mouse',
   vocabAudioPauseActive: false,
   vocabAudioWasPlaying: false,
@@ -287,6 +332,9 @@ const ICONS = {
 
 const audioEl = document.getElementById('audioEl');
 const LAST_KEY = 'listening-last-position';
+const BUSY = ['downloading', 'processing', 'translating'];
+const GAP_SECONDS = 8;          // 两句之间空这么久就在字幕里画一条「没有声音」的分隔线
+const JSON_MAX = 25 * 1024 * 1024;
 
 function beginVocabAudioPause() {
   if (state.vocabAudioPauseActive) {
@@ -401,7 +449,7 @@ async function loadProjects() {
   state.projects = r.projects || [];
   renderListView();
 
-  const hasInProgress = state.projects.some(p => p.status === 'processing' || p.status === 'translating');
+  const hasInProgress = state.projects.some(p => BUSY.includes(p.status));
   if (hasInProgress && !state.pollingTimer) {
     state.pollingTimer = setInterval(async () => {
       if (state.view !== 'list') return;
@@ -409,7 +457,7 @@ async function loadProjects() {
       if (r2.projects) {
         state.projects = r2.projects;
         renderListView();
-        if (!r2.projects.some(p => p.status === 'processing' || p.status === 'translating')) {
+        if (!r2.projects.some(p => BUSY.includes(p.status))) {
           clearInterval(state.pollingTimer);
           state.pollingTimer = null;
         }
@@ -474,21 +522,27 @@ function projectCardHtml(p) {
   const busy = p.status !== 'completed';
   const title = esc(p.title);
   const date = p.created_at ? formatDate(p.created_at) : '';
-  const dur = p.duration ? `<span class="lr-dot">${formatTime(p.duration)}</span>` : '';
+  const jiufen = p.source_type === 'jiufen';
+  let dur = p.duration ? `<span class="lr-dot">${formatTime(p.duration)}</span>` : '';
+  if (jiufen) dur += '<span class="lr-dot">九分学长</span>' + (p.attempt_count > 1 ? `<span class="lr-dot">做过 ${p.attempt_count} 次</span>` : '');
   let tag = '', body = '';
-  if (p.status === 'processing') {
+  if (p.status === 'downloading') {
+    tag = '<span class="ui-tag ui-tag--warn">下载中</span>';
+    body = '<div class="lr-proj__status">正在下载音频，下好就开始翻译</div>';
+  } else if (p.status === 'processing') {
     tag = '<span class="ui-tag ui-tag--warn">转录中</span>';
-    body = '<div class="lr-proj__status">正在转成字幕，完成后这里自动刷新</div>';
+    body = `<div class="lr-proj__status">${jiufen ? '音频和 JSON 里的字幕对不上，正在重新转录' : '正在转成字幕，完成后这里自动刷新'}</div>`;
   } else if (p.status === 'translating') {
     tag = '<span class="ui-tag ui-tag--warn">翻译中</span>';
-    body = '<div class="lr-proj__status">字幕已出，正在润色和翻译</div>';
+    body = `<div class="lr-proj__status">${jiufen ? '原文用 JSON 里的逐句字幕，没有转录；正在翻译' : '字幕已出，正在润色和翻译'}</div>`;
   } else if (p.status === 'error') {
     tag = '<span class="ui-tag ui-tag--err">失败</span>';
     body = `<div class="lr-proj__status is-err"><span>${esc(errorPhaseText(p))}</span><button class="ui-btn ui-btn--sm" type="button" data-act="retry" data-id="${esc(p.id)}">${ICONS.retry}重试</button></div>`;
   } else {
     if (p.mastered) tag = `<span class="ui-tag ui-tag--ok">${ICONS.check}已掌握</span>`;
     const stat = (n, label) => `<div class="lr-proj__stat"><span class="lr-proj__num">${n}</span><span class="lr-proj__label">${label}</span></div>`;
-    body = `<div class="lr-proj__stats">${stat(p.checkin_count || 0, '打卡')}${stat(p.vocab_count || 0, '生词')}${stat(p.note_count || 0, '笔记')}</div>`;
+    const score = jiufen && p.score && p.score.total ? stat(`${p.score.correct}/${p.score.total}`, '答对') : '';
+    body = `<div class="lr-proj__stats${score ? ' lr-proj__stats--4' : ''}">${score}${stat(p.checkin_count || 0, '打卡')}${stat(p.vocab_count || 0, '生词')}${stat(p.note_count || 0, '笔记')}</div>`;
   }
   const openAttrs = busy ? '' : ` role="link" tabindex="0" aria-label="打开 ${title}" data-act="open" data-id="${esc(p.id)}"`;
   return `
@@ -500,7 +554,7 @@ function projectCardHtml(p) {
 }
 
 function errorPhaseText(p) {
-  const phase = { transcribe: '转录失败：', polish: '润色翻译失败：' }[p.error_phase] || '处理失败：';
+  const phase = { download: '音频下载失败：', transcribe: '转录失败：', polish: '润色翻译失败：' }[p.error_phase] || '处理失败：';
   return phase + (p.error || '未知错误');
 }
 
@@ -530,7 +584,8 @@ function openDeleteDialog(id) {
   const extras = [];
   if (p.vocab_count) extras.push(`${p.vocab_count} 个生词`);
   if (p.note_count) extras.push(`${p.note_count} 条笔记`);
-  const what = extras.length ? `音频、字幕、${extras.join('和 ')}` : '音频和字幕';
+  const base = p.source_type === 'jiufen' ? '音频、字幕、题目和做题记录' : '音频和字幕';
+  const what = extras.length ? `${base.replace('和', '、')}、${extras.join('和 ')}` : base;
   document.getElementById('deleteText').textContent = `「${p.title}」的${what}会一起删除，删了不能恢复。`;
   document.getElementById('deleteModal').hidden = false;
   document.getElementById('deleteConfirmBtn').focus();
@@ -562,7 +617,7 @@ async function deleteProject(id) {
 
 async function retryProject(id) {
   const r = await API.post('/api/listening_review/project/' + id + '/retry', {});
-  if (r.success) { showToast(r.phase === 'polish' ? '字幕还在，已重新开始翻译' : '已重新开始转录'); await loadProjects(); }
+  if (r.success) { showToast({ polish: '字幕还在，已重新开始翻译', download: '已重新开始下载音频' }[r.phase] || '已重新开始转录'); await loadProjects(); }
   else showToast(r.error || '重试失败', 'error');
 }
 
@@ -625,6 +680,7 @@ function openUploadModal() {
   document.getElementById('fileDropText').textContent = FILE_DROP_TEXT;
   document.getElementById('fileDropMeta').textContent = FILE_DROP_META;
   document.getElementById('uploadFileBtn').disabled = true;
+  resetJsonTab(false);
   switchTab('file');
 }
 
@@ -638,8 +694,12 @@ function switchTab(tab) {
   });
   document.getElementById('tabFile').hidden = tab !== 'file';
   document.getElementById('tabUrl').hidden = tab !== 'url';
+  document.getElementById('tabJson').hidden = tab !== 'json';
   document.getElementById('uploadFileBtn').hidden = tab !== 'file';
   document.getElementById('uploadUrlBtn').hidden = tab !== 'url';
+  document.getElementById('uploadJsonBtn').hidden = tab !== 'json';
+  state.uploadTab = tab;
+  syncJsonFooter();
 }
 
 function onFileSelected(input) {
@@ -682,6 +742,253 @@ async function doUploadUrl() {
 
 document.getElementById('urlInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') doUploadUrl(); });
 
+// --- 九分学长 JSON：粘贴或选文件 → 预解析 → 勾选 / 改标题 → 导入 ---
+// 粘贴的内容不放进输入框（几 MB 的文字铺开会卡），只记在内存里、显示大小；预解析的结果服务器先存着，导入时只发选择
+function resetJsonTab(focus) {
+  state.json = null;
+  const paste = document.getElementById('jsonPaste');
+  paste.value = '';
+  ['jsonPaste', 'jsonOr', 'jsonDrop', 'jsonHint'].forEach(id => { document.getElementById(id).hidden = false; });
+  ['jsonFileBar', 'jsonError', 'jsonPreview'].forEach(id => { document.getElementById(id).hidden = true; });
+  document.getElementById('jsonPreview').innerHTML = '';
+  document.getElementById('uploadDialog').classList.remove('lr-dialog--json');
+  syncJsonFooter();
+  if (focus) paste.focus();
+}
+
+function showJsonError(title, text) {
+  document.getElementById('jsonErrorTitle').textContent = title;
+  document.getElementById('jsonErrorText').textContent = text;
+  document.getElementById('jsonError').hidden = false;
+  document.getElementById('jsonPreview').hidden = true;
+  syncJsonFooter();
+}
+
+async function loadJsonText(text, name, fromFile) {
+  const size = new Blob([text]).size;
+  state.json = { raw: text, name, fromFile, size, preview: null, choices: [] };
+  ['jsonPaste', 'jsonOr', 'jsonDrop', 'jsonHint', 'jsonError'].forEach(id => { document.getElementById(id).hidden = true; });
+  document.getElementById('jsonPaste').value = '';
+  document.getElementById('jsonFileBar').hidden = false;
+  document.getElementById('jsonFileName').textContent = name;
+  document.getElementById('jsonFileSize').textContent = formatSize(size);
+  if (size > JSON_MAX) { showJsonError('内容太大了', `${formatSize(size)}，超过了 25 MB。确认复制的是一次交卷的 JSON。`); return; }
+  const box = document.getElementById('jsonPreview');
+  box.hidden = false;
+  box.innerHTML = '<p class="lr-imp__loading">正在解析…</p>';
+  syncJsonFooter();
+  await previewJson();
+}
+
+async function previewJson() {
+  const j = state.json;
+  if (!j) return false;
+  let r;
+  try {
+    const h = { 'Content-Type': 'text/plain;charset=utf-8' };
+    const tk = localStorage.getItem('authToken');
+    if (tk) h['Authorization'] = 'Bearer ' + tk;
+    const resp = await fetch('/api/listening_review/jiufen/preview', { method: 'POST', headers: h, body: j.raw });
+    r = await resp.json().catch(() => ({ error: resp.status === 413 ? '内容太大，服务器收不下' : `服务器返回 ${resp.status}` }));
+  } catch (e) { r = { error: '网络出错了：' + e.message }; }
+  if (state.json !== j) return false;   // 期间点了清空或换了内容
+  if (!r.success) {
+    const what = j.fromFile ? '这个文件读不出来' : '粘贴的内容读不出来';
+    showJsonError(r.format_error ? what : '预解析没成功', r.error || '未知错误');
+    return false;
+  }
+  j.preview = r;
+  j.choices = r.parts.map(p => ({
+    include: p.has_audio,
+    mode: p.existing ? 'update' : 'new',
+    title: p.title || ''
+  }));
+  renderJsonPreview();
+  return true;
+}
+
+function onJsonFile(file) {
+  if (!file) return;
+  if (file.size > JSON_MAX) {
+    loadJsonText('', file.name, true).then(() => showJsonError('文件太大了', `${formatSize(file.size)}，超过了 25 MB。`));
+    return;
+  }
+  file.text().then(text => loadJsonText(text, file.name, true))
+    .catch(e => showJsonError('这个文件读不出来', e.message));
+}
+
+const jsonPasteEl = document.getElementById('jsonPaste');
+jsonPasteEl.addEventListener('paste', (e) => {
+  const text = e.clipboardData ? e.clipboardData.getData('text') : '';
+  if (!text) return;   // 拿不到剪贴板的浏览器走下面的 input
+  e.preventDefault();
+  loadJsonText(text, '粘贴的 JSON', false);
+});
+jsonPasteEl.addEventListener('input', (e) => {
+  if (e.inputType && !/^insertFrom(Paste|Drop)/.test(e.inputType)) return;   // 打字不算
+  const text = jsonPasteEl.value;
+  if (text.trim()) loadJsonText(text, '粘贴的 JSON', false);
+});
+
+function stripLabel(title, label) {
+  const t = String(title || '');
+  const prefix = `${label} · `;
+  return t.startsWith(prefix) ? t.slice(prefix.length) : t;
+}
+
+function qList(nums) {
+  return nums.length > 4 ? `${nums.length} 题` : nums.map(n => 'Q' + n).join(' ');
+}
+
+function renderJsonPreview() {
+  const { preview: r, choices } = state.json;
+  const box = document.getElementById('jsonPreview');
+  const multi = r.parts.length > 1;
+  document.getElementById('uploadDialog').classList.toggle('lr-dialog--json', multi);
+  const correct = r.parts.reduce((s, p) => s + (p.correct || 0), 0);
+  const total = r.parts.reduce((s, p) => s + (p.total || 0), 0);
+  const sum = [`<b>${r.kind === 'composition' ? '组卷练习' : '单篇练习'}</b>`, `<span>${r.parts.length} 个 Part</span>`];
+  if (r.submitted_at) sum.push(`<span class="lr-dot">${formatDate(r.submitted_at)}交卷</span>`);
+  if (r.elapsed_seconds) sum.push(`<span class="lr-dot">用时 ${formatTime(r.elapsed_seconds)}</span>`);
+  else if (multi && total) sum.push(`<span class="lr-dot">答对 ${correct}/${total}</span>`);
+
+  const rows = r.parts.map((p, k) => {
+    const c = choices[k];
+    const ex = p.existing;
+    const off = !c.include;
+    const stats = [];
+    if (p.sentences) stats.push(`<span>${p.sentences} 句</span>`);
+    if (p.duration) stats.push(`<span class="lr-dot">${formatTime(p.duration)}</span>`);
+    if (p.total) {
+      const again = ex && !ex.same_attempt && c.mode === 'update';
+      stats.push(`<span class="lr-dot">${again ? '这次答对' : '答对'} <b>${p.correct}</b> / ${p.total}</span>`);
+      if (again && ex.previous && ex.previous.total) stats.push(`<span class="lr-dot">上次 ${ex.previous.correct} / ${ex.previous.total}</span>`);
+      else {
+        if (p.wrong.length) stats.push(`<span class="lr-dot is-err">错 ${qList(p.wrong)}</span>`);
+        if (p.blank.length) stats.push(`<span class="lr-dot">没答 ${qList(p.blank)}</span>`);
+      }
+    }
+    if (p.marks) stats.push(`<span class="lr-dot">划线 ${p.marks} 处</span>`);
+    let name;
+    if (ex && c.mode === 'update') {
+      name = `<span class="lr-imp__name" style="color: var(--w-ink);">${esc(stripLabel(ex.title, p.label))}</span>`;
+    } else {
+      const warn = !c.title.trim();
+      name = `<input class="ui-input lr-imp__title${warn ? ' is-warn' : ''}" data-k="${k}" value="${esc(c.title)}" placeholder="JSON 里没有标题，起一个；不填就叫 ${esc(p.label)}" aria-label="${esc(p.label)} 的标题"${off ? ' disabled' : ''} />`;
+    }
+    let extra = '';
+    if (!p.has_audio) extra += '<div class="lr-imp__warn">JSON 里没有音频链接，这个 Part 导入不了。</div>';
+    else if (!p.has_timing && !(ex && c.mode === 'update')) extra += '<div class="lr-imp__warn">JSON 里没有带时间的逐句字幕：导入后要重新转录，题目的出处也没法标到字幕上。</div>';
+    if (ex) {
+      const on = (m) => c.mode === m;
+      extra += `<div class="lr-imp__merge"><span class="ui-tag ui-tag--accent">${formatDate(ex.created_at)}导入过</span>
+        <div class="ui-seg" role="radiogroup" aria-label="${esc(p.label)} 怎么导入">
+          <button class="ui-seg__btn${on('update') ? ' is-on' : ''}" type="button" role="radio" aria-checked="${on('update')}" data-k="${k}" data-mode="update"${off ? ' disabled' : ''}>更新那一篇</button>
+          <button class="ui-seg__btn${on('new') ? ' is-on' : ''}" type="button" role="radio" aria-checked="${on('new')}" data-k="${k}" data-mode="new"${off || !p.has_audio ? ' disabled' : ''}>另建一篇</button>
+        </div></div>`;
+      const keep = '你的笔记、生词、收藏句和听错原因都不动，也不用再下载和翻译。';
+      const note = c.mode === 'new' ? '另建一篇：重新下载音频、重新翻译，原来那篇不动。'
+        : ex.same_attempt ? `这次的做题记录导入过，会换成这份里的答案和划线；${keep}`
+        : `这次的答案和划线记成「第 ${ex.attempt_count + 1} 次做」，上次的也留着；${keep}`;
+      extra += `<div class="lr-imp__note">${note}</div>`;
+    }
+    const disabled = !p.has_audio && !(ex && c.mode === 'update');
+    return `<div class="lr-imp__part${off ? ' is-off' : ''}${disabled ? ' is-disabled' : ''}">
+      <input class="lr-imp__check" type="checkbox" data-k="${k}"${c.include ? ' checked' : ''}${disabled ? ' disabled' : ''} aria-label="导入 ${esc(p.label)}" />
+      <span class="lr-imp__label">${esc(p.label)}</span>
+      ${name}
+      <div class="lr-imp__stats">${stats.join('')}</div>
+      ${extra}
+    </div>`;
+  }).join('');
+
+  const picked = r.parts.filter((p, k) => choices[k].include);
+  const anyNew = picked.some((p, k) => !(p.existing && choices[r.parts.indexOf(p)].mode === 'update'));
+  const anyUpd = picked.some(p => p.existing && choices[r.parts.indexOf(p)].mode === 'update');
+  const steps = '<ol><li>下载 JSON 里的音频</li><li>原文直接用 JSON 里的逐句字幕，<strong>不再转录</strong></li><li>翻译成中文</li></ol>';
+  let how = '';
+  if (anyNew) how = `${anyUpd ? '新的 Part 建一篇' : '导入后每个 Part 建一篇'}：${steps}题目、你的答案、解析和做题时的划线一起存${anyUpd ? '进去。导入过的 Part 只把这次的做题记录加进原来那篇。' : '进这篇。'}`;
+
+  box.innerHTML = `<div style="display: flex; flex-direction: column; gap: 16px;">
+    <div class="lr-imp__sum">${sum.join('')}</div>
+    <div class="lr-imp__parts">${rows}</div>
+    ${how ? `<div class="lr-imp__how">${how}</div>` : ''}
+  </div>`;
+  box.hidden = false;
+  syncJsonFooter();
+}
+
+function syncJsonFooter() {
+  const note = document.getElementById('jsonFootnote');
+  const btn = document.getElementById('uploadJsonBtn');
+  const j = state.json;
+  const onJson = state.uploadTab === 'json';
+  if (!onJson || !j || !j.preview || !document.getElementById('jsonError').hidden) {
+    note.hidden = true;
+    btn.disabled = true;
+    btn.textContent = '导入';
+    return;
+  }
+  let created = 0, updated = 0;
+  j.preview.parts.forEach((p, k) => {
+    if (!j.choices[k].include) return;
+    if (p.existing && j.choices[k].mode === 'update') updated++; else created++;
+  });
+  const n = created + updated;
+  note.textContent = [created ? `新建 ${created} 篇` : '', updated ? `更新 ${updated} 篇` : ''].filter(Boolean).join(' · ');
+  note.hidden = !(j.preview.parts.length > 1 || updated) || !n;
+  btn.disabled = !n;
+  btn.textContent = n ? `导入 ${n} 个 Part` : '导入';
+}
+
+document.getElementById('jsonPreview').addEventListener('change', (e) => {
+  const check = e.target.closest('.lr-imp__check');
+  if (!check || !state.json) return;
+  state.json.choices[+check.dataset.k].include = check.checked;
+  renderJsonPreview();
+});
+document.getElementById('jsonPreview').addEventListener('input', (e) => {
+  const input = e.target.closest('.lr-imp__title');
+  if (!input || !state.json) return;
+  state.json.choices[+input.dataset.k].title = input.value;
+  input.classList.toggle('is-warn', !input.value.trim());
+});
+document.getElementById('jsonPreview').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-mode]');
+  if (!btn || !state.json) return;
+  const c = state.json.choices[+btn.dataset.k];
+  if (c.mode === btn.dataset.mode) return;
+  c.mode = btn.dataset.mode;
+  renderJsonPreview();
+});
+
+async function doImportJson(retried) {
+  const j = state.json;
+  if (!j || !j.preview) return;
+  const parts = j.choices.map((c, k) => ({ index: k, mode: c.mode, title: c.title.trim(), include: c.include }))
+    .filter(c => c.include);
+  if (!parts.length) return;
+  const btn = document.getElementById('uploadJsonBtn');
+  btn.disabled = true; btn.textContent = '导入中…';
+  let r;
+  try { r = await API.post('/api/listening_review/jiufen/import', { key: j.preview.key, parts }); }
+  catch (e) { r = { error: '请求失败：' + e.message }; }
+  if (r.expired && !retried && j.raw) {
+    // 服务器重启过、预解析没了：用手上的内容重新预解析一次，选择照旧
+    const keep = j.choices;
+    if (await previewJson()) { j.choices = keep; renderJsonPreview(); return doImportJson(true); }
+    return;
+  }
+  if (!r.success) { showToast(r.error || '导入失败', 'error'); syncJsonFooter(); return; }
+  const msgs = [];
+  if (r.created.length) msgs.push(`新建 ${r.created.length} 篇，正在下载音频和翻译`);
+  r.updated.forEach(u => msgs.push(u.how === 'added' ? `${u.label} 已加上第 ${u.attempt_count} 次做题记录` : `${u.label} 的做题记录已更新`));
+  if (r.skipped.length) msgs.push(`${r.skipped.join('、')} 没有音频链接，没导入`);
+  showToast(msgs.join('；'), 'success');
+  closeUploadModal();
+  await loadProjects();
+}
+
 // 点弹窗外的遮罩关闭
 ['uploadModal', 'deleteModal'].forEach(id => {
   const el = document.getElementById(id);
@@ -710,6 +1017,21 @@ document.getElementById('urlInput').addEventListener('keydown', (e) => { if (e.k
       onFileSelected(input);
     }
   });
+  // JSON 页：文件拖到选文件的框或粘贴框上都行
+  ['jsonDrop', 'jsonPaste'].forEach(id => {
+    const el = document.getElementById(id);
+    ['dragenter', 'dragover'].forEach(ev => el.addEventListener(ev, (e) => {
+      if (![...(e.dataTransfer?.types || [])].includes('Files')) return;
+      e.preventDefault(); el.classList.add('is-over');
+    }));
+    ['dragleave', 'drop'].forEach(ev => el.addEventListener(ev, () => el.classList.remove('is-over')));
+    el.addEventListener('drop', (e) => {
+      const file = e.dataTransfer?.files?.[0];
+      if (!file) return;
+      e.preventDefault();
+      onJsonFile(file);
+    });
+  });
 })();
 
 // ===================================================================
@@ -718,6 +1040,7 @@ document.getElementById('urlInput').addEventListener('keydown', (e) => { if (e.k
 async function openProject(id) {
   const proj = state.projects.find(p => p.id === id);
   if (!proj) return;
+  if (proj.status === 'downloading') { showToast('还在下载音频，稍等一会儿'); return; }
   if (proj.status === 'processing') { showToast('还在转录，稍等一会儿'); return; }
   if (proj.status === 'translating') { showToast('还在润色翻译，稍等一会儿'); return; }
   if (proj.status === 'error') { showToast(errorPhaseText(proj), 'error'); return; }
@@ -727,6 +1050,10 @@ async function openProject(id) {
 
   state.currentProject = r.project;
   state.currentData = r.data;
+  state.exam = r.exam && Array.isArray(r.exam.groups) ? r.exam : null;
+  state.attemptIdx = state.exam ? (state.exam.attempts || []).length - 1 : -1;
+  state.selQ = null;
+  state.playUntil = null;
   state.activeSegmentId = -1;
   state.pickerSeg = null;
 
@@ -736,8 +1063,9 @@ async function openProject(id) {
   const metaParts = [];
   if (r.project.duration) metaParts.push(formatTime(r.project.duration));
   if (segCount) metaParts.push(`${segCount} 句`);
+  if (state.exam) metaParts.push('九分学长');
   document.getElementById('detailMeta').textContent = metaParts.join(' · ');
-  document.getElementById('sideUploaded').textContent = r.project.created_at ? `${formatDate(r.project.created_at)}上传` : '';
+  document.getElementById('sideUploaded').textContent = r.project.created_at ? `${formatDate(r.project.created_at)}${state.exam ? '导入' : '上传'}` : '';
   updateMasteredBtn(!!r.project.mastered);
   updateCheckinBtn(r.project.checkin_count || 0);
   toggleSide(window.matchMedia('(min-width: 1100px)').matches);
@@ -746,6 +1074,7 @@ async function openProject(id) {
   audioEl.src = `/api/listening_review/audio/${id}/${r.project.audio_filename}?token=${encodeURIComponent(tk)}`;
   audioEl.load();
   updateProgressBar(0);
+  renderExamSide();
   renderLyrics();
   renderNotesView();
   updateNotesButton();
@@ -760,8 +1089,12 @@ function backToList() {
   audioEl.pause();
   audioEl.removeAttribute('src');
   audioEl.load();
+  toggleAttemptMenu(false);
   state.currentProject = null;
   state.currentData = null;
+  state.exam = null;
+  state.selQ = null;
+  state.playUntil = null;
   state.activeSegmentId = -1;
   switchView('list');
   loadProjects();
@@ -798,14 +1131,41 @@ function renderLyrics() {
     container.innerHTML = '<div class="ui-empty"><p class="ui-empty__title">这篇没有字幕数据</p></div>';
     return;
   }
-  container.innerHTML = state.currentData.segments.map(lineHtml).join('');
+  const segs = state.currentData.segments;
+  const marks = questionMarks();
+  const ev = selectedEvidence();
+  let html = '', prevEnd = null, inBand = false;
+  segs.forEach(seg => {
+    if (prevEnd !== null && seg.start - prevEnd >= GAP_SECONDS) {
+      const span = `${formatTime(prevEnd)}–${formatTime(seg.start)}`;
+      html += `<div class="lr-gap">${state.exam ? `看题时间 ${span}，没有声音` : `${span} 没有声音`}</div>`;
+    }
+    const inRange = !!ev && seg.id >= ev.from && seg.id <= ev.to;
+    if (inRange && !inBand) {
+      html += `<div class="lr-evi" role="group" aria-label="第 ${esc(ev.num)} 题的出处"><div class="lr-evi__head"><span>Q${esc(ev.num)} 出处 · ${formatTime(ev.start)}–${formatTime(ev.end)}</span><button class="lr-linkbtn" type="button" data-act="evi-play">播放这一段</button></div>`;
+      inBand = true;
+    } else if (!inRange && inBand) {
+      html += '</div>';
+      inBand = false;
+    }
+    html += lineHtml(seg, marks);
+    prevEnd = Math.max(prevEnd || 0, seg.end);
+  });
+  if (inBand) html += '</div>';
+  container.innerHTML = html;
   renderSideNums();
 }
 
-function lineHtml(seg) {
+function lineHtml(seg, marks) {
   const starred = (state.currentData.starred_segments || []).includes(seg.id);
   const segAnnots = (state.currentData.vocab_annotations || []).filter(a => a.segment_id === seg.id);
   const segNotes = (state.currentData.notes || []).filter(n => n.segment_id === seg.id);
+  const qtags = ((marks && marks.tags[seg.id]) || []).map(t => {
+    const what = { right: '答对了', wrong: '答错了', blank: '没答' }[t.state] || '';
+    const cls = t.state === 'wrong' ? ' is-err' : t.state === 'blank' ? ' is-blank' : '';
+    return `<button class="lr-qtag${cls}" type="button" data-act="qtag" data-q="${esc(t.num)}" aria-label="第 ${esc(t.num)} 题${what ? '，' + what : ''}">Q${esc(t.num)}</button>`;
+  }).join('');
+  const ans = (marks && marks.ans[seg.id]) || [];
   const cls = 'lr-line' + (seg.id === state.activeSegmentId ? ' is-active' : '') + (starred ? ' is-starred' : '');
   const translation = seg.translation ? `<div class="lr-line__zh">${esc(seg.translation)}</div>` : '';
   return `
@@ -813,7 +1173,7 @@ function lineHtml(seg) {
       <button class="lr-line__time" type="button" tabindex="-1">${formatTime(seg.start)}</button>
       <button class="lr-line__star star-btn${starred ? ' is-on' : ''}" type="button" data-seg-id="${seg.id}" aria-label="${starred ? '取消收藏' : '收藏这句'}" aria-pressed="${starred}">${starred ? ICONS.starOn : ICONS.star}</button>
       <div class="lr-line__body">
-        <div class="lr-line__en line-text" data-seg-id="${seg.id}">${renderAnnotatedText(seg.text, segAnnots, segNotes)}</div>
+        <div class="lr-line__en"><span class="line-text" data-seg-id="${seg.id}">${renderAnnotatedText(seg.text, segAnnots, segNotes, ans)}</span>${qtags}</div>
         ${translation}
         <div class="lr-why-slot" data-seg-id="${seg.id}">${starred ? whyHtml(seg.id) : ''}</div>
       </div>
@@ -890,10 +1250,11 @@ function endErrorTagAudioPause() {
 // Render a segment's text with overlap-safe vocab underlines + note highlights.
 // Both annotation types can coexist on the same characters; we split the text at
 // every annotation boundary so the markup never breaks, even when ranges overlap.
-function renderAnnotatedText(text, vocabAnnots, noteAnnots) {
+function renderAnnotatedText(text, vocabAnnots, noteAnnots, answerRanges) {
   const ranges = [];
   (vocabAnnots || []).forEach(a => ranges.push({ start: a.start_offset, end: a.end_offset, type: 'vocab', id: a.id, meaning: a.meaning, segId: a.segment_id }));
   (noteAnnots  || []).forEach(n => ranges.push({ start: n.start_offset, end: n.end_offset, type: 'note',  id: n.id }));
+  (answerRanges || []).forEach(([start, end]) => ranges.push({ start, end, type: 'ans' }));
   if (ranges.length === 0) return esc(text);
 
   const bounds = new Set([0, text.length]);
@@ -915,6 +1276,7 @@ function renderAnnotatedText(text, vocabAnnots, noteAnnots) {
     const note  = covering.find(r => r.type === 'note');
     const cls = [];
     let attrs = '';
+    if (covering.some(r => r.type === 'ans')) cls.push('lr-ans');
     if (vocab) { cls.push('lr-vocab'); attrs += ` data-aid="${esc(vocab.id)}" data-seg-id="${vocab.segId}" data-meaning="${esc(vocab.meaning)}"`; }
     if (note)  { cls.push('lr-note');  attrs += ` data-note-id="${esc(note.id)}"`; }
     html += `<span class="${cls.join(' ')}"${attrs}>${esc(slice)}</span>`;
@@ -941,6 +1303,8 @@ lyricsContainer.addEventListener('click', (e) => {
   if (errorBubble) { e.stopPropagation(); toggleErrorTag(parseInt(errorBubble.dataset.segId), errorBubble.dataset.tag); return; }
 
   const act = e.target.closest('[data-act]');
+  if (act && act.dataset.act === 'qtag') { e.stopPropagation(); selectQuestion(act.dataset.q, { fromScript: true }); return; }
+  if (act && act.dataset.act === 'evi-play') { e.stopPropagation(); playEvidence(state.selQ); return; }
   if (act && act.dataset.act === 'open-picker') { e.stopPropagation(); openErrorPicker(parseInt(act.dataset.segId)); return; }
   if (act && act.dataset.act === 'close-picker') { e.stopPropagation(); closeErrorPicker(); return; }
 
@@ -1357,6 +1721,14 @@ function updateNotesButton() {
 function renderSideNums() {
   if (!state.currentData) return;
   const d = state.currentData;
+  const att = currentAttempt();
+  document.getElementById('sideScoreCell').hidden = !att;
+  document.getElementById('sideNums').classList.toggle('lr-side__nums--4', !!att);
+  document.getElementById('sideCheckinLabel').textContent = att ? '打卡' : '打卡次数';
+  document.getElementById('sideNotesLabel').textContent = att ? '笔记生词' : '笔记 / 生词';
+  if (att) document.getElementById('sideScoreNum').textContent = `${att.correct}/${att.total}`;
+  const nCount = document.getElementById('sideTabNCount');
+  if (nCount) nCount.textContent = (d.notes || []).length + (d.vocab_annotations || []).length;
   document.getElementById('sideStarNum').textContent = (d.starred_segments || []).length;
   document.getElementById('sideNotesNum').textContent = (d.notes || []).length + (d.vocab_annotations || []).length;
   document.getElementById('sideCheckinNum').textContent = state.currentProject?.checkin_count || 0;
@@ -1489,6 +1861,417 @@ async function deleteFromView(kind, id) {
 }
 
 // ===================================================================
+//  九分学长导入的篇：做题记录、题目栏、字幕上的出处
+// ===================================================================
+function currentAttempt() {
+  const list = (state.exam && state.exam.attempts) || [];
+  return list[state.attemptIdx] || list[list.length - 1] || null;
+}
+
+function examQuestions() {
+  const out = [];
+  ((state.exam && state.exam.groups) || []).forEach((g, gi) => (g.questions || []).forEach(q => out.push({ g, gi, q })));
+  return out;
+}
+
+function answerOf(num) {
+  const a = currentAttempt();
+  return (a && a.answers && a.answers[num]) || { user: '', state: '' };
+}
+
+// 正确答案里 a|b 是几种都算对的写法
+function displayAnswer(ans) {
+  return String(ans || '').split('|').map(s => s.trim()).filter(Boolean).join(' / ');
+}
+
+function stateCls(st) {
+  return st === 'wrong' ? ' is-err' : st === 'blank' ? ' is-blank' : '';
+}
+
+// 题目的出处句子：sentenceIndex 就是字幕的句子 id；音频和 JSON 字幕对不上（改成重新转录）时不标
+function evidenceSegs(q) {
+  if (!state.exam || state.exam.aligned === false || !q || !q.evidence || !state.currentData) return [];
+  const [a, b] = q.evidence;
+  return (state.currentData.segments || []).filter(s => s.id >= a && s.id <= b);
+}
+
+function selectedEvidence() {
+  if (state.selQ === null) return null;
+  const item = examQuestions().find(x => x.q.num === state.selQ);
+  const segs = item ? evidenceSegs(item.q) : [];
+  if (!segs.length) return null;
+  return {
+    num: state.selQ, from: item.q.evidence[0], to: item.q.evidence[1],
+    start: Math.min(...segs.map(s => s.start)), end: Math.max(...segs.map(s => s.end))
+  };
+}
+
+function findWord(text, word) {
+  const w = String(word || '').trim();
+  if (!w) return -1;
+  const re = new RegExp('(^|[^A-Za-z0-9])(' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')(?![A-Za-z0-9])', 'i');
+  const m = re.exec(text);
+  return m ? m.index + m[1].length : -1;
+}
+
+// 题号小标签挂在答案所在的那句（找不到就挂在出处最后一句）；填空题的答案词下面画绿线
+function questionMarks() {
+  const tags = {}, ans = {};
+  examQuestions().forEach(({ g, q }) => {
+    const segs = evidenceSegs(q);
+    if (!segs.length) return;
+    let target = segs[segs.length - 1];
+    if (g.kind === 'blank') {
+      outer: for (const alt of String(q.answer || '').split('|')) {
+        for (const seg of segs) {
+          const at = findWord(seg.text, alt);
+          if (at >= 0) {
+            target = seg;
+            (ans[seg.id] = ans[seg.id] || []).push([at, at + alt.trim().length]);
+            break outer;
+          }
+        }
+      }
+    }
+    (tags[target.id] = tags[target.id] || []).push({ num: q.num, state: answerOf(q.num).state });
+  });
+  return { tags, ans };
+}
+
+// --- 本篇栏：来源、做题记录切换、题目 / 本篇笔记 两页 ---
+function renderExamSide() {
+  const exam = state.exam;
+  document.getElementById('sideTabs').hidden = !exam;
+  document.getElementById('notesHeadRow').hidden = !!exam;
+  const att = currentAttempt();
+  const src = document.getElementById('sideSrc');
+  src.hidden = !att;
+  if (att) {
+    const bits = ['九分学长'];
+    if (att.submitted_at) bits.push(`${formatDate(att.submitted_at)}交卷`);
+    if (att.elapsed_seconds) bits.push(`用时 ${formatTime(att.elapsed_seconds)}`);
+    src.textContent = bits.join(' · ');
+  }
+  const attempts = (exam && exam.attempts) || [];
+  document.getElementById('attemptBox').hidden = attempts.length < 2;
+  if (attempts.length >= 2) {
+    const i = attempts.indexOf(att);
+    document.getElementById('attemptBtnText').textContent = `第 ${i + 1} 次 · ${formatDate(att.submitted_at)}交卷`;
+    document.getElementById('attemptMenu').innerHTML = attempts.map((a, k) => `
+      <button class="lr-att__opt${k === i ? ' is-on' : ''}" type="button" role="option" aria-selected="${k === i}" data-i="${k}"><span>第 ${k + 1} 次 · ${formatDate(a.submitted_at)}</span><span>${a.correct}/${a.total}</span><span>划线 ${(a.marks || []).length}</span></button>`).join('');
+  }
+  document.getElementById('sideTabQCount').textContent = examQuestions().length || '';
+  setSideTab(state.sideTab);
+  renderQuestions();
+  renderSideNums();
+}
+
+function setSideTab(tab) {
+  const t = state.exam ? tab : 'notes';
+  if (state.exam) state.sideTab = t;
+  document.getElementById('questionsPane').hidden = t !== 'questions';
+  document.getElementById('notesPane').hidden = t !== 'notes';
+  document.querySelectorAll('.side-tab').forEach(b => {
+    const on = b.dataset.tab === t;
+    b.classList.toggle('is-on', on);
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+}
+document.querySelectorAll('.side-tab').forEach(b => b.addEventListener('click', () => setSideTab(b.dataset.tab)));
+
+function toggleAttemptMenu(force) {
+  const menu = document.getElementById('attemptMenu');
+  const open = typeof force === 'boolean' ? force : menu.hidden;
+  menu.hidden = !open;
+  document.getElementById('attemptHint').hidden = !open;
+  document.getElementById('attemptBtn').setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+document.getElementById('attemptMenu').addEventListener('click', (e) => {
+  const opt = e.target.closest('[data-i]');
+  if (!opt) return;
+  state.attemptIdx = +opt.dataset.i;
+  toggleAttemptMenu(false);
+  renderExamSide();
+  renderLyrics();
+});
+document.addEventListener('mousedown', (e) => {
+  if (!document.getElementById('attemptMenu').hidden && !e.target.closest('#attemptBox')) toggleAttemptMenu(false);
+});
+
+// --- 题目栏：题号总览 + 按原卷排的题目，空里填着你的答案，黄底是做题时划的词 ---
+function hlText(text, marks) {
+  const s = String(text || '');
+  const rs = marks.map(m => [Math.max(0, m.start), Math.min(s.length, m.end)]).filter(([a, b]) => b > a).sort((x, y) => x[0] - y[0]);
+  let out = '', pos = 0;
+  rs.forEach(([a, b]) => {
+    a = Math.max(a, pos);
+    if (b <= a) return;
+    out += esc(s.slice(pos, a)) + `<span class="lr-hl">${esc(s.slice(a, b))}</span>`;
+    pos = b;
+  });
+  return out + esc(s.slice(pos));
+}
+
+function nearestIndex(hay, needle, around) {
+  let best = -1;
+  for (let i = hay.indexOf(needle); i >= 0; i = hay.indexOf(needle, i + 1)) {
+    if (best < 0 || Math.abs(i - around) < Math.abs(best - around)) best = i;
+  }
+  return best;
+}
+
+// 题目版式里的划线：下标按版式的纯文字算（空格框不占位置），对不上就找附近同一个词
+function wrapMarks(root, marks) {
+  if (!marks.length) return;
+  const nodes = [];
+  let full = '';
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode: n => (n.parentElement && n.parentElement.closest('.ir-blank')) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT
+  });
+  for (let n = walker.nextNode(); n; n = walker.nextNode()) { nodes.push({ node: n, start: full.length }); full += n.data; }
+  const ranges = marks.map(m => {
+    let s = m.start;
+    if (full.slice(s, s + m.text.length) !== m.text) s = nearestIndex(full, m.text, m.start);
+    return s < 0 ? null : [s, s + m.text.length];
+  }).filter(Boolean).sort((a, b) => a[0] - b[0]);
+  const merged = [];
+  ranges.forEach(r => {
+    const last = merged[merged.length - 1];
+    if (last && r[0] <= last[1]) last[1] = Math.max(last[1], r[1]);
+    else merged.push([r[0], r[1]]);
+  });
+  // 从后往前包：拆开的文字节点前半段还是原来那个节点，前面的下标不受影响
+  for (let i = merged.length - 1; i >= 0; i--) {
+    const [s, e] = merged[i];
+    for (let k = nodes.length - 1; k >= 0; k--) {
+      const { node, start } = nodes[k];
+      const from = Math.max(s - start, 0), to = Math.min(e - start, node.data.length);
+      if (to <= from || !node.data.slice(from, to).trim()) continue;
+      let mid = node;
+      if (from > 0) mid = node.splitText(from);
+      if (to - from < mid.data.length) mid.splitText(to - from);
+      const span = document.createElement('span');
+      span.className = 'lr-hl';
+      mid.parentNode.insertBefore(span, mid);
+      span.appendChild(mid);
+    }
+  }
+}
+
+function keysOf(ans, options) {
+  const s = String(ans || '').trim().toUpperCase();
+  if (!s) return new Set();
+  const keys = options.map(o => String(o.key).toUpperCase());
+  const tokens = s.split(/[\s,，、/&|]+/).filter(Boolean);
+  if (tokens.every(t => keys.includes(t))) return new Set(tokens);
+  if (/^[A-Z]+$/.test(s) && [...s].every(c => keys.includes(c))) return new Set([...s]);
+  const hit = options.find(o => String(o.text).trim().toUpperCase() === s);
+  return new Set(hit ? [String(hit.key).toUpperCase()] : []);
+}
+
+function blankChipHtml(q) {
+  const a = answerOf(q.num);
+  const sel = q.num === state.selQ;
+  const right = displayAnswer(q.answer);
+  const user = String(a.user || '').trim();
+  let cls = 'lr-blank', inner = `<span class="lr-blank__n">${esc(q.num)}</span>`, label;
+  if (a.state === 'right') {
+    inner += esc(user || right);
+    label = `${user || right}，答对`;
+  } else if (a.state === 'wrong' && user) {
+    cls += ' is-err';
+    inner += `<span class="lr-blank__you">${esc(user)}</span><span class="lr-blank__right">${esc(right)}</span>`;
+    label = `你填 ${user}，正确是 ${right}`;
+  } else if (a.state) {
+    cls += ' is-blank';
+    inner += `<span class="lr-blank__none">没答</span><span class="lr-blank__right">${esc(right)}</span>`;
+    label = `没答，正确是 ${right}`;
+  } else {
+    inner += `<span class="lr-blank__right">${esc(right)}</span>`;
+    label = `答案 ${right}`;
+  }
+  if (sel) cls += ' is-sel';
+  return `<button class="${cls}" type="button" data-q="${esc(q.num)}" aria-expanded="${sel}" aria-label="第 ${esc(q.num)} 题：${esc(label)}">${inner}</button>`;
+}
+
+function qxHtml(q) {
+  const a = answerOf(q.num);
+  const user = String(a.user || '').trim();
+  const ok = a.state === 'right';
+  const an = q.analysis || {};
+  const para = (label, text) => text ? `<div><span class="lr-qx__label">${esc(label)}</span><p class="lr-qx__text">${esc(text)}</p></div>` : '';
+  const ans = [];
+  if (a.state) ans.push(`<span>你的答案${user ? `<b class="${ok ? 'is-ok' : 'is-err'}">${esc(user)}</b>` : '<b>没答</b>'}</span>`);
+  if (!ok) ans.push(`<span>正确答案<b class="is-ok">${esc(displayAnswer(q.answer))}</b></span>`);
+  const play = evidenceSegs(q).length
+    ? `<button class="ui-btn ui-btn--sm" type="button" data-act="q-play" data-q="${esc(q.num)}">${ICONS.play}播放出处</button>` : '';
+  return `<div class="lr-qx">
+    <div class="lr-qx__ans">${ans.join('')}</div>
+    ${para('解析', an.explain)}${para('干扰', an.trap)}${(an.extra || []).map(x => para(x.label || '补充', x.text)).join('')}
+    <div class="lr-qx__acts">${play}<button class="ui-btn ui-btn--sm" type="button" data-act="q-close">收起</button></div>
+  </div>`;
+}
+
+function choiceHtml(q, gmarks) {
+  const a = answerOf(q.num);
+  const sel = q.num === state.selQ;
+  const right = keysOf(q.answer, q.options), mine = keysOf(a.user, q.options);
+  const opts = q.options.map(o => {
+    const k = String(o.key).toUpperCase();
+    const isR = right.has(k), isM = mine.has(k);
+    const cls = isM ? (isR ? ' is-right' : ' is-wrong') : isR ? ' is-right' : '';
+    const mark = isM ? (isR ? '你选 · 对' : '你选') : isR ? '答案' : '';
+    const om = gmarks.filter(m => m.q === q.num && m.o === o.key);
+    return `<li class="lr-opt${cls}"><span class="lr-opt__k">${esc(o.key)}</span><span>${hlText(o.text, om)}</span><span class="lr-opt__mark">${mark}</span></li>`;
+  }).join('');
+  const stemMarks = gmarks.filter(m => m.q === q.num && !m.o);
+  return `<div class="lr-qs__stem${sel ? ' is-sel' : ''}" role="button" tabindex="0" data-q="${esc(q.num)}" aria-expanded="${sel}"><span class="lr-qnum${stateCls(a.state)}">${esc(q.num)}</span><span>${hlText(q.text, stemMarks)}</span></div>
+    <ul class="lr-qs__opts">${opts}</ul>${sel ? qxHtml(q) : ''}`;
+}
+
+function rowHtml(q, gmarks) {
+  const sel = q.num === state.selQ;
+  const stemMarks = gmarks.filter(m => m.q === q.num && !m.o);
+  return `<div class="lr-qs__match" role="button" tabindex="0" data-q="${esc(q.num)}" aria-expanded="${sel}"><span>${hlText(q.text, stemMarks)}</span>${blankChipHtml(q)}</div>${sel ? qxHtml(q) : ''}`;
+}
+
+function groupHtml(g, gi, gmarks) {
+  let html = '<div class="lr-qs__group">';
+  if (g.range) html += `<div class="lr-qs__range">${esc(g.range)}</div>`;
+  if (g.instruction_html) html += `<div class="lr-qs__inst">${g.instruction_html}</div>`;
+  if (g.image) html += `<img class="lr-qs__img" src="${esc(g.image)}" alt="${esc(g.range || '题目')}的配图" loading="lazy" referrerpolicy="no-referrer" />`;
+  if (g.title) html += `<p class="lr-qs__title">${esc(g.title)}</p>`;
+  const bank = (g.options && g.options.length) ? g.options : (g.kind === 'match' && g.questions[0] ? g.questions[0].options : []);
+  if (g.kind === 'match' && bank.length) html += `<div class="lr-qs__bank">${bank.map(o => `<b>${esc(o.key)}</b><span>${esc(o.text)}</span>`).join('')}</div>`;
+  if (g.content_html) html += `<div class="lr-qs__content" data-g="${gi}">${g.content_html}</div>`;
+  else if (g.kind === 'choice' || g.kind === 'judge') html += g.questions.map(q => choiceHtml(q, gmarks)).join('');
+  else html += g.questions.map(q => rowHtml(q, gmarks)).join('');
+  return html + '</div>';
+}
+
+// 题目版式（HTML）里的空格框换成填着答案的小框，选中的题在那一行下面展开解析
+function fillContent(box, g, gmarks) {
+  wrapMarks(box, gmarks.filter(m => !m.q));
+  const byNum = {};
+  g.questions.forEach(q => { byNum[q.num] = q; });
+  const placed = new Set();
+  box.querySelectorAll('.ir-blank').forEach(span => {
+    const q = byNum[span.dataset.q];
+    if (!q) return;
+    const t = document.createElement('template');
+    t.innerHTML = blankChipHtml(q);
+    span.replaceWith(t.content.firstElementChild);
+    placed.add(q.num);
+  });
+  // 版式里没有空格框的题，列在版式下面
+  const rest = g.questions.filter(q => !placed.has(q.num));
+  if (rest.length) box.insertAdjacentHTML('beforeend', rest.map(q => rowHtml(q, gmarks)).join(''));
+  if (state.selQ === null || !placed.has(state.selQ)) return;
+  const chip = box.querySelector(`.lr-blank[data-q="${CSS.escape(state.selQ)}"]`);
+  const t = document.createElement('template');
+  t.innerHTML = qxHtml(byNum[state.selQ]).trim();
+  const qx = t.content.firstElementChild;
+  const tr = chip.closest('tr');
+  if (tr && box.contains(tr)) {
+    const row = document.createElement('tr');
+    const td = document.createElement('td');
+    td.colSpan = 99;
+    td.appendChild(qx);
+    row.appendChild(td);
+    tr.after(row);
+    return;
+  }
+  const li = chip.closest('li');
+  if (li && box.contains(li)) { li.appendChild(qx); return; }
+  const block = chip.closest('p, div, h1, h2, h3, h4, h5, h6');
+  if (block && block !== box && box.contains(block)) block.after(qx);
+  else box.appendChild(qx);
+}
+
+function renderQuestions() {
+  const pane = document.getElementById('questionsPane');
+  if (!state.exam) { pane.innerHTML = ''; return; }
+  const att = currentAttempt();
+  const marks = (att && att.marks) || [];
+  const qmap = examQuestions().map(({ q }) => {
+    const st = answerOf(q.num).state;
+    const what = { right: '答对', wrong: '答错', blank: '没答' }[st] || '';
+    const sel = q.num === state.selQ;
+    return `<button class="lr-qnum${stateCls(st)}${sel ? ' is-sel' : ''}" type="button" data-q="${esc(q.num)}" aria-pressed="${sel}" aria-label="第 ${esc(q.num)} 题${what ? '，' + what : ''}">${esc(q.num)}</button>`;
+  }).join('');
+  const legend = att ? `<div class="lr-qs__legend"><span><i style="background: var(--w-ok-soft);"></i>答对</span><span><i style="background: var(--w-err);"></i>答错</span><span><i style="background: var(--w-big-track);"></i>没答</span>${marks.length ? '<span><i style="background: var(--w-hl-yellow);"></i>你做题时划的词</span>' : ''}</div>` : '';
+  const groups = state.exam.groups.map((g, gi) => groupHtml(g, gi, marks.filter(m => m.g === gi))).join('');
+  pane.innerHTML = `<div class="lr-qmap" role="group" aria-label="题号，点一题看出处和解析">${qmap}</div>${legend}<div class="lr-qs">${groups}</div>`;
+  pane.querySelectorAll('.lr-qs__content').forEach(box => {
+    const gi = +box.dataset.g;
+    fillContent(box, state.exam.groups[gi], marks.filter(m => m.g === gi));
+  });
+}
+
+function scrollSideTo(el) {
+  const side = document.getElementById('notesSide');
+  const sr = side.getBoundingClientRect(), r = el.getBoundingClientRect();
+  if (r.top >= sr.top + 12 && r.bottom <= sr.bottom - 12) return;
+  side.scrollBy({ top: r.top - sr.top - 80, behavior: 'smooth' });
+}
+
+function scrollScriptTo(el) {
+  const topH = navHeight();
+  const bottomH = document.getElementById('lrPlayer').offsetHeight;
+  const visibleH = window.innerHeight - topH - bottomH;
+  const r = el.getBoundingClientRect();
+  const y = r.top + window.scrollY - topH - Math.max(16, (visibleH - r.height) / 2);
+  window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+}
+
+// 选中一题：题目栏展开解析，字幕把出处圈出来并滚过去；再点一次收起
+function selectQuestion(num, { fromScript = false } = {}) {
+  if (num !== null && !fromScript && num === state.selQ) num = null;
+  state.selQ = num;
+  renderQuestions();
+  renderLyrics();
+  if (num === null) return;
+  if (fromScript) {
+    setSideTab('questions');
+    if (!state.sideOpen) toggleSide(true);
+  }
+  const pane = document.getElementById('questionsPane');
+  const el = pane.querySelector('.lr-qx') || pane.querySelector(`[data-q="${CSS.escape(num)}"]:not(.lr-qnum)`);
+  if (el) scrollSideTo(el);
+  const band = document.querySelector('#lyricsContainer .lr-evi');
+  if (band && !fromScript) scrollScriptTo(band);
+}
+
+function playEvidence(num) {
+  const item = examQuestions().find(x => x.q.num === num);
+  const segs = item ? evidenceSegs(item.q) : [];
+  if (!segs.length) return;
+  if (isDrawerMode()) toggleSide(false);
+  markVocabAudioManualOverride();
+  audioEl.currentTime = Math.min(...segs.map(s => s.start));
+  state.playUntil = Math.max(...segs.map(s => s.end));
+  audioEl.play().catch(() => {});
+}
+
+const questionsPaneEl = document.getElementById('questionsPane');
+questionsPaneEl.addEventListener('click', (e) => {
+  const act = e.target.closest('[data-act]');
+  if (act && act.dataset.act === 'q-play') { playEvidence(act.dataset.q); return; }
+  if (act && act.dataset.act === 'q-close') { selectQuestion(null); return; }
+  if (e.target.closest('.lr-qx')) return;
+  const hit = e.target.closest('[data-q]');
+  if (hit) selectQuestion(hit.dataset.q);
+});
+questionsPaneEl.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const hit = e.target.closest('[role="button"][data-q]');
+  if (!hit || hit !== e.target) return;
+  e.preventDefault();
+  e.stopPropagation();
+  selectQuestion(hit.dataset.q);
+});
+
+// ===================================================================
 //  Audio Player
 // ===================================================================
 let lastSavedAt = 0;
@@ -1511,6 +2294,10 @@ audioEl.addEventListener('timeupdate', () => {
   if (newActive !== state.activeSegmentId && newActive >= 0) {
     state.activeSegmentId = newActive;
     highlightSegment(newActive);
+  }
+  if (state.playUntil !== null && t >= state.playUntil) {
+    state.playUntil = null;
+    audioEl.pause();
   }
   // 只在真正播放时记「上次听到哪」，光打开看一眼不算
   if (!audioEl.paused && Date.now() - lastSavedAt > 3000) {
@@ -1568,6 +2355,7 @@ function highlightSegment(segId) {
 function seekToSegment(segId) {
   const seg = state.currentData.segments.find(s => s.id === segId);
   if (!seg) return;
+  state.playUntil = null;
   audioEl.currentTime = seg.start;
   if (audioEl.paused) audioEl.play().catch(() => {});
   state.activeSegmentId = segId;
@@ -1580,6 +2368,7 @@ function seekToSegment(segId) {
   let dragging = false;
 
   function seekFromEvent(e) {
+    state.playUntil = null;
     const rect = wrap.getBoundingClientRect();
     const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
     if (audioEl.duration) audioEl.currentTime = ratio * audioEl.duration;
@@ -1687,6 +2476,7 @@ function updateCheckinBtn(count) {
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     if (!document.getElementById('uploadModal').hidden) { closeUploadModal(); return; }
+    if (!document.getElementById('attemptMenu').hidden) { toggleAttemptMenu(false); return; }
     if (!document.getElementById('deleteModal').hidden) { closeDeleteDialog(); return; }
     if (!document.getElementById('vocabPopover').hidden) { hideVocabPopover(); return; }
     if (!document.getElementById('notePopover').hidden) { hideNotePopover(); return; }
@@ -1699,8 +2489,8 @@ document.addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   if (e.code === 'Space')      { e.preventDefault(); togglePlay(); }
-  else if (e.code === 'ArrowLeft')  { e.preventDefault(); audioEl.currentTime = Math.max(0, audioEl.currentTime - 3); }
-  else if (e.code === 'ArrowRight') { e.preventDefault(); audioEl.currentTime = Math.min(audioEl.duration || 0, audioEl.currentTime + 3); }
+  else if (e.code === 'ArrowLeft')  { e.preventDefault(); state.playUntil = null; audioEl.currentTime = Math.max(0, audioEl.currentTime - 3); }
+  else if (e.code === 'ArrowRight') { e.preventDefault(); state.playUntil = null; audioEl.currentTime = Math.min(audioEl.duration || 0, audioEl.currentTime + 3); }
 });
 
 // ===================================================================
