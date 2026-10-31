@@ -6,6 +6,7 @@
 |---|---|
 | `home/` | 首页 |
 | `intensive/` | 文章精读、添加文章 |
+| `vocab_summary/` | 词汇汇总（含词汇挑战）、登录 |
 | `listening/` | 听力精听复习、听力笔记本 |
 | `vocabulary/` | 单词本 |
 | `study_tips/` | 学习技巧 |

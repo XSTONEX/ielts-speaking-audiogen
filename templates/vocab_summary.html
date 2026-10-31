@@ -1,3 +1,4 @@
+<!-- 设计稿：https://claude.ai/artifact/MhSvUwJm3kfprXehaKM2nu 「登录 · 词汇汇总 · 改版」。改样式先改画布，再改这个文件。 -->
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -24,1152 +25,965 @@
   <script src="/static/auth-fetch.js?v=20260927"></script>
   <title>词汇汇总 · IELTS Lab</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  
-  <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="/static/android-chrome-192x192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="/static/android-chrome-512x512.png">
-  
-  <link href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Crimson+Text:wght@400;600&display=swap" rel="stylesheet">
-  <style>
-    * { box-sizing: border-box; }
-    body { font-family: 'PT Serif', 'Crimson Text', ui-serif, 'Times New Roman', 'Georgia', serif; background: #f6f8fb; margin:0; line-height: 1.6; color: #1f2937; letter-spacing: -0.05px; text-rendering: optimizeLegibility; font-kerning: normal; }
-    .container { max-width: 1600px; margin: 0 auto; background:#fff; min-height: 100vh; display: flex; flex-direction: column; }
-    
-    /* Header */
-    .header { display:flex; justify-content:space-between; align-items:center; padding: 20px 32px; border-bottom:1px solid var(--border-default); /* 原写死 #fafbfc，暗色下页眉仍是亮底，
-       而 theme.css 已把 .header .title 改成近白色，标题对比度只剩 1.07 */
-    background: var(--bg-muted); }
-    .header .title { font-weight:600; color:#111827; font-size: 24px; }
-    .header .actions { display: flex; gap: 12px; align-items: center; }
-    .btn { padding: 10px 20px; border:none; border-radius:12px; cursor:pointer; background:#f8fafc; color:#374151; font-weight:500; transition: all 0.2s; border: 1px solid #e2e8f0; font-size: 14px; }
-    .btn:hover { background:#e2e8f0; transform: translateY(-1px); }
-    .btn.primary { background: linear-gradient(135deg, #4f46e5 0%, #764ba2 100%); color:#fff; border: none; }
-    .btn.primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(102, 126, 234, 0.25); }
-    .btn.export { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color:#fff; border: none; }
-    .btn.export:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(16, 185, 129, 0.25); }
-    .btn.challenge { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color:#fff; border: none; }
-    .btn.challenge:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(245, 158, 11, 0.25); }
-    
-    /* Main Layout */
-    .main { flex: 1; display: flex; overflow: hidden; }
-    .sidebar { width: 380px; border-right: 1px solid #e6ebf2; background: #fafbfc; display: flex; flex-direction: column; }
-    .content { flex: 1; display: flex; flex-direction: column; background: #fff; }
-    
-    /* Category Tabs */
-    .cat-tabs { display:flex; gap:4px; justify-content:center; margin: 20px 16px 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 16px; }
-    .cat-tabs button { padding:10px 18px; border-radius:12px; border:none; background:#f8fafc; cursor:pointer; font-weight:500; color:#6b7280; transition: all 0.2s; font-size: 14px; }
-    .cat-tabs button.active { background: linear-gradient(135deg, #4f46e5 0%, #764ba2 100%); color:#fff; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
-    .cat-tabs button:hover:not(.active) { background:#e2e8f0; }
-    
-    /* Article List */
-    .article-list { flex: 1; overflow-y: auto; padding: 0 16px 16px; }
-    .article-item { border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin-bottom: 12px; background: #fff; cursor: pointer; transition: all 0.2s; }
-    .article-item:hover { border-color: #c7d2fe; background: #f5f7ff; transform: translateY(-1px); }
-    .article-item.active { border-color: #4f46e5; background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%); }
-    .article-title { font-weight: 600; color: #111827; font-size: 15px; margin-bottom: 6px; }
-    .article-meta { color: #6b7280; font-size: 12px; display: flex; justify-content: space-between; }
-    .article-stats { color: #10b981; font-weight: 500; }
-    
-    /* Vocabulary Content */
-    .vocab-header { padding: 20px 24px; border-bottom: 1px solid #f1f5f9; background: #fafbfc; }
-    .vocab-title { font-weight: 600; color: #111827; font-size: 18px; margin-bottom: 8px; }
-    .vocab-subtitle { color: #6b7280; font-size: 14px; }
-    .vocab-controls { display: flex; gap: 12px; margin-top: 16px; }
-    .search-box { flex: 1; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 10px; background: #f8fafc; font-size: 14px; font-family: 'PT Serif', 'Crimson Text', ui-serif, 'Times New Roman', 'Georgia', serif; }
-    .search-box:focus { outline: none; border-color: #4f46e5; background: #fff; }
-    
-    /* Vocabulary List */
-    .vocab-list { flex: 1; overflow-y: auto; padding: 16px 24px; }
-    .vocab-item { border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px 16px; margin-bottom: 10px; background: #fafbff; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-    .vocab-item:hover { border-color: #c7d2fe; background: #f5f7ff; }
-    .vocab-content { flex: 1; min-width: 0; }
-    .vocab-word { font-weight: 700; color: #111827; font-size: 15px; margin-bottom: 4px; word-break: break-word; }
-    .vocab-meaning { color: #6b7280; font-size: 13px; line-height: 1.4; word-break: break-word; }
-    .vocab-actions { flex-shrink: 0; display: flex; align-items: center; }
-    .jump-btn { width: 32px; height: 32px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; color: #475569; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; font-size: 14px; }
-    .jump-btn:hover { background: #eef2f7; border-color: #cbd5e1; transform: translateY(-1px); color: #4f46e5; }
-    .jump-btn:active { transform: translateY(0); }
-    
-    /* Empty States */
-    .empty { text-align: center; padding: 48px 24px; color: #9ca3af; }
-    .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
-    .empty-text { font-size: 16px; margin-bottom: 8px; }
-    .empty-hint { font-size: 14px; color: #d1d5db; }
-    
-    /* Export Dropdown */
-    .export-dropdown { position: relative; display: inline-block; }
-    .export-menu { position: absolute; top: 100%; right: 0; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); min-width: 200px; z-index: 1000; display: none; }
-    .export-menu.active { display: block; }
-    .export-item { padding: 12px 16px; cursor: pointer; transition: all 0.2s; border-bottom: 1px solid #f1f5f9; }
-    .export-item:last-child { border-bottom: none; }
-    .export-item:hover { background: #f8fafc; }
-    .export-item-title { font-weight: 500; color: #111827; font-size: 14px; }
-    .export-item-desc { color: #6b7280; font-size: 12px; margin-top: 2px; }
-
-    /* Modal Styles */
-    .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000; }
-    .modal-content { background: #fff; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); max-width: 90vw; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #f1f5f9; background: #fafbfc; }
-    .modal-header h3 { margin: 0; color: #111827; font-size: 18px; font-weight: 600; }
-    .modal-close { background: none; border: none; font-size: 24px; color: #6b7280; cursor: pointer; padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px; transition: all 0.2s; }
-    .modal-close:hover { background: #f3f4f6; color: #374151; }
-    .modal-body { padding: 24px; overflow-y: auto; flex: 1; }
-    .modal-footer { display: flex; gap: 12px; justify-content: flex-end; padding: 16px 24px; border-top: 1px solid #f1f5f9; background: #fafbfc; }
-
-    /* Challenge Setup Modal */
-    .challenge-setup { width: 700px; }
-    .setup-section { margin-bottom: 24px; }
-    .setup-section label { display: block; margin-bottom: 8px; font-weight: 500; color: #374151; }
-    .category-filter-buttons { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-    .category-filter-btn { padding: 8px 16px; border: 2px solid #e5e7eb; border-radius: 20px; background: #fff; color: #6b7280; cursor: pointer; transition: all 0.2s; font-size: 14px; font-weight: 500; }
-    .category-filter-btn:hover { border-color: #d1d5db; background: #f9fafb; }
-    .category-filter-btn.active { border-color: #4f46e5; background: linear-gradient(135deg, #4f46e5 0%, #764ba2 100%); color: #fff; }
-    .article-selection { border: 1px solid #e5e7eb; border-radius: 12px; max-height: 300px; overflow-y: auto; }
-    .article-category { margin-bottom: 16px; }
-    .article-category:last-child { margin-bottom: 0; }
-    .category-header { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: #f8fafc; border-bottom: 1px solid #e5e7eb; font-weight: 500; color: #374151; }
-    .category-header input[type="checkbox"] { margin: 0; }
-    .article-category .article-list { padding: 0; }
-    .article-category .article-item { margin: 0; border: none; border-bottom: 1px solid #f1f5f9; border-radius: 0; display: flex; align-items: center; gap: 12px; }
-    .article-category .article-item:last-child { border-bottom: none; }
-    .article-category .article-item input[type="checkbox"] { margin: 0; flex-shrink: 0; }
-    .article-category .article-item .article-info { flex: 1; min-width: 0; }
-    .article-category-badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 500; background: #f3f4f6; color: #6b7280; }
-    .article-category-badge[data-category="Reading"] { background: #dbeafe; color: #1e40af; }
-    .article-category-badge[data-category="Listening"] { background: #d1fae5; color: #065f46; }
-    .article-category-badge[data-category="Writing"] { background: #fef3c7; color: #92400e; }
-    .word-count-input { width: 80px; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; }
-    .word-count-slider { margin-top: 12px; }
-    .word-count-slider input[type="range"] { width: 100%; }
-    .slider-labels { display: flex; justify-content: space-between; margin-top: 4px; font-size: 12px; color: #6b7280; }
-    .challenge-stats { display: flex; gap: 24px; padding: 16px; background: #f8fafc; border-radius: 12px; }
-    .stat-item { text-align: center; }
-    .stat-label { display: block; font-size: 12px; color: #6b7280; margin-bottom: 4px; }
-    .stat-value { display: block; font-size: 24px; font-weight: 600; color: #111827; }
-
-    /* Challenge Game Modal */
-    .challenge-game { width: 600px; }
-    .challenge-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #f1f5f9; background: linear-gradient(135deg, #4f46e5 0%, #764ba2 100%); color: #fff; }
-    .challenge-info h3 { margin: 0; font-size: 18px; }
-    .challenge-progress { font-size: 14px; opacity: 0.9; margin-top: 4px; }
-    .challenge-timer { font-size: 20px; font-weight: 600; background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 20px; }
-    .challenge-question-container { padding: 40px 24px; text-align: center; background: #fafbfc; }
-    .challenge-question { font-size: 24px; font-weight: 600; color: #111827; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 12px; }
-    .challenge-word { color: #4f46e5; }
-    .challenge-audio-btn { background: #4f46e5; color: #fff; border: none; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
-    .challenge-audio-btn:hover { background: #5a67d8; transform: scale(1.1); }
-    .challenge-options { padding: 0 24px 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .challenge-option { padding: 16px; border: 2px solid #e5e7eb; border-radius: 12px; background: #fff; cursor: pointer; transition: all 0.2s; text-align: center; font-weight: 500; }
-    .challenge-option:hover { border-color: #4f46e5; background: #f5f7ff; }
-    .challenge-option.correct { border-color: #10b981; background: #ecfdf5; color: #065f46; }
-    .challenge-option.incorrect { border-color: #ef4444; background: #fef2f2; color: #991b1b; }
-    .challenge-controls { display: flex; gap: 12px; justify-content: center; padding: 16px 24px; border-top: 1px solid #f1f5f9; }
-
-    /* Challenge Result Modal */
-    .challenge-result { width: 600px; }
-    .result-summary { text-align: center; margin-bottom: 24px; }
-    .result-score { font-size: 48px; font-weight: 600; color: #4f46e5; margin-bottom: 8px; }
-    .result-accuracy { font-size: 18px; color: #6b7280; margin-bottom: 16px; }
-    .result-details { display: flex; justify-content: space-around; padding: 16px; background: #f8fafc; border-radius: 12px; }
-    .result-detail { text-align: center; }
-    .result-detail-value { font-size: 20px; font-weight: 600; color: #111827; }
-    .result-detail-label { font-size: 12px; color: #6b7280; margin-top: 4px; }
-    .wrong-words-section { margin-top: 24px; }
-    .wrong-words-section h4 { margin-bottom: 16px; color: #111827; }
-    .wrong-word-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 8px; background: #fef2f2; }
-    .wrong-word-text { font-weight: 600; color: #991b1b; }
-    .wrong-word-meaning { color: #6b7280; }
-
-    /* Challenge History Modal */
-    .challenge-history { width: 800px; }
-    .history-tabs { display: flex; border-bottom: 1px solid #e5e7eb; margin-bottom: 24px; }
-    .tab-btn { padding: 12px 24px; border: none; background: none; cursor: pointer; color: #6b7280; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.2s; }
-    .tab-btn.active { color: #4f46e5; border-bottom-color: #4f46e5; }
-    .tab-btn:hover:not(.active) { color: #374151; }
-    .history-content { min-height: 300px; }
-    .history-item { padding: 16px; border: 1px solid #e5e7eb; border-radius: 12px; margin-bottom: 12px; }
-    .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .history-title { font-weight: 600; color: #111827; }
-    .history-date { font-size: 12px; color: #6b7280; }
-    .history-stats { display: flex; gap: 16px; font-size: 14px; color: #6b7280; }
-    
-    /* Mobile Responsive */
-    @media (max-width: 1024px) {
-      .main { flex-direction: column; }
-      .sidebar { width: 100%; max-height: 40vh; }
-      .content { flex: 1; }
-      .header { padding: 16px 20px; flex-direction: column; gap: 12px; }
-      .header .actions { width: 100%; justify-content: center; }
-    }
-    
-    @media (max-width: 768px) {
-      .container { margin: 0; }
-      .header { padding: 12px 16px; }
-      .header .title { font-size: 20px; }
-      .cat-tabs { margin: 16px 12px 12px; flex-wrap: wrap; }
-      .cat-tabs button { padding: 8px 14px; font-size: 13px; }
-      .article-list { padding: 0 12px 12px; }
-      .vocab-header { padding: 16px 16px; }
-      .vocab-list { padding: 12px 16px; }
-      .vocab-item { padding: 10px 12px; align-items: flex-start; gap: 8px; }
-      .vocab-content { flex: 1; }
-      .vocab-actions { margin-top: 2px; }
-      .btn { padding: 8px 16px; font-size: 13px; }
-    }
-  </style>
-  <!-- 词汇发音管理器 -->
-  <script src="/static/word-pronunciation.js?v=20260919"></script>
-  <link rel="stylesheet" href="/static/theme.css?v=20260919">
+  <link rel="stylesheet" href="/static/theme.css?v=20261031b">
+  <link rel="stylesheet" href="/static/plain.css?v=20261031">
   <script src="/static/theme.js?v=20260919" defer></script>
   <script src="/static/api-client.js?v=20260919" defer></script>
   <script src="/static/auth.js?v=20260927" defer></script>
-  <script src="/static/ui-feedback.js?v=20260919" defer></script>
-  <script src="/static/app-shell.js?v=20260927" defer></script>
+  <script src="/static/app-shell.js?v=20261031" defer></script>
+  <style>
+    /* 词汇汇总页专属样式：只用设计系统令牌（--w-* 等）和 plain.css 的 ui- 组件，类名统一 vs- 前缀。 */
+    html.vs-lock { overflow: hidden; }
+    .vs-main { padding: 26px 0 64px 0; }
+    .vs-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .vs-grow { flex: 1 1 auto; }
+
+    /* ---------- 页头 ---------- */
+    .vs-back { display: inline-flex; align-items: center; gap: 2px; margin: 0 0 10px -4px; font-size: var(--w-fs-meta); color: var(--w-ink3); text-decoration: none; }
+    .vs-back:hover { color: var(--w-ink); }
+    .vs-head {
+      display: flex; align-items: flex-end; justify-content: space-between; gap: 24px;
+      padding-bottom: 24px; margin-bottom: 24px; border-bottom: 1px solid var(--w-line);
+    }
+    .vs-head__main { min-width: 0; }
+    .vs-head__title { margin: 0; font-size: var(--w-fs-title); font-weight: 600; line-height: 1.35; color: var(--w-ink); }
+    .vs-head__desc { margin: 6px 0 0 0; font-size: var(--w-fs-ui); color: var(--w-ink2); }
+    .vs-head__tools { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+    /* ---------- 导出菜单 ---------- */
+    .vs-menu-wrap { position: relative; }
+    .vs-menu {
+      position: absolute; top: calc(100% + 6px); right: 0; z-index: 1100; width: 260px; padding: 6px;
+      background: var(--w-surface); border: 1px solid var(--w-line); border-radius: var(--w-r-card); box-shadow: var(--w-shadow-lg);
+    }
+    .vs-menu button {
+      width: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 1px; padding: 9px 12px;
+      border: none; border-radius: var(--w-r-inner); background: transparent; text-align: left; cursor: pointer;
+    }
+    .vs-menu button:hover:not(:disabled), .vs-menu button:focus-visible { background: var(--w-sunken); outline: none; }
+    .vs-menu button:disabled { opacity: .55; cursor: not-allowed; }
+    .vs-menu b { font-size: var(--w-fs-ui); font-weight: 600; color: var(--w-ink); }
+    .vs-menu span { font-size: var(--w-fs-meta); color: var(--w-ink3); }
+
+    /* ---------- 主体：左边文章，右边词 ---------- */
+    .vs-body { display: grid; grid-template-columns: var(--rail-w) minmax(0, 1fr); gap: var(--gap-18); align-items: start; }
+    .vs-rail {
+      position: sticky; top: calc(var(--app-shell-h, 56px) + 16px);
+      max-height: calc(100vh - var(--app-shell-h, 56px) - 32px);
+      display: flex; flex-direction: column; gap: 12px; min-width: 0;
+    }
+    .vs-seg {
+      height: 40px; flex-shrink: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px;
+      border-radius: var(--w-r-chip); background: var(--w-big-track);
+    }
+    .vs-seg button {
+      min-width: 0; padding: 0 4px; border: none; border-radius: var(--w-r-chip); background: transparent;
+      font-size: var(--w-fs-meta); color: var(--w-ink2); cursor: pointer; white-space: nowrap; transition: background .15s, color .15s;
+    }
+    .vs-seg button:hover { color: var(--w-ink); }
+    .vs-seg button.active { background: var(--w-surface); color: var(--w-ink); font-weight: 600; box-shadow: 0 0 0 1px var(--w-line); }
+    .vs-seg button:focus-visible { outline: none; box-shadow: var(--w-ring); }
+    .vs-seg__n { margin-left: 3px; font-weight: 400; color: var(--w-ink3); font-variant-numeric: tabular-nums; }
+    .vs-arts { display: flex; flex-direction: column; gap: 4px; min-height: 0; overflow: auto; margin: 0 -4px; padding: 0 4px; }
+    .vs-art {
+      width: 100%; display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; text-align: left;
+      border: 1px solid transparent; border-radius: var(--w-r-card); background: transparent; cursor: pointer;
+      transition: background .15s, border-color .15s;
+    }
+    .vs-art:hover { background: var(--w-sunken); }
+    .vs-art:focus-visible { outline: none; box-shadow: var(--w-ring); }
+    .vs-art.active { background: var(--w-big-soft); border-color: var(--w-big-line); }
+    .vs-art__title {
+      font-size: var(--w-fs-ui); line-height: 1.45; color: var(--w-ink); overflow-wrap: anywhere;
+      overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    }
+    .vs-art__meta { font-size: var(--w-fs-meta); color: var(--w-ink3); font-variant-numeric: tabular-nums; }
+    .vs-art.active .vs-art__title { color: var(--w-big); font-weight: 600; }
+    .vs-art.active .vs-art__meta { color: var(--w-big); }
+    .vs-rail__note { margin: 0 12px; font-size: var(--w-fs-meta); line-height: 1.6; color: var(--w-ink3); }
+    .vs-rail__msg { padding: 14px 12px; font-size: var(--w-fs-meta); line-height: 1.7; color: var(--w-ink3); }
+
+    .vs-pane { min-width: 0; }
+    .vs-pane__head { height: 40px; display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+    .vs-pane__title { margin: 0; min-width: 0; font-size: var(--w-fs-en); font-weight: 600; color: var(--w-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vs-pane__count { flex-shrink: 0; font-size: var(--w-fs-meta); color: var(--w-ink3); font-variant-numeric: tabular-nums; }
+    .vs-pane__open { flex-shrink: 0; display: inline-flex; align-items: center; gap: 2px; font-size: var(--w-fs-meta); color: var(--w-big); text-decoration: none; }
+    .vs-pane__open:hover { text-decoration: underline; }
+    .vs-search { position: relative; margin-left: auto; flex-shrink: 0; width: 260px; }
+    .vs-search svg { position: absolute; left: 12px; top: 12px; color: var(--w-ink3); pointer-events: none; }
+    .vs-search .ui-input { padding-left: 36px; }
+    .vs-search .ui-input::-webkit-search-cancel-button { cursor: pointer; }
+    .vs-pane__tip { margin: 14px 0 0 0; font-size: var(--w-fs-meta); color: var(--w-ink3); }
+
+    .vs-words { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .vs-word {
+      display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 14px 16px;
+      border: 1px solid var(--w-line); border-radius: var(--w-r-card); background: var(--w-surface); cursor: pointer;
+      transition: border-color .15s;
+    }
+    .vs-word:hover { border-color: var(--w-big-line); }
+    .vs-word.is-playing { border-color: var(--w-big-line); background: var(--w-big-soft); }
+    .vs-word__top { display: flex; align-items: center; gap: 8px; }
+    .vs-word__en { flex: 1 1 auto; min-width: 0; font-family: var(--font-en); font-size: var(--w-fs-en); font-weight: 600; line-height: 1.4; color: var(--w-ink); overflow-wrap: anywhere; }
+    .vs-word__zh { font-size: var(--w-fs-ui); line-height: 1.6; color: var(--w-ink2); overflow-wrap: anywhere; }
+    .vs-word__zh.is-empty { color: var(--w-ink3); }
+    .vs-words > .ui-empty { grid-column: 1 / -1; border: 1px dashed var(--w-line); border-radius: var(--w-r-card); }
+    .vs-ibtn {
+      width: 30px; height: 30px; flex-shrink: 0; padding: 0; display: inline-flex; align-items: center; justify-content: center;
+      border: 1px solid var(--w-line); border-radius: var(--w-r-round); background: var(--w-surface); color: var(--w-ink2); cursor: pointer;
+      transition: border-color .15s, background .15s, color .15s;
+    }
+    .vs-ibtn:hover { border-color: var(--w-big-line); background: var(--w-big-soft); color: var(--w-big); }
+    .vs-ibtn:focus-visible { outline: none; box-shadow: var(--w-ring); }
+    .vs-ibtn:disabled { opacity: .55; cursor: not-allowed; }
+
+    /* ---------- 弹窗（外壳是 plain.css 的 ui-dialog） ---------- */
+    .vs-dlg { display: flex; flex-direction: column; overflow: hidden; padding: 0; }
+    .vs-dlg:focus { outline: none; }
+    .vs-dlg--setup, .vs-dlg--result { width: min(640px, 100%); }
+    .vs-dlg--game { width: min(600px, 100%); }
+    .vs-dlg--history { width: min(760px, 100%); height: min(700px, calc(100vh - 48px)); }
+    .vs-dlg__head { display: flex; align-items: flex-start; gap: 14px; padding: 20px 24px 16px 24px; border-bottom: 1px solid var(--w-line); flex-shrink: 0; }
+    .vs-dlg__head > div { flex: 1 1 auto; min-width: 0; }
+    .vs-dlg__title { margin: 0; font-size: var(--w-fs-en); font-weight: 600; color: var(--w-ink); }
+    .vs-dlg__sub { margin: 2px 0 0 0; font-size: var(--w-fs-meta); color: var(--w-ink3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vs-dlg__body { flex: 1 1 auto; min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 20px; padding: 20px 24px; }
+    .vs-dlg__foot { display: flex; align-items: center; gap: 10px; padding: 14px 24px; border-top: 1px solid var(--w-line); flex-shrink: 0; }
+    .vs-dlg__summary { flex: 1 1 auto; min-width: 0; font-size: var(--w-fs-meta); color: var(--w-ink2); }
+    .vs-dlg__summary b { font-weight: 600; color: var(--w-ink); font-variant-numeric: tabular-nums; }
+    .vs-close {
+      width: 32px; height: 32px; flex-shrink: 0; padding: 0; display: inline-flex; align-items: center; justify-content: center;
+      border: 1px solid var(--w-line); border-radius: var(--w-r-round); background: var(--w-surface); color: var(--w-ink2); cursor: pointer;
+    }
+    .vs-close:hover { border-color: var(--w-big-line); background: var(--w-big-soft); color: var(--w-big); }
+    .vs-close:focus-visible { outline: none; box-shadow: var(--w-ring); }
+    .vs-label { font-size: var(--w-fs-meta); color: var(--w-ink2); }
+    .vs-block { display: flex; flex-direction: column; gap: 10px; }
+    .vs-hint { margin: 0; font-size: var(--w-fs-meta); color: var(--w-ink3); }
+    .vs-err { margin: 0; padding: 10px 12px; border: 1px solid var(--w-err-line); border-radius: var(--w-r-inner); background: var(--w-err-soft); color: var(--w-err); font-size: var(--w-fs-meta); }
+    .vs-text-btn { height: 40px; padding: 0 6px; border: none; background: transparent; color: var(--w-ink3); font-size: var(--w-fs-ui); cursor: pointer; }
+    .vs-text-btn:hover { color: var(--w-ink); }
+
+    /* 开始挑战 */
+    .vs-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .vs-filter .vs-label { margin-right: 6px; }
+    .vs-filter .ui-chip:disabled { opacity: .55; cursor: not-allowed; }
+    .vs-check { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; font-size: var(--w-fs-meta); color: var(--w-ink2); cursor: pointer; }
+    .vs-check input, .vs-pick input { width: 16px; height: 16px; margin: 0; flex-shrink: 0; accent-color: var(--w-big); cursor: pointer; }
+    .vs-pick { max-height: 280px; overflow: auto; border: 1px solid var(--w-line); border-radius: var(--w-r-inner); }
+    .vs-pick__row { min-height: 46px; display: flex; align-items: center; gap: 12px; padding: 6px 14px; cursor: pointer; }
+    .vs-pick__row + .vs-pick__row { border-top: 1px solid var(--w-line); }
+    .vs-pick__row:hover { background: var(--w-sunken); }
+    .vs-pick__row.is-on { background: var(--w-big-soft); }
+    .vs-pick__title { flex: 1 1 auto; min-width: 0; font-size: var(--w-fs-ui); color: var(--w-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vs-pick__n { flex-shrink: 0; width: 56px; text-align: right; font-size: var(--w-fs-meta); color: var(--w-ink3); font-variant-numeric: tabular-nums; }
+    .vs-pick__cat { flex-shrink: 0; width: 82px; display: flex; justify-content: flex-end; }
+    .vs-pick__cat .ui-tag { padding: 1px 8px; font-weight: 400; }
+    .vs-pick .vs-rail__msg { text-align: center; }
+    .vs-count { display: flex; align-items: center; gap: 16px; }
+    .vs-count .ui-input { width: 76px; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+    .vs-count input[type="range"] { flex: 1 1 auto; min-width: 0; accent-color: var(--w-big); }
+    .vs-count span { flex-shrink: 0; font-size: var(--w-fs-meta); color: var(--w-ink3); }
+
+    /* 答题 */
+    .vs-game__head { display: flex; align-items: center; gap: 12px; padding: 18px 24px 14px 24px; }
+    .vs-game__progress { font-size: var(--w-fs-meta); color: var(--w-ink3); font-variant-numeric: tabular-nums; }
+    .vs-game__score { margin-left: auto; font-size: var(--w-fs-meta); color: var(--w-ink2); }
+    .vs-game__score b { font-weight: 600; color: var(--w-ink); font-variant-numeric: tabular-nums; }
+    .vs-timer { display: flex; align-items: center; gap: 12px; padding: 0 24px; }
+    .vs-timer__bar { flex: 1 1 auto; height: 6px; border-radius: var(--w-r-chip); background: var(--w-big-track); overflow: hidden; }
+    .vs-timer__bar i { display: block; height: 100%; width: 100%; border-radius: var(--w-r-chip); background: var(--w-big); transition: width .25s linear; }
+    .vs-timer__num { flex-shrink: 0; width: 40px; text-align: right; font-size: var(--w-fs-meta); color: var(--w-big); font-variant-numeric: tabular-nums; }
+    .vs-timer.is-low .vs-timer__bar i { background: var(--w-warn); }
+    .vs-timer.is-low .vs-timer__num { color: var(--w-warn); }
+    .vs-q { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 34px 24px 28px 24px; text-align: center; }
+    .vs-q__hint { font-size: var(--w-fs-meta); color: var(--w-ink3); }
+    .vs-q__main { display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 40px; }
+    .vs-q__word { font-family: var(--font-en); font-size: var(--w-fs-title); font-weight: 600; line-height: 1.35; color: var(--w-ink); overflow-wrap: anywhere; }
+    .vs-q__meaning { font-size: var(--w-fs-title); font-weight: 600; line-height: 1.45; color: var(--w-ink); overflow-wrap: anywhere; }
+    .vs-q .vs-ibtn { width: 32px; height: 32px; }
+    .vs-opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 0 24px; }
+    .vs-opt {
+      min-height: 58px; padding: 10px 14px; display: flex; align-items: center; justify-content: center; gap: 8px;
+      border: 1px solid var(--w-line); border-radius: var(--w-r-card); background: var(--w-surface); color: var(--w-ink);
+      font-size: var(--w-fs-ui); line-height: 1.5; text-align: center; overflow-wrap: anywhere; cursor: pointer;
+      transition: border-color .15s, background .15s, color .15s, opacity .15s;
+    }
+    .vs-opt.is-en { font-family: var(--font-en); font-size: var(--w-fs-en); }
+    .vs-opt:hover:not(:disabled) { border-color: var(--w-big-line); background: var(--w-big-soft); }
+    .vs-opt:focus-visible { outline: none; box-shadow: var(--w-ring); }
+    .vs-opt:disabled { cursor: default; }
+    .vs-opt.is-dim { opacity: .55; }
+    .vs-opt.correct { border-color: var(--w-ok-line); background: var(--w-ok-soft); color: var(--w-ok); font-weight: 600; }
+    .vs-opt.incorrect { border-color: var(--w-err-line); background: var(--w-err-soft); color: var(--w-err); font-weight: 600; }
+    .vs-opt svg { flex-shrink: 0; }
+    .vs-q__feedback { min-height: 22px; margin: 14px 24px 0 24px; text-align: center; font-size: var(--w-fs-meta); color: var(--w-ink3); }
+    .vs-dlg--game .vs-dlg__foot { margin-top: 22px; }
+
+    /* 结果 */
+    .vs-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    .vs-stat { padding: 14px 16px; border: 1px solid var(--w-line); border-radius: var(--w-r-card); background: var(--w-surface); }
+    .vs-stat__num { font-size: var(--w-fs-title); font-weight: 600; line-height: 1.2; color: var(--w-ink); font-variant-numeric: tabular-nums; }
+    .vs-stat__unit { margin-left: 2px; font-size: var(--w-fs-meta); font-weight: 400; color: var(--w-ink3); }
+    .vs-stat__label { margin-top: 4px; font-size: var(--w-fs-meta); color: var(--w-ink2); }
+    .vs-stat.is-main { border-color: var(--w-big-line); background: var(--w-big-soft); }
+    .vs-stat.is-main .vs-stat__num, .vs-stat.is-main .vs-stat__label { color: var(--w-big); }
+    .vs-list { border: 1px solid var(--w-line); border-radius: var(--w-r-inner); overflow: hidden; }
+    .vs-list__row { min-height: 46px; display: flex; align-items: center; gap: 14px; padding: 8px 14px; }
+    .vs-list__row + .vs-list__row { border-top: 1px solid var(--w-line); }
+    .vs-list__word { flex: 0 0 150px; min-width: 0; font-family: var(--font-en); font-size: var(--w-fs-ui); font-weight: 600; color: var(--w-ink); overflow-wrap: anywhere; }
+    .vs-list__meaning { flex: 1 1 auto; min-width: 0; font-size: var(--w-fs-ui); color: var(--w-ink2); overflow-wrap: anywhere; }
+    .vs-list__pick { flex-shrink: 0; max-width: 40%; font-size: var(--w-fs-meta); color: var(--w-err); overflow-wrap: anywhere; text-align: right; }
+    .vs-list__pick.is-skip { color: var(--w-ink3); }
+    .vs-allright { margin: 0; padding: 18px; border: 1px solid var(--w-ok-line); border-radius: var(--w-r-inner); background: var(--w-ok-soft); color: var(--w-ok); text-align: center; font-size: var(--w-fs-ui); }
+
+    /* 记录 */
+    .vs-dlg--history .vs-dlg__head { flex-direction: column; align-items: stretch; gap: 10px; padding-bottom: 0; }
+    .vs-dlg--history .vs-dlg__head > .vs-dlg__bar { display: flex; align-items: center; gap: 14px; }
+    .vs-dlg--history .vs-dlg__head > .vs-tabs { flex: none; }
+    .vs-tabs { display: flex; gap: 24px; }
+    .vs-tabs button {
+      margin-bottom: -1px; padding: 6px 0 10px 0; border: none; border-bottom: 2px solid transparent; background: transparent;
+      font-size: var(--w-fs-ui); color: var(--w-ink3); cursor: pointer;
+    }
+    .vs-tabs button:hover { color: var(--w-ink); }
+    .vs-tabs button.active { color: var(--w-ink); font-weight: 600; border-bottom-color: var(--w-big); }
+    .vs-tabs button:focus-visible { outline: none; box-shadow: var(--w-ring); }
+    .vs-tabs__n { margin-left: 3px; font-size: var(--w-fs-meta); font-weight: 400; color: var(--w-ink3); font-variant-numeric: tabular-nums; }
+    .vs-dlg--history .vs-dlg__body { gap: 12px; padding-top: 18px; }
+    .vs-rec { padding: 14px 16px; border: 1px solid var(--w-line); border-radius: var(--w-r-card); }
+    .vs-rec__top, .vs-rec__bottom { display: flex; align-items: center; gap: 14px; }
+    .vs-rec__bottom { margin-top: 6px; }
+    .vs-rec__title { flex: 1 1 auto; min-width: 0; font-size: var(--w-fs-ui); font-weight: 600; color: var(--w-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vs-rec__when { flex-shrink: 0; font-size: var(--w-fs-meta); color: var(--w-ink3); font-variant-numeric: tabular-nums; }
+    .vs-rec__line { flex: 1 1 auto; min-width: 0; font-size: var(--w-fs-meta); color: var(--w-ink2); font-variant-numeric: tabular-nums; }
+    .vs-rec .ui-btn--sm { height: 30px; padding: 0 12px; }
+    .vs-rec__detail { margin-top: 12px; padding: 12px 14px; border-radius: var(--w-r-inner); background: var(--w-sunken); font-size: var(--w-fs-meta); line-height: 1.8; color: var(--w-ink2); }
+    .vs-rec__detail .ui-en { font-size: var(--w-fs-meta); color: var(--w-ink); }
+    .vs-ww { display: flex; align-items: center; gap: 14px; padding: 10px 16px; }
+    .vs-ww + .vs-ww { border-top: 1px solid var(--w-line); }
+    .vs-ww__main { flex: 1 1 auto; min-width: 0; }
+    .vs-ww__line { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+    .vs-ww__word { flex-shrink: 0; max-width: 50%; font-family: var(--font-en); font-size: var(--w-fs-ui); font-weight: 600; color: var(--w-ink); overflow-wrap: anywhere; }
+    .vs-ww__meaning { min-width: 0; font-size: var(--w-fs-ui); color: var(--w-ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vs-ww__from { font-size: var(--w-fs-meta); color: var(--w-ink3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vs-ww__times { flex-shrink: 0; width: 64px; text-align: right; font-size: var(--w-fs-meta); font-weight: 600; color: var(--w-err); font-variant-numeric: tabular-nums; }
+    .vs-ww .ui-btn--sm { height: 30px; padding: 0 12px; flex-shrink: 0; }
+    .vs-table { border: 1px solid var(--w-line); border-radius: var(--w-r-card); overflow: hidden; }
+    .vs-table__row { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; padding: 10px 16px; font-size: var(--w-fs-ui); font-variant-numeric: tabular-nums; }
+    .vs-table__row + .vs-table__row { border-top: 1px solid var(--w-line); }
+    .vs-table__row.is-head { padding: 8px 16px; background: var(--w-sunken); font-size: var(--w-fs-meta); color: var(--w-ink3); }
+    .vs-table__row .is-soft { color: var(--w-ink2); }
+    .vs-para { margin: 0; font-size: var(--w-fs-meta); color: var(--w-ink2); }
+    .vs-para b { font-weight: 600; color: var(--w-ink); }
+
+    /* ---------- 提示 ---------- */
+    .vs-toasts { position: fixed; left: 50%; bottom: 24px; z-index: 1500; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; }
+    .vs-toasts .ui-toast { pointer-events: auto; max-width: min(520px, calc(100vw - 32px)); }
+
+    /* ---------- 窄屏：只保证不溢出、能点能用 ---------- */
+    @media (max-width: 1024px) {
+      .vs-words { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 820px) {
+      .vs-head { flex-direction: column; align-items: stretch; gap: 14px; }
+      .vs-head__tools { flex-wrap: wrap; }
+      .vs-body { grid-template-columns: minmax(0, 1fr); }
+      .vs-rail { position: static; max-height: none; }
+      .vs-arts { max-height: 240px; }
+      .vs-pane__head { height: auto; flex-wrap: wrap; }
+      .vs-search { width: 100%; margin-left: 0; }
+      .vs-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .vs-dlg__head, .vs-dlg__body, .vs-dlg__foot, .vs-game__head { padding-left: 16px; padding-right: 16px; }
+      .vs-timer, .vs-opts { padding-left: 16px; padding-right: 16px; }
+    }
+    @media (max-width: 560px) {
+      .vs-words, .vs-opts { grid-template-columns: minmax(0, 1fr); }
+      .vs-list__row, .vs-ww { flex-wrap: wrap; }
+      .vs-list__word { flex-basis: auto; }
+      .vs-dlg__foot { flex-wrap: wrap; }
+      .vs-pick__cat { display: none; }
+    }
+  </style>
 </head>
-<body class="theme-page page-vocab-summary">
+<body class="theme-page page-vocab-summary ui-plain">
 
-  <div class="container">
-    <div class="header">
-      <div class="title">📚 词汇汇总</div>
-      <div class="actions">
-        <button class="btn challenge" onclick="openChallengeSetup()">🏆 词汇挑战</button>
-        <button class="btn" onclick="openChallengeHistory()">📊 挑战记录</button>
-        <button class="btn" onclick="location.href='/intensive'">返回精读</button>
-        <div class="export-dropdown">
-          <button class="btn export" onclick="toggleExportMenu()">导出词汇 ▼</button>
-          <div class="export-menu" id="exportMenu">
-            <div class="export-item" onclick="exportVocab('current')">
-              <div class="export-item-title">导出当前文章</div>
-              <div class="export-item-desc">导出所选文章的词汇</div>
-            </div>
-            <div class="export-item" onclick="exportVocab('category')">
-              <div class="export-item-title">导出当前分类</div>
-              <div class="export-item-desc">导出所选分类的所有词汇</div>
-            </div>
-            <div class="export-item" onclick="exportVocab('all')">
-              <div class="export-item-title">导出全部词汇</div>
-              <div class="export-item-desc">导出所有分类的词汇</div>
-            </div>
+  <main class="ui-page vs-main">
+    <a class="vs-back" href="/intensive"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5L5.5 8 10 12.5"/></svg>文章精读</a>
+
+    <header class="vs-head">
+      <div class="vs-head__main">
+        <h1 class="vs-head__title">词汇汇总</h1>
+        <p class="vs-head__desc">精读里高亮过的词按文章汇总在这里：听发音、跳回原文、导出成表格，也能拿来做挑战。</p>
+      </div>
+      <div class="vs-head__tools">
+        <button type="button" class="ui-btn ui-btn--md" id="historyBtn">挑战记录</button>
+        <div class="vs-menu-wrap">
+          <button type="button" class="ui-btn ui-btn--md" id="exportBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="exportMenu">导出<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 6.5L8 10l3.5-3.5"/></svg></button>
+          <div class="vs-menu" id="exportMenu" role="menu" hidden>
+            <button type="button" role="menuitem" data-export="current"><b>当前文章</b><span id="exportCurrentDesc">先选一篇文章</span></button>
+            <button type="button" role="menuitem" data-export="category"><b>当前分类</b><span id="exportCategoryDesc"></span></button>
+            <button type="button" role="menuitem" data-export="all"><b>全部文章</b><span id="exportAllDesc"></span></button>
           </div>
         </div>
+        <button type="button" class="ui-btn ui-btn--md ui-btn--primary" id="challengeBtn">开始挑战</button>
       </div>
+    </header>
+
+    <div class="vs-body">
+      <aside class="vs-rail" aria-label="文章">
+        <div class="vs-seg" role="tablist" aria-label="分类">
+          <button type="button" role="tab" id="tab-Reading" data-cat="Reading">Reading<span class="vs-seg__n"></span></button>
+          <button type="button" role="tab" id="tab-Listening" data-cat="Listening">Listening<span class="vs-seg__n"></span></button>
+          <button type="button" role="tab" id="tab-Writing" data-cat="Writing">Writing<span class="vs-seg__n"></span></button>
+        </div>
+        <div class="vs-arts" id="articleList"><div class="vs-rail__msg">正在加载文章…</div></div>
+        <p class="vs-rail__note" id="railNote" hidden></p>
+      </aside>
+
+      <section class="vs-pane" aria-labelledby="vocabTitle">
+        <div class="vs-pane__head">
+          <h2 class="vs-pane__title" id="vocabTitle">词汇</h2>
+          <span class="vs-pane__count" id="vocabSubtitle"></span>
+          <a class="vs-pane__open" id="openArticle" href="/intensive" target="_blank" rel="noopener" hidden>打开原文<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 10.5l5-5M6.5 5.5h4v4"/></svg></a>
+          <label class="vs-search">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg>
+            <span class="vs-sr">搜单词或释义</span>
+            <input type="search" class="ui-input" id="vocabSearch" placeholder="搜单词或释义" autocomplete="off">
+          </label>
+        </div>
+        <div class="vs-words" id="vocabList"></div>
+        <p class="vs-pane__tip" id="vocabTip" hidden>点卡片听发音；右上角的箭头在新标签页打开原文，并滚到这个词。</p>
+      </section>
     </div>
+  </main>
 
-    <div class="main">
-      <div class="sidebar">
-        <div class="cat-tabs">
-          <button id="tab-Reading" class="active" onclick="setActiveCat('Reading')">Reading</button>
-          <button id="tab-Listening" onclick="setActiveCat('Listening')">Listening</button>
-          <button id="tab-Writing" onclick="setActiveCat('Writing')">Writing</button>
+  <!-- 开始挑战 -->
+  <div class="ui-dialog-backdrop" id="challengeSetupModal" hidden>
+    <div class="ui-dialog vs-dlg vs-dlg--setup" role="dialog" aria-modal="true" aria-labelledby="setupTitle" tabindex="-1">
+      <div class="vs-dlg__head">
+        <div>
+          <h3 class="vs-dlg__title" id="setupTitle">开始词汇挑战</h3>
+          <p class="vs-dlg__sub">从选中的文章里随机抽词，英译中、中译英混着出，每题 15 秒。</p>
         </div>
-        <div class="article-list" id="articleList">
-          <div class="empty">
-            <div class="empty-icon">📄</div>
-            <div class="empty-text">加载中...</div>
-          </div>
-        </div>
+        <button type="button" class="vs-close" data-close aria-label="关闭"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
       </div>
-
-      <div class="content">
-        <div class="vocab-header">
-          <div class="vocab-title" id="vocabTitle">选择文章查看词汇</div>
-          <div class="vocab-subtitle" id="vocabSubtitle">从左侧选择一篇文章开始浏览词汇</div>
-          <div class="vocab-controls">
-            <input type="text" class="search-box" id="vocabSearch" placeholder="搜索单词或释义..." oninput="filterVocab()">
-            <button class="btn" onclick="refreshVocab()">刷新</button>
+      <div class="vs-dlg__body">
+        <div class="vs-block">
+          <div class="vs-filter">
+            <span class="vs-label">选文章</span>
+            <span id="setupFilters" class="vs-filter"></span>
+            <label class="vs-check"><input type="checkbox" id="selectAllArticles"><span id="selectAllLabel">全选</span></label>
+          </div>
+          <div class="vs-pick" id="filteredArticles"></div>
+          <p class="vs-hint">只列出高亮过词的文章；没写释义的词不出题。</p>
+        </div>
+        <div class="vs-block">
+          <label class="vs-label" for="challengeWordCount">题数</label>
+          <div class="vs-count">
+            <input type="number" class="ui-input" id="challengeWordCount" min="5" max="50" value="20" inputmode="numeric">
+            <input type="range" id="wordCountSlider" min="5" max="50" value="20" aria-label="拖动调题数">
+            <span>5–50</span>
           </div>
         </div>
-        <div class="vocab-list" id="vocabList">
-          <div class="empty">
-            <div class="empty-icon">🔤</div>
-            <div class="empty-text">暂无词汇显示</div>
-            <div class="empty-hint">选择左侧文章查看其词汇内容</div>
-          </div>
-        </div>
+        <p class="vs-err" id="setupError" role="alert" hidden></p>
       </div>
-    </div>
-  </div>
-
-  <!-- 挑战设置模态框 -->
-  <div id="challengeSetupModal" class="modal" style="display: none;">
-    <div class="modal-content challenge-setup">
-      <div class="modal-header">
-        <h3>🏆 开始词汇挑战</h3>
-        <button class="modal-close" onclick="closeChallengeSetup()">&times;</button>
-      </div>
-      <div class="modal-body">
-                <div class="setup-section">
-          <label>选择挑战文章</label>
-          
-          <!-- 分类筛选按钮 -->
-          <div class="category-filter-buttons">
-            <button class="category-filter-btn active" onclick="switchCategoryFilter('all')" id="filterAll">
-              📚 全部文章
-            </button>
-            <button class="category-filter-btn" onclick="switchCategoryFilter('Reading')" id="filterReading">
-              📖 Reading
-            </button>
-            <button class="category-filter-btn" onclick="switchCategoryFilter('Listening')" id="filterListening">
-              🎧 Listening  
-            </button>
-            <button class="category-filter-btn" onclick="switchCategoryFilter('Writing')" id="filterWriting">
-              ✍️ Writing
-            </button>
-      </div>
-          
-          <div class="article-selection" id="challengeArticleSelection">
-            <div class="article-category" id="allArticlesCategory">
-              <div class="category-header">
-                <input type="checkbox" id="selectAllArticles" onchange="toggleAllArticlesSelection(this.checked)">
-                <label for="selectAllArticles">全选当前显示的文章</label>
-    </div>
-              <div class="article-list" id="filteredArticles"></div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="setup-section">
-          <label for="challengeWordCount">词汇数量</label>
-          <input type="number" id="challengeWordCount" min="5" max="50" value="20" class="word-count-input">
-          <div class="word-count-slider">
-            <input type="range" min="5" max="50" value="20" id="wordCountSlider" oninput="updateWordCount(this.value)">
-            <div class="slider-labels">
-              <span>5</span>
-              <span>50</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="setup-section">
-          <div class="challenge-stats" id="challengeStats">
-            <div class="stat-item">
-              <span class="stat-label">已选文章</span>
-              <span class="stat-value" id="selectedArticlesCount">0</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-label">可用词汇</span>
-              <span class="stat-value" id="availableVocabCount">0</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="modal-footer">
-        <button class="btn" onclick="closeChallengeSetup()">取消</button>
-        <button class="btn primary" onclick="startVocabChallenge()" id="startChallengeBtn" disabled>开始挑战</button>
+      <div class="vs-dlg__foot">
+        <span class="vs-dlg__summary">已选 <b id="selectedArticlesCount">0</b> 篇 · <b id="availableVocabCount">0</b> 个词 · 本次最多出 <b id="questionCount">0</b> 题</span>
+        <button type="button" class="ui-btn ui-btn--md" data-close>取消</button>
+        <button type="button" class="ui-btn ui-btn--md ui-btn--primary" id="startChallengeBtn" disabled>开始挑战</button>
       </div>
     </div>
   </div>
 
-  <!-- 挑战游戏模态框 -->
-  <div id="challengeGameModal" class="modal" style="display: none;">
-    <div class="modal-content challenge-game">
-      <div class="challenge-header">
-        <div class="challenge-info">
-          <h3 id="challengeGameTitle">词汇挑战</h3>
-          <div class="challenge-progress" id="challengeProgress">第 1 题 / 共 20 题</div>
-        </div>
-        <div class="challenge-timer" id="challengeTimer">10s</div>
+  <!-- 答题 -->
+  <div class="ui-dialog-backdrop" id="challengeGameModal" hidden>
+    <div class="ui-dialog vs-dlg vs-dlg--game" role="dialog" aria-modal="true" aria-labelledby="challengeGameTitle" tabindex="-1">
+      <div class="vs-game__head">
+        <h3 class="vs-dlg__title" id="challengeGameTitle">词汇挑战</h3>
+        <span class="vs-game__progress" id="challengeProgress"></span>
+        <span class="vs-game__score">已答对 <b id="challengeCorrect">0</b></span>
       </div>
-      
-      <div class="challenge-question-container">
-        <div class="challenge-question" id="challengeQuestion">
-          Loading...
-        </div>
+      <div class="vs-timer" id="challengeTimerBox">
+        <div class="vs-timer__bar" aria-hidden="true"><i id="challengeTimerBar"></i></div>
+        <span class="vs-timer__num" id="challengeTimer">15 秒</span>
       </div>
-      
-      <div class="challenge-options" id="challengeOptions">
-        <!-- 选项将动态生成 -->
+      <div class="vs-q">
+        <span class="vs-q__hint" id="challengeHint"></span>
+        <div class="vs-q__main" id="challengeQuestion"></div>
       </div>
-      
-      <div class="challenge-controls">
-        <button class="btn" onclick="skipQuestion()">跳过</button>
-        <button class="btn" onclick="quitChallenge()">退出挑战</button>
+      <div class="vs-opts" id="challengeOptions"></div>
+      <p class="vs-q__feedback" id="challengeFeedback" aria-live="polite"></p>
+      <div class="vs-dlg__foot">
+        <button type="button" class="ui-btn ui-btn--md" id="skipBtn">跳过这题</button>
+        <span class="vs-grow"></span>
+        <button type="button" class="vs-text-btn" id="quitBtn">退出挑战</button>
       </div>
     </div>
   </div>
 
-  <!-- 挑战结果模态框 -->
-  <div id="challengeResultModal" class="modal" style="display: none;">
-    <div class="modal-content challenge-result">
-      <div class="modal-header">
-        <h3>🎉 挑战完成</h3>
-        <button class="modal-close" onclick="closeChallengeResult()">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="result-summary" id="resultSummary">
-          <!-- 结果将动态生成 -->
+  <!-- 挑战完成 -->
+  <div class="ui-dialog-backdrop" id="challengeResultModal" hidden>
+    <div class="ui-dialog vs-dlg vs-dlg--result" role="dialog" aria-modal="true" aria-labelledby="resultTitle" tabindex="-1">
+      <div class="vs-dlg__head">
+        <div>
+          <h3 class="vs-dlg__title" id="resultTitle">挑战完成</h3>
+          <p class="vs-dlg__sub" id="resultSub"></p>
         </div>
-        <div class="wrong-words-section" id="wrongWordsSection">
-          <!-- 错词将动态生成 -->
-        </div>
+        <button type="button" class="vs-close" data-close aria-label="关闭"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
       </div>
-      <div class="modal-footer">
-        <button class="btn" onclick="closeChallengeResult()">关闭</button>
-        <button class="btn primary" onclick="reviewWrongWords()">复习错词</button>
-        <button class="btn challenge" onclick="restartChallenge()">再来一次</button>
+      <div class="vs-dlg__body">
+        <div class="vs-stats" id="resultSummary"></div>
+        <div class="vs-block" id="wrongWordsSection"></div>
+      </div>
+      <div class="vs-dlg__foot">
+        <button type="button" class="ui-btn ui-btn--md" data-close>关闭</button>
+        <span class="vs-grow"></span>
+        <button type="button" class="ui-btn ui-btn--md ui-btn--soft" id="reviewWrongBtn">复习错词</button>
+        <button type="button" class="ui-btn ui-btn--md ui-btn--primary" id="restartBtn">再来一次</button>
       </div>
     </div>
   </div>
 
-  <!-- 挑战记录模态框 -->
-  <div id="challengeHistoryModal" class="modal" style="display: none;">
-    <div class="modal-content challenge-history">
-      <div class="modal-header">
-        <h3>📊 挑战记录</h3>
-        <button class="modal-close" onclick="closeChallengeHistory()">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="history-tabs">
-          <button class="tab-btn active" onclick="switchHistoryTab('recent')" id="recentTab">最近挑战</button>
-          <button class="tab-btn" onclick="switchHistoryTab('wrong')" id="wrongTab">错词汇总</button>
-          <button class="tab-btn" onclick="switchHistoryTab('stats')" id="statsTab">统计数据</button>
+  <!-- 挑战记录 -->
+  <div class="ui-dialog-backdrop" id="challengeHistoryModal" hidden>
+    <div class="ui-dialog vs-dlg vs-dlg--history" role="dialog" aria-modal="true" aria-labelledby="historyTitle" tabindex="-1">
+      <div class="vs-dlg__head">
+        <div class="vs-dlg__bar">
+          <h3 class="vs-dlg__title vs-grow" id="historyTitle">挑战记录</h3>
+          <button type="button" class="vs-close" data-close aria-label="关闭"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
         </div>
-        <div class="history-content" id="historyContent">
-          <!-- 内容将动态生成 -->
+        <div class="vs-tabs" role="tablist">
+          <button type="button" role="tab" id="recentTab" data-tab="recent">最近挑战<span class="vs-tabs__n"></span></button>
+          <button type="button" role="tab" id="wrongTab" data-tab="wrong">错词本<span class="vs-tabs__n"></span></button>
+          <button type="button" role="tab" id="statsTab" data-tab="stats">统计</button>
         </div>
       </div>
-      <div class="modal-footer">
-        <button class="btn" onclick="closeChallengeHistory()">关闭</button>
-        <button class="btn primary" onclick="exportChallengeHistory()">导出记录</button>
+      <div class="vs-dlg__body" id="historyContent"></div>
+      <div class="vs-dlg__foot">
+        <button type="button" class="ui-btn ui-btn--md" id="exportHistoryBtn">导出记录</button>
+        <span class="vs-grow"></span>
+        <button type="button" class="ui-btn ui-btn--md" data-close>关闭</button>
       </div>
     </div>
   </div>
-  
+
+  <div class="vs-toasts" id="toasts" aria-live="polite"></div>
+
   <script>
-    let currentToken = null;
-    let allArticles = [];
-    let currentArticle = null;
-    let currentVocab = [];
+    const CATS = ['Reading', 'Listening', 'Writing'];
+    const QUESTION_SECONDS = 15;
+    const $ = id => document.getElementById(id);
+
+    let allArticles = [];      // /intensive_list 的全部文章
     let activeCat = 'Reading';
+    let currentArticle = null; // 右边正在看的文章
+    let currentVocab = [];     // 它的高亮；正在加载时是 null
+    let vocabSeq = 0;          // 连点两篇时只认最后一次
 
-    // Authentication
-    function checkStoredToken(){
-      const tk=localStorage.getItem('authToken');
-      if(!tk) return Promise.resolve(false);
-      // 只有服务器明确回答"无效"才清掉凭证；断网、服务器重启时的 502 页面说明不了凭证失效，按已登录继续
-      const keep=()=>{ currentToken=tk; return true; };
-      return fetch('/verify_token',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({token:tk})})
-        .then(r=>r.json())
-        .then(d=>{ if(d && d.valid===false){ localStorage.removeItem('authToken'); return false; } return keep(); })
-        .catch(keep);
-    }
+    const ICONS = {
+      play: '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6h2.5L8.5 3v10L5 10H2.5z"/><path d="M11 5.5a3.5 3.5 0 0 1 0 5"/></svg>',
+      jump: '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 11l6-6M6 5h5v5"/></svg>',
+      check: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>',
+      cross: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7"/></svg>'
+    };
 
-    window.onload = function(){
-      checkStoredToken().then(valid=>{
-        if(valid){
-          loadData();
-        } else {
-          window.location.href='/login';
-        }
+    // 建元素：数据一律走 textContent，不拼 HTML（单词、释义、标题都是用户写的，所有账号共用）
+    function h(tag, props, ...kids) {
+      const el = document.createElement(tag);
+      if (props) {
+        Object.keys(props).forEach(k => {
+          const v = props[k];
+          if (v == null || v === false) return;
+          if (k === 'class') el.className = v;
+          else if (k === 'text') el.textContent = v;
+          else if (k === 'icon') el.insertAdjacentHTML('afterbegin', ICONS[v]);
+          else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+          else el.setAttribute(k, v === true ? '' : v);
+        });
+      }
+      kids.flat().forEach(c => {
+        if (c == null || c === false) return;
+        el.appendChild(typeof c === 'string' || typeof c === 'number' ? document.createTextNode(String(c)) : c);
       });
+      return el;
     }
 
-    // Category management
-    function setActiveCat(cat) {
-      activeCat = cat;
-      ['Reading','Listening','Writing'].forEach(c=>{
-        const el = document.getElementById('tab-'+c);
-        if(el) el.className = (c===activeCat ? 'active' : '');
-      });
-      renderArticleList();
-      clearVocabDisplay();
+    function catOf(article) { return CATS.includes(article && article.category) ? article.category : 'Reading'; }
+    function wordCount(article) { return Number(article && article.highlight_count) || 0; }
+    function withWords(list) { return list.filter(a => wordCount(a) > 0); }
+    function articleById(id) { return allArticles.find(a => a.id === id) || null; }
+    function pad2(n) { return String(n).padStart(2, '0'); }
+    function shortDate(iso) {
+      const d = new Date(iso || '');
+      return isNaN(d) ? '' : `${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+    }
+    function fmtWhen(iso) {
+      const d = new Date(iso || '');
+      if (isNaN(d)) return '';
+      const now = new Date();
+      const day = x => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+      const diff = Math.round((day(now) - day(d)) / 86400000);
+      const hm = `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+      if (diff === 0) return `今天 ${hm}`;
+      if (diff === 1) return `昨天 ${hm}`;
+      if (d.getFullYear() === now.getFullYear()) return `${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${hm}`;
+      return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+    }
+    function readJson(response) {
+      return response.json().catch(() => ({ success: false, error: `服务器返回 ${response.status}` }));
+    }
+    function storeGet(key, fallback) { try { return localStorage.getItem(key) || fallback; } catch (e) { return fallback; } }
+    function storeSet(key, value) { try { localStorage.setItem(key, value); } catch (e) {} }
+
+    function toast(message, kind) {
+      const item = h('div', { class: 'ui-toast' + (kind ? ' ui-toast--' + kind : ''), role: kind === 'err' ? 'alert' : 'status', text: message });
+      $('toasts').appendChild(item);
+      setTimeout(() => item.remove(), kind === 'err' ? 4200 : 2600);
     }
 
-    // Data loading
+    // ==================== 发音 ====================
+    // 先放精读划词时生成好的发音（/vocab_audio/<文章>/<词>），没有就用有道词典的发音，都不再调付费 TTS
+    const player = new Audio();
+    let playing = null;
+    player.addEventListener('error', () => { if (playing) nextSource(playing); });
+    player.addEventListener('ended', () => stopPlaying());
+    function playWord(word, articleId, options) {
+      const text = String(word || '').trim().replace(/\s+/g, ' ');
+      if (!text) return;
+      stopPlaying();
+      const sources = [];
+      if (articleId) sources.push(`/vocab_audio/${encodeURIComponent(articleId)}/${encodeURIComponent(text.toLowerCase())}`);
+      sources.push('https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(text) + '&type=2');
+      playing = { text, sources, index: 0, quiet: !!(options && options.quiet), card: options && options.card };
+      if (playing.card) playing.card.classList.add('is-playing');
+      nextSource(playing);
+    }
+    function nextSource(current) {
+      if (playing !== current) return;
+      if (current.index >= current.sources.length) {
+        stopPlaying();
+        if (!current.quiet) toast(`没取到「${current.text}」的发音`, 'err');
+        return;
+      }
+      player.src = current.sources[current.index++];
+      const p = player.play();
+      if (p && p.catch) {
+        p.catch(err => {
+          // 加载失败由 error 事件换下一个来源；浏览器不让自动播放时安静地停下
+          if (playing === current && err && err.name === 'NotAllowedError') stopPlaying();
+        });
+      }
+    }
+    function stopPlaying() {
+      if (playing && playing.card) playing.card.classList.remove('is-playing');
+      playing = null;
+    }
+
+    // ==================== 文章与词 ====================
     function loadData() {
+      $('articleList').replaceChildren(h('div', { class: 'vs-rail__msg', text: '正在加载文章…' }));
       fetch('/intensive_list')
-        .then(r => r.json())
+        .then(r => { if (!r.ok) throw new Error(String(r.status)); return r.json(); })
         .then(d => {
-          allArticles = d.items || [];
-          renderArticleList();
-          // 加载完文章后初始化挑战数据
+          allArticles = Array.isArray(d.items) ? d.items : [];
+          const saved = storeGet('vsCategory', '');
+          const firstWithWords = CATS.find(c => withWords(allArticles).some(a => catOf(a) === c));
+          setActiveCat(CATS.includes(saved) && withWords(allArticles).some(a => catOf(a) === saved) ? saved : (firstWithWords || 'Reading'));
           initializeChallengeData();
         })
-        .catch(e => {
-          console.error('Failed to load articles:', e);
-          document.getElementById('articleList').innerHTML = '<div class="empty"><div class="empty-icon">❌</div><div class="empty-text">加载失败</div></div>';
+        .catch(() => {
+          $('articleList').replaceChildren(h('div', { class: 'vs-rail__msg' },
+            '文章列表没加载出来。', h('br'),
+            h('button', { type: 'button', class: 'ui-btn ui-btn--sm', style: 'margin-top: 10px', text: '重试', onclick: loadData })));
+          renderPaneEmpty('文章列表没加载出来', '刷新一下页面，或者稍后再来。');
         });
     }
 
-    // Article list rendering
-    function renderArticleList() {
-      const container = document.getElementById('articleList');
-      const filtered = allArticles.filter(item => (item.category || 'Reading') === activeCat);
-      
-      if (!filtered.length) {
-        container.innerHTML = '<div class="empty"><div class="empty-icon">📄</div><div class="empty-text">该分类暂无文章</div></div>';
-        return;
-      }
-
-      container.innerHTML = '';
-      filtered.forEach(article => {
-        const div = document.createElement('div');
-        div.className = 'article-item';
-        div.onclick = () => selectArticle(article);
-        
-        div.innerHTML = `
-          <div class="article-title">${escapeHtml(article.title || '未命名')}</div>
-          <div class="article-meta">
-            <span>${(article.created_at || '').slice(0,19).replace('T',' ')}</span>
-            <span class="article-stats">${article.highlight_count || 0} 词汇</span>
-          </div>
-        `;
-        container.appendChild(div);
+    function setActiveCat(cat) {
+      if (cat !== activeCat) $('vocabSearch').value = '';
+      activeCat = cat;
+      storeSet('vsCategory', cat);
+      CATS.forEach(c => {
+        const tab = $('tab-' + c);
+        const n = withWords(allArticles).filter(a => catOf(a) === c).length;
+        tab.classList.toggle('active', c === cat);
+        tab.setAttribute('aria-selected', String(c === cat));
+        tab.querySelector('.vs-seg__n').textContent = allArticles.length ? String(n) : '';
       });
+      const list = withWords(allArticles).filter(a => catOf(a) === cat);
+      renderArticleList(list);
+      const savedId = storeGet('vsArticle', '');
+      const pick = list.find(a => a.id === savedId) || list[0];
+      if (pick) selectArticle(pick);
+      else {
+        currentArticle = null;
+        currentVocab = [];
+        renderPaneEmpty(`${cat} 里还没有划过词的文章`, '在「文章精读」里打开一篇文章，划词、写上释义，词就会汇总到这里。', true);
+      }
     }
 
-    // Article selection
+    function renderArticleList(list) {
+      const box = $('articleList');
+      if (!list.length) {
+        box.replaceChildren(h('div', { class: 'vs-rail__msg', text: '这一类还没有划过词的文章。' }));
+      } else {
+        box.replaceChildren(...list.map(a => h('button', {
+          type: 'button', class: 'vs-art', 'data-id': a.id,
+          onclick: () => selectArticle(a)
+        },
+          h('span', { class: 'vs-art__title', text: a.title || '未命名' }),
+          h('span', { class: 'vs-art__meta', text: `${wordCount(a)} 个词` + (shortDate(a.created_at) ? ` · ${shortDate(a.created_at)}` : '') })
+        )));
+      }
+      const hiddenCount = allArticles.filter(a => catOf(a) === activeCat && !wordCount(a)).length;
+      $('railNote').hidden = !hiddenCount;
+      $('railNote').textContent = `另有 ${hiddenCount} 篇还没高亮过词，不列在这里。`;
+    }
+
     function selectArticle(article) {
-      // Update active state
-      document.querySelectorAll('.article-item').forEach(item => item.classList.remove('active'));
-      event.currentTarget.classList.add('active');
-      
       currentArticle = article;
-      loadArticleVocab(article.id);
-    }
-
-    // Load vocabulary for selected article
-    function loadArticleVocab(articleId) {
-      fetch(`/intensive_article/${articleId}`)
-        .then(r => r.json())
+      storeSet('vsArticle', article.id);
+      document.querySelectorAll('#articleList .vs-art').forEach(el => el.classList.toggle('active', el.dataset.id === article.id));
+      $('vocabTitle').textContent = article.title || '未命名';
+      $('vocabSubtitle').textContent = '';
+      $('openArticle').href = '/intensive#article-' + encodeURIComponent(article.id);
+      $('openArticle').hidden = false;
+      $('vocabTip').hidden = true;
+      currentVocab = null;
+      $('vocabList').replaceChildren(h('div', { class: 'ui-empty' }, h('p', { class: 'ui-empty__text', text: '正在加载这篇的词…' })));
+      const seq = ++vocabSeq;
+      fetch(`/intensive_article/${encodeURIComponent(article.id)}`)
+        .then(readJson)
         .then(d => {
-          if (d.success) {
-            const article = d.article;
-            currentVocab = article.highlights || [];
-            renderVocabDisplay();
-          } else {
-            showVocabError('加载词汇失败');
-          }
+          if (seq !== vocabSeq) return;   // 已经点了别的文章
+          if (!d.success) throw new Error(d.error || '加载失败');
+          currentVocab = (d.article.highlights || []).slice().sort((a, b) => (a.start || 0) - (b.start || 0));
+          renderVocab();
         })
-        .catch(e => {
-          console.error('Failed to load vocabulary:', e);
-          showVocabError('加载词汇失败');
+        .catch(() => {
+          if (seq !== vocabSeq) return;
+          currentVocab = [];
+          $('vocabList').replaceChildren(h('div', { class: 'ui-empty' },
+            h('p', { class: 'ui-empty__title', text: '这篇的词没加载出来' }),
+            h('button', { type: 'button', class: 'ui-btn ui-btn--sm', text: '重试', onclick: () => selectArticle(article) })));
         });
     }
 
-    // Vocabulary display
-    function renderVocabDisplay() {
-      const titleEl = document.getElementById('vocabTitle');
-      const subtitleEl = document.getElementById('vocabSubtitle');
-      const listEl = document.getElementById('vocabList');
-      
-      titleEl.textContent = currentArticle.title || '未命名';
-      subtitleEl.textContent = `共 ${currentVocab.length} 个词汇`;
-      
+    function renderPaneEmpty(title, text, withLink) {
+      $('vocabTitle').textContent = '词汇';
+      $('vocabSubtitle').textContent = '';
+      $('openArticle').hidden = true;
+      $('vocabTip').hidden = true;
+      $('vocabList').replaceChildren(h('div', { class: 'ui-empty' },
+        h('p', { class: 'ui-empty__title', text: title }),
+        h('p', { class: 'ui-empty__text', text: text }),
+        withLink ? h('a', { class: 'ui-btn ui-btn--sm', href: '/intensive', text: '去文章精读' }) : null));
+    }
+
+    function renderVocab() {
+      const q = ($('vocabSearch').value || '').trim().toLowerCase();
+      $('vocabSubtitle').textContent = `${currentVocab.length} 个词`;
+      const list = q ? currentVocab.filter(v => (v.text || '').toLowerCase().includes(q) || (v.meaning || '').toLowerCase().includes(q)) : currentVocab;
+      $('vocabTip').hidden = !list.length;
       if (!currentVocab.length) {
-        listEl.innerHTML = '<div class="empty"><div class="empty-icon">🔤</div><div class="empty-text">该文章暂无词汇</div></div>';
+        $('vocabList').replaceChildren(h('div', { class: 'ui-empty' }, h('p', { class: 'ui-empty__title', text: '这篇的高亮都删掉了' })));
         return;
       }
-
-      filterVocab();
-    }
-
-    function filterVocab() {
-      const searchVal = (document.getElementById('vocabSearch').value || '').toLowerCase();
-      const listEl = document.getElementById('vocabList');
-      
-      let filteredVocab = currentVocab.slice().sort((a,b) => a.start - b.start);
-      
-      if (searchVal) {
-        filteredVocab = filteredVocab.filter(item => {
-          const word = (item.text || '').toLowerCase();
-          const meaning = (item.meaning || '').toLowerCase();
-          return word.includes(searchVal) || meaning.includes(searchVal);
-        });
-      }
-
-      if (!filteredVocab.length) {
-        listEl.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">${searchVal ? '未找到匹配词汇' : '暂无词汇'}</div></div>`;
+      if (!list.length) {
+        $('vocabList').replaceChildren(h('div', { class: 'ui-empty' }, h('p', { class: 'ui-empty__title', text: `没找到「${q}」` })));
         return;
       }
-
-      listEl.innerHTML = '';
-      filteredVocab.forEach(vocab => {
-        const div = document.createElement('div');
-        div.className = 'vocab-item';
-        div.style.cursor = 'pointer';
-        
-        div.innerHTML = `
-          <div class="vocab-content">
-            <div class="vocab-word">${escapeHtml(vocab.text || '')}</div>
-            <div class="vocab-meaning">${escapeHtml(vocab.meaning || '')}</div>
-          </div>
-          <div class="vocab-actions">
-            <button class="play-btn" style="padding:6px 8px;margin-right:6px;border:none;background:#f3f4f6;color:#6b7280;border-radius:4px;cursor:pointer;font-size:12px;" onclick="event.stopPropagation(); playWordPronunciation('${(vocab.text || '').replace(/'/g, "\\'")}', '${currentArticle.id}')" title="播放发音">🔊</button>
-            <button class="jump-btn" onclick="jumpToArticle('${currentArticle.id}', '${vocab.id}')" title="跳转到原文">↗</button>
-          </div>
-        `;
-        
-        // 添加整体点击事件播放发音
-        div.onclick = function(e) {
-          if (e.target.closest('.vocab-actions')) return; // 如果点击的是动作按钮区域，不触发
-          const word = vocab.text || '';
-          if (word && window.playWordPronunciation) {
-            window.playWordPronunciation(word, currentArticle.id);
-          }
-        };
-        
-        listEl.appendChild(div);
-      });
+      const article = currentArticle;
+      $('vocabList').replaceChildren(...list.map(v => {
+        const card = h('div', { class: 'vs-word', 'data-hid': v.id || '' },
+          h('div', { class: 'vs-word__top' },
+            h('span', { class: 'vs-word__en', text: v.text || '' }),
+            h('button', { type: 'button', class: 'vs-ibtn vs-play', icon: 'play', 'aria-label': `听「${v.text || ''}」的发音`, title: '听发音',
+              onclick: e => { e.stopPropagation(); playWord(v.text, article.id, { card }); } }),
+            h('button', { type: 'button', class: 'vs-ibtn vs-jump', icon: 'jump', 'aria-label': '在新标签页打开原文，滚到这个词', title: '跳到原文',
+              onclick: e => { e.stopPropagation(); jumpToArticle(article.id, v.id); } })),
+          h('span', { class: 'vs-word__zh' + (v.meaning ? '' : ' is-empty'), text: v.meaning || '（没写释义）' }));
+        card.addEventListener('click', () => playWord(v.text, article.id, { card }));
+        return card;
+      }));
     }
 
-    function clearVocabDisplay() {
-      document.getElementById('vocabTitle').textContent = '选择文章查看词汇';
-      document.getElementById('vocabSubtitle').textContent = '从左侧选择一篇文章开始浏览词汇';
-      document.getElementById('vocabList').innerHTML = '<div class="empty"><div class="empty-icon">🔤</div><div class="empty-text">暂无词汇显示</div><div class="empty-hint">选择左侧文章查看其词汇内容</div></div>';
-      document.getElementById('vocabSearch').value = '';
-      currentArticle = null;
-      currentVocab = [];
-      document.querySelectorAll('.article-item').forEach(item => item.classList.remove('active'));
-    }
-
-    function showVocabError(message) {
-      document.getElementById('vocabList').innerHTML = `<div class="empty"><div class="empty-icon">❌</div><div class="empty-text">${message}</div></div>`;
-    }
-
-    function refreshVocab() {
-      if (currentArticle) {
-        loadArticleVocab(currentArticle.id);
-      }
-    }
-
-    // Jump to article
+    // 新标签页打开原文：精读页从 sessionStorage 读要滚到的高亮（新标签页会复制一份），
+    // 这边稍后删掉，免得这个标签页以后打开精读还自动滚
     function jumpToArticle(articleId, vocabId) {
-      // Store the target highlight in sessionStorage and navigate to intensive page
-      sessionStorage.setItem('jumpToHighlight', vocabId);
-      window.open(`/intensive#article-${articleId}`, '_blank');
+      try { sessionStorage.setItem('jumpToHighlight', vocabId || ''); } catch (e) {}
+      window.open('/intensive#article-' + encodeURIComponent(articleId), '_blank');
+      setTimeout(() => { try { sessionStorage.removeItem('jumpToHighlight'); } catch (e) {} }, 1500);
     }
 
-    // Export functionality
-    function toggleExportMenu() {
-      const menu = document.getElementById('exportMenu');
-      menu.classList.toggle('active');
+    // ==================== 导出 ====================
+    function toggleExportMenu(force) {
+      const menu = $('exportMenu');
+      const open = force === undefined ? menu.hidden : force;
+      if (open) refreshExportMenu();
+      menu.hidden = !open;
+      $('exportBtn').setAttribute('aria-expanded', String(open));
     }
-
-    // Close export menu when clicking outside
-    document.addEventListener('click', function(e) {
-      const dropdown = document.querySelector('.export-dropdown');
-      if (dropdown && !dropdown.contains(e.target)) {
-        document.getElementById('exportMenu').classList.remove('active');
-      }
-    });
-
+    function refreshExportMenu() {
+      const btns = $('exportMenu').querySelectorAll('button');
+      const inCat = withWords(allArticles).filter(a => catOf(a) === activeCat);
+      const all = withWords(allArticles);
+      btns[0].disabled = !(currentArticle && currentVocab && currentVocab.length);
+      $('exportCurrentDesc').textContent = btns[0].disabled ? '先选一篇有词的文章' : `${currentArticle.title || '未命名'} · ${currentVocab.length} 个词`;
+      btns[1].disabled = !inCat.length;
+      $('exportCategoryDesc').textContent = `${activeCat} · ${inCat.length} 篇`;
+      btns[2].disabled = !all.length;
+      $('exportAllDesc').textContent = `${all.length} 篇`;
+    }
     function exportVocab(type) {
-      document.getElementById('exportMenu').classList.remove('active');
-      
-      let vocabData = [];
-      let filename = '';
-
-      switch(type) {
-        case 'current':
-          if (!currentArticle || !currentVocab.length) {
-            alert('请先选择一篇包含词汇的文章');
-            return;
-          }
-          vocabData = currentVocab;
-          filename = `${currentArticle.title || '文章'}_词汇.csv`;
-          break;
-        case 'category':
-          const categoryArticles = allArticles.filter(item => (item.category || 'Reading') === activeCat);
-          if (!categoryArticles.length) {
-            alert('当前分类暂无文章');
-            return;
-          }
-          // We'll need to fetch all articles in this category
-          exportCategoryVocab(categoryArticles);
-          return;
-        case 'all':
-          if (!allArticles.length) {
-            alert('暂无文章数据');
-            return;
-          }
-          exportAllVocab();
-          return;
-      }
-
-      downloadCSV(vocabData, filename);
-    }
-
-    function exportCategoryVocab(articles) {
-      const filename = `${activeCat}_分类词汇.csv`;
-      const promises = articles.map(article => 
-        fetch(`/intensive_article/${article.id}`)
-          .then(r => r.json())
-          .then(d => d.success ? d.article.highlights || [] : [])
-          .catch(() => [])
-      );
-
-      Promise.all(promises).then(results => {
-        const allVocab = results.flat();
-        downloadCSV(allVocab, filename);
-      });
-    }
-
-    function exportAllVocab() {
-      const filename = '全部词汇.csv';
-      const promises = allArticles.map(article => 
-        fetch(`/intensive_article/${article.id}`)
-          .then(r => r.json())
-          .then(d => d.success ? d.article.highlights || [] : [])
-          .catch(() => [])
-      );
-
-      Promise.all(promises).then(results => {
-        const allVocab = results.flat();
-        downloadCSV(allVocab, filename);
-      });
-    }
-
-    function downloadCSV(vocabData, filename) {
-      if (!vocabData.length) {
-        alert('没有词汇数据可导出');
+      toggleExportMenu(false);
+      if (type === 'current') {
+        if (!currentArticle || !currentVocab || !currentVocab.length) return;
+        downloadVocab(currentVocab, `${currentArticle.title || '文章'}_词汇.csv`, 0);
         return;
       }
-
-      // Remove duplicates based on text and meaning
-      const uniqueVocab = [];
-      const seen = new Set();
-      
-      vocabData.forEach(item => {
-        const key = `${item.text}|${item.meaning}`;
-        if (!seen.has(key)) {
-          seen.add(key);
-          uniqueVocab.push(item);
-        }
-      });
-
-      // Create CSV content
-      let csvContent = '\uFEFF'; // BOM for proper UTF-8 encoding
-      csvContent += '词汇,释义\n';
-      
-      uniqueVocab.forEach(item => {
-        const word = (item.text || '').replace(/"/g, '""');
-        const meaning = (item.meaning || '').replace(/"/g, '""');
-        csvContent += `"${word}","${meaning}"\n`;
-      });
-
-      // Download file
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
+      const list = type === 'category' ? withWords(allArticles).filter(a => catOf(a) === activeCat) : withWords(allArticles);
+      if (!list.length) return;
+      let failed = 0;
+      Promise.all(list.map(a => fetch(`/intensive_article/${encodeURIComponent(a.id)}`)
+        .then(readJson)
+        .then(d => { if (!d.success) throw new Error(); return d.article.highlights || []; })
+        .catch(() => { failed++; return []; })))
+        .then(results => downloadVocab(results.flat(), type === 'category' ? `${activeCat}_分类词汇.csv` : '全部词汇.csv', failed));
+    }
+    function csvCell(value) { return '"' + String(value == null ? '' : value).replace(/"/g, '""') + '"'; }
+    function downloadText(filename, text) {
+      const blob = new Blob(['﻿' + text], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', filename);
-      link.style.visibility = 'hidden';
+      const link = h('a', { href: url, download: filename, style: 'display: none' });
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
-      
-      alert(`已导出 ${uniqueVocab.length} 个词汇到 ${filename}`);
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
     }
-
-    // Utility functions
-    function escapeHtml(text) {
-      return (text || '').replace(/[&<>"']/g, function(match) {
-        const escape = {
-          '&': '&amp;',
-          '<': '&lt;',
-          '>': '&gt;',
-          '"': '&quot;',
-          "'": '&#39;'
-        };
-        return escape[match];
+    function downloadVocab(vocabData, filename, failed) {
+      const seen = new Set();
+      const unique = vocabData.filter(item => {
+        const key = `${item.text}|${item.meaning}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
       });
+      if (!unique.length) { toast(failed ? '文章没读出来，没导出' : '没有可导出的词', 'err'); return; }
+      // 表头和单词本「导入 CSV」认的一样，导出的文件可以直接导进单词本
+      downloadText(filename, '词汇,释义\n' + unique.map(v => `${csvCell(v.text)},${csvCell(v.meaning)}`).join('\n') + '\n');
+      if (failed) toast(`已导出 ${unique.length} 个词，但有 ${failed} 篇没读出来，导出的不全`, 'err');
+      else toast(`已导出 ${unique.length} 个词`, 'ok');
     }
 
-    // ==================== 挑战功能 ====================
-    
-    let challengeSelectedArticles = [];
-    let currentChallenge = null;
-    let currentChallengeAnswers = [];
-    let currentQuestionIndex = 0;
-    let currentQuestionType = '';
-    let challengeTimer = null;
-    let questionStartTime = 0;
-    let challengeHistory = [];
-    let wrongWordsRecord = {};
+    // ==================== 弹窗 ====================
+    const openStack = [];
+    function openDialog(id) {
+      const box = $(id);
+      if (!box.hidden) return;
+      box.hidden = false;
+      openStack.push({ id, opener: document.activeElement });
+      document.documentElement.classList.add('vs-lock');
+      box.querySelector('.vs-dlg').focus();
+    }
+    function closeDialog(id) {
+      const box = $(id);
+      if (box.hidden) return;
+      box.hidden = true;
+      const at = openStack.findIndex(x => x.id === id);
+      const entry = at >= 0 ? openStack.splice(at, 1)[0] : null;
+      if (!openStack.length) document.documentElement.classList.remove('vs-lock');
+      if (entry && entry.opener && document.contains(entry.opener) && entry.opener.focus) entry.opener.focus();
+    }
+    document.querySelectorAll('.ui-dialog-backdrop').forEach(box => {
+      box.addEventListener('click', e => {
+        if (e.target.closest('[data-close]')) { closeDialog(box.id); return; }
+        // 点弹窗外面关掉；答题中不关，免得误点丢了进度
+        if (e.target === box && box.id !== 'challengeGameModal') closeDialog(box.id);
+      });
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Escape') return;
+      if (!$('exportMenu').hidden) { toggleExportMenu(false); $('exportBtn').focus(); return; }
+      const top = openStack[openStack.length - 1];
+      if (top && top.id !== 'challengeGameModal') closeDialog(top.id);
+    });
 
-    // 初始化时加载后端数据
-    async function initializeChallengeData() {
-      try {
-        // 加载挑战记录
-        const recordsResponse = await fetch('/api/vocab_challenge_records', {
-          headers: {
-            'Authorization': `Bearer ${currentToken}`
-          }
-        });
-        
-        if (recordsResponse.ok) {
-          const recordsData = await recordsResponse.json();
-          if (recordsData.success) {
-            challengeHistory = recordsData.records || [];
-          }
-        }
-        
-        // 加载错词记录
-        const wrongWordsResponse = await fetch('/api/vocab_wrong_words', {
-          headers: {
-            'Authorization': `Bearer ${currentToken}`
-          }
-        });
-        
-        if (wrongWordsResponse.ok) {
-          const wrongWordsData = await wrongWordsResponse.json();
-          if (wrongWordsData.success) {
-            wrongWordsRecord = wrongWordsData.wrong_words || {};
-          }
-        }
-      } catch (error) {
-        console.warn('加载挑战数据失败:', error);
-        // 如果后端加载失败，尝试从localStorage加载作为备份
-        challengeHistory = JSON.parse(localStorage.getItem('vocabChallengeHistory') || '[]');
-        wrongWordsRecord = JSON.parse(localStorage.getItem('vocabWrongWords') || '{}');
+    // ==================== 挑战：选文章 ====================
+    let setupFilter = 'all';
+    let picked = new Set();
+    let challengeBusy = false;
+
+    function setupArticles() { return withWords(allArticles); }
+    function openChallengeSetup(preselect) {
+      if (preselect) picked = new Set(preselect.filter(id => setupArticles().some(a => a.id === id)));
+      else picked = new Set([...picked].filter(id => setupArticles().some(a => a.id === id)));
+      setupFilter = 'all';
+      $('setupError').hidden = true;
+      renderSetup();
+      openDialog('challengeSetupModal');
+    }
+    function visibleSetupArticles() {
+      return setupArticles().filter(a => setupFilter === 'all' || catOf(a) === setupFilter);
+    }
+    function renderSetup() {
+      const all = setupArticles();
+      const chips = [['all', '全部', all.length]].concat(CATS.map(c => [c, c, all.filter(a => catOf(a) === c).length]));
+      $('setupFilters').replaceChildren(...chips.map(([key, label, n]) => h('button', {
+        type: 'button', class: 'ui-chip' + (setupFilter === key ? ' is-on' : ''), disabled: key !== 'all' && !n,
+        'aria-pressed': String(setupFilter === key), onclick: () => { setupFilter = key; renderSetup(); }
+      }, label, ' ', h('span', { class: 'ui-chip__count', text: String(n) }))));
+
+      const list = visibleSetupArticles();
+      const box = $('filteredArticles');
+      if (!list.length) {
+        box.replaceChildren(h('div', { class: 'vs-rail__msg', text: all.length ? '这一类没有划过词的文章' : '还没有划过词的文章。先去「文章精读」里划词、写释义。' }));
+      } else {
+        box.replaceChildren(...list.map(a => {
+          const on = picked.has(a.id);
+          const input = h('input', { type: 'checkbox', id: 'article_' + a.id, value: a.id, checked: on });
+          input.addEventListener('change', () => toggleArticleSelection(a.id, input.checked));
+          return h('label', { class: 'vs-pick__row' + (on ? ' is-on' : ''), for: 'article_' + a.id },
+            input,
+            h('span', { class: 'vs-pick__title', text: a.title || '未命名', title: a.title || '' }),
+            h('span', { class: 'vs-pick__n', text: `${wordCount(a)} 个词` }),
+            h('span', { class: 'vs-pick__cat' }, h('span', { class: 'ui-tag', text: catOf(a) })));
+        }));
       }
-    }
-
-    // 打开挑战设置
-    function openChallengeSetup() {
-      document.getElementById('challengeSetupModal').style.display = 'flex';
-      document.body.style.overflow = 'hidden';
-      loadArticlesForChallenge();
+      const pickedHere = list.filter(a => picked.has(a.id)).length;
+      const selAll = $('selectAllArticles');
+      selAll.disabled = !list.length;
+      selAll.checked = !!list.length && pickedHere === list.length;
+      selAll.indeterminate = pickedHere > 0 && pickedHere < list.length;
+      $('selectAllLabel').textContent = list.length ? `全选这 ${list.length} 篇` : '全选';
       updateChallengeStats();
     }
-
-    // 关闭挑战设置
-    function closeChallengeSetup() {
-      document.getElementById('challengeSetupModal').style.display = 'none';
-      document.body.style.overflow = 'auto';
-      challengeSelectedArticles = [];
+    function toggleArticleSelection(id, on) {
+      if (on) picked.add(id); else picked.delete(id);
+      renderSetup();
+    }
+    function toggleAllArticlesSelection(on) {
+      visibleSetupArticles().forEach(a => { if (on) picked.add(a.id); else picked.delete(a.id); });
+      renderSetup();
+    }
+    function clampCount(value) {
+      const n = parseInt(value, 10);
+      return isNaN(n) ? 20 : Math.min(50, Math.max(5, n));
+    }
+    function updateChallengeStats() {
+      // 词数直接用文章列表里带的高亮数，不用再把每篇整篇下载一遍
+      const words = setupArticles().filter(a => picked.has(a.id)).reduce((s, a) => s + wordCount(a), 0);
+      const count = clampCount($('challengeWordCount').value);
+      $('selectedArticlesCount').textContent = String(picked.size);
+      $('availableVocabCount').textContent = String(words);
+      $('questionCount').textContent = String(Math.min(count, words));
+      const btn = $('startChallengeBtn');
+      btn.disabled = !picked.size || challengeBusy;
     }
 
-    let currentCategoryFilter = 'all';
-    let allChallengeArticles = []; // 存储所有文章数据
-
-    // 加载文章列表用于挑战
-    function loadArticlesForChallenge() {
-      // 存储所有文章
-      allChallengeArticles = [...allArticles];
-      
-      // 默认显示所有文章
-      switchCategoryFilter('all');
-    }
-
-    // 切换分类筛选
-    function switchCategoryFilter(category) {
-      currentCategoryFilter = category;
-      
-      // 更新按钮状态
-      document.querySelectorAll('.category-filter-btn').forEach(btn => btn.classList.remove('active'));
-      document.getElementById(`filter${category.charAt(0).toUpperCase() + category.slice(1)}`).classList.add('active');
-      
-      // 筛选文章
-      let filteredArticles;
-      if (category === 'all') {
-        filteredArticles = allChallengeArticles;
-      } else {
-        filteredArticles = allChallengeArticles.filter(article => 
-          (article.category || 'Reading') === category
-        );
-      }
-      
-      // 显示筛选后的文章
-      displayFilteredArticles(filteredArticles);
-      
-      // 更新全选按钮状态
-      updateSelectAllButtonState();
-    }
-
-    // 显示筛选后的文章
-    function displayFilteredArticles(articles) {
-      const container = document.getElementById('filteredArticles');
-      
-      if (articles.length === 0) {
-        container.innerHTML = '<div style="padding: 16px; color: #6b7280; text-align: center;">该分类暂无文章</div>';
-        return;
-      }
-
-      container.innerHTML = articles.map(article => `
-        <div class="article-item">
-          <input type="checkbox" id="article_${article.id}" value="${article.id}" 
-                 ${challengeSelectedArticles.includes(article.id) ? 'checked' : ''}
-                 onchange="toggleArticleSelection('${article.id}', this.checked)">
-          <div class="article-info">
-            <div class="article-title">${escapeHtml(article.title || '未命名文章')}</div>
-            <div class="article-meta">
-              <span id="vocab_count_${article.id}">计算中...</span>
-              <span>${new Date(article.updated_at || article.created_at).toLocaleDateString()}</span>
-              <span class="article-category-badge" data-category="${article.category || 'Reading'}">${article.category || 'Reading'}</span>
-            </div>
-          </div>
-        </div>
-      `).join('');
-      
-      // 异步获取每篇文章的词汇数量
-      articles.forEach(async (article) => {
-        try {
-          const response = await fetch(`/intensive_article/${article.id}`);
-          const data = await response.json();
-          const vocabCount = data.success ? (data.article.highlights || []).length : 0;
-          const countElement = document.getElementById(`vocab_count_${article.id}`);
-          if (countElement) {
-            countElement.textContent = `${vocabCount} 词汇`;
-          }
-        } catch (error) {
-          const countElement = document.getElementById(`vocab_count_${article.id}`);
-          if (countElement) {
-            countElement.textContent = '0 词汇';
-          }
-        }
-      });
-    }
-
-    // 切换全选
-    function toggleAllArticlesSelection(selected) {
-      // 获取当前显示的文章
-      let currentArticles;
-      if (currentCategoryFilter === 'all') {
-        currentArticles = allChallengeArticles;
-      } else {
-        currentArticles = allChallengeArticles.filter(article => 
-          (article.category || 'Reading') === currentCategoryFilter
-        );
-      }
-      
-      currentArticles.forEach(article => {
-        const checkbox = document.getElementById(`article_${article.id}`);
-        if (checkbox) {
-          checkbox.checked = selected;
-          toggleArticleSelection(article.id, selected);
-        }
-      });
-    }
-
-    // 更新全选按钮状态
-    function updateSelectAllButtonState() {
-      // 获取当前显示的文章
-      let currentArticles;
-      if (currentCategoryFilter === 'all') {
-        currentArticles = allChallengeArticles;
-      } else {
-        currentArticles = allChallengeArticles.filter(article => 
-          (article.category || 'Reading') === currentCategoryFilter
-        );
-      }
-      
-      const selectAllCheckbox = document.getElementById('selectAllArticles');
-      if (selectAllCheckbox && currentArticles.length > 0) {
-        const selectedCount = currentArticles.filter(article => 
-          challengeSelectedArticles.includes(article.id)
-        ).length;
-        
-        selectAllCheckbox.checked = selectedCount === currentArticles.length;
-        selectAllCheckbox.indeterminate = selectedCount > 0 && selectedCount < currentArticles.length;
-      }
-    }
-
-    // 切换文章选择
-    function toggleArticleSelection(articleId, selected) {
-      if (selected) {
-        if (!challengeSelectedArticles.includes(articleId)) {
-          challengeSelectedArticles.push(articleId);
-        }
-      } else {
-        challengeSelectedArticles = challengeSelectedArticles.filter(id => id !== articleId);
-      }
-      
-      updateChallengeStats();
-      updateStartButtonState();
-      updateSelectAllButtonState();
-    }
-
-    // 更新词汇数量
-    function updateWordCount(value) {
-      document.getElementById('challengeWordCount').value = value;
-      updateChallengeStats();
-    }
-
-    // 更新挑战统计
-    async function updateChallengeStats() {
-      const selectedCount = challengeSelectedArticles.length;
-      document.getElementById('selectedArticlesCount').textContent = selectedCount;
-      
-      if (selectedCount === 0) {
-        document.getElementById('availableVocabCount').textContent = '0';
-        return;
-      }
-
-      // 计算可用词汇数量
-      try {
-        const vocabCounts = await Promise.all(
-          challengeSelectedArticles.map(async articleId => {
-            const response = await fetch(`/intensive_article/${articleId}`);
-            const data = await response.json();
-            return data.success ? (data.article.highlights || []).length : 0;
-          })
-        );
-        
-        const totalVocab = vocabCounts.reduce((sum, count) => sum + count, 0);
-        document.getElementById('availableVocabCount').textContent = totalVocab;
-      } catch (error) {
-        console.error('获取词汇统计失败:', error);
-        document.getElementById('availableVocabCount').textContent = '?';
-      }
-    }
-
-    // 更新开始按钮状态
-    function updateStartButtonState() {
-      const startBtn = document.getElementById('startChallengeBtn');
-      const hasSelection = challengeSelectedArticles.length > 0;
-      
-      startBtn.disabled = !hasSelection;
-      startBtn.textContent = hasSelection ? '开始挑战' : '请选择文章';
-    }
-
-    // 开始词汇挑战
     async function startVocabChallenge() {
-      if (challengeSelectedArticles.length === 0) {
-        alert('请至少选择一篇文章');
-        return;
-      }
-
-      const wordCount = parseInt(document.getElementById('challengeWordCount').value);
-      
+      if (!picked.size || challengeBusy) return;
+      const count = clampCount($('challengeWordCount').value);
+      $('challengeWordCount').value = count;
+      $('wordCountSlider').value = count;
+      const ids = setupArticles().filter(a => picked.has(a.id)).map(a => a.id);
+      const btn = $('startChallengeBtn');
+      challengeBusy = true;
+      btn.disabled = true;
+      btn.textContent = '正在出题';
+      $('setupError').hidden = true;
       try {
-        // 创建个人挑战
         const response = await fetch('/api/vocab_summary_challenge', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${currentToken}`
-          },
-          body: JSON.stringify({
-            article_ids: challengeSelectedArticles,
-            word_count: wordCount
-          })
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ article_ids: ids, word_count: count })
         });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-          currentChallenge = data.challenge;
-          currentChallengeAnswers = [];
-          currentQuestionIndex = 0;
-          
-          // 关闭设置模态框，打开游戏模态框
-          closeChallengeSetup();
-          document.getElementById('challengeGameModal').style.display = 'flex';
-      document.body.style.overflow = 'hidden';
-
-          document.getElementById('challengeGameTitle').textContent = `词汇挑战 - ${wordCount}词`;
-          showNextQuestion();
-        } else {
-          alert('创建挑战失败：' + (data.error || '未知错误'));
+        const data = await readJson(response);
+        if (!data.success || !data.challenge || !(data.challenge.vocabulary || []).length) {
+          throw new Error(data.error || '出题失败');
         }
+        closeDialog('challengeSetupModal');
+        startGame(data.challenge, '词汇挑战');
       } catch (error) {
-        console.error('创建挑战失败:', error);
-        alert('创建挑战失败，请重试');
+        $('setupError').textContent = error && error.message && !/fetch|network/i.test(error.message) ? error.message : '网络出错，没出成题，再试一次';
+        $('setupError').hidden = false;
+      } finally {
+        challengeBusy = false;
+        btn.textContent = '开始挑战';
+        updateChallengeStats();
       }
     }
 
-    // 显示下一题
+    // ==================== 挑战：答题 ====================
+    const game = { challenge: null, answers: [], index: 0, type: '', phase: 'idle', seq: 0, timer: null, deadline: 0, startedAt: 0, correct: 0 };
+
+    function startGame(challenge, title) {
+      game.challenge = challenge;
+      game.answers = [];
+      game.index = 0;
+      game.correct = 0;
+      game.seq++;
+      $('challengeGameTitle').textContent = title;
+      openDialog('challengeGameModal');
+      showNextQuestion();
+    }
+
+    function vocabArticleId(word) {
+      const v = (game.challenge && game.challenge.vocabulary || []).find(x => x.word === word);
+      return v ? v.article_id : '';
+    }
+
     function showNextQuestion() {
-      if (currentQuestionIndex >= currentChallenge.vocabulary.length) {
-        finishChallenge();
-        return;
-      }
+      stopTimer();
+      const list = game.challenge.vocabulary;
+      if (game.index >= list.length) { finishChallenge(); return; }
+      const vocab = list[game.index];
+      game.phase = 'asking';
+      $('challengeProgress').textContent = `第 ${game.index + 1} / ${list.length} 题`;
+      $('challengeCorrect').textContent = String(game.correct);
+      $('challengeFeedback').textContent = '';
+      $('skipBtn').disabled = false;
 
-      const vocab = currentChallenge.vocabulary[currentQuestionIndex];
-      const progress = document.getElementById('challengeProgress');
-      progress.textContent = `第 ${currentQuestionIndex + 1} 题 / 共 ${currentChallenge.vocabulary.length} 题`;
-
-      // 随机决定是显示单词还是意思
       const showWord = Math.random() > 0.5;
-      const question = document.getElementById('challengeQuestion');
-      const optionsContainer = document.getElementById('challengeOptions');
-
+      let options, correct;
       if (showWord) {
-        // 英文对中文：显示英文单词，选择中文释义
-        currentQuestionType = 'word_to_meaning';
-        question.innerHTML = `
-          <span class="challenge-word">${vocab.word}</span>
-          <button class="challenge-audio-btn" onclick="playChallengeWord('${vocab.word.replace(/'/g, "\\'")}', '${currentChallenge.id}')" title="播放发音">
-            🔊
-          </button>
-        `;
-
-        // 自动播放一次
-        setTimeout(() => {
-          playChallengeWord(vocab.word, currentChallenge.id);
-        }, 100);
-        
-        // 生成选项：正确答案 + 3个错误答案
-        const options = [vocab.meaning];
-        const otherVocab = currentChallenge.vocabulary.filter(v => v.word !== vocab.word);
-        
-        // 使用改进的随机算法生成选项
-        const wrongOptions = generateWrongOptions(otherVocab, vocab.meaning, 'meaning');
-        options.push(...wrongOptions);
-        
-        // 打乱选项顺序
-        shuffleArray(options);
-        renderChallengeOptions(options, vocab.meaning);
+        game.type = 'word_to_meaning';
+        $('challengeHint').textContent = '选出这个词的意思';
+        $('challengeQuestion').replaceChildren(
+          h('span', { class: 'vs-q__word', text: vocab.word }),
+          h('button', { type: 'button', class: 'vs-ibtn', icon: 'play', 'aria-label': '再听一遍', title: '再听一遍',
+            onclick: () => playWord(vocab.word, vocab.article_id) }));
+        const seq = game.seq, idx = game.index;
+        setTimeout(() => { if (game.seq === seq && game.index === idx) playWord(vocab.word, vocab.article_id, { quiet: true }); }, 100);
+        correct = vocab.meaning;
+        options = [correct].concat(generateWrongOptions(list.filter(v => v.word !== vocab.word), correct, 'meaning'));
       } else {
-        // 中文对英文：显示中文释义，选择英文单词
-        currentQuestionType = 'meaning_to_word';
-        question.textContent = vocab.meaning;
-        
-        // 生成选项：正确答案 + 3个错误答案
-        const options = [vocab.word];
-        const otherVocab = currentChallenge.vocabulary.filter(v => v.meaning !== vocab.meaning);
-        
-        // 使用改进的随机算法生成选项
-        const wrongOptions = generateWrongOptions(otherVocab, vocab.word, 'word');
-        options.push(...wrongOptions);
-        
-        // 打乱选项顺序
-        shuffleArray(options);
-        renderChallengeOptions(options, vocab.word);
+        game.type = 'meaning_to_word';
+        $('challengeHint').textContent = '选出这个意思对应的词';
+        $('challengeQuestion').replaceChildren(h('span', { class: 'vs-q__meaning', text: vocab.meaning }));
+        correct = vocab.word;
+        options = [correct].concat(generateWrongOptions(list.filter(v => v.meaning !== vocab.meaning), correct, 'word'));
       }
-
-      // 开始倒计时
+      shuffleArray(options);
+      $('challengeOptions').replaceChildren(...options.map(option => {
+        const btn = h('button', { type: 'button', class: 'vs-opt' + (game.type === 'meaning_to_word' ? ' is-en' : '') },
+          h('span', { text: option }));
+        btn.dataset.answer = option;
+        btn.addEventListener('click', () => selectChallengeOption(option, correct, btn));
+        return btn;
+      }));
       startQuestionTimer();
     }
 
-    // 改进的随机选项生成算法
     function generateWrongOptions(otherVocab, correctAnswer, type) {
-      const wrongOptions = [];
-      const usedOptions = new Set([correctAnswer]);
-      
-      // 创建候选选项池
-      let candidates = otherVocab.map(v => type === 'meaning' ? v.meaning : v.word)
-        .filter(option => option && !usedOptions.has(option));
-      
-      // 去重
-      candidates = [...new Set(candidates)];
-      
-      // 如果候选选项不够，重复使用
-      while (wrongOptions.length < 3 && candidates.length > 0) {
-        // 使用改进的随机选择算法
-        const randomIndex = Math.floor(Math.random() * candidates.length);
-        const selectedOption = candidates[randomIndex];
-        
-        if (!usedOptions.has(selectedOption)) {
-          wrongOptions.push(selectedOption);
-          usedOptions.add(selectedOption);
-        }
-        
-        // 从候选池中移除已选择的选项
-        candidates.splice(randomIndex, 1);
-      }
-      
-      return wrongOptions;
+      const pool = [...new Set(otherVocab.map(v => type === 'meaning' ? v.meaning : v.word).filter(o => o && o !== correctAnswer))];
+      shuffleArray(pool);
+      return pool.slice(0, 3);
     }
-
-    // 改进的数组打乱算法 (Fisher-Yates)
     function shuffleArray(array) {
       for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -1178,748 +992,415 @@
       return array;
     }
 
-    // 渲染选项
-    function renderChallengeOptions(options, correctAnswer) {
-      const container = document.getElementById('challengeOptions');
-      container.innerHTML = '';
-
-      options.forEach((option, index) => {
-        const optionDiv = document.createElement('div');
-        optionDiv.className = 'challenge-option';
-        optionDiv.textContent = option;
-        optionDiv.onclick = () => selectChallengeOption(option, correctAnswer, optionDiv);
-        container.appendChild(optionDiv);
-      });
+    function startQuestionTimer() {
+      game.startedAt = Date.now();
+      game.deadline = game.startedAt + QUESTION_SECONDS * 1000;
+      const tick = () => {
+        const left = Math.max(0, game.deadline - Date.now());
+        const secs = Math.ceil(left / 1000);
+        $('challengeTimer').textContent = `${secs} 秒`;
+        $('challengeTimerBar').style.width = (left / (QUESTION_SECONDS * 10)) + '%';
+        $('challengeTimerBox').classList.toggle('is-low', secs <= 5);
+        if (left <= 0) skipQuestion(true);
+      };
+      tick();
+      game.timer = setInterval(tick, 250);
+    }
+    function stopTimer() {
+      if (game.timer) { clearInterval(game.timer); game.timer = null; }
     }
 
-    // 播放挑战词汇音频
-    function playChallengeWord(word, challengeId) {
-      if (!word || !challengeId) {
-        console.warn('Word or challenge ID missing for audio playback');
-        return;
-      }
-      
-      try {
-        // 构造挑战音频URL（使用challenge_前缀作为文章ID）
-        const audioUrl = `/vocab_audio/challenge_${encodeURIComponent(challengeId)}/${encodeURIComponent(word.trim().toLowerCase())}`;
-        
-        // 创建并播放音频
-        const audio = new Audio(audioUrl);
-        audio.onended = () => {
-          console.log(`播放完成: ${word}`);
-        };
-        audio.onerror = (error) => {
-          console.warn(`音频播放失败: ${word}`, error);
-          // 播放失败时尝试使用原始文章音频
-          fallbackToOriginalAudio(word);
-        };
-        audio.play().catch(error => {
-          console.warn(`音频播放失败: ${word}`, error);
-          // 播放失败时尝试使用原始文章音频
-          fallbackToOriginalAudio(word);
-        });
-      } catch (error) {
-        console.warn(`音频播放错误: ${word}`, error);
-        fallbackToOriginalAudio(word);
-      }
-    }
-
-    // 备用音频播放方案
-    function fallbackToOriginalAudio(word) {
-      try {
-        if (window.playWordPronunciation && currentChallenge && currentChallenge.vocabulary) {
-          // 找到这个词汇对应的原始文章ID
-          const vocab = currentChallenge.vocabulary.find(v => v.word === word);
-          if (vocab && vocab.article_id) {
-            window.playWordPronunciation(word, vocab.article_id);
-          }
-        }
-      } catch (error) {
-        console.warn(`备用音频播放也失败: ${word}`, error);
-      }
-    }
-
-    // 选择答案
-    function selectChallengeOption(selectedOption, correctAnswer, optionElement) {
-      // 停止计时器
-      if (challengeTimer) {
-        clearInterval(challengeTimer);
-        challengeTimer = null;
-      }
-
-      const timeTaken = Math.round((Date.now() - questionStartTime) / 1000);
-      const isCorrect = selectedOption === correctAnswer;
-      const vocab = currentChallenge.vocabulary[currentQuestionIndex];
-
-      // 如果是中文对英文题目，播放选中单词的音频
-        if (currentQuestionType === 'meaning_to_word') {
-          playChallengeWord(selectedOption, currentChallenge.id);
-      }
-
-      // 记录答案
-      currentChallengeAnswers.push({
-        question_index: currentQuestionIndex,
-        vocab: vocab,
-        selected_option: selectedOption,
-        correct_answer: correctAnswer,
-        time_taken: timeTaken,
-        is_correct: isCorrect,
-        question_type: currentQuestionType
-      });
-      
-      // 如果答错了，记录到错词本
-      if (!isCorrect) {
-        recordWrongWord(vocab, selectedOption, correctAnswer);
-      }
-
-      // 显示结果
-      const allOptions = document.querySelectorAll('.challenge-option');
-      allOptions.forEach(opt => {
-        opt.style.pointerEvents = 'none';
-        if (opt.textContent === correctAnswer) {
-          opt.classList.add('correct');
-        } else if (opt === optionElement && !isCorrect) {
-          opt.classList.add('incorrect');
+    // 显示对错，停一下再进下一题。等待期间按钮都不能点（以前这时点「跳过」会多记一题、跳掉下一题）
+    function revealAnswer(correctAnswer, chosenBtn, isCorrect, message, delay) {
+      game.phase = 'feedback';
+      stopTimer();
+      $('skipBtn').disabled = true;
+      document.querySelectorAll('#challengeOptions .vs-opt').forEach(btn => {
+        btn.disabled = true;
+        if (btn.dataset.answer === correctAnswer) {
+          btn.classList.add('correct');
+          btn.insertAdjacentHTML('afterbegin', ICONS.check);
+        } else if (btn === chosenBtn && !isCorrect) {
+          btn.classList.add('incorrect');
+          btn.insertAdjacentHTML('afterbegin', ICONS.cross);
+        } else {
+          btn.classList.add('is-dim');
         }
       });
-
-      // 2秒后显示下一题
+      $('challengeFeedback').textContent = message;
+      $('challengeCorrect').textContent = String(game.correct);
+      const seq = game.seq, idx = game.index;
       setTimeout(() => {
-        currentQuestionIndex++;
+        if (game.seq !== seq || game.index !== idx || game.phase !== 'feedback') return;
+        game.index++;
         showNextQuestion();
-      }, 2000);
+      }, delay);
     }
 
-    // 记录错词
+    function answerRecord(vocab, extra) {
+      return Object.assign({
+        question_index: game.index,
+        vocab: { word: vocab.word, meaning: vocab.meaning, article_id: vocab.article_id || '', article_title: vocab.article_title || '', highlight_id: vocab.highlight_id || '' },
+        question_type: game.type
+      }, extra);
+    }
+
+    function selectChallengeOption(selectedOption, correctAnswer, optionElement) {
+      if (game.phase !== 'asking') return;
+      const vocab = game.challenge.vocabulary[game.index];
+      const isCorrect = selectedOption === correctAnswer;
+      const timeTaken = Math.min(QUESTION_SECONDS, Math.round((Date.now() - game.startedAt) / 1000));
+      game.answers.push(answerRecord(vocab, {
+        selected_option: selectedOption, correct_answer: correctAnswer, time_taken: timeTaken, is_correct: isCorrect
+      }));
+      if (isCorrect) game.correct++;
+      else recordWrongWord(vocab, selectedOption, correctAnswer);
+      // 中译英的题，答完念一遍正确的词
+      if (game.type === 'meaning_to_word') playWord(vocab.word, vocab.article_id, { quiet: true });
+      revealAnswer(correctAnswer, optionElement, isCorrect, isCorrect ? '答对了' : '答错了，已记进错词本', isCorrect ? 1200 : 2200);
+    }
+
+    function skipQuestion(timeUp) {
+      if (game.phase !== 'asking') return;
+      const vocab = game.challenge.vocabulary[game.index];
+      const correctAnswer = game.type === 'word_to_meaning' ? vocab.meaning : vocab.word;
+      game.answers.push(answerRecord(vocab, {
+        selected_option: null, correct_answer: correctAnswer, time_taken: QUESTION_SECONDS, is_correct: false, skipped: true
+      }));
+      recordWrongWord(vocab, '跳过', correctAnswer);
+      revealAnswer(correctAnswer, null, false, (timeUp === true ? '时间到' : '跳过了') + '，正确答案已标出，记进错词本', 1800);
+    }
+
+    function quitChallenge() {
+      if (game.phase === 'idle') return;
+      if (!confirm('退出这次挑战？已经答的题不算成绩，答错的词还留在错词本里。')) return;
+      game.seq++;
+      game.phase = 'idle';
+      stopTimer();
+      closeDialog('challengeGameModal');
+    }
+
+    function finishChallenge() {
+      stopTimer();
+      game.phase = 'idle';
+      const total = game.challenge.vocabulary.length;
+      const correctCount = game.answers.filter(a => a.is_correct).length;
+      let timeBonus = 0;
+      game.answers.forEach(a => { if (a.is_correct && !a.skipped) timeBonus += Math.max(1, 16 - a.time_taken); });
+      const ids = game.challenge.article_ids || [];
+      const titles = ids.map(id => {
+        const a = articleById(id);
+        if (a) return a.title || '未命名';
+        const v = game.challenge.vocabulary.find(x => x.article_id === id);
+        return v && v.article_title ? v.article_title : '';
+      }).filter(Boolean);
+      const record = {
+        id: Date.now().toString(),
+        timestamp: new Date().toISOString(),
+        type: game.challenge.type === 'review' ? 'review' : 'vocab_summary',
+        article_ids: ids,
+        article_titles: titles,
+        total_questions: total,
+        correct_count: correctCount,
+        accuracy: Math.round((correctCount / total) * 100),
+        score: Math.round((correctCount / total) * 70 + (timeBonus / (total * 15)) * 30),
+        time_bonus: timeBonus,
+        answers: game.answers
+      };
+      saveChallengeRecordToBackend(record);
+      challengeHistory.unshift(record);
+      closeDialog('challengeGameModal');
+      showChallengeResult(record);
+    }
+
+    // ==================== 挑战：结果 ====================
+    let lastResult = null;
+    function recordTitle(record) {
+      let titles = (record.article_titles || []).filter(Boolean);
+      // 以前的记录文章名是空的（开始挑战时选中的文章被清掉了），按文章 ID 补回来
+      if (!titles.length) titles = (record.article_ids || []).map(id => (articleById(id) || {}).title).filter(Boolean);
+      const text = titles.length ? titles.join('、') : '（文章已删除）';
+      return record.type === 'review' ? '错词复习 · ' + text : text;
+    }
+    function wrongAnswersOf(record) {
+      return (record.answers || []).filter(a => !a.is_correct && a.vocab);
+    }
+    function stat(num, unit, label, main) {
+      return h('div', { class: 'vs-stat' + (main ? ' is-main' : '') },
+        h('div', { class: 'vs-stat__num' }, String(num), unit ? h('span', { class: 'vs-stat__unit', text: unit }) : null),
+        h('div', { class: 'vs-stat__label', text: label }));
+    }
+    function showChallengeResult(record) {
+      lastResult = record;
+      $('resultSub').textContent = `${recordTitle(record)} · ${record.total_questions} 题`;
+      $('resultSub').title = recordTitle(record);
+      $('resultSummary').replaceChildren(
+        stat(record.score, '', '得分', true),
+        stat(record.accuracy, '%', '正确率'),
+        stat(record.correct_count, `/ ${record.total_questions}`, '答对'),
+        stat(Math.round(record.time_bonus), '', '时间奖励'));
+      const wrong = wrongAnswersOf(record);
+      const section = $('wrongWordsSection');
+      if (wrong.length) {
+        section.replaceChildren(
+          h('span', { class: 'vs-label', text: `答错和跳过的 ${wrong.length} 个` }),
+          h('div', { class: 'vs-list' }, ...wrong.map(a => h('div', { class: 'vs-list__row' },
+            h('span', { class: 'vs-list__word', text: a.vocab.word }),
+            h('span', { class: 'vs-list__meaning', text: a.vocab.meaning }),
+            h('span', { class: 'vs-list__pick' + (a.skipped ? ' is-skip' : ''), text: a.skipped ? '跳过' : `选了「${a.selected_option}」` })))));
+      } else {
+        section.replaceChildren(h('p', { class: 'vs-allright', text: '全部答对' }));
+      }
+      $('reviewWrongBtn').hidden = !wrong.length;
+      $('reviewWrongBtn').textContent = `复习这 ${wrong.length} 个`;
+      openDialog('challengeResultModal');
+    }
+
+    // 用某次挑战里答错的词再出一轮（结果页和挑战记录里的「复习错词」都走这里）
+    function reviewWrongOf(record) {
+      const seen = new Set();
+      const vocab = wrongAnswersOf(record).map(a => a.vocab).filter(v => {
+        const key = `${v.word}::${v.meaning}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      if (!vocab.length) { toast('这次挑战没有错词'); return; }
+      shuffleArray(vocab);
+      closeDialog('challengeResultModal');
+      closeDialog('challengeHistoryModal');
+      startGame({ id: 'review_' + record.id, type: 'review', vocabulary: vocab, article_ids: record.article_ids || [] }, '错词复习');
+    }
+
+    // ==================== 错词本、挑战记录 ====================
+    let challengeHistory = [];
+    let wrongWordsRecord = {};
+    let historyTab = 'recent';
+    const openDetails = new Set();
+
+    async function initializeChallengeData() {
+      try {
+        const records = await fetch('/api/vocab_challenge_records').then(readJson);
+        if (records.success) challengeHistory = records.records || [];
+        const wrong = await fetch('/api/vocab_wrong_words').then(readJson);
+        if (wrong.success) wrongWordsRecord = wrong.wrong_words || {};
+      } catch (error) {
+        // 后端读不到时，用本机上次存的备份
+        try {
+          challengeHistory = JSON.parse(storeGet('vocabChallengeHistory', '[]'));
+          wrongWordsRecord = JSON.parse(storeGet('vocabWrongWords', '{}'));
+        } catch (e) {}
+      }
+    }
+
     function recordWrongWord(vocab, selectedOption, correctAnswer) {
-      const wordKey = `${vocab.word}::${vocab.meaning}`;
-      
-      if (!wrongWordsRecord[wordKey]) {
-        wrongWordsRecord[wordKey] = {
-          word: vocab.word,
-          meaning: vocab.meaning,
-          article_title: vocab.article_title || '',
-          article_id: vocab.article_id || '',
-          wrong_count: 0,
-          last_wrong_at: null,
-          wrong_answers: []
+      const key = `${vocab.word}::${vocab.meaning}`;
+      if (!wrongWordsRecord[key]) {
+        wrongWordsRecord[key] = {
+          word: vocab.word, meaning: vocab.meaning,
+          article_title: vocab.article_title || '', article_id: vocab.article_id || '',
+          wrong_count: 0, last_wrong_at: null, wrong_answers: []
         };
       }
-      
-      wrongWordsRecord[wordKey].wrong_count++;
-      wrongWordsRecord[wordKey].last_wrong_at = new Date().toISOString();
-      wrongWordsRecord[wordKey].wrong_answers.push({
-        selected: selectedOption,
-        correct: correctAnswer,
-        timestamp: new Date().toISOString()
-      });
-      
-      // 保存到后端
+      const item = wrongWordsRecord[key];
+      item.wrong_count++;
+      item.last_wrong_at = new Date().toISOString();
+      item.wrong_answers.push({ selected: selectedOption, correct: correctAnswer, timestamp: item.last_wrong_at });
       saveWrongWordsToBackend();
     }
 
-    // 开始问题计时器
-    function startQuestionTimer() {
-      questionStartTime = Date.now();
-      let timeLeft = 15; // 增加到15秒
-      const timerElement = document.getElementById('challengeTimer');
-      
-      timerElement.textContent = `${timeLeft}s`;
-
-      challengeTimer = setInterval(() => {
-        timeLeft--;
-        timerElement.textContent = `${timeLeft}s`;
-
-        if (timeLeft <= 0) {
-          clearInterval(challengeTimer);
-          challengeTimer = null;
-          
-          // 时间到，自动跳过
-          skipQuestion();
-        }
-      }, 1000);
-    }
-
-    // 跳过问题
-    function skipQuestion() {
-      if (challengeTimer) {
-        clearInterval(challengeTimer);
-        challengeTimer = null;
-      }
-      
-      const vocab = currentChallenge.vocabulary[currentQuestionIndex];
-      const timeTaken = 15;
-      
-      // 记录跳过的答案
-      currentChallengeAnswers.push({
-        question_index: currentQuestionIndex,
-        vocab: vocab,
-        selected_option: null,
-        correct_answer: null,
-        time_taken: timeTaken,
-        is_correct: false,
-        question_type: currentQuestionType,
-        skipped: true
-      });
-      
-      // 记录为错词
-      recordWrongWord(vocab, '跳过', currentQuestionType === 'word_to_meaning' ? vocab.meaning : vocab.word);
-      
-      currentQuestionIndex++;
-      showNextQuestion();
-    }
-
-    // 完成挑战
-    function finishChallenge() {
-      // 计算结果
-      const totalQuestions = currentChallenge.vocabulary.length;
-      const correctCount = currentChallengeAnswers.filter(answer => answer.is_correct).length;
-      const accuracy = Math.round((correctCount / totalQuestions) * 100);
-      
-      // 计算时间奖励
-      let timeBonus = 0;
-      currentChallengeAnswers.forEach(answer => {
-        if (answer.is_correct && !answer.skipped) {
-          timeBonus += Math.max(1, 16 - answer.time_taken); // 15秒满分，用时越少奖励越多
-        }
-      });
-      
-      const score = Math.round((correctCount / totalQuestions) * 70 + (timeBonus / (totalQuestions * 15)) * 30);
-      
-      // 保存挑战记录
-      const challengeRecord = {
-        id: Date.now().toString(),
-        timestamp: new Date().toISOString(),
-        article_ids: currentChallenge.article_ids,
-        article_titles: challengeSelectedArticles.map(id => {
-          const article = allArticles.find(a => a.id === id);
-          return article ? article.title : '未知文章';
-        }),
-        total_questions: totalQuestions,
-        correct_count: correctCount,
-        accuracy: accuracy,
-        score: score,
-        time_bonus: timeBonus,
-        answers: currentChallengeAnswers
-      };
-      
-      // 保存到后端
-      saveChallengeRecordToBackend(challengeRecord);
-      
-      challengeHistory.unshift(challengeRecord); // 添加到开头本地缓存
-      
-      // 显示结果
-      showChallengeResult(challengeRecord);
-    }
-
-    // 显示挑战结果
-    function showChallengeResult(result) {
-      document.getElementById('challengeGameModal').style.display = 'none';
-      document.getElementById('challengeResultModal').style.display = 'flex';
-      
-      const wrongAnswers = result.answers.filter(answer => !answer.is_correct);
-      
-      document.getElementById('resultSummary').innerHTML = `
-        <div class="result-score">${result.score}</div>
-        <div class="result-accuracy">正确率 ${result.accuracy}%</div>
-        <div class="result-details">
-          <div class="result-detail">
-            <div class="result-detail-value">${result.correct_count}</div>
-            <div class="result-detail-label">答对题数</div>
-          </div>
-          <div class="result-detail">
-            <div class="result-detail-value">${result.total_questions}</div>
-            <div class="result-detail-label">总题数</div>
-          </div>
-          <div class="result-detail">
-            <div class="result-detail-value">${Math.round(result.time_bonus)}</div>
-            <div class="result-detail-label">时间奖励</div>
-          </div>
-        </div>
-      `;
-      
-      if (wrongAnswers.length > 0) {
-        document.getElementById('wrongWordsSection').innerHTML = `
-          <h4>错词回顾 (${wrongAnswers.length}个)</h4>
-          ${wrongAnswers.map(answer => `
-            <div class="wrong-word-item">
-              <div>
-                <div class="wrong-word-text">${answer.vocab.word}</div>
-                <div class="wrong-word-meaning">${answer.vocab.meaning}</div>
-              </div>
-              <div style="text-align: right; font-size: 12px; color: #6b7280;">
-                ${answer.skipped ? '跳过' : `错选: ${answer.selected_option}`}
-              </div>
-            </div>
-          `).join('')}
-        `;
-      } else {
-        document.getElementById('wrongWordsSection').innerHTML = `
-          <div style="text-align: center; padding: 24px; color: #10b981;">
-            🎉 全部答对！太棒了！
-          </div>
-        `;
-      }
-    }
-
-    // 关闭挑战结果
-    function closeChallengeResult() {
-      document.getElementById('challengeResultModal').style.display = 'none';
-      document.body.style.overflow = 'auto';
-    }
-
-    // 复习错词
-    function reviewWrongWords() {
-      // 可以实现一个专门的错词复习功能
-      alert('错词复习功能开发中...');
-    }
-
-    // 重新开始挑战
-    function restartChallenge() {
-      closeChallengeResult();
-      openChallengeSetup();
-      
-      // 预选之前的文章
-      challengeSelectedArticles.forEach(articleId => {
-        const checkbox = document.getElementById(`article_${articleId}`);
-        if (checkbox) {
-          checkbox.checked = true;
-        }
-      });
-      updateChallengeStats();
-      updateStartButtonState();
-    }
-
-    // 退出挑战
-    function quitChallenge() {
-      if (confirm('确定要退出当前挑战吗？进度将不会保存。')) {
-      if (challengeTimer) {
-        clearInterval(challengeTimer);
-        challengeTimer = null;
-      }
-        document.getElementById('challengeGameModal').style.display = 'none';
-        document.body.style.overflow = 'auto';
-        
-        currentChallenge = null;
-        currentChallengeAnswers = [];
-        currentQuestionIndex = 0;
-      }
-    }
-
-    // ==================== 挑战记录功能 ====================
-
-    // 打开挑战记录
     function openChallengeHistory() {
-      document.getElementById('challengeHistoryModal').style.display = 'flex';
-      document.body.style.overflow = 'hidden';
+      openDetails.clear();
       switchHistoryTab('recent');
+      openDialog('challengeHistoryModal');
     }
-
-    // 关闭挑战记录
-    function closeChallengeHistory() {
-      document.getElementById('challengeHistoryModal').style.display = 'none';
-      document.body.style.overflow = 'auto';
-    }
-
-    // 切换历史标签页
     function switchHistoryTab(tab) {
-      // 更新标签按钮状态
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      document.getElementById(tab + 'Tab').classList.add('active');
-      
-      const content = document.getElementById('historyContent');
-      
-      switch(tab) {
-        case 'recent':
-          showRecentChallenges();
-          break;
-        case 'wrong':
-          showWrongWordsStats();
-          break;
-        case 'stats':
-          showChallengeStats();
-          break;
-      }
+      historyTab = tab;
+      ['recent', 'wrong', 'stats'].forEach(t => {
+        const btn = $(t + 'Tab');
+        btn.classList.toggle('active', t === tab);
+        btn.setAttribute('aria-selected', String(t === tab));
+      });
+      $('recentTab').querySelector('.vs-tabs__n').textContent = String(challengeHistory.length);
+      $('wrongTab').querySelector('.vs-tabs__n').textContent = String(Object.keys(wrongWordsRecord).length);
+      const box = $('historyContent');
+      box.scrollTop = 0;
+      if (tab === 'recent') showRecentChallenges(box);
+      else if (tab === 'wrong') showWrongWordsStats(box);
+      else showChallengeStats(box);
+    }
+    function emptyBlock(title, text) {
+      return h('div', { class: 'ui-empty' }, h('p', { class: 'ui-empty__title', text: title }), text ? h('p', { class: 'ui-empty__text', text: text }) : null);
     }
 
-    // 显示最近挑战
-    function showRecentChallenges() {
-      const content = document.getElementById('historyContent');
-      
-      if (challengeHistory.length === 0) {
-        content.innerHTML = `
-          <div style="text-align: center; padding: 48px; color: #6b7280;">
-            <div style="font-size: 48px; margin-bottom: 16px;">📚</div>
-            <div>还没有挑战记录</div>
-            <div style="margin-top: 8px; font-size: 14px; color: #9ca3af;">开始你的第一个词汇挑战吧！</div>
-            </div>
-        `;
-        return;
-      }
-      
-      content.innerHTML = challengeHistory.map(challenge => `
-        <div class="history-item">
-          <div class="history-header">
-            <div class="history-title">
-              ${challenge.article_titles.join(', ')} (${challenge.total_questions}词)
-            </div>
-            <div class="history-date">
-              ${new Date(challenge.timestamp).toLocaleDateString('zh-CN')} 
-              ${new Date(challenge.timestamp).toLocaleTimeString('zh-CN', {hour: '2-digit', minute: '2-digit'})}
-            </div>
-            </div>
-          <div class="history-stats">
-            <span>正确率: <strong>${challenge.accuracy}%</strong></span>
-            <span>得分: <strong>${challenge.score}</strong></span>
-            <span>答对: <strong>${challenge.correct_count}/${challenge.total_questions}</strong></span>
-            <span>时间奖励: <strong>${Math.round(challenge.time_bonus)}</strong></span>
-          </div>
-          <div style="margin-top: 12px;">
-            <button class="btn" style="font-size: 12px; padding: 4px 8px;" onclick="showChallengeDetail('${challenge.id}')">查看详情</button>
-            <button class="btn" style="font-size: 12px; padding: 4px 8px;" onclick="reviewChallengeWrongWords('${challenge.id}')">复习错词</button>
-          </div>
-        </div>
-      `).join('');
+    function showRecentChallenges(box) {
+      if (!challengeHistory.length) { box.replaceChildren(emptyBlock('还没有挑战记录', '点页面右上角的「开始挑战」做第一次。')); return; }
+      box.replaceChildren(...challengeHistory.map(record => {
+        const wrong = wrongAnswersOf(record);
+        const open = openDetails.has(record.id);
+        const answered = (record.answers || []).filter(a => !a.skipped && typeof a.time_taken === 'number');
+        const avg = answered.length ? (answered.reduce((s, a) => s + a.time_taken, 0) / answered.length).toFixed(1) : '';
+        return h('div', { class: 'vs-rec' },
+          h('div', { class: 'vs-rec__top' },
+            h('span', { class: 'vs-rec__title', text: recordTitle(record), title: recordTitle(record) }),
+            h('span', { class: 'vs-rec__when', text: fmtWhen(record.timestamp) })),
+          h('div', { class: 'vs-rec__bottom' },
+            h('span', { class: 'vs-rec__line', text: `正确率 ${record.accuracy}% · 得分 ${record.score} · 答对 ${record.correct_count} / ${record.total_questions}` }),
+            h('button', { type: 'button', class: 'ui-btn ui-btn--sm', 'aria-expanded': String(open), text: open ? '收起' : '详情',
+              onclick: () => { if (open) openDetails.delete(record.id); else openDetails.add(record.id); showRecentChallenges(box); } }),
+            h('button', { type: 'button', class: 'ui-btn ui-btn--sm', disabled: !wrong.length, text: wrong.length ? `复习错词 ${wrong.length}` : '没有错词',
+              onclick: () => reviewWrongOf(record) })),
+          open ? h('div', { class: 'vs-rec__detail' },
+            wrong.length
+              ? h('div', null, '答错和跳过：', h('span', { class: 'ui-en', text: wrong.map(a => a.vocab.word).join(' · ') }))
+              : h('div', { text: '全部答对' }),
+            avg ? h('div', { text: `答了的题平均用时 ${avg} 秒` }) : null) : null);
+      }));
     }
 
-    // 显示错词统计
-    function showWrongWordsStats() {
-      const content = document.getElementById('historyContent');
-      const wrongWords = Object.values(wrongWordsRecord);
-      
-      if (wrongWords.length === 0) {
-        content.innerHTML = `
-          <div style="text-align: center; padding: 48px; color: #6b7280;">
-            <div style="font-size: 48px; margin-bottom: 16px;">🎉</div>
-            <div>还没有错词记录</div>
-            <div style="margin-top: 8px; font-size: 14px; color: #9ca3af;">继续保持，或者开始更多挑战！</div>
-          </div>
-        `;
-        return;
-      }
-      
-      // 按错误次数排序
-      wrongWords.sort((a, b) => b.wrong_count - a.wrong_count);
-      
-      content.innerHTML = `
-        <div style="margin-bottom: 16px; padding: 16px; background: #fef2f2; border-radius: 12px; border-left: 4px solid #ef4444;">
-          <div style="font-weight: 600; color: #991b1b; margin-bottom: 8px;">错词汇总</div>
-          <div style="color: #6b7280; font-size: 14px;">
-            总计 ${wrongWords.length} 个词汇需要重点复习，累计错误 ${wrongWords.reduce((sum, w) => sum + w.wrong_count, 0)} 次
-          </div>
-        </div>
-        ${wrongWords.map(word => `
-          <div class="history-item" style="border-left: 3px solid #ef4444;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-              <div>
-                <div style="font-weight: 600; color: #111827; font-size: 16px;">${word.word}</div>
-                <div style="color: #6b7280; margin-top: 2px;">${word.meaning}</div>
-                ${word.article_title ? `<div style="color: #9ca3af; font-size: 12px; margin-top: 4px;">来源: ${word.article_title}</div>` : ''}
-              </div>
-              <div style="text-align: right;">
-                <div style="color: #ef4444; font-weight: 600;">错 ${word.wrong_count} 次</div>
-                <div style="color: #6b7280; font-size: 12px;">
-                  ${new Date(word.last_wrong_at).toLocaleDateString('zh-CN')}
-                </div>
-              </div>
-            </div>
-            <div style="margin-top: 8px;">
-              <button class="btn" style="font-size: 12px; padding: 4px 8px;" onclick="practiceWrongWord('${word.word}', '${word.meaning}')">单词练习</button>
-              <button class="btn" style="font-size: 12px; padding: 4px 8px;" onclick="removeFromWrongWords('${word.word}::${word.meaning}')">移出错词本</button>
-            </div>
-          </div>
-        `).join('')}
-      `;
+    function showWrongWordsStats(box) {
+      const words = Object.entries(wrongWordsRecord).map(([key, w]) => Object.assign({ key }, w));
+      if (!words.length) { box.replaceChildren(emptyBlock('错词本是空的', '挑战里答错或跳过的词会记在这里。')); return; }
+      words.sort((a, b) => (b.wrong_count || 0) - (a.wrong_count || 0) || String(b.last_wrong_at).localeCompare(String(a.last_wrong_at)));
+      const total = words.reduce((s, w) => s + (w.wrong_count || 0), 0);
+      box.replaceChildren(
+        h('p', { class: 'vs-para' }, '共 ', h('b', { text: String(words.length) }), ' 个词，累计错 ', h('b', { text: String(total) }), ' 次，错得多的排前面。这些词也会出现在首页「待复习」里。'),
+        h('div', { class: 'vs-table' }, ...words.map(w => h('div', { class: 'vs-ww' },
+          h('div', { class: 'vs-ww__main' },
+            h('div', { class: 'vs-ww__line' },
+              h('span', { class: 'vs-ww__word', text: w.word }),
+              h('span', { class: 'vs-ww__meaning', text: w.meaning, title: w.meaning })),
+            h('div', { class: 'vs-ww__from', text: [w.article_title ? `来自 ${w.article_title}` : '', fmtWhen(w.last_wrong_at)].filter(Boolean).join(' · ') })),
+          h('span', { class: 'vs-ww__times', text: `错 ${w.wrong_count || 0} 次` }),
+          h('button', { type: 'button', class: 'vs-ibtn', icon: 'play', 'aria-label': `听「${w.word}」的发音`, title: '听发音',
+            onclick: () => playWord(w.word, w.article_id || (currentArticle && currentArticle.id)) }),
+          h('button', { type: 'button', class: 'ui-btn ui-btn--sm', text: '记住了', title: '从错词本里移出',
+            onclick: () => removeFromWrongWords(w.key, w.word) })))));
     }
 
-    // 显示挑战统计
-    function showChallengeStats() {
-      const content = document.getElementById('historyContent');
-      
-      if (challengeHistory.length === 0) {
-        content.innerHTML = `
-          <div style="text-align: center; padding: 48px; color: #6b7280;">
-            <div style="font-size: 48px; margin-bottom: 16px;">📊</div>
-            <div>暂无统计数据</div>
-          </div>
-        `;
-        return;
-      }
-      
-      // 计算统计数据
+    function showChallengeStats(box) {
+      if (!challengeHistory.length) { box.replaceChildren(emptyBlock('还没有统计', '做过挑战以后，这里会有正确率和每天的记录。')); return; }
       const totalChallenges = challengeHistory.length;
-      const totalQuestions = challengeHistory.reduce((sum, c) => sum + c.total_questions, 0);
-      const totalCorrect = challengeHistory.reduce((sum, c) => sum + c.correct_count, 0);
-      const avgAccuracy = Math.round((totalCorrect / totalQuestions) * 100);
-      const avgScore = Math.round(challengeHistory.reduce((sum, c) => sum + c.score, 0) / totalChallenges);
-      const bestScore = Math.max(...challengeHistory.map(c => c.score));
-      const recentAccuracy = challengeHistory.slice(0, 5).reduce((sum, c) => sum + c.accuracy, 0) / Math.min(5, challengeHistory.length);
-      
-      // 按日期分组统计
-      const dailyStats = {};
-      challengeHistory.forEach(challenge => {
-        const date = new Date(challenge.timestamp).toDateString();
-        if (!dailyStats[date]) {
-          dailyStats[date] = { count: 0, accuracy: 0, totalQuestions: 0, correctAnswers: 0 };
-        }
-        dailyStats[date].count++;
-        dailyStats[date].totalQuestions += challenge.total_questions;
-        dailyStats[date].correctAnswers += challenge.correct_count;
-        dailyStats[date].accuracy = Math.round((dailyStats[date].correctAnswers / dailyStats[date].totalQuestions) * 100);
+      const totalQuestions = challengeHistory.reduce((s, c) => s + (c.total_questions || 0), 0);
+      const totalCorrect = challengeHistory.reduce((s, c) => s + (c.correct_count || 0), 0);
+      const avgAccuracy = totalQuestions ? Math.round(totalCorrect / totalQuestions * 100) : 0;
+      const avgScore = Math.round(challengeHistory.reduce((s, c) => s + (c.score || 0), 0) / totalChallenges);
+      const bestScore = Math.max(...challengeHistory.map(c => c.score || 0));
+      const recent = challengeHistory.slice(0, 5);
+      const recentAccuracy = Math.round(recent.reduce((s, c) => s + (c.accuracy || 0), 0) / recent.length);
+      const daily = {};
+      challengeHistory.forEach(c => {
+        const d = new Date(c.timestamp);
+        if (isNaN(d)) return;
+        const key = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+        const row = daily[key] || (daily[key] = { count: 0, questions: 0, correct: 0 });
+        row.count++;
+        row.questions += c.total_questions || 0;
+        row.correct += c.correct_count || 0;
       });
-      
-      const sortedDates = Object.keys(dailyStats).sort((a, b) => new Date(b) - new Date(a));
-      
-      content.innerHTML = `
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
-          <div style="background: linear-gradient(135deg, #4f46e5 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; text-align: center;">
-            <div style="font-size: 24px; font-weight: 600;">${totalChallenges}</div>
-            <div style="opacity: 0.9;">总挑战次数</div>
-          </div>
-          <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 20px; border-radius: 12px; text-align: center;">
-            <div style="font-size: 24px; font-weight: 600;">${avgAccuracy}%</div>
-            <div style="opacity: 0.9;">平均正确率</div>
-          </div>
-          <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 20px; border-radius: 12px; text-align: center;">
-            <div style="font-size: 24px; font-weight: 600;">${avgScore}</div>
-            <div style="opacity: 0.9;">平均得分</div>
-          </div>
-          <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 20px; border-radius: 12px; text-align: center;">
-            <div style="font-size: 24px; font-weight: 600;">${bestScore}</div>
-            <div style="opacity: 0.9;">最高得分</div>
-          </div>
-        </div>
-        
-        <div style="background: #f8fafc; padding: 20px; border-radius: 12px; margin-bottom: 24px;">
-          <h4 style="margin-bottom: 16px; color: #111827;">近期表现</h4>
-          <div style="display: flex; gap: 24px; margin-bottom: 16px;">
-            <div>
-              <div style="color: #6b7280; font-size: 14px;">最近5次平均正确率</div>
-              <div style="font-size: 20px; font-weight: 600; color: #111827;">${Math.round(recentAccuracy)}%</div>
-            </div>
-            <div>
-              <div style="color: #6b7280; font-size: 14px;">总答题数</div>
-              <div style="font-size: 20px; font-weight: 600; color: #111827;">${totalQuestions}</div>
-            </div>
-            <div>
-              <div style="color: #6b7280; font-size: 14px;">总答对数</div>
-              <div style="font-size: 20px; font-weight: 600; color: #111827;">${totalCorrect}</div>
-            </div>
-          </div>
-        </div>
-        
-        <div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px;">
-          <h4 style="margin-bottom: 16px; color: #111827;">每日练习记录</h4>
-          ${sortedDates.slice(0, 10).map(date => {
-            const stats = dailyStats[date];
-            return `
-              <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f1f5f9;">
-                <div>
-                  <div style="font-weight: 500; color: #111827;">${new Date(date).toLocaleDateString('zh-CN')}</div>
-                  <div style="font-size: 14px; color: #6b7280;">${stats.count} 次挑战</div>
-                </div>
-                <div style="text-align: right;">
-                  <div style="font-weight: 500; color: #111827;">${stats.accuracy}%</div>
-                  <div style="font-size: 14px; color: #6b7280;">${stats.correctAnswers}/${stats.totalQuestions}</div>
-                </div>
-              </div>
-            `;
-          }).join('')}
-        </div>
-      `;
+      const days = Object.keys(daily).sort().reverse().slice(0, 10);
+      box.replaceChildren(
+        h('div', { class: 'vs-stats' },
+          stat(totalChallenges, '', '总挑战次数'), stat(avgAccuracy, '%', '平均正确率'),
+          stat(avgScore, '', '平均得分'), stat(bestScore, '', '最高得分')),
+        h('p', { class: 'vs-para' }, `最近 ${recent.length} 次平均正确率 `, h('b', { text: recentAccuracy + '%' }),
+          ' · 共答 ', h('b', { text: String(totalQuestions) }), ' 题，答对 ', h('b', { text: String(totalCorrect) }), ' 题'),
+        h('div', { class: 'vs-table' },
+          h('div', { class: 'vs-table__row is-head' }, h('span', { text: '日期' }), h('span', { text: '挑战' }), h('span', { text: '正确率' }), h('span', { text: '答对' })),
+          ...days.map(key => {
+            const r = daily[key];
+            const [y, m, d] = key.split('-');
+            return h('div', { class: 'vs-table__row' },
+              h('span', { text: `${Number(m)} 月 ${Number(d)} 日` + (Number(y) !== new Date().getFullYear() ? `（${y}）` : '') }),
+              h('span', { class: 'is-soft', text: `${r.count} 次` }),
+              h('span', { text: r.questions ? Math.round(r.correct / r.questions * 100) + '%' : '—' }),
+              h('span', { class: 'is-soft', text: `${r.correct} / ${r.questions}` }));
+          })));
     }
 
-    // 显示挑战详情
-    function showChallengeDetail(challengeId) {
-      const challenge = challengeHistory.find(c => c.id === challengeId);
-      if (!challenge) return;
-      
-      const wrongAnswers = challenge.answers.filter(a => !a.is_correct);
-      
-      alert(`挑战详情：
-      
-文章：${challenge.article_titles.join(', ')}
-时间：${new Date(challenge.timestamp).toLocaleString('zh-CN')}
-总题数：${challenge.total_questions}
-答对：${challenge.correct_count}
-正确率：${challenge.accuracy}%
-得分：${challenge.score}
-时间奖励：${Math.round(challenge.time_bonus)}
-
-错题：${wrongAnswers.length}个
-${wrongAnswers.map(a => `• ${a.vocab.word} - ${a.vocab.meaning}`).join('\n')}`);
+    function removeFromWrongWords(key, word) {
+      if (!confirm(`把「${word}」移出错词本？`)) return;
+      delete wrongWordsRecord[key];
+      saveWrongWordsToBackend();
+      switchHistoryTab('wrong');
+      toast(`已把「${word}」移出错词本`, 'ok');
     }
 
-    // 复习挑战错词
-    function reviewChallengeWrongWords(challengeId) {
-      const challenge = challengeHistory.find(c => c.id === challengeId);
-      if (!challenge) return;
-      
-      const wrongAnswers = challenge.answers.filter(a => !a.is_correct);
-      if (wrongAnswers.length === 0) {
-        alert('这次挑战没有错词！');
-        return;
-      }
-      
-      // 创建一个基于错词的新挑战
-      const wrongVocab = wrongAnswers.map(a => a.vocab);
-      
-      currentChallenge = {
-        id: `review_${challengeId}`,
-        type: 'review',
-        vocabulary: wrongVocab,
-        article_ids: challenge.article_ids
-      };
-      
-      currentChallengeAnswers = [];
-      currentQuestionIndex = 0;
-      
-      closeChallengeHistory();
-      document.getElementById('challengeGameModal').style.display = 'flex';
-      document.body.style.overflow = 'hidden';
-      
-      document.getElementById('challengeGameTitle').textContent = `错词复习 - ${wrongVocab.length}词`;
-      showNextQuestion();
-    }
-
-    // 练习单个错词
-    function practiceWrongWord(word, meaning) {
-      // 播放发音 - 尝试使用原始文章的音频
-      try {
-        if (window.playWordPronunciation) {
-          // 尝试从错词记录中找到原始文章ID
-          const wordKey = `${word}::${meaning}`;
-          const wrongWordData = wrongWordsRecord[wordKey];
-          
-          if (wrongWordData && wrongWordData.article_id) {
-            window.playWordPronunciation(word, wrongWordData.article_id);
-          } else {
-            // 如果找不到原始文章ID，尝试从当前显示的文章中找
-            const currentDisplayedArticle = currentArticle;
-            if (currentDisplayedArticle) {
-              window.playWordPronunciation(word, currentDisplayedArticle.id);
-            }
-          }
-        }
-      } catch (error) {
-        console.warn(`练习单词音频播放失败: ${word}`, error);
-      }
-      
-      alert(`${word}\n${meaning}\n\n已播放发音，请仔细听并记忆！`);
-    }
-
-    // 从错词本移除
-    function removeFromWrongWords(wordKey) {
-      if (confirm('确定要从错词本中移除这个词汇吗？')) {
-        delete wrongWordsRecord[wordKey];
-        saveWrongWordsToBackend();
-        showWrongWordsStats(); // 刷新显示
-      }
-    }
-
-    // 导出挑战记录
     function exportChallengeHistory() {
-      if (challengeHistory.length === 0) {
-        alert('暂无挑战记录可导出');
-        return;
-      }
-      
-      let csvContent = '\uFEFF'; // BOM for proper UTF-8 encoding
-      csvContent += '挑战时间,文章,题目数,答对数,正确率,得分,时间奖励\n';
-      
-      challengeHistory.forEach(challenge => {
-        const time = new Date(challenge.timestamp).toLocaleString('zh-CN');
-        const articles = challenge.article_titles.join(';');
-        csvContent += `"${time}","${articles}",${challenge.total_questions},${challenge.correct_count},${challenge.accuracy}%,${challenge.score},${Math.round(challenge.time_bonus)}\n`;
-      });
-      
-      // Download file
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', `词汇挑战记录_${new Date().toLocaleDateString('zh-CN')}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      alert(`已导出 ${challengeHistory.length} 条挑战记录`);
+      if (!challengeHistory.length) { toast('还没有挑战记录可以导出', 'err'); return; }
+      const rows = challengeHistory.map(c => [
+        csvCell(new Date(c.timestamp).toLocaleString('zh-CN')), csvCell(recordTitle(c)),
+        c.total_questions, c.correct_count, `${c.accuracy}%`, c.score, Math.round(c.time_bonus || 0)
+      ].join(','));
+      downloadText(`词汇挑战记录_${new Date().toLocaleDateString('zh-CN').replace(/\//g, '-')}.csv`,
+        '挑战时间,文章,题目数,答对数,正确率,得分,时间奖励\n' + rows.join('\n') + '\n');
+      toast(`已导出 ${challengeHistory.length} 条挑战记录`, 'ok');
     }
 
-    // ==================== 后端持久化功能 ====================
-    
-    // 保存挑战记录到后端
-    async function saveChallengeRecordToBackend(challengeRecord) {
+    // ==================== 存到后端（失败时备份在本机） ====================
+    async function saveChallengeRecordToBackend(record) {
       try {
         const response = await fetch('/api/vocab_challenge_record', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${currentToken}`
-          },
-          body: JSON.stringify({
-            challenge_record: challengeRecord
-          })
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ challenge_record: record })
         });
-        
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success) {
-            console.log(`挑战记录已保存到后端，总记录数: ${data.record_count}`);
-          }
-        } else {
-          console.warn('保存挑战记录到后端失败');
-          // 备份到localStorage
-          let localHistory = JSON.parse(localStorage.getItem('vocabChallengeHistory') || '[]');
-          localHistory.unshift(challengeRecord);
-          if (localHistory.length > 50) {
-            localHistory = localHistory.slice(0, 50);
-          }
-          localStorage.setItem('vocabChallengeHistory', JSON.stringify(localHistory));
-        }
+        if (!response.ok) throw new Error(String(response.status));
       } catch (error) {
-        console.warn('保存挑战记录到后端出错:', error);
-        // 备份到localStorage
-        let localHistory = JSON.parse(localStorage.getItem('vocabChallengeHistory') || '[]');
-        localHistory.unshift(challengeRecord);
-        if (localHistory.length > 50) {
-          localHistory = localHistory.slice(0, 50);
-        }
-        localStorage.setItem('vocabChallengeHistory', JSON.stringify(localHistory));
+        let local = [];
+        try { local = JSON.parse(storeGet('vocabChallengeHistory', '[]')); } catch (e) {}
+        local.unshift(record);
+        storeSet('vocabChallengeHistory', JSON.stringify(local.slice(0, 50)));
+        toast('挑战记录没存到服务器，先存在这台设备上', 'err');
       }
     }
-
-    // 保存错词记录到后端
     async function saveWrongWordsToBackend() {
       try {
         const response = await fetch('/api/vocab_wrong_words', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${currentToken}`
-          },
-          body: JSON.stringify({
-            wrong_words: wrongWordsRecord
-          })
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ wrong_words: wrongWordsRecord })
         });
-        
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success) {
-            console.log(`错词记录已保存到后端，总词汇数: ${data.word_count}`);
-          }
-        } else {
-          console.warn('保存错词记录到后端失败');
-          // 备份到localStorage
-          localStorage.setItem('vocabWrongWords', JSON.stringify(wrongWordsRecord));
-        }
+        if (!response.ok) throw new Error(String(response.status));
       } catch (error) {
-        console.warn('保存错词记录到后端出错:', error);
-        // 备份到localStorage
-        localStorage.setItem('vocabWrongWords', JSON.stringify(wrongWordsRecord));
+        storeSet('vocabWrongWords', JSON.stringify(wrongWordsRecord));
       }
     }
+
+    // ==================== 绑定 ====================
+    CATS.forEach(c => $('tab-' + c).addEventListener('click', () => { if (c !== activeCat) setActiveCat(c); }));
+    $('vocabSearch').addEventListener('input', () => { if (currentArticle && currentVocab) renderVocab(); });  // 还在加载时不画，加载完会按搜索词画
+    $('historyBtn').addEventListener('click', openChallengeHistory);
+    $('challengeBtn').addEventListener('click', () => openChallengeSetup());
+    $('exportBtn').addEventListener('click', e => { e.stopPropagation(); toggleExportMenu(); });
+    $('exportMenu').addEventListener('click', e => {
+      const btn = e.target.closest('[data-export]');
+      if (btn && !btn.disabled) exportVocab(btn.dataset.export);
+    });
+    document.addEventListener('click', e => {
+      if (!$('exportMenu').hidden && !e.target.closest('.vs-menu-wrap')) toggleExportMenu(false);
+    });
+    $('selectAllArticles').addEventListener('change', e => toggleAllArticlesSelection(e.target.checked));
+    $('challengeWordCount').addEventListener('input', e => {
+      const n = parseInt(e.target.value, 10);
+      if (!isNaN(n)) $('wordCountSlider').value = Math.min(50, Math.max(5, n));
+      updateChallengeStats();
+    });
+    $('challengeWordCount').addEventListener('change', e => { e.target.value = clampCount(e.target.value); updateChallengeStats(); });
+    $('wordCountSlider').addEventListener('input', e => { $('challengeWordCount').value = e.target.value; updateChallengeStats(); });
+    $('startChallengeBtn').addEventListener('click', startVocabChallenge);
+    $('skipBtn').addEventListener('click', () => skipQuestion(false));
+    $('quitBtn').addEventListener('click', quitChallenge);
+    $('reviewWrongBtn').addEventListener('click', () => { if (lastResult) reviewWrongOf(lastResult); });
+    $('restartBtn').addEventListener('click', () => {
+      const ids = lastResult ? lastResult.article_ids : null;
+      closeDialog('challengeResultModal');
+      openChallengeSetup(ids);
+    });
+    ['recent', 'wrong', 'stats'].forEach(t => $(t + 'Tab').addEventListener('click', () => switchHistoryTab(t)));
+    $('exportHistoryBtn').addEventListener('click', exportChallengeHistory);
+
+    // 没登录时导航脚本（app-shell.js）会跳去登录页，这里只管有凭证时加载数据
+    if (storeGet('authToken', '')) loadData();
+    else $('articleList').replaceChildren(h('div', { class: 'vs-rail__msg', text: '登录后显示你的文章。' }));
   </script>
 </body>
 </html>

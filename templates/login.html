@@ -1,3 +1,4 @@
+<!-- 设计稿：https://claude.ai/artifact/MhSvUwJm3kfprXehaKM2nu 「登录 · 词汇汇总 · 改版」。改样式先改画布，再改这个文件。 -->
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -21,312 +22,101 @@
         })();
     </script>
     <meta charset="UTF-8">
-    <script src="/static/auth-fetch.js?v=20260927"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>用户登录 - IELTS Speaking AudioGen</title>
+    <title>登录 · IELTS Lab</title>
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-    <link href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Crimson+Text:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+    <link rel="stylesheet" href="/static/theme.css?v=20261031b">
+    <link rel="stylesheet" href="/static/plain.css?v=20261031">
+    <script src="/static/theme.js?v=20260919" defer></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* 登录页专属样式：只用设计系统令牌（--w-* 等）和 plain.css 的 ui- 组件，类名统一 lg- 前缀。
+           没有导航栏（app-shell.js 在 /login 不画导航），整页只有中间一张卡片。 */
+        .lg-wrap {
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 48px 16px;
         }
-
-        body {
-            font-family: 'PT Serif', 'Crimson Text', ui-serif, 'Times New Roman', 'Georgia', serif;
-            background: linear-gradient(135deg, #e0e7ff 0%, #f4f6fa 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
+        .lg-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; font-size: var(--w-fs-en); font-weight: 600; color: var(--w-ink); }
+        .lg-brand__mark {
+            width: 32px; height: 32px; border-radius: var(--w-r-chip); background: var(--w-big); color: var(--w-on-big);
+            display: inline-flex; align-items: center; justify-content: center; font-size: var(--w-fs-meta); font-weight: 600;
         }
-
-        /* 背景动画元素 */
-        .bg-animation {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            z-index: 0;
+        .lg-card {
+            width: 100%; max-width: 400px; padding: 30px 32px 26px 32px;
+            border: 1px solid var(--w-line); border-radius: var(--w-r-card); background: var(--w-surface);
         }
-
-        .bg-circle {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
-            animation: float 15s infinite ease-in-out;
+        .lg-title { margin: 0; font-size: var(--w-fs-title); font-weight: 600; line-height: 1.35; color: var(--w-ink); }
+        .lg-sub { margin: 4px 0 22px 0; font-size: var(--w-fs-meta); color: var(--w-ink3); }
+        .lg-msg { margin-bottom: 16px; padding: 10px 12px; border-radius: var(--w-r-inner); font-size: var(--w-fs-meta); }
+        .lg-msg--err { border: 1px solid var(--w-err-line); background: var(--w-err-soft); color: var(--w-err); }
+        .lg-msg--ok { border: 1px solid var(--w-ok-line); background: var(--w-ok-soft); color: var(--w-ok); }
+        .lg-form { display: flex; flex-direction: column; gap: 16px; margin: 0; }
+        .lg-form .ui-input { height: 44px; }
+        .lg-pw { position: relative; display: block; }
+        .lg-pw .ui-input { padding-right: 44px; }
+        .lg-eye {
+            position: absolute; top: 6px; right: 6px; width: 32px; height: 32px; padding: 0;
+            display: inline-flex; align-items: center; justify-content: center;
+            border: none; border-radius: var(--w-r-chip); background: transparent; color: var(--w-ink3); cursor: pointer;
+            transition: background .15s, color .15s;
         }
-
-        .bg-circle:nth-child(1) {
-            width: 200px;
-            height: 200px;
-            top: -100px;
-            left: -100px;
-            animation-delay: 0s;
+        .lg-eye:hover { background: var(--w-sunken); color: var(--w-ink); }
+        .lg-eye:focus-visible { outline: none; box-shadow: var(--w-ring); }
+        .lg-eye .lg-eye__off { display: none; }
+        .lg-eye[aria-pressed="true"] .lg-eye__on { display: none; }
+        .lg-eye[aria-pressed="true"] .lg-eye__off { display: inline; }
+        .lg-submit { width: 100%; margin-top: 6px; font-weight: 600; }
+        .lg-spin {
+            width: 14px; height: 14px; flex: none; border: 2px solid currentColor; border-right-color: transparent;
+            border-radius: 50%; animation: lg-spin .8s linear infinite;
         }
-
-        .bg-circle:nth-child(2) {
-            width: 300px;
-            height: 300px;
-            bottom: -150px;
-            right: -150px;
-            animation-delay: -5s;
-        }
-
-        .bg-circle:nth-child(3) {
-            width: 150px;
-            height: 150px;
-            top: 20%;
-            right: 10%;
-            animation-delay: -10s;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(180deg); }
-        }
-
-        .login-container {
-            background: #fff;
-            border-radius: 20px;
-            padding: 50px 40px;
-            box-shadow: 0 16px 48px rgba(31,38,135,0.20);
-            width: 100%;
-            max-width: 450px;
-            position: relative;
-            z-index: 1;
-            border: 1px solid rgba(255, 255, 255, 0.8);
-        }
-
-        .login-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .logo {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #4f46e5, #06b6d4);
-            border-radius: 50%;
-            margin: 0 auto 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
-            color: white;
-            font-weight: bold;
-        }
-
-        .login-title {
-            font-size: 28px;
-            font-weight: 800;
-            color: #1f2937;
-            margin-bottom: 8px;
-            letter-spacing: 0.3px;
-        }
-
-        .login-subtitle {
-            color: #718096;
-            font-size: 16px;
-        }
-
-        .form-group {
-            margin-bottom: 25px;
-            position: relative;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
-            color: #2d3748;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 15px 20px;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            background: #f7fafc;
-        }
-
-        .form-input:focus {
-            outline: none;
-            border-color: #667eea;
-            background: white;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .form-input::placeholder {
-            color: #a0aec0;
-        }
-
-        .login-btn {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, #4f46e5, #06b6d4);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-bottom: 20px;
-        }
-
-        .login-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
-        }
-
-        .login-btn:active {
-            transform: translateY(0);
-        }
-
-        .login-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .register-link {
-            text-align: center;
-            margin-top: 20px;
-            padding: 15px;
-            background: #f7fafc;
-            border-radius: 12px;
-            border: 2px dashed #e2e8f0;
-        }
-
-        .register-link a {
-            color: #4f46e5;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .register-link a:hover {
-            text-decoration: underline;
-        }
-
-        .error-message {
-            background: #fed7d7;
-            color: #c53030;
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 4px solid #c53030;
-            display: none;
-        }
-
-        .success-message {
-            background: #c6f6d5;
-            color: #2d7d32;
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 4px solid #2d7d32;
-            display: none;
-        }
-
-        .loading-spinner {
-            width: 20px;
-            height: 20px;
-            border: 2px solid transparent;
-            border-top: 2px solid white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            display: none;
-            margin-right: 10px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-
-
-        /* 响应式设计 */
+        @keyframes lg-spin { to { transform: rotate(360deg); } }
+        .lg-foot { margin: 18px 0 0 0; padding-top: 16px; border-top: 1px solid var(--w-line); text-align: center; font-size: var(--w-fs-meta); color: var(--w-ink3); }
         @media (max-width: 480px) {
-            .login-container {
-                margin: 20px;
-                padding: 30px 25px;
-            }
-            
-            .login-title {
-                font-size: 24px;
-            }
+            .lg-wrap { justify-content: flex-start; padding-top: 40px; }
+            .lg-card { padding: 24px 20px 20px 20px; }
         }
     </style>
-    <link rel="stylesheet" href="/static/theme.css?v=20260919">
-    <script src="/static/theme.js?v=20260919" defer></script>
-  <script src="/static/api-client.js?v=20260919" defer></script>
-  <script src="/static/auth.js?v=20260927" defer></script>
-  <script src="/static/ui-feedback.js?v=20260919" defer></script>
-  <script src="/static/app-shell.js?v=20260927" defer></script>
 </head>
-<body class="theme-page page-login">
-    <div class="bg-animation">
-        <div class="bg-circle"></div>
-        <div class="bg-circle"></div>
-        <div class="bg-circle"></div>
-    </div>
+<body class="theme-page page-login ui-plain">
+    <div class="lg-wrap">
+        <div class="lg-brand"><span class="lg-brand__mark" aria-hidden="true">IL</span>IELTS Lab</div>
 
-    <div class="login-container">
-        <div class="login-header">
-            <div class="logo">IS</div>
-            <h1 class="login-title">欢迎登录</h1>
-            <p class="login-subtitle">IELTS Speaking AudioGen</p>
-        </div>
+        <main class="lg-card">
+            <h1 class="lg-title">登录</h1>
+            <p class="lg-sub">登录后接着上次的练习。</p>
 
-        <div id="errorMessage" class="error-message"></div>
-        <div id="successMessage" class="success-message"></div>
+            <div id="errorMessage" class="lg-msg lg-msg--err" role="alert" hidden></div>
+            <div id="successMessage" class="lg-msg lg-msg--ok" role="status" hidden></div>
 
-        <form id="loginForm">
-            <div class="form-group">
-                <label class="form-label" for="username">用户名</label>
-                <input 
-                    type="text" 
-                    id="username" 
-                    class="form-input" 
-                    placeholder="请输入用户名"
-                    required
-                >
-            </div>
+            <form id="loginForm" class="lg-form" novalidate>
+                <label class="ui-field">
+                    <span class="ui-field__label">用户名</span>
+                    <input type="text" id="username" class="ui-input" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+                </label>
+                <label class="ui-field">
+                    <span class="ui-field__label">密码</span>
+                    <span class="lg-pw">
+                        <input type="password" id="password" class="ui-input" autocomplete="current-password" required>
+                        <button type="button" id="togglePassword" class="lg-eye" aria-label="显示密码" aria-pressed="false">
+                            <svg class="lg-eye__on" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8z"/><circle cx="8" cy="8" r="2"/></svg>
+                            <svg class="lg-eye__off" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8z"/><circle cx="8" cy="8" r="2"/><path d="M2.5 13.5l11-11"/></svg>
+                        </button>
+                    </span>
+                </label>
+                <button type="submit" id="loginBtn" class="ui-btn ui-btn--primary lg-submit">
+                    <span class="lg-spin" id="loadingSpinner" hidden></span>
+                    <span id="loginBtnText">登录</span>
+                </button>
+            </form>
 
-            <div class="form-group">
-                <label class="form-label" for="password">密码</label>
-                <input 
-                    type="password" 
-                    id="password" 
-                    class="form-input" 
-                    placeholder="请输入密码"
-                    required
-                >
-            </div>
-
-            <button type="submit" id="loginBtn" class="login-btn">
-                <span class="loading-spinner" id="loadingSpinner"></span>
-                <span id="loginBtnText">登录</span>
-            </button>
-        </form>
-
-        <div class="register-link">
-            <p>还没有账户？ <a href="#" id="registerLink">联系管理员注册</a></p>
-        </div>
+            <p class="lg-foot">还没有账号？请找管理员开通。</p>
+        </main>
     </div>
 
     <script>
-        let currentToken = null;
-
-        // DOM 元素
         const loginForm = document.getElementById('loginForm');
         const usernameInput = document.getElementById('username');
         const passwordInput = document.getElementById('password');
@@ -335,147 +125,133 @@
         const loadingSpinner = document.getElementById('loadingSpinner');
         const errorMessage = document.getElementById('errorMessage');
         const successMessage = document.getElementById('successMessage');
-        const registerLink = document.getElementById('registerLink');
+        const togglePassword = document.getElementById('togglePassword');
 
-        // 检查已存储的 token
+        // 登录完回哪一页：地址里的 ?next=，否则是把你送到登录页的那一页（各页面没登录时都是
+        // 直接跳 /login，浏览器会把来源页放在 document.referrer 里），都没有才回首页。
+        // 只认本站的路径，防止被人拿登录页做跳板跳到别的网站。
+        function samePath(raw) {
+            if (!raw) return '';
+            try {
+                const url = new URL(raw, window.location.origin);
+                if (url.origin !== window.location.origin || url.pathname === '/login') return '';
+                return url.pathname + url.search + url.hash;
+            } catch (e) {
+                return '';
+            }
+        }
+        function landingPage() {
+            let next = '';
+            try { next = new URLSearchParams(window.location.search).get('next') || ''; } catch (e) {}
+            // ?next= 只接受以单个 / 开头的站内路径（//evil.com 这种会被当成别的网站）
+            if (next && (!next.startsWith('/') || next.startsWith('//') || next.includes('\\'))) next = '';
+            return samePath(next) || samePath(document.referrer) || '/';
+        }
+        function goOn() {
+            window.location.href = landingPage();
+        }
+
+        // 已经登录的人打开登录页：直接放行
         function checkStoredToken() {
-            const storedToken = localStorage.getItem('authToken');
-            if (storedToken) {
-                return fetch('/verify_token', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({token: storedToken})
-                })
+            let storedToken = null;
+            try { storedToken = localStorage.getItem('authToken'); } catch (e) {}
+            if (!storedToken) return Promise.resolve(false);
+            return fetch('/verify_token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: storedToken })
+            })
                 .then(res => res.json())
                 .then(data => {
                     if (data && data.valid === true) {
-                        currentToken = storedToken;
-                        redirectToModules();
+                        goOn();
                         return true;
                     }
                     // 只有服务器明确回答"无效"才清掉凭证；其它情况（比如 503）留在登录页，凭证不动
                     if (data && data.valid === false) {
-                        localStorage.removeItem('authToken');
+                        try { localStorage.removeItem('authToken'); } catch (e) {}
                     }
                     return false;
                 })
-                .catch(() => {
-                    // 断网、服务器重启时的 502 页面：说明不了凭证失效，留在登录页，凭证不动
-                    return false;
-                });
-            }
-            return Promise.resolve(false);
+                // 断网、服务器重启时的 502 页面：说明不了凭证失效，留在登录页，凭证不动
+                .catch(() => false);
         }
 
-        // 显示消息
         function showMessage(message, isError = true) {
             hideMessages();
-            if (isError) {
-                errorMessage.textContent = message;
-                errorMessage.style.display = 'block';
-            } else {
-                successMessage.textContent = message;
-                successMessage.style.display = 'block';
-            }
+            const box = isError ? errorMessage : successMessage;
+            box.textContent = message;
+            box.hidden = false;
         }
-
-        // 隐藏消息
         function hideMessages() {
-            errorMessage.style.display = 'none';
-            successMessage.style.display = 'none';
+            errorMessage.hidden = true;
+            successMessage.hidden = true;
         }
 
-        // 设置加载状态
         function setLoading(loading) {
             loginBtn.disabled = loading;
-            if (loading) {
-                loadingSpinner.style.display = 'inline-block';
-                loginBtnText.textContent = '登录中...';
-            } else {
-                loadingSpinner.style.display = 'none';
-                loginBtnText.textContent = '登录';
-            }
+            loadingSpinner.hidden = !loading;
+            loginBtnText.textContent = loading ? '正在登录' : '登录';
         }
 
-        // 登录函数
         function login(username, password) {
             setLoading(true);
             hideMessages();
-
             fetch('/user_login', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    username: username,
-                    password: password
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: username, password: password })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        try {
+                            localStorage.setItem('authToken', data.token);
+                            localStorage.setItem('currentUser', JSON.stringify(data.user));
+                        } catch (e) {
+                            showMessage('浏览器不让保存登录状态（可能是无痕模式），换个窗口再试');
+                            setLoading(false);
+                            return;
+                        }
+                        showMessage(`欢迎，${data.user.display_name}`, false);
+                        setTimeout(goOn, 500);
+                        // 跳走之前按钮保持「正在登录」，免得又点一次
+                        return;
+                    }
+                    showMessage(data.error === '用户名或密码错误' ? '用户名或密码不对，再试一次。' : (data.error || '登录失败，请检查用户名和密码'));
+                    setLoading(false);
                 })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    currentToken = data.token;
-                    localStorage.setItem('authToken', data.token);
-                    localStorage.setItem('currentUser', JSON.stringify(data.user));
-                    showMessage(`欢迎，${data.user.display_name}！`, false);
-                    setTimeout(() => {
-                        redirectToModules();
-                    }, 1000);
-                } else {
-                    showMessage(data.error || '登录失败，请检查用户名和密码');
-                }
-            })
-            .catch(err => {
-                console.error('登录错误:', err);
-                showMessage('网络错误，请稍后重试');
-            })
-            .finally(() => {
-                setLoading(false);
-            });
+                .catch(err => {
+                    console.error('登录错误:', err);
+                    showMessage('网络出错，没连上服务器，稍后再试');
+                    setLoading(false);
+                });
         }
 
-        // 重定向到模块页面
-        function redirectToModules() {
-            window.location.href = '/';
-        }
-
-        // 表单提交处理
-        loginForm.addEventListener('submit', function(e) {
+        loginForm.addEventListener('submit', function (e) {
             e.preventDefault();
-            
+            if (loginBtn.disabled) return;
             const username = usernameInput.value.trim();
-            const password = passwordInput.value.trim();
-
+            // 密码原样发送：首尾的空格也是密码的一部分
+            const password = passwordInput.value;
             if (!username || !password) {
-                showMessage('请输入用户名和密码');
+                showMessage(!username ? '请输入用户名' : '请输入密码');
+                (!username ? usernameInput : passwordInput).focus();
                 return;
             }
-
             login(username, password);
         });
 
-
-
-        // 注册链接处理
-        registerLink.addEventListener('click', function(e) {
-            e.preventDefault();
-            showMessage('请联系系统管理员进行账户注册', false);
+        togglePassword.addEventListener('click', function () {
+            const show = passwordInput.type === 'password';
+            passwordInput.type = show ? 'text' : 'password';
+            togglePassword.setAttribute('aria-pressed', String(show));
+            togglePassword.setAttribute('aria-label', show ? '隐藏密码' : '显示密码');
+            passwordInput.focus();
         });
 
-        // 页面加载时检查 token
-        window.addEventListener('load', function() {
-            checkStoredToken().then(hasValidToken => {
-                if (!hasValidToken) {
-                    // 聚焦到用户名输入框
-                    usernameInput.focus();
-                }
-            });
-        });
-
-        // 回车键处理
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' && !loginBtn.disabled) {
-                loginForm.dispatchEvent(new Event('submit'));
-            }
+        checkStoredToken().then(hasValidToken => {
+            if (!hasValidToken && !usernameInput.value) usernameInput.focus();
         });
     </script>
 </body>

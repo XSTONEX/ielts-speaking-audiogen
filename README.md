@@ -72,7 +72,7 @@
 
 应用启动后，可通过浏览器访问 `http://0.0.0.0:5001`。
 
-*注：单词本的发音直接在浏览器里播放有道词典的音频，启动时不再开后台线程去生成 TTS 音频（2026-10-31 起）。*
+*注：单词本的发音直接在浏览器里播放有道词典的音频，启动时不再开后台线程去生成 TTS 音频（2026-10-31 起）。词汇汇总的挑战也不再给每局单独生成发音，先放精读划词时存下的发音，没有就用有道的。*
 
 ## 🎨 设计稿（在线画布）
 
@@ -88,8 +88,9 @@
 | 单词本 | [单词本 · 改版](https://claude.ai/artifact/DdH1UvUcm5uZREciG59yuK) | `templates/vocabulary.html` |
 | 学习技巧 | [学习技巧 · 改版](https://claude.ai/artifact/JBZLPZnqnFwX6HmFybiBt4) | `templates/study_techniques.html` |
 | 学习交流小天地 | [学习交流小天地 · 改版](https://claude.ai/artifact/K2TS66ABkrU6WCRkdvsrhM) | `templates/message_board.html` |
+| 登录、词汇汇总（含词汇挑战的四个弹窗） | [登录 · 词汇汇总 · 改版](https://claude.ai/artifact/MhSvUwJm3kfprXehaKM2nu) | `templates/login.html`、`templates/vocab_summary.html` |
 
-* **文章精读**（`templates/intensive.html`、`intensive_new.html`）、**登录页**、**词汇汇总**（`vocab_summary.html`）没有单独的画布，照着设计系统和写作页的样式写。
+* **文章精读**（`templates/intensive.html`）和**添加文章**（`templates/intensive_new.html`）没有单独的画布，照着设计系统和写作页的样式写。
 * 合集播放（`/combined`）和 Reading 真题（`/reading`）不在首页和导航栏放入口，网址照常能开。
 
 只作历史参考、不再跟着改的画布：
