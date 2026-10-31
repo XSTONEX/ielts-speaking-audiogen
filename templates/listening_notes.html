@@ -22,87 +22,74 @@
   </script>
   <meta charset="UTF-8" />
   <script src="/static/auth-fetch.js?v=20260927"></script>
-  <title>听力笔记本</title>
+  <title>听力笔记本 · IELTS Lab</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-  <link href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Crimson+Text:wght@400;600&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      // 启动脚本已在 <html> 上 toggle 'dark'，这里必须用 class 策略，
-      // 否则 Tailwind 默认的 media 策略只跟随系统，无视应用内的主题开关。
-      darkMode: 'class',
-      theme: { extend: { fontFamily: { serif: ['PT Serif', 'Crimson Text', 'ui-serif', 'Georgia', 'Cambria', '"Times New Roman"', 'Times', 'serif'] } } }
-    }
-  </script>
-  <style>
-    body { font-family: 'PT Serif', 'Crimson Text', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif; }
-
-    /* Context highlight (no tooltip) — full-word */
-    .ctx-mark { border-radius: 3px; padding: 1px 2px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
-    .ctx-mark.note  { background-color: rgba(251,191,36,.5); }
-    .ctx-mark.vocab { background-color: rgba(191,219,254,.75); text-decoration: underline solid #60a5fa; text-decoration-thickness: 1.5px; text-underline-offset: 2px; }
-
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-    .toast-show { transform: translateX(-50%) translateY(0) !important; opacity: 1 !important; }
-  </style>
-  <link rel="stylesheet" href="/static/theme.css?v=20260919">
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+  <link rel="stylesheet" href="/static/theme.css?v=20261031">
+  <link rel="stylesheet" href="/static/plain.css">
+  <link rel="stylesheet" href="/static/listening.css?v=20261031">
   <script src="/static/theme.js?v=20260919" defer></script>
   <script src="/static/api-client.js?v=20260919" defer></script>
   <script src="/static/auth.js?v=20260927" defer></script>
   <script src="/static/ui-feedback.js?v=20260919" defer></script>
   <script src="/static/app-shell.js?v=20260927" defer></script>
 </head>
-<body class="theme-page bg-slate-50 min-h-screen dark:bg-slate-900">
+<body class="theme-page page-listening-notes ui-plain">
 
-  <!-- Top Bar -->
-  <header id="topBar" class="fixed top-0 inset-x-0 h-14 bg-white/70 backdrop-blur-md border-b border-slate-200/50 z-50 flex items-center px-5 md:px-8">
-    <div class="flex items-center gap-2.5">
-      <span class="text-xl">&#128218;</span>
-      <h1 class="text-xl font-bold text-slate-800 tracking-tight dark:text-slate-100">听力笔记本</h1>
+  <header class="ui-head lr-head">
+    <div class="ui-head__lead">
+      <a class="ui-icon-btn ui-icon-btn--back" href="/listening_review" aria-label="返回听力精听复习"></a>
+      <div class="ui-head__main">
+        <div class="ui-head__crumb"><a href="/listening_review">听力精听复习</a><span class="sep">/</span><span>笔记本</span></div>
+        <h1 class="ui-head__title">听力笔记本<span id="statsLine" class="ui-head__meta ui-num"></span></h1>
+      </div>
     </div>
-    <a href="/listening_review" class="ml-auto inline-flex items-center gap-1.5 bg-blue-50 text-blue-600 font-semibold text-sm px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors no-underline dark:text-blue-400 dark:bg-blue-950">&#8592; 听力复习</a>
+    <div class="ui-head__tools">
+      <div id="modeToggle" class="ui-seg" role="group" aria-label="视图">
+        <button id="modeBrowseBtn" class="ui-seg__btn is-on" type="button" aria-pressed="true" onclick="setMode('browse')">浏览</button>
+        <button id="modeReviewBtn" class="ui-seg__btn" type="button" aria-pressed="false" onclick="setMode('review')">复习</button>
+      </div>
+    </div>
   </header>
 
-  <main class="pt-14">
-    <div class="max-w-4xl mx-auto px-4 md:px-8 py-6">
-
-      <!-- Controls -->
-      <div class="flex items-center gap-3 flex-wrap mb-4">
-        <div id="statsLine" class="text-sm text-slate-500 dark:text-slate-400"></div>
-        <div id="modeToggle" class="ml-auto flex items-center bg-slate-100 rounded-xl p-1 gap-1 dark:bg-slate-800">
-          <button id="modeBrowseBtn" onclick="setMode('browse')" class="px-4 py-1.5 rounded-lg text-sm font-semibold border-none cursor-pointer transition-colors bg-white text-slate-800 shadow-sm dark:bg-slate-900 dark:text-slate-100">&#128214; 浏览</button>
-          <button id="modeReviewBtn" onclick="setMode('review')" class="px-4 py-1.5 rounded-lg text-sm font-semibold border-none cursor-pointer transition-colors bg-transparent text-slate-500 dark:text-slate-400">&#127919; 复习</button>
+  <div class="lr-nb">
+    <nav id="articleRail" class="ui-rail" aria-label="按文章筛选"></nav>
+    <main class="lr-nb__main">
+      <label class="ui-field lr-nb__article"><span class="ui-field__label">文章</span><select id="articleSelect" class="ui-select"></select></label>
+      <div class="lr-toolbar">
+        <div class="lr-row" role="group" aria-label="按类型筛选">
+          <button class="ui-chip filter-chip" type="button" data-filter="all">全部 <span class="ui-chip__count" data-count="all"></span></button>
+          <button class="ui-chip filter-chip" type="button" data-filter="note">笔记 <span class="ui-chip__count" data-count="note"></span></button>
+          <button class="ui-chip filter-chip" type="button" data-filter="vocab">生词 <span class="ui-chip__count" data-count="vocab"></span></button>
         </div>
-      </div>
-
-      <!-- Filter + search -->
-      <div class="flex items-center gap-2 flex-wrap mb-6">
-        <button class="filter-chip px-3.5 py-1.5 rounded-full text-xs font-semibold border border-slate-200 bg-slate-50 text-slate-500 cursor-pointer transition-colors hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400" data-filter="all" onclick="setFilter('all')">全部</button>
-        <button class="filter-chip px-3.5 py-1.5 rounded-full text-xs font-semibold border border-slate-200 bg-slate-50 text-slate-500 cursor-pointer transition-colors hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400" data-filter="note" onclick="setFilter('note')">笔记</button>
-        <button class="filter-chip px-3.5 py-1.5 rounded-full text-xs font-semibold border border-slate-200 bg-slate-50 text-slate-500 cursor-pointer transition-colors hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400" data-filter="vocab" onclick="setFilter('vocab')">生词</button>
-        <div class="relative ml-auto">
-          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-sm pointer-events-none">&#128269;</span>
-          <input id="searchInput" oninput="onSearch(this.value)" placeholder="搜索词、笔记或原句…" class="w-[min(260px,60vw)] pl-8 pr-3 py-1.5 border border-slate-200 rounded-full text-sm text-slate-700 outline-none focus:border-blue-400 transition-colors bg-white dark:border-slate-700 dark:text-slate-200 dark:bg-slate-900" />
-        </div>
+        <label class="lr-search"><span class="lr-sr">搜索</span>
+          <svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 13.5 13.5"/></svg>
+          <input id="searchInput" class="ui-input" type="search" placeholder="搜索词、笔记或原句" oninput="onSearch(this.value)" />
+        </label>
       </div>
 
       <div id="browseRoot"></div>
-      <div id="reviewRoot" class="hidden"></div>
+      <div id="reviewRoot" hidden></div>
+    </main>
+  </div>
 
+  <!-- 删除确认 -->
+  <div id="confirmModal" class="ui-dialog-backdrop" hidden>
+    <div class="ui-dialog" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle" style="width: min(420px, 100%);">
+      <div class="ui-dialog__head"><h3 class="ui-dialog__title" id="confirmTitle"></h3><button class="ui-dialog__close" type="button" aria-label="关闭" onclick="closeConfirm()">×</button></div>
+      <div class="ui-dialog__body"><p id="confirmText" style="margin: 0; line-height: 1.65; color: var(--w-ink2);"></p></div>
+      <div class="ui-dialog__foot">
+        <button class="ui-btn ui-btn--md" type="button" onclick="closeConfirm()">取消</button>
+        <button id="confirmBtn" class="ui-btn ui-btn--md lr-btn-danger" type="button" onclick="confirmDeleteEntry()">删除</button>
+      </div>
     </div>
-  </main>
+  </div>
 
   <!-- Hidden audio element: plays the sentence of the clicked / current card -->
   <audio id="npAudio" preload="none"></audio>
-
-  <!-- Toast -->
-  <div id="toast" class="fixed bottom-10 left-1/2 bg-slate-800 text-white px-6 py-2.5 rounded-xl text-sm z-[300] pointer-events-none opacity-0 transition-all duration-300 dark:bg-slate-700" style="transform:translateX(-50%) translateY(80px)"></div>
 
 <script>
 // ===================================================================
@@ -110,14 +97,29 @@
 // ===================================================================
 const state = {
   raw: { articles: [], total_notes: 0, total_vocab: 0, article_count: 0 },
+  article: 'all',
   filter: 'all',
   search: '',
   mode: 'browse',
   playingUid: null,
+  pendingDelete: null,
   // review session
-  deck: [],
+  deck: [],          // 这一轮还没「记住」的卡
+  deckKey: '',       // 这一轮是按哪些卡洗出来的（筛选没变就不重新洗）
   idx: 0,
-  revealed: false
+  revealed: false,
+  roundTotal: 0,
+  masteredCount: 0,
+  done: false
+};
+
+const ICONS = {
+  play: '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M5 3.5v9l7.5-4.5z"/></svg>',
+  pause: '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5.5 3.5v9M10.5 3.5v9"/></svg>',
+  trash: '<svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 8.5h5.8l.6-8.5"/></svg>',
+  shuffle: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 4.5h2.5l6 7h2.5M2.5 11.5h2.5l1.6-1.9M9.4 6.4 11 4.5h2.5M12 3l1.5 1.5L12 6M12 10l1.5 1.5L12 13"/></svg>',
+  speaker: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6h2.5l3.5-3v10L5 10H2.5z"/><path d="M11 5.5a3.5 3.5 0 0 1 0 5"/></svg>',
+  check: '<svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5 6.5 12 13 4.5"/></svg>'
 };
 
 const audio = document.getElementById('npAudio');
@@ -146,7 +148,7 @@ const API = {
 
 async function loadNotes() {
   const r = await API.get('/api/listening_review/all_notes');
-  if (r.error) { showToast(r.error); return; }
+  if (r.error) { showToast(r.error, 'error'); return; }
   state.raw = r;
   // Enrich every entry with its article context so cards/cards-deck can play audio directly.
   (state.raw.articles || []).forEach(a => {
@@ -168,6 +170,21 @@ function allEntries() {
   const out = [];
   (state.raw.articles || []).forEach(a => a.entries.forEach(e => out.push(e)));
   return out;
+}
+
+function inArticle(e) {
+  return state.article === 'all' || e.project_id === state.article;
+}
+
+function matchesSearch(e) {
+  const q = state.search.trim().toLowerCase();
+  return !q || `${e.quote} ${e.body} ${e.sentence}`.toLowerCase().includes(q);
+}
+
+function matches(e) {
+  if (!inArticle(e)) return false;
+  if (state.filter !== 'all' && e.kind !== state.filter) return false;
+  return matchesSearch(e);
 }
 
 // ===================================================================
@@ -197,9 +214,9 @@ function playEntryByUid(uid) {
 }
 
 function playCurrentCard() {
-  if (state.mode === 'review' && state.deck.length && state.idx < state.deck.length) playEntry(state.deck[state.idx]);
+  if (state.mode === 'review' && !state.done && state.deck.length && state.idx < state.deck.length) playEntry(state.deck[state.idx]);
 }
-function replayCurrent() { if (state.deck.length) playEntry(state.deck[state.idx]); }
+function replayCurrent() { if (state.deck.length && !state.done) playEntry(state.deck[state.idx]); }
 
 // Stop at the end of the sentence so only this segment plays.
 audio.addEventListener('timeupdate', () => {
@@ -211,40 +228,70 @@ audio.addEventListener('timeupdate', () => {
 function updatePlayingUI() {
   document.querySelectorAll('.np-card').forEach(card => {
     const on = card.dataset.uid === state.playingUid && !audio.paused;
-    card.classList.toggle('bg-amber-50', on);
-    const glyph = card.querySelector('.np-glyph');
-    if (glyph) glyph.innerHTML = on ? '&#10074;&#10074;' : '&#9654;';
+    card.classList.toggle('is-playing', on);
+    const btn = card.querySelector('.lr-card__play');
+    if (btn) {
+      btn.querySelector('.np-glyph').innerHTML = on ? ICONS.pause : ICONS.play;
+      btn.setAttribute('aria-label', on ? '暂停这句' : '播放这句');
+    }
   });
   const rb = document.getElementById('reviewPlayBtn');
-  if (rb) rb.innerHTML = (state.playingUid && !audio.paused) ? '&#10074;&#10074; 播放中' : '&#128266; 重听';
-}
-
-function matches(e) {
-  const f = state.filter, q = state.search.trim().toLowerCase();
-  if (f !== 'all' && e.kind !== f) return false;
-  if (q && !(`${e.quote} ${e.body} ${e.sentence}`.toLowerCase().includes(q))) return false;
-  return true;
+  if (rb) {
+    const on = !!state.playingUid && !audio.paused;
+    rb.innerHTML = on ? `${ICONS.pause}播放中` : `${ICONS.speaker}重听这句`;
+  }
 }
 
 function renderSentenceWithSpan(text, start, end, kind) {
   if (text == null) return '';
   const s = Math.max(0, Math.min(start ?? 0, text.length));
   const e = Math.max(s, Math.min(end ?? 0, text.length));
-  const cls = kind === 'note' ? 'ctx-mark note' : 'ctx-mark vocab';
+  const cls = kind === 'note' ? 'lr-note' : 'lr-vocab';
   return esc(text.substring(0, s)) + `<span class="${cls}">` + esc(text.substring(s, e)) + '</span>' + esc(text.substring(e));
 }
 
 function tagHtml(kind) {
-  return kind === 'note'
-    ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:text-amber-300 dark:bg-amber-900">笔记</span>'
-    : '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">生词</span>';
+  return kind === 'note' ? '<span class="ui-tag">笔记</span>' : '<span class="ui-tag ui-tag--accent">生词</span>';
 }
 
 function renderStats() {
-  const el = document.getElementById('statsLine');
   const a = state.raw.article_count || 0, v = state.raw.total_vocab || 0, n = state.raw.total_notes || 0;
-  el.textContent = `${a} 篇文章 · ${v} 个生词 · ${n} 条笔记`;
+  document.getElementById('statsLine').textContent = `${a} 篇 · ${v} 个生词 · ${n} 条笔记`;
 }
+
+// 左侧「文章」目录（手机上是下拉框）和类型筛选的计数
+function renderFilters() {
+  const articles = state.raw.articles || [];
+  if (state.article !== 'all' && !articles.some(a => a.project_id === state.article)) state.article = 'all';
+  const total = allEntries().length;
+
+  const rail = document.getElementById('articleRail');
+  const item = (id, name, count) => {
+    const on = state.article === id;
+    return `<button class="ui-rail__item${on ? ' is-active' : ''}" type="button" data-article="${esc(id)}" aria-pressed="${on}" title="${esc(name)}"><span class="ui-rail__name">${esc(name)}</span><span class="ui-rail__count">${count}</span></button>`;
+  };
+  rail.innerHTML = '<p class="ui-rail__label">文章</p>' + item('all', '全部文章', total) + articles.map(a => item(a.project_id, a.title, a.entries.length)).join('');
+
+  const select = document.getElementById('articleSelect');
+  select.innerHTML = `<option value="all">全部文章（${total}）</option>` + articles.map(a => `<option value="${esc(a.project_id)}">${esc(a.title)}（${a.entries.length}）</option>`).join('');
+  select.value = state.article;
+
+  const scoped = allEntries().filter(e => inArticle(e) && matchesSearch(e));
+  const counts = { all: scoped.length, note: scoped.filter(e => e.kind === 'note').length, vocab: scoped.filter(e => e.kind === 'vocab').length };
+  document.querySelectorAll('.filter-chip').forEach(b => {
+    const on = b.dataset.filter === state.filter;
+    b.classList.toggle('is-on', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    b.querySelector('.ui-chip__count').textContent = counts[b.dataset.filter];
+  });
+}
+
+document.getElementById('articleRail').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-article]');
+  if (btn) setArticle(btn.dataset.article);
+});
+document.getElementById('articleSelect').addEventListener('change', (e) => setArticle(e.target.value));
+document.querySelectorAll('.filter-chip').forEach(b => b.addEventListener('click', () => setFilter(b.dataset.filter)));
 
 // ===================================================================
 //  Mode / filter / search
@@ -252,38 +299,44 @@ function renderStats() {
 function setMode(m) {
   state.mode = m;
   audio.pause();
-  document.getElementById('browseRoot').classList.toggle('hidden', m !== 'browse');
-  document.getElementById('reviewRoot').classList.toggle('hidden', m !== 'review');
-  const bb = document.getElementById('modeBrowseBtn'), rb = document.getElementById('modeReviewBtn');
-  bb.classList.toggle('bg-white', m === 'browse'); bb.classList.toggle('text-slate-800', m === 'browse'); bb.classList.toggle('shadow-sm', m === 'browse');
-  bb.classList.toggle('bg-transparent', m !== 'browse'); bb.classList.toggle('text-slate-500', m !== 'browse');
-  rb.classList.toggle('bg-white', m === 'review'); rb.classList.toggle('text-slate-800', m === 'review'); rb.classList.toggle('shadow-sm', m === 'review');
-  rb.classList.toggle('bg-transparent', m !== 'review'); rb.classList.toggle('text-slate-500', m !== 'review');
+  document.getElementById('browseRoot').hidden = m !== 'browse';
+  document.getElementById('reviewRoot').hidden = m !== 'review';
+  [['modeBrowseBtn', 'browse'], ['modeReviewBtn', 'review']].forEach(([id, mode]) => {
+    const b = document.getElementById(id);
+    b.classList.toggle('is-on', m === mode);
+    b.setAttribute('aria-pressed', m === mode ? 'true' : 'false');
+  });
 
   if (m === 'review') buildDeck();
   else renderBrowse();
 }
 
+function refreshCurrentMode({ autoplay = true } = {}) {
+  renderFilters();
+  if (state.mode === 'review') buildDeck({ autoplay });
+  else renderBrowse();
+}
+
 function setFilter(f) {
   state.filter = f;
-  document.querySelectorAll('.filter-chip').forEach(b => {
-    const active = b.dataset.filter === f;
-    b.classList.toggle('bg-blue-500', active);
-    b.classList.toggle('text-white', active);
-    b.classList.toggle('border-blue-500', active);
-    b.classList.toggle('bg-slate-50', !active);
-    b.classList.toggle('text-slate-500', !active);
-    b.classList.toggle('border-slate-200', !active);
-  });
-  if (state.mode === 'review') buildDeck();
-  else renderBrowse();
+  refreshCurrentMode();
+}
+
+function setArticle(a) {
+  state.article = a;
+  refreshCurrentMode();
 }
 
 let searchTimer = null;
 function onSearch(v) {
   state.search = v;
   clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => { if (state.mode === 'review') buildDeck(); else renderBrowse(); }, 180);
+  searchTimer = setTimeout(() => {
+    renderFilters();
+    if (state.mode === 'browse') { renderBrowse(); return; }
+    // 复习时边打字边搜：结果没变就不重洗，变了也不自动播放
+    if (deckKeyFor(allEntries().filter(matches)) !== state.deckKey) buildDeck({ autoplay: false });
+  }, 300);
 }
 
 // ===================================================================
@@ -294,19 +347,13 @@ function renderBrowse() {
   let html = '', shown = 0;
 
   (state.raw.articles || []).forEach(a => {
-    const ents = a.entries.filter(e => matches({ ...e }));
+    const ents = a.entries.filter(matches);
     if (!ents.length) return;
     shown += ents.length;
     html += `
-      <section class="mb-9">
-        <div class="flex items-center gap-3 mb-3 pb-2 border-b-2 border-slate-100 dark:border-slate-800">
-          <h2 class="text-lg font-bold text-slate-800 truncate dark:text-slate-100">${esc(a.title)}</h2>
-          <span class="text-xs text-slate-400 flex-shrink-0 whitespace-nowrap">${a.note_count} 笔记 · ${a.vocab_count} 生词</span>
-          <a href="/listening_review?project=${a.project_id}" class="ml-auto text-xs font-semibold text-blue-500 hover:text-blue-600 no-underline flex-shrink-0 whitespace-nowrap dark:text-blue-400">去精听 &#8594;</a>
-        </div>
-        <div class="space-y-1">
-          ${ents.map(e => entryCardHtml(e)).join('')}
-        </div>
+      <section class="lr-sec">
+        <div class="lr-sec__head"><h2 class="lr-sec__title" title="${esc(a.title)}">${esc(a.title)}</h2><span class="lr-meta ui-num">${a.note_count} 笔记 · ${a.vocab_count} 生词</span><a class="lr-link" href="/listening_review?project=${encodeURIComponent(a.project_id)}">去精听 →</a></div>
+        <div class="lr-cards">${ents.map(entryCardHtml).join('')}</div>
       </section>`;
   });
 
@@ -315,46 +362,86 @@ function renderBrowse() {
 }
 
 function entryCardHtml(e) {
-  const isNote = e.kind === 'note';
-  const accent = isNote ? 'bg-amber-300' : 'bg-blue-300';
   const sentence = renderSentenceWithSpan(e.sentence, e.start_offset, e.end_offset, e.kind);
+  const what = e.kind === 'note' ? '这条笔记' : '这个生词';
+  const deep = `/listening_review?project=${encodeURIComponent(e.project_id)}&seg=${e.segment_id}`;
   return `
-    <article data-uid="${e.uid}" onclick="playEntryByUid('${e.uid}')" class="np-card group py-3.5 px-3 rounded-xl cursor-pointer transition-colors hover:bg-slate-50" title="点击播放这句">
-      <div class="flex items-center gap-2 mb-2">
-        ${tagHtml(e.kind)}
-        <span class="text-[11px] text-slate-400 font-mono inline-flex items-center gap-1.5"><span class="np-glyph text-amber-500">&#9654;</span>${formatTime(e.start)}</span>
-        <div class="ml-auto flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <a href="/listening_review?project=${e.project_id}&seg=${e.segment_id}" onclick="event.stopPropagation()" class="text-[11px] font-semibold text-blue-500 hover:text-blue-600 no-underline px-1.5 dark:text-blue-400">去原文</a>
-          <button onclick="event.stopPropagation();deleteEntry('${e.project_id}','${e.kind}','${e.id}')" title="删除" class="w-6 h-6 rounded flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 border-none bg-transparent cursor-pointer text-base leading-none">&times;</button>
-        </div>
+    <article class="lr-card np-card" data-uid="${esc(e.uid)}" title="点一下播放这句，再点暂停">
+      <div class="lr-card__top">${tagHtml(e.kind)}<button class="lr-card__play" type="button" data-act="play" aria-label="播放这句"><span class="np-glyph" style="display: inline-flex;">${ICONS.play}</span>${formatTime(e.start)}</button><span class="lr-meta lr-card__state">播放中</span>
+        <div class="lr-card__acts"><a class="lr-link" href="${deep}" data-act="link">去原文</a><button class="lr-icon lr-icon--danger" type="button" data-act="delete" aria-label="删除${what}">${ICONS.trash}</button></div>
       </div>
-      <p class="text-[15px] md:text-base leading-[1.9] text-slate-700 dark:text-slate-200">${sentence}</p>
-      <div class="mt-2.5 flex gap-2.5">
-        <div class="w-[3px] rounded-full ${accent} flex-shrink-0"></div>
-        <div class="text-[13.5px] text-slate-600 leading-relaxed whitespace-pre-wrap break-words flex-1 pt-0.5 dark:text-slate-300">${esc(e.body)}</div>
-      </div>
+      <p class="lr-card__en">${sentence}</p>
+      <div class="lr-card__body">${esc(e.body)}</div>
     </article>`;
 }
 
+document.getElementById('browseRoot').addEventListener('click', (ev) => {
+  const card = ev.target.closest('.np-card');
+  if (!card) return;
+  const act = ev.target.closest('[data-act]');
+  if (act && act.dataset.act === 'link') return; // 正常跳转
+  if (act && act.dataset.act === 'delete') {
+    ev.stopPropagation();
+    const e = allEntries().find(x => x.uid === card.dataset.uid);
+    if (e) askDeleteEntry(e);
+    return;
+  }
+  if (window.getSelection && String(window.getSelection()).trim()) return; // 在选字，不当成点击
+  playEntryByUid(card.dataset.uid);
+});
+
 function emptyStateHtml() {
-  const tip = state.search ? '没有匹配的内容' : (state.filter === 'vocab' ? '还没有生词' : state.filter === 'note' ? '还没有笔记' : '还没有任何笔记');
-  return `
-    <div class="text-center py-24 text-slate-300">
-      <div class="text-5xl mb-4">&#128221;</div>
-      <div class="text-base">${tip}</div>
-      <div class="text-sm mt-2">去精听一篇文章，选中词或句子开始记录吧</div>
-      <a href="/listening_review" class="inline-block mt-5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-colors no-underline">去听力复习 &#8594;</a>
-    </div>`;
+  const total = allEntries().length;
+  if (!total) {
+    return `
+      <section class="ui-card" style="padding: 8px 24px;"><div class="ui-empty">
+        <p class="ui-empty__title">还没有任何笔记</p>
+        <p class="ui-empty__text">去精听一篇文章，选中词或句子，就能加释义或写笔记。</p>
+        <a class="ui-btn ui-btn--md ui-btn--primary" href="/listening_review">去听力精听复习</a>
+      </div></section>`;
+  }
+  const tip = state.search ? '没有匹配的内容' : (state.filter === 'vocab' ? '这里还没有生词' : state.filter === 'note' ? '这里还没有笔记' : '这里还没有笔记');
+  return `<section class="ui-card" style="padding: 8px 24px;"><div class="ui-empty"><p class="ui-empty__title">${tip}</p><p class="ui-empty__text">换个筛选或搜索词试试。</p></div></section>`;
+}
+
+// --- 删除（确认弹窗） ---
+function askDeleteEntry(e) {
+  state.pendingDelete = e;
+  const isNote = e.kind === 'note';
+  document.getElementById('confirmTitle').textContent = isNote ? '删除这条笔记？' : '删除这个生词？';
+  document.getElementById('confirmText').textContent = `「${e.quote}」${isNote ? '的笔记' : '的释义'}会从「${e.project_title}」里删掉，删了不能恢复。`;
+  document.getElementById('confirmModal').hidden = false;
+  document.getElementById('confirmBtn').focus();
+}
+
+function closeConfirm() {
+  document.getElementById('confirmModal').hidden = true;
+  state.pendingDelete = null;
+}
+
+document.getElementById('confirmModal').addEventListener('click', (e) => { if (e.target.id === 'confirmModal') closeConfirm(); });
+
+async function confirmDeleteEntry() {
+  const e = state.pendingDelete;
+  if (!e) return;
+  const btn = document.getElementById('confirmBtn');
+  btn.disabled = true;
+  try {
+    await deleteEntry(e.project_id, e.kind, e.id);
+  } finally {
+    btn.disabled = false;
+    closeConfirm();
+  }
 }
 
 async function deleteEntry(pid, kind, id) {
-  if (!confirm('删除这条' + (kind === 'note' ? '笔记' : '生词') + '？')) return;
   const url = kind === 'note'
     ? `/api/listening_review/project/${pid}/note/${id}`
     : `/api/listening_review/project/${pid}/vocab/${id}`;
   const r = await API.del(url);
-  if (!r.success) { showToast(r.error || '删除失败'); return; }
+  if (!r.success) { showToast(r.error || '删除失败', 'error'); return; }
 
+  if (state.playingUid === pid + ':' + id) audio.pause();
   const art = state.raw.articles.find(a => a.project_id === pid);
   if (art) {
     art.entries = art.entries.filter(e => e.id !== id);
@@ -366,6 +453,7 @@ async function deleteEntry(pid, kind, id) {
   state.raw.total_notes = state.raw.articles.reduce((s, a) => s + a.note_count, 0);
   state.raw.total_vocab = state.raw.articles.reduce((s, a) => s + a.vocab_count, 0);
   renderStats();
+  renderFilters();
   if (state.mode === 'review') { state.deck = state.deck.filter(e => e.uid !== (pid + ':' + id)); renderReview(); }
   else renderBrowse();
   showToast('已删除');
@@ -383,27 +471,64 @@ function shuffle(arr) {
   return a;
 }
 
-function buildDeck() {
-  state.deck = shuffle(allEntries().filter(matches));
+function deckKeyFor(entries) {
+  return entries.map(e => e.uid).sort().join('|');
+}
+
+function startRound(cards, { autoplay = true } = {}) {
+  state.deck = shuffle(cards);
   state.idx = 0;
   state.revealed = false;
+  state.roundTotal = state.deck.length;
+  state.masteredCount = 0;
+  state.done = state.deck.length === 0;
   renderReview();
-  playCurrentCard();
+  if (autoplay) playCurrentCard();
+}
+
+function buildDeck({ autoplay = true } = {}) {
+  const cards = allEntries().filter(matches);
+  state.deckKey = deckKeyFor(cards);
+  startRound(cards, { autoplay });
+}
+
+// 再练这一轮没记住的
+function retryRemaining() {
+  startRound(state.deck);
 }
 
 function renderReview() {
   const root = document.getElementById('reviewRoot');
+  const total = state.roundTotal;
 
-  if (!state.deck.length) {
+  if (state.done || !state.deck.length) {
+    state.done = true;
+    const remain = state.deck.length;
+    let title, text, buttons;
+    if (!total) {
+      title = state.search || state.filter !== 'all' || state.article !== 'all' ? '当前筛选下没有卡片' : '还没有可复习的卡片';
+      text = '换个筛选，或者先去精听页加一些生词和笔记。';
+      buttons = `<button class="ui-btn ui-btn--md" type="button" onclick="setMode('browse')">回到浏览</button>`;
+    } else if (!remain) {
+      title = '这一轮全部记住了';
+      text = `${total} 张都记住了。`;
+      buttons = `<button class="ui-btn ui-btn--md ui-btn--primary" type="button" onclick="buildDeck()">全部重来</button>
+        <button class="ui-btn ui-btn--md" type="button" onclick="setMode('browse')">回到浏览</button>`;
+    } else {
+      title = '这一轮过完了';
+      text = `${total} 张里记住了 ${state.masteredCount} 张，还有 ${remain} 张没记住。`;
+      buttons = `<button class="ui-btn ui-btn--md ui-btn--primary" type="button" onclick="retryRemaining()">再练没记住的 ${remain} 张</button>
+        <button class="ui-btn ui-btn--md" type="button" onclick="buildDeck()">全部重来</button>
+        <button class="ui-btn ui-btn--md" type="button" onclick="setMode('browse')">回到浏览</button>`;
+    }
     root.innerHTML = `
-      <div class="text-center py-20 text-slate-400">
-        <div class="text-5xl mb-4">&#127881;</div>
-        <div class="text-lg font-semibold text-slate-600 dark:text-slate-300">这一轮复习完成！</div>
-        <div class="text-sm mt-1">${state.search || state.filter !== 'all' ? '当前筛选下没有更多卡片' : '所有卡片都过了一遍'}</div>
-        <div class="flex items-center justify-center gap-3 mt-6">
-          <button onclick="buildDeck()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-5 py-2.5 rounded-xl border-none cursor-pointer transition-colors">再来一轮</button>
-          <button onclick="setMode('browse')" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold text-sm px-5 py-2.5 rounded-xl border-none cursor-pointer transition-colors dark:bg-slate-800 dark:text-slate-300">回到浏览</button>
-        </div>
+      <div class="lr-review">
+        ${total ? `<div class="lr-review__bar"><span class="lr-review__pos">${total} 张 / ${total}</span><div class="ui-progress"><div class="ui-progress__bar"><i style="width: 100%;"></i></div></div></div>` : ''}
+        <section class="ui-card" style="padding: 8px 24px;"><div class="ui-empty">
+          <p class="ui-empty__title">${title}</p>
+          <p class="ui-empty__text">${text}</p>
+          <div class="lr-row" style="justify-content: center;">${buttons}</div>
+        </div></section>
       </div>`;
     return;
   }
@@ -411,74 +536,80 @@ function renderReview() {
   if (state.idx >= state.deck.length) state.idx = state.deck.length - 1;
   const e = state.deck[state.idx];
   const sentence = renderSentenceWithSpan(e.sentence, e.start_offset, e.end_offset, e.kind);
-  const pos = state.idx + 1, total = state.deck.length;
+  const seen = state.masteredCount + state.idx + 1;
+  const pct = total ? Math.round(seen / total * 100) : 0;
+  const deep = `/listening_review?project=${encodeURIComponent(e.project_id)}&seg=${e.segment_id}`;
 
-  const back = state.revealed
-    ? `<div class="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800">
-         <div class="text-xs font-semibold ${e.kind === 'note' ? 'text-amber-600' : 'text-blue-600'} mb-1.5">${e.kind === 'note' ? '笔记' : '释义'}</div>
-         <div class="text-[15px] md:text-base text-slate-700 leading-relaxed whitespace-pre-wrap break-words dark:text-slate-200">${esc(e.body)}</div>
-       </div>`
-    : `<button onclick="revealCard()" class="mt-7 mx-auto block bg-slate-800 hover:bg-slate-700 text-white font-semibold text-sm px-6 py-2.5 rounded-xl border-none cursor-pointer transition-colors dark:bg-slate-700">点击翻面查看笔记</button>`;
-
+  const face = state.revealed
+    ? `<div class="lr-flash__back"><div class="lr-flash__label">${e.kind === 'note' ? '笔记' : '释义'}</div><div class="lr-flash__body">${esc(e.body)}</div></div>`
+    : `<div class="lr-flash__center lr-flash__flip"><button class="ui-btn ui-btn--primary" type="button" onclick="revealCard()">翻面</button></div>`;
   const masterBtn = state.revealed
-    ? `<button onclick="masterCard()" class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-600 font-semibold text-sm px-5 py-2.5 rounded-xl border border-emerald-100 cursor-pointer hover:bg-emerald-100 transition-colors dark:text-emerald-400 dark:bg-emerald-950">&#10003; 记住了</button>`
+    ? `<button class="ui-btn ui-btn--md ui-btn--primary" type="button" onclick="masterCard()">${ICONS.check}记住了</button>`
     : '';
 
   root.innerHTML = `
-    <div class="max-w-2xl mx-auto">
-      <div class="flex items-center justify-between mb-4 text-xs text-slate-400">
-        <span class="font-mono">${pos} / ${total}</span>
-        <div class="flex gap-3">
-          <button onclick="buildDeck()" class="hover:text-slate-600 border-none bg-transparent cursor-pointer text-xs">&#8635; 洗牌</button>
-          <button onclick="setMode('browse')" class="hover:text-slate-600 border-none bg-transparent cursor-pointer text-xs">退出复习</button>
-        </div>
+    <div class="lr-review">
+      <div class="lr-review__bar">
+        <span class="lr-review__pos">第 ${seen} 张 / ${total}</span>
+        <div class="ui-progress"><div class="ui-progress__bar"><i style="width: ${pct}%;"></i></div></div>
+        <button class="ui-btn ui-btn--sm" type="button" onclick="buildDeck()">${ICONS.shuffle}洗牌</button>
+        <button class="ui-btn ui-btn--sm" type="button" onclick="setMode('browse')">退出复习</button>
       </div>
-
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-7 md:p-9 min-h-[280px] flex flex-col dark:bg-slate-900 dark:border-slate-700">
-        <div class="flex items-center gap-2 mb-5">
-          ${tagHtml(e.kind)}
-          <span class="text-xs text-slate-400 truncate">${esc(e.project_title)}</span>
-          <a href="/listening_review?project=${e.project_id}&seg=${e.segment_id}" class="ml-auto text-xs text-slate-300 hover:text-blue-500 no-underline whitespace-nowrap">去原文</a>
-        </div>
-        <p class="text-lg md:text-xl leading-[1.9] text-slate-600 dark:text-slate-300">${sentence}</p>
-        <div class="text-center mt-5">
-          <div class="text-2xl md:text-3xl font-bold text-slate-800 break-words dark:text-slate-100">${esc(e.quote)}</div>
-          <button id="reviewPlayBtn" onclick="replayCurrent()" class="mt-3 text-xs text-slate-400 hover:text-amber-600 border-none bg-transparent cursor-pointer inline-flex items-center gap-1">&#128266; 重听</button>
-        </div>
-        ${back}
-      </div>
-
-      <div class="flex items-center justify-center gap-3 mt-6">
-        <button onclick="prevCard()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold text-sm px-5 py-2.5 rounded-xl border-none cursor-pointer transition-colors dark:bg-slate-800 dark:text-slate-300">&#8592; 上一张</button>
+      <article class="ui-card lr-flash">
+        <div class="lr-flash__top">${tagHtml(e.kind)}<span class="lr-flash__src">${esc(e.project_title)} · ${formatTime(e.start)}</span><span class="lr-spacer"></span><a class="lr-link" href="${deep}">去原文</a></div>
+        <p class="lr-flash__en">${sentence}</p>
+        <div class="lr-flash__term">${esc(e.quote)}</div>
+        <div class="lr-flash__center"><button id="reviewPlayBtn" class="ui-btn ui-btn--sm" type="button" onclick="replayCurrent()">${ICONS.speaker}重听这句</button></div>
+        ${face}
+      </article>
+      <div class="lr-review__nav">
+        <button class="ui-btn ui-btn--md" type="button" onclick="prevCard()" ${seen <= 1 ? 'disabled' : ''}>← 上一张</button>
         ${masterBtn}
-        <button onclick="nextCard()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold text-sm px-5 py-2.5 rounded-xl border-none cursor-pointer transition-colors dark:bg-slate-800 dark:text-slate-300">下一张 &#8594;</button>
+        <button class="ui-btn ui-btn--md" type="button" onclick="nextCard()">下一张 →</button>
       </div>
+      <div class="lr-review__keys lr-meta"><span class="lr-kbd">空格</span> 翻面，再按一次下一张　<span class="lr-kbd">←</span><span class="lr-kbd">→</span> 切换</div>
     </div>`;
+  updatePlayingUI();
 }
 
 function revealCard() { state.revealed = true; renderReview(); }
 
 function nextCard() {
+  if (state.done) return;
   if (state.idx < state.deck.length - 1) { state.idx++; state.revealed = false; renderReview(); playCurrentCard(); }
+  else { state.done = true; audio.pause(); renderReview(); }
 }
 
 function prevCard() {
+  if (state.done) {
+    if (!state.deck.length) return;
+    state.done = false; state.idx = state.deck.length - 1; state.revealed = false;
+    renderReview(); playCurrentCard();
+    return;
+  }
   if (state.idx > 0) { state.idx--; state.revealed = false; renderReview(); playCurrentCard(); }
 }
 
+// 「记住了」只在这一轮里移出，不保存
 function masterCard() {
   state.deck.splice(state.idx, 1);
+  state.masteredCount++;
   state.revealed = false;
-  if (state.idx >= state.deck.length) state.idx = Math.max(0, state.deck.length - 1);
+  if (state.idx >= state.deck.length) { state.done = true; audio.pause(); renderReview(); return; }
   renderReview();
   playCurrentCard();
 }
 
 // Keyboard shortcuts for review
 document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !document.getElementById('confirmModal').hidden) { closeConfirm(); return; }
   if (state.mode !== 'review') return;
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (!document.getElementById('confirmModal').hidden) return;
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
   if (e.code === 'Space' || e.code === 'Enter') {
+    if (state.done) return; // 完成页：交给按钮自己
+    if (e.code === 'Enter' && e.target.closest('a, button')) return; // 回车照常点链接 / 按钮
     e.preventDefault();
     if (!state.revealed) revealCard(); else nextCard();
   } else if (e.code === 'ArrowRight') { e.preventDefault(); nextCard(); }
@@ -490,9 +621,7 @@ document.addEventListener('keydown', (e) => {
 // ===================================================================
 function esc(s) {
   if (s == null) return '';
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
 function formatTime(s) {
@@ -502,13 +631,9 @@ function formatTime(s) {
   return m + ':' + (sec < 10 ? '0' : '') + sec;
 }
 
-let toastTimer = null;
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('toast-show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('toast-show'), 2600);
+function showToast(msg, type) {
+  if (window.IELTSUI && IELTSUI.toast) IELTSUI.toast(msg, type || 'info');
+  else console.log(msg);
 }
 </script>
 </body>

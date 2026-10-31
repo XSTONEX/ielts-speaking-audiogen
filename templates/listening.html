@@ -22,429 +22,218 @@
   </script>
   <meta charset="UTF-8" />
   <script src="/static/auth-fetch.js?v=20260927"></script>
-  <title>Listening Review</title>
+  <title>听力精听复习 · IELTS Lab</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
-  <link href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Crimson+Text:wght@400;600&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      // 启动脚本已在 <html> 上 toggle 'dark'，这里必须用 class 策略，
-      // 否则 Tailwind 默认的 media 策略只跟随系统，无视应用内的主题开关。
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            serif: ['PT Serif', 'Crimson Text', 'ui-serif', 'Georgia', 'Cambria', '"Times New Roman"', 'Times', 'serif'],
-          }
-        }
-      }
-    }
-  </script>
-  <style>
-    body { font-family: 'PT Serif', 'Crimson Text', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif; }
-
-    /* Lyrics dynamic states */
-    .lyrics-line { position: relative; overflow: visible; }
-    .lyrics-line .line-text { color: #64748b; transition: color .3s, font-weight .3s; }
-    .lyrics-line.active { background: rgba(239,246,255,.85); border-left: 3px solid #3b82f6; }
-    .lyrics-line.active .line-text { color: #0f172a; font-weight: 600; }
-    .lyrics-line.starred:not(.active) { background: linear-gradient(90deg, #fef9c3, transparent 60%); }
-    .lyrics-line.active.starred { background: linear-gradient(90deg, #fef9c3 0%, rgba(239,246,255,.85) 40%); border-left: 3px solid #3b82f6; }
-    .lyrics-line.starred { padding-right: 6.75rem; }
-
-    /* 收藏句右侧错误分类: 右侧原点 + 放射状弹出 */
-    .error-tag-zone {
-      display: none;
-      position: absolute;
-      right: 0;
-      top: 0;
-      bottom: 0;
-      width: 108px;
-      z-index: 24;
-      pointer-events: auto;
-    }
-    .lyrics-line.starred .error-tag-zone { display: block; }
-    .lyrics-line.starred .error-tag-zone:hover {
-      width: 230px;
-      top: -128px;
-      bottom: -128px;
-      z-index: 40;
-    }
-    .lyrics-line.starred { z-index: 1; }
-    .lyrics-line.starred:hover { z-index: 6; }
-    .lyrics-line.starred::after {
-      content: '';
-      position: absolute;
-      right: 0;
-      top: 12px;
-      bottom: 12px;
-      width: 2px;
-      border-radius: 2px 0 0 2px;
-      background: #94a3b8;
-      opacity: .28;
-      pointer-events: none;
-      transition: opacity .2s;
-    }
-    .lyrics-line.starred:hover::after { opacity: .48; }
-
-    .error-tag-rest {
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 4px;
-      pointer-events: none;
-      transition: opacity .16s ease, transform .16s ease;
-    }
-    .error-tag-rest:empty { display: none; }
-    .error-rest-chip {
-      --bubble: 100 116 139;
-      font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
-      height: 22px;
-      padding: 0 8px;
-      border-radius: 999px;
-      border: 1px solid rgb(var(--bubble) / .22);
-      background: rgb(var(--bubble) / .12);
-      color: rgb(var(--bubble));
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: .02em;
-      line-height: 22px;
-      white-space: nowrap;
-    }
-    .lyrics-line.starred .error-tag-zone:hover .error-tag-rest {
-      opacity: 0;
-      transform: translateY(-50%) scale(.92);
-      pointer-events: none;
-    }
-
-    .error-bubbles {
-      position: absolute;
-      right: 16px;
-      top: 50%;
-      width: 0;
-      height: 0;
-      pointer-events: none;
-    }
-    .lyrics-line.starred .error-tag-zone:hover .error-bubbles { pointer-events: auto; }
-
-    .error-bubble {
-      --bubble: 100 116 139;
-      --dx: 0px;
-      --dy: 0px;
-      appearance: none;
-      position: absolute;
-      right: 0;
-      top: 0;
-      font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
-      height: 28px;
-      padding: 0 10px;
-      border-radius: 999px;
-      border: 1px solid rgb(var(--bubble) / .28);
-      background:
-        radial-gradient(120% 80% at 30% 18%, rgb(255 255 255 / .9), transparent 50%),
-        rgb(255 255 255 / .88);
-      color: rgb(var(--bubble));
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: .01em;
-      line-height: 1;
-      white-space: nowrap;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgb(15 23 42 / .06), inset 0 1px 0 rgb(255 255 255 / .8);
-      opacity: 0;
-      transform: translate(50%, -50%) scale(.2);
-      filter: blur(1px);
-      transition:
-        opacity .24s ease,
-        transform .4s cubic-bezier(.22,1.4,.36,1),
-        filter .22s ease,
-        background .18s ease,
-        color .18s ease,
-        box-shadow .18s ease,
-        border-color .18s ease;
-      transition-delay: calc((4 - var(--i, 0)) * 22ms);
-      pointer-events: none;
-    }
-    .lyrics-line.starred .error-tag-zone:hover .error-bubble {
-      opacity: 1;
-      transform: translate(calc(50% + var(--dx)), calc(-50% + var(--dy))) scale(1);
-      filter: blur(0);
-      pointer-events: auto;
-      transition-delay: calc(var(--i, 0) * 36ms);
-    }
-    .lyrics-line.starred .error-tag-zone:hover .error-bubble:hover {
-      transform: translate(calc(50% + var(--dx)), calc(-50% + var(--dy))) scale(1.06);
-      box-shadow: 0 6px 14px rgb(15 23 42 / .1), inset 0 1px 0 rgb(255 255 255 / .9);
-    }
-    .error-bubble.selected {
-      background:
-        radial-gradient(120% 80% at 28% 14%, rgb(255 255 255 / .35), transparent 48%),
-        rgb(var(--bubble) / .9);
-      color: #fff;
-      border-color: transparent;
-      box-shadow: 0 5px 12px rgb(15 23 42 / .1);
-    }
-    .error-bubble[data-tag="locate"],
-    .error-rest-chip[data-tag="locate"] { --bubble: 108 132 122; }
-    .error-bubble[data-tag="vocab"],
-    .error-rest-chip[data-tag="vocab"] { --bubble: 90 120 162; }
-    .error-bubble[data-tag="phonetic"],
-    .error-rest-chip[data-tag="phonetic"] { --bubble: 94 128 134; }
-    .error-bubble[data-tag="spelling"],
-    .error-rest-chip[data-tag="spelling"] { --bubble: 168 136 92; }
-    .error-bubble[data-tag="distractor"],
-    .error-rest-chip[data-tag="distractor"] { --bubble: 160 118 124; }
-
-    /* Annotated word */
-    .annotated-word { position: relative; background: rgba(191,219,254,.45); text-decoration: underline solid #60a5fa; text-decoration-thickness: 1.5px; text-underline-offset: 2px; cursor: help; border-radius: 3px; padding: 1px 2px; transition: background .15s; }
-    .annotated-word:hover { background: rgba(147,197,253,.6); }
-    .annotated-word::after { content: attr(data-meaning); position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: #1e293b; color: #fff; font-size: 12px; line-height: 1.4; padding: 5px 10px; border-radius: 6px; max-width: 200px; width: max-content; text-align: center; pointer-events: none; opacity: 0; transition: opacity .15s; z-index: 150; font-weight: normal; text-decoration: none; white-space: pre-wrap; }
-    .annotated-word::before { content: ''; position: absolute; bottom: calc(100% + 2px); left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: #1e293b; pointer-events: none; opacity: 0; transition: opacity .15s; z-index: 150; }
-    .annotated-word:hover::after, .annotated-word:hover::before { opacity: 1; }
-
-    /* Note highlight — full-word amber highlighter */
-    .note-mark { background-color: rgba(251,191,36,.42); border-radius: 3px; cursor: pointer; padding: 1px 2px; box-decoration-break: clone; -webkit-box-decoration-break: clone; transition: background-color .15s; }
-    .note-mark:hover { background-color: rgba(245,158,11,.55); }
-    /* When a span is both a note and a vocab annotation, keep the amber highlight + blue underline */
-    .note-mark.annotated-word { background-color: rgba(251,191,36,.42); }
-
-    /* Context highlight inside the annotated "notes article" (no tooltip) */
-    .ctx-mark { border-radius: 3px; padding: 1px 2px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
-    .ctx-mark.note  { background-color: rgba(251,191,36,.5); }
-    .ctx-mark.vocab { background-color: rgba(191,219,254,.75); text-decoration: underline solid #60a5fa; text-decoration-thickness: 1.5px; text-underline-offset: 2px; }
-
-    /* Progress bar hover */
-    .progress-wrap:hover .progress-thumb { transform: translate(-50%,-50%) scale(1.5); }
-    .progress-wrap:hover .progress-track-inner { height: 6px; }
-
-    /* Toast animation */
-    .toast-show { transform: translateX(-50%) translateY(0) !important; opacity: 1 !important; }
-
-    /* Translation line */
-    .translation-line { font-size: 14px; color: #64748b; opacity: 0.7; line-height: 1.5; margin-top: 2px; }
-    .lyrics-line.active .translation-line { opacity: 0.85; }
-    .translations-hidden .translation-line { display: none; }
-
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 5px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-  </style>
-  <link rel="stylesheet" href="/static/theme.css?v=20260919">
+  <link rel="stylesheet" href="/static/theme.css?v=20261031">
+  <link rel="stylesheet" href="/static/plain.css">
+  <link rel="stylesheet" href="/static/listening.css?v=20261031">
   <script src="/static/theme.js?v=20260919" defer></script>
   <script src="/static/api-client.js?v=20260919" defer></script>
   <script src="/static/auth.js?v=20260927" defer></script>
   <script src="/static/ui-feedback.js?v=20260919" defer></script>
   <script src="/static/app-shell.js?v=20260927" defer></script>
 </head>
-<body class="theme-page page-listening bg-slate-50 min-h-screen dark:bg-slate-900">
+<body class="theme-page page-listening ui-plain">
 
-  <!-- ==================== Top Bar ==================== -->
-  <header id="topBar" class="fixed top-0 inset-x-0 h-14 bg-white/70 backdrop-blur-md border-b border-slate-200/50 z-50 flex items-center px-5 md:px-8">
-    <!-- List mode header -->
-    <div id="topList" class="flex items-center justify-between w-full">
-      <h1 class="text-xl font-bold text-slate-800 tracking-tight dark:text-slate-100">Listening Review</h1>
-      <a href="/" class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-600 font-semibold text-sm px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors no-underline dark:bg-blue-950 dark:text-blue-300">&#8592; Home</a>
-    </div>
-    <!-- Detail mode header -->
-    <div id="topDetail" class="hidden items-center gap-3 w-full">
-      <button onclick="backToList()" class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-600 font-semibold text-sm px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors flex-shrink-0 border-none cursor-pointer dark:bg-blue-950 dark:text-blue-300">&#8592; Back</button>
-      <h1 id="detailTitle" class="text-lg font-bold text-slate-800 truncate dark:text-slate-100"></h1>
-      <div class="ml-auto flex items-center gap-2 flex-shrink-0">
-        <button id="masteredBtn" onclick="toggleMastered()" class="inline-flex items-center gap-1 bg-slate-100 text-slate-500 font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-emerald-50 hover:text-emerald-600 transition-colors border-none cursor-pointer dark:bg-slate-800 dark:text-slate-400" title="标记为已掌握">&#10003; 标熟</button>
-        <button id="checkinBtn" onclick="doCheckin()" class="inline-flex items-center gap-1 bg-slate-100 text-slate-500 font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-amber-50 hover:text-amber-600 transition-colors border-none cursor-pointer dark:bg-slate-800 dark:text-slate-400" title="打卡">&#9998; 打卡 <span id="checkinCount" class="ml-0.5 text-[10px] opacity-70"></span></button>
-        <button id="notesBtn" onclick="openNotesView()" class="inline-flex items-center gap-1 bg-amber-100 text-amber-700 font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-amber-200 transition-colors border-none cursor-pointer dark:text-amber-300 dark:bg-amber-900" title="本篇笔记">&#128221; 笔记 <span id="notesCount" class="ml-0.5 text-[10px] opacity-80"></span></button>
-        <button id="toggleTransBtn" onclick="toggleTranslations()" class="inline-flex items-center gap-1 bg-blue-100 text-blue-600 font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-blue-200 transition-colors border-none cursor-pointer dark:bg-blue-900 dark:text-blue-300" title="Toggle translations">&#35793; Translation</button>
+  <!-- ==================== 项目列表 ==================== -->
+  <div id="listView">
+    <header class="ui-head lr-head">
+      <div class="ui-head__lead">
+        <div class="ui-head__main">
+          <h1 class="ui-head__title">听力精听复习<span id="projCount" class="ui-head__meta ui-num"></span></h1>
+          <p class="lr-head__desc">上传一段听力音频，自动转成逐句字幕和中文译文；边听边标生词、记笔记，给听错的句子归因。</p>
+        </div>
+      </div>
+      <div class="ui-head__tools">
+        <a class="ui-btn ui-btn--md" href="/listening_review/notes">
+          <svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 3.5h4A1.5 1.5 0 0 1 8 5v8a1.5 1.5 0 0 0-1.5-1.5h-4zM13.5 3.5h-4A1.5 1.5 0 0 0 8 5v8a1.5 1.5 0 0 1 1.5-1.5h4z"/></svg>听力笔记本<span id="allNotesCount" class="ui-num lr-meta"></span>
+        </a>
+        <button class="ui-btn ui-btn--md" type="button" onclick="openUploadModal()">
+          <svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 10.5V3M5 6l3-3 3 3M3 10.5v2.5h10v-2.5"/></svg>上传音频
+        </button>
+      </div>
+    </header>
+    <main class="lr-body">
+      <div class="lr-container">
+        <section id="continueCard" class="ui-card ui-card--accent lr-continue" aria-label="继续上次" hidden>
+          <div class="lr-continue__main">
+            <div class="ui-eyebrow" style="margin-bottom: 4px;">继续上次</div>
+            <div id="continueTitle" class="lr-continue__title"></div>
+            <div class="ui-progress"><div class="ui-progress__bar"><i id="continueBar"></i></div><span id="continueNum" class="ui-progress__num"></span></div>
+          </div>
+          <button class="ui-btn ui-btn--primary" type="button" onclick="continueLast()">接着听</button>
+        </section>
+
+        <div id="listToolbar" class="lr-toolbar" hidden>
+          <div class="lr-row" role="group" aria-label="按掌握情况筛选">
+            <button class="ui-chip list-filter" type="button" data-filter="all">全部 <span class="ui-chip__count" data-count="all"></span></button>
+            <button class="ui-chip list-filter" type="button" data-filter="todo">未掌握 <span class="ui-chip__count" data-count="todo"></span></button>
+            <button class="ui-chip list-filter" type="button" data-filter="done">已掌握 <span class="ui-chip__count" data-count="done"></span></button>
+          </div>
+          <span class="lr-meta">按添加时间，新的在前</span>
+        </div>
+
+        <div id="projectGrid" class="lr-grid"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ==================== 精听详情 ==================== -->
+  <div id="detailView" hidden>
+    <header class="ui-head lr-head">
+      <div class="ui-head__lead">
+        <button class="ui-icon-btn ui-icon-btn--back" type="button" onclick="backToList()" aria-label="返回听力精听复习"></button>
+        <div class="ui-head__main">
+          <div class="ui-head__crumb"><a href="/listening_review" onclick="event.preventDefault(); backToList();">听力精听复习</a><span class="sep">/</span><span>精听</span></div>
+          <h1 class="ui-head__title"><span id="detailTitle" class="lr-title-text"></span><span id="detailMeta" class="ui-head__meta ui-num"></span></h1>
+        </div>
+      </div>
+      <div class="ui-head__tools">
+        <button id="toggleTransBtn" class="ui-btn ui-btn--md ui-btn--soft" type="button" aria-pressed="true" onclick="toggleTranslations()">
+          <svg id="transCheck" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8.5 6.5 11.5 12.5 4.5"/></svg>显示译文
+        </button>
+        <button id="notesBtn" class="ui-btn ui-btn--md" type="button" aria-pressed="false" aria-controls="notesSide" onclick="toggleSide()">
+          <svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 2.5 13.5 5 5.5 13H3v-2.5z"/></svg>本篇笔记<span id="notesCount" class="ui-num lr-meta"></span>
+        </button>
+      </div>
+    </header>
+
+    <div class="lr-body lr-detail-body">
+      <div id="detailGrid" class="lr-container lr-detail">
+        <section id="lyricsContainer" class="lr-script" aria-label="逐句字幕"></section>
+
+        <div class="lr-side-mask" onclick="toggleSide(false)"></div>
+        <aside id="notesSide" class="lr-side" aria-label="本篇">
+          <section class="lr-side__card">
+            <div class="lr-row"><h2 class="lr-side__title">本篇</h2><span class="lr-spacer"></span><span id="sideUploaded" class="lr-meta"></span>
+              <button class="lr-icon lr-side__close" type="button" aria-label="收起本篇栏" onclick="toggleSide(false)"><svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+            </div>
+            <div class="lr-side__nums">
+              <div><div id="sideCheckinNum" class="lr-side__num">0</div><div class="lr-side__numlabel">打卡次数</div></div>
+              <div><div id="sideStarNum" class="lr-side__num">0</div><div class="lr-side__numlabel">收藏句</div></div>
+              <div><div id="sideNotesNum" class="lr-side__num">0</div><div class="lr-side__numlabel">笔记 / 生词</div></div>
+            </div>
+            <div class="lr-side__btns">
+              <button id="checkinBtn" class="ui-btn ui-btn--md" type="button" onclick="doCheckin()">
+                <svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5 6.5 12 13 4.5"/></svg>打卡
+              </button>
+              <button id="masteredBtn" class="ui-btn ui-btn--md" type="button" aria-pressed="false" onclick="toggleMastered()">标熟</button>
+            </div>
+          </section>
+
+          <section class="lr-side__card" style="padding-bottom: 8px;">
+            <div class="lr-row"><h2 class="lr-side__title">本篇笔记</h2><span class="lr-spacer"></span><span id="notesViewCount" class="lr-meta ui-num"></span></div>
+            <div class="ui-seg lr-side__filter" role="group" aria-label="筛选本篇笔记">
+              <button class="ui-seg__btn notes-filter-btn" type="button" data-filter="all">全部</button>
+              <button class="ui-seg__btn notes-filter-btn" type="button" data-filter="note">笔记</button>
+              <button class="ui-seg__btn notes-filter-btn" type="button" data-filter="vocab">生词</button>
+            </div>
+            <div id="notesViewBody" class="lr-entries"></div>
+            <a class="lr-link" href="/listening_review/notes" style="display: inline-block; padding: 8px 0 6px 0;">去听力笔记本复习 →</a>
+          </section>
+        </aside>
       </div>
     </div>
-  </header>
+  </div>
 
-  <!-- ==================== Main Content ==================== -->
-  <main class="pt-14">
-
-    <!-- List View -->
-    <div id="listView" class="max-w-5xl mx-auto px-4 md:px-8 py-6">
-      <div class="flex gap-3 mb-5">
-        <button onclick="openUploadModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-colors border-none cursor-pointer shadow-sm">+ New Project</button>
-        <a href="/listening_review/notes" class="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 font-semibold text-sm px-5 py-2.5 rounded-xl hover:bg-amber-100 transition-colors border border-amber-100 cursor-pointer no-underline dark:bg-amber-950 dark:text-amber-300">&#128218; 全部笔记 · 复习</a>
-      </div>
-      <div id="projectGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-    </div>
-
-    <!-- Detail View -->
-    <div id="detailView" class="hidden pb-44">
-      <div id="lyricsContainer" class="max-w-4xl mx-auto pt-4"></div>
-    </div>
-
-  </main>
-
-  <!-- ==================== Bottom Player Bar ==================== -->
-  <div id="playerBar" class="fixed bottom-0 inset-x-0 bg-white/70 backdrop-blur-md border-t border-slate-200/50 z-50 hidden">
+  <!-- ==================== 底部播放条 ==================== -->
+  <footer id="lrPlayer" class="lr-player" aria-label="播放控制" hidden>
     <audio id="audioEl" preload="auto"></audio>
-    <div class="max-w-4xl mx-auto px-5 md:px-8 py-3">
-      <!-- Progress -->
-      <div id="progressWrap" class="progress-wrap w-full h-5 flex items-center cursor-pointer mb-2">
-        <div class="progress-track-inner relative w-full h-1 bg-slate-200 rounded-full transition-all dark:bg-slate-700">
-          <div id="progressFill" class="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 to-blue-400 rounded-full" style="width:0"></div>
-          <div id="progressThumb" class="progress-thumb absolute top-1/2 w-3 h-3 bg-blue-500 rounded-full shadow-md transition-transform" style="left:0;transform:translate(-50%,-50%)"></div>
-        </div>
+    <div class="lr-player__inner">
+      <button id="playBtn" class="lr-play" type="button" aria-label="播放" onclick="togglePlay()"></button>
+      <span class="lr-time"><span id="curTime">0:00</span> / <span id="totTime">0:00</span></span>
+      <div id="progressWrap" class="lr-seek" role="slider" aria-label="播放进度" tabindex="0">
+        <div class="lr-seek__track"><div id="progressFill" class="lr-seek__fill"></div><div id="progressThumb" class="lr-seek__thumb"></div></div>
       </div>
-      <!-- Controls -->
-      <div class="flex items-center gap-3 flex-wrap">
-        <span class="text-xs text-slate-500 font-mono min-w-[80px] dark:text-slate-400"><span id="curTime">0:00</span> / <span id="totTime">0:00</span></span>
-        <div class="flex items-center gap-2">
-          <button id="playBtn" onclick="togglePlay()" class="w-9 h-9 rounded-full bg-blue-600 hover:bg-blue-700 text-white border-none cursor-pointer flex items-center justify-center text-sm transition-colors shadow-sm">&#9654;</button>
-        </div>
-        <div class="ml-auto flex items-center gap-1.5 flex-wrap">
-          <button class="speed-btn text-xs px-2.5 py-1 rounded-md border border-slate-200 bg-slate-50 text-slate-500 cursor-pointer transition-all hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400" data-rate="0.8" onclick="setSpeed(0.8)">0.8x</button>
-          <button class="speed-btn text-xs px-2.5 py-1 rounded-md border border-blue-500 bg-blue-600 text-white cursor-pointer transition-all" data-rate="1" onclick="setSpeed(1)">1.0x</button>
-          <button class="speed-btn text-xs px-2.5 py-1 rounded-md border border-slate-200 bg-slate-50 text-slate-500 cursor-pointer transition-all hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400" data-rate="1.2" onclick="setSpeed(1.2)">1.2x</button>
-          <button class="speed-btn text-xs px-2.5 py-1 rounded-md border border-slate-200 bg-slate-50 text-slate-500 cursor-pointer transition-all hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400" data-rate="1.5" onclick="setSpeed(1.5)">1.5x</button>
-        </div>
+      <div class="ui-seg lr-speed" role="group" aria-label="倍速">
+        <button class="ui-seg__btn speed-btn" type="button" data-rate="0.8" onclick="setSpeed(0.8)">0.8×</button>
+        <button class="ui-seg__btn speed-btn is-on" type="button" data-rate="1" onclick="setSpeed(1)">1.0×</button>
+        <button class="ui-seg__btn speed-btn" type="button" data-rate="1.2" onclick="setSpeed(1.2)">1.2×</button>
+        <button class="ui-seg__btn speed-btn" type="button" data-rate="1.5" onclick="setSpeed(1.5)">1.5×</button>
       </div>
+      <span class="lr-keys"><span class="lr-kbd">空格</span> 播放 / 暂停 <span class="lr-kbd">←</span><span class="lr-kbd">→</span> 3 秒</span>
     </div>
-  </div>
+  </footer>
 
-  <!-- ==================== Upload Modal ==================== -->
-  <div id="uploadModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center hidden">
-    <div class="bg-white rounded-2xl p-7 w-[min(520px,92vw)] max-h-[80vh] overflow-y-auto shadow-2xl dark:bg-slate-900">
-      <div class="text-xl font-bold text-slate-800 mb-5 dark:text-slate-100">New Listening Project</div>
-      <!-- Tabs -->
-      <div class="flex border-b-2 border-slate-200 mb-5 dark:border-slate-700">
-        <button class="modal-tab pb-2.5 px-5 text-sm font-semibold border-b-2 -mb-[2px] transition-colors cursor-pointer bg-transparent border-t-0 border-l-0 border-r-0 text-blue-600 border-blue-500 dark:text-blue-300" onclick="switchTab('file')">Upload File</button>
-        <button class="modal-tab pb-2.5 px-5 text-sm font-semibold border-b-2 -mb-[2px] transition-colors cursor-pointer bg-transparent border-t-0 border-l-0 border-r-0 text-slate-400 border-transparent" onclick="switchTab('url')">From URL</button>
-      </div>
-      <!-- File tab -->
-      <div id="tabFile" class="tab-panel">
-        <div class="mb-4">
-          <label class="block text-sm font-semibold text-slate-700 mb-1.5 dark:text-slate-200">Title (optional)</label>
-          <input id="fileTitle" class="w-full px-3.5 py-2.5 border-[1.5px] border-slate-200 rounded-lg text-sm text-slate-700 outline-none focus:border-blue-500 transition-colors dark:border-slate-700 dark:text-slate-200" placeholder="Leave blank to use filename" />
+  <!-- ==================== 上传弹窗 ==================== -->
+  <div id="uploadModal" class="ui-dialog-backdrop" hidden>
+    <div class="ui-dialog" role="dialog" aria-modal="true" aria-labelledby="uploadTitle">
+      <div class="ui-dialog__head"><h3 class="ui-dialog__title" id="uploadTitle">上传听力音频</h3><button class="ui-dialog__close" type="button" aria-label="关闭" onclick="closeUploadModal()">×</button></div>
+      <div class="ui-dialog__body">
+        <div class="ui-seg" role="tablist" aria-label="音频来源" style="align-self: flex-start;">
+          <button class="ui-seg__btn modal-tab" type="button" role="tab" data-tab="file" onclick="switchTab('file')">本地文件</button>
+          <button class="ui-seg__btn modal-tab" type="button" role="tab" data-tab="url" onclick="switchTab('url')">音频链接</button>
         </div>
-        <div class="mb-4">
-          <label id="fileDropLabel" class="block border-2 border-dashed border-slate-300 rounded-xl py-8 px-5 text-center cursor-pointer transition-all hover:border-blue-500 hover:bg-blue-50 text-slate-500 text-sm dark:border-slate-600 dark:text-slate-400">
-            <span class="block text-3xl mb-2">&#128190;</span>
-            <span id="fileDropText">Click to select or drag audio file here</span>
-            <input type="file" id="fileInput" accept=".mp3,.wav,.m4a,.flac,.ogg,.mp4,.webm" onchange="onFileSelected(this)" class="hidden" />
+        <div id="tabFile" style="display: flex; flex-direction: column; gap: 16px;">
+          <label id="fileDropLabel" class="lr-drop">
+            <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 10.5V3M5 6l3-3 3 3M3 10.5v2.5h10v-2.5"/></svg>
+            <span id="fileDropText" class="lr-drop__name">点这里选音频文件，或把文件拖进来</span>
+            <span id="fileDropMeta" class="lr-meta">MP3、WAV、M4A、FLAC、OGG、MP4、WebM</span>
+            <input type="file" id="fileInput" accept=".mp3,.wav,.m4a,.flac,.ogg,.mp4,.webm" onchange="onFileSelected(this)" />
           </label>
-          <div class="text-xs text-slate-400 mt-1.5">Supported: MP3, WAV, M4A, FLAC, OGG, MP4, WebM. Max 25MB.</div>
+          <label class="ui-field"><span class="ui-field__label">标题（可选）</span><input id="fileTitle" class="ui-input" placeholder="不填就用文件名" /><span class="ui-field__hint">支持 MP3、WAV、M4A、FLAC、OGG、MP4、WebM，最大 25 MB。</span></label>
         </div>
-        <div class="flex gap-3 justify-end mt-5">
-          <button onclick="closeUploadModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm px-5 py-2.5 rounded-xl transition-colors border border-slate-200 cursor-pointer dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700">Cancel</button>
-          <button id="uploadFileBtn" onclick="doUploadFile()" disabled class="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-colors border-none cursor-pointer shadow-sm">Upload</button>
+        <div id="tabUrl" style="display: flex; flex-direction: column; gap: 16px;" hidden>
+          <label class="ui-field"><span class="ui-field__label">音频链接</span><input id="urlInput" class="ui-input" placeholder="https://example.com/audio.mp3" inputmode="url" /><span class="ui-field__hint">要能直接下载的音频地址，最大 25 MB。</span></label>
+          <label class="ui-field"><span class="ui-field__label">标题（可选）</span><input id="urlTitle" class="ui-input" placeholder="不填就用链接里的文件名" /></label>
         </div>
       </div>
-      <!-- URL tab -->
-      <div id="tabUrl" class="tab-panel hidden">
-        <div class="mb-4">
-          <label class="block text-sm font-semibold text-slate-700 mb-1.5 dark:text-slate-200">Title (optional)</label>
-          <input id="urlTitle" class="w-full px-3.5 py-2.5 border-[1.5px] border-slate-200 rounded-lg text-sm text-slate-700 outline-none focus:border-blue-500 transition-colors dark:border-slate-700 dark:text-slate-200" placeholder="Leave blank to use URL filename" />
-        </div>
-        <div class="mb-4">
-          <label class="block text-sm font-semibold text-slate-700 mb-1.5 dark:text-slate-200">Audio URL</label>
-          <input id="urlInput" class="w-full px-3.5 py-2.5 border-[1.5px] border-slate-200 rounded-lg text-sm text-slate-700 outline-none focus:border-blue-500 transition-colors dark:border-slate-700 dark:text-slate-200" placeholder="https://example.com/audio.mp3" />
-        </div>
-        <div class="flex gap-3 justify-end mt-5">
-          <button onclick="closeUploadModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm px-5 py-2.5 rounded-xl transition-colors border border-slate-200 cursor-pointer dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700">Cancel</button>
-          <button id="uploadUrlBtn" onclick="doUploadUrl()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-colors border-none cursor-pointer shadow-sm">Download &amp; Transcribe</button>
-        </div>
+      <div class="ui-dialog__foot">
+        <button class="ui-btn ui-btn--md" type="button" onclick="closeUploadModal()">取消</button>
+        <button id="uploadFileBtn" class="ui-btn ui-btn--md ui-btn--primary" type="button" onclick="doUploadFile()" disabled>上传并转录</button>
+        <button id="uploadUrlBtn" class="ui-btn ui-btn--md ui-btn--primary" type="button" onclick="doUploadUrl()" hidden>下载并转录</button>
       </div>
     </div>
   </div>
 
-  <!-- ==================== Selection Toolbar (step 1: appears on text selection) ==================== -->
-  <div id="selectionToolbar" class="absolute z-[200] hidden">
-    <div class="flex items-stretch bg-white rounded-full shadow-lg border border-slate-200 overflow-hidden text-xs font-semibold select-none dark:bg-slate-900 dark:border-slate-700">
-      <button id="selVocabBtn" class="flex items-center gap-0.5 pl-3 pr-3 py-1.5 text-blue-600 hover:bg-blue-50 border-none cursor-pointer bg-transparent transition-colors leading-none dark:text-blue-300">
-        <span class="text-sm">+</span><span>释义</span>
-      </button>
-      <span class="w-px bg-slate-200 my-1.5 dark:bg-slate-700"></span>
-      <button id="selNoteBtn" class="flex items-center gap-0.5 pl-3 pr-3 py-1.5 text-amber-600 hover:bg-amber-50 border-none cursor-pointer bg-transparent transition-colors leading-none dark:text-amber-300">
-        <span class="text-sm">+</span><span>笔记</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- ==================== Vocab Popover (step 2: after badge click) ==================== -->
-  <div id="vocabPopover" class="absolute z-[200] bg-white rounded-lg shadow-lg border border-slate-200 p-2.5 min-w-[180px] hidden dark:bg-slate-900 dark:border-slate-700">
-    <div id="vpWord" class="text-xs font-bold text-blue-600 mb-1.5 dark:text-blue-300"></div>
-    <!-- Add mode -->
-    <div id="vpAddMode">
-      <input id="vpInput" class="w-full px-2 py-1.5 border border-slate-200 rounded-md text-xs outline-none focus:border-blue-500 transition-colors mb-1.5 dark:border-slate-700" placeholder="输入中文释义" />
-      <div class="flex gap-1.5 justify-end">
-        <button onclick="hideVocabPopover()" class="px-2.5 py-1 rounded text-[11px] font-semibold bg-slate-100 text-slate-500 border-none cursor-pointer hover:bg-slate-200 transition-colors dark:bg-slate-800 dark:text-slate-400">取消</button>
-        <button onclick="saveVocab()" class="px-2.5 py-1 rounded text-[11px] font-semibold bg-blue-600 text-white border-none cursor-pointer hover:bg-blue-700 transition-colors">保存</button>
-      </div>
-    </div>
-    <!-- View mode -->
-    <div id="vpViewMode" class="hidden">
-      <div id="vpMeaning" class="text-xs text-slate-600 mb-2 leading-relaxed dark:text-slate-300"></div>
-      <div class="flex gap-1.5 justify-end">
-        <button onclick="hideVocabPopover()" class="px-2.5 py-1 rounded text-[11px] font-semibold bg-slate-100 text-slate-500 border-none cursor-pointer hover:bg-slate-200 transition-colors dark:bg-slate-800 dark:text-slate-400">关闭</button>
-        <button onclick="deleteVocab()" class="px-2.5 py-1 rounded text-[11px] font-semibold bg-red-500 text-white border-none cursor-pointer hover:bg-red-600 transition-colors">删除</button>
+  <!-- ==================== 删除确认 ==================== -->
+  <div id="deleteModal" class="ui-dialog-backdrop" hidden>
+    <div class="ui-dialog" role="alertdialog" aria-modal="true" aria-labelledby="deleteTitle" aria-describedby="deleteText" style="width: min(440px, 100%);">
+      <div class="ui-dialog__head"><h3 class="ui-dialog__title" id="deleteTitle">删除这个项目？</h3><button class="ui-dialog__close" type="button" aria-label="关闭" onclick="closeDeleteDialog()">×</button></div>
+      <div class="ui-dialog__body"><p id="deleteText" style="margin: 0; line-height: 1.65; color: var(--w-ink2);"></p></div>
+      <div class="ui-dialog__foot">
+        <button class="ui-btn ui-btn--md" type="button" onclick="closeDeleteDialog()">取消</button>
+        <button id="deleteConfirmBtn" class="ui-btn ui-btn--md lr-btn-danger" type="button" onclick="confirmDelete()">删除</button>
       </div>
     </div>
   </div>
 
-  <!-- ==================== Note Popover (rich note editor for word/sentence) ==================== -->
-  <div id="notePopover" class="absolute z-[200] bg-white rounded-xl shadow-xl border border-slate-200 p-3 w-[min(320px,90vw)] hidden dark:bg-slate-900 dark:border-slate-700">
-    <div class="flex items-center gap-1.5 mb-2">
-      <span class="text-[10px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded flex-shrink-0 dark:text-amber-300 dark:bg-amber-900">笔记</span>
-      <span id="npQuote" class="text-xs text-slate-500 italic truncate dark:text-slate-400"></span>
+  <!-- ==================== 选中文字后的小工具条 ==================== -->
+  <div id="selectionToolbar" class="lr-pop" role="toolbar" aria-label="给选中的文字" hidden>
+    <button id="selVocabBtn" class="lr-pop__btn" type="button"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9"/></svg>释义</button>
+    <span class="lr-pop__sep"></span>
+    <button id="selNoteBtn" class="lr-pop__btn" type="button"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9"/></svg>笔记</button>
+  </div>
+
+  <!-- ==================== 生词面板：加释义 / 看释义 / 改释义 ==================== -->
+  <div id="vocabPopover" class="lr-panel" role="dialog" aria-label="生词释义" hidden>
+    <div id="vpWord" class="lr-panel__quote"></div>
+    <div id="vpAddMode" style="display: flex; flex-direction: column; gap: 12px;">
+      <label class="ui-field"><span class="ui-field__label">中文释义</span><input id="vpInput" class="ui-input" placeholder="输入中文释义" /></label>
+      <div class="lr-panel__foot"><span class="lr-meta">回车保存</span><button class="ui-btn ui-btn--sm" type="button" onclick="hideVocabPopover()">取消</button><button class="ui-btn ui-btn--sm ui-btn--primary" type="button" onclick="saveVocab()">保存</button></div>
     </div>
-    <!-- Edit mode -->
-    <div id="npEditMode">
-      <textarea id="npInput" rows="3" class="w-full px-2.5 py-2 border border-slate-200 rounded-lg text-[13px] leading-relaxed outline-none focus:border-amber-400 transition-colors resize-none dark:border-slate-700" placeholder="写下你的笔记…（语法点 / 搭配 / 易错 / 联想）"></textarea>
-      <div class="flex items-center gap-1.5 justify-between mt-2">
-        <span class="text-[10px] text-slate-300 select-none">⌘/Ctrl + Enter 保存</span>
-        <div class="flex gap-1.5">
-          <button onclick="hideNotePopover()" class="px-3 py-1 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-500 border-none cursor-pointer hover:bg-slate-200 transition-colors dark:bg-slate-800 dark:text-slate-400">取消</button>
-          <button onclick="saveNote()" class="px-3 py-1 rounded-md text-[11px] font-semibold bg-amber-500 text-white border-none cursor-pointer hover:bg-amber-600 transition-colors">保存</button>
-        </div>
-      </div>
-    </div>
-    <!-- View mode -->
-    <div id="npViewMode" class="hidden">
-      <div id="npBody" class="text-[13px] text-slate-700 leading-relaxed whitespace-pre-wrap mb-2.5 max-h-48 overflow-y-auto dark:text-slate-200"></div>
-      <div class="flex gap-1.5 justify-end">
-        <button onclick="hideNotePopover()" class="px-3 py-1 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-500 border-none cursor-pointer hover:bg-slate-200 transition-colors dark:bg-slate-800 dark:text-slate-400">关闭</button>
-        <button onclick="editCurrentNote()" class="px-3 py-1 rounded-md text-[11px] font-semibold bg-blue-600 text-white border-none cursor-pointer hover:bg-blue-700 transition-colors">编辑</button>
-        <button onclick="deleteNote()" class="px-3 py-1 rounded-md text-[11px] font-semibold bg-red-500 text-white border-none cursor-pointer hover:bg-red-600 transition-colors">删除</button>
-      </div>
+    <div id="vpViewMode" style="display: flex; flex-direction: column; gap: 12px;" hidden>
+      <div id="vpMeaning" class="lr-panel__body"></div>
+      <div class="lr-panel__foot"><button class="ui-btn ui-btn--sm ui-btn--danger" type="button" onclick="deleteVocab()">删除</button><button class="ui-btn ui-btn--sm" type="button" onclick="editVocabMeaning()">改释义</button></div>
     </div>
   </div>
 
-  <!-- ==================== Notes Article View (single-article, context-first 批注稿) ==================== -->
-  <div id="notesView" class="fixed inset-0 z-[150] hidden flex items-center justify-center p-3 md:p-6">
-    <div id="notesViewOverlay" class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
-    <div id="notesViewCard" class="relative w-full max-w-3xl max-h-[90vh] bg-white rounded-2xl shadow-2xl flex flex-col opacity-0 scale-95 transition-all duration-300 dark:bg-slate-900">
-      <header class="flex items-center gap-3 px-6 md:px-8 py-4 border-b border-slate-100 flex-shrink-0 dark:border-slate-800">
-        <div class="flex-1 min-w-0">
-          <div id="notesViewTitle" class="text-lg font-bold text-slate-800 truncate dark:text-slate-100">本篇笔记</div>
-          <div id="notesViewCount" class="text-xs text-slate-400 mt-0.5"></div>
-        </div>
-        <a href="/listening_review/notes" class="hidden sm:inline-flex items-center gap-1 bg-slate-100 text-slate-600 font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-slate-200 transition-colors no-underline flex-shrink-0 dark:bg-slate-800 dark:text-slate-300">全部笔记 &#8594;</a>
-        <button onclick="closeNotesView()" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 border-none cursor-pointer bg-transparent text-xl leading-none flex-shrink-0">&times;</button>
-      </header>
-      <div class="flex gap-1.5 px-6 md:px-8 py-3 border-b border-slate-100 flex-shrink-0 dark:border-slate-800">
-        <button class="notes-filter-btn px-3 py-1 rounded-full text-xs font-semibold border border-slate-200 bg-slate-50 text-slate-500 cursor-pointer transition-colors hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400" data-filter="all" onclick="setNotesFilter('all')">全部</button>
-        <button class="notes-filter-btn px-3 py-1 rounded-full text-xs font-semibold border border-slate-200 bg-slate-50 text-slate-500 cursor-pointer transition-colors hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400" data-filter="note" onclick="setNotesFilter('note')">笔记</button>
-        <button class="notes-filter-btn px-3 py-1 rounded-full text-xs font-semibold border border-slate-200 bg-slate-50 text-slate-500 cursor-pointer transition-colors hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400" data-filter="vocab" onclick="setNotesFilter('vocab')">释义</button>
-      </div>
-      <div id="notesViewBody" class="flex-1 overflow-y-auto px-6 md:px-8 py-5"></div>
+  <!-- ==================== 笔记面板：写 / 看 / 改 ==================== -->
+  <div id="notePopover" class="lr-panel" role="dialog" aria-label="笔记" hidden>
+    <div class="lr-panel__label">笔记 · <span id="npQuote" class="ui-en"></span></div>
+    <div id="npEditMode" style="display: flex; flex-direction: column; gap: 12px;">
+      <textarea id="npInput" class="ui-textarea" rows="3" placeholder="语法点、搭配、易错、联想……"></textarea>
+      <div class="lr-panel__foot"><span class="lr-meta">⌘ / Ctrl + 回车保存</span><button class="ui-btn ui-btn--sm" type="button" onclick="hideNotePopover()">取消</button><button class="ui-btn ui-btn--sm ui-btn--primary" type="button" onclick="saveNote()">保存</button></div>
+    </div>
+    <div id="npViewMode" style="display: flex; flex-direction: column; gap: 12px;" hidden>
+      <div id="npBody" class="lr-panel__body"></div>
+      <div class="lr-panel__foot"><span id="npDate" class="lr-meta"></span><button class="ui-btn ui-btn--sm ui-btn--danger" type="button" onclick="deleteNote()">删除</button><button class="ui-btn ui-btn--sm" type="button" onclick="editCurrentNote()">编辑</button></div>
     </div>
   </div>
-
-  <!-- ==================== Toast ==================== -->
-  <div id="toast" class="fixed bottom-24 left-1/2 bg-slate-800 text-white px-6 py-2.5 rounded-xl text-sm z-[300] pointer-events-none opacity-0 transition-all duration-300 dark:bg-slate-700" style="transform:translateX(-50%) translateY(80px)"></div>
 
 <script>
 // ===================================================================
@@ -453,18 +242,24 @@
 const state = {
   view: 'list',
   projects: [],
+  listFilter: 'all',
   currentProject: null,
   currentData: null,
   activeSegmentId: -1,
   playbackRate: 1.0,
   pollingTimer: null,
   showTranslations: true,
-  pendingVocab: null,    // { segmentId, word, startOffset, endOffset } — pending text selection
-  viewingAnnot: null,     // { id, segmentId } — for vocab delete mode
+  sideOpen: false,
+  pickerSeg: null,        // 正在展开听错原因选择的句子
+  pendingDelete: null,    // 删除确认弹窗里的项目 id
+  pendingVocab: null,     // { segmentId, word, startOffset, endOffset } — pending text selection
+  viewingAnnot: null,     // { id, segmentId } — 正在看的生词
+  editingAnnot: null,     // 正在改释义的生词对象
   notePending: null,      // { segmentId, word, startOffset, endOffset } — selection awaiting a new note
   viewingNote: null,      // the note object currently shown in the popover
   editingNote: null,      // the note object currently being edited
   notesFilter: 'all',
+  lastPointer: 'mouse',
   vocabAudioPauseActive: false,
   vocabAudioWasPlaying: false,
   vocabAudioManualOverride: false
@@ -478,7 +273,19 @@ const ERROR_TAGS = [
   { id: 'distractor', label: 'E 干扰误选', hint: '选择题被干扰项带走，或说话人改口后没改' }
 ];
 
+const ICONS = {
+  star: '<svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M8 2.2l1.8 3.7 4 .6-2.9 2.8.7 4L8 11.4l-3.6 1.9.7-4L2.2 6.5l4-.6z"/></svg>',
+  starOn: '<svg class="lr-ico" viewBox="0 0 16 16" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M8 2.2l1.8 3.7 4 .6-2.9 2.8.7 4L8 11.4l-3.6 1.9.7-4L2.2 6.5l4-.6z"/></svg>',
+  play: '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M5 3.5v9l7.5-4.5z"/></svg>',
+  pause: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5.5 3.5v9M10.5 3.5v9"/></svg>',
+  trash: '<svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 8.5h5.8l.6-8.5"/></svg>',
+  edit: '<svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 2.5 13.5 5 5.5 13H3v-2.5z"/></svg>',
+  retry: '<svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 8a5 5 0 1 1-1.5-3.5M13 3v2.5h-2.5"/></svg>',
+  check: '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8.5 6.5 11.5 12.5 4.5"/></svg>'
+};
+
 const audioEl = document.getElementById('audioEl');
+const LAST_KEY = 'listening-last-position';
 
 function beginVocabAudioPause() {
   if (state.vocabAudioPauseActive) {
@@ -543,6 +350,8 @@ const API = {
     d = await r.json();
   } catch { d = null; }
   if (d && d.valid === false) { localStorage.removeItem('authToken'); location.href = '/login'; return; }
+  setPlayIcon(false);
+  setNotesFilter('all');
   await loadProjects();
   await maybeDeepLinkFromUrl();
 })();
@@ -560,11 +369,15 @@ async function maybeDeepLinkFromUrl() {
   const segId = parseInt(segParam);
   const seg = state.currentData?.segments.find(s => s.id === segId);
   if (!seg) return;
+  seekWhenReady(seg.start);
   state.activeSegmentId = segId;
   highlightSegment(segId);
-  const applySeek = () => { audioEl.currentTime = seg.start; };
-  if (audioEl.readyState >= 1) applySeek();
-  else audioEl.addEventListener('loadedmetadata', applySeek, { once: true });
+}
+
+function seekWhenReady(t, then) {
+  const apply = () => { audioEl.currentTime = t; if (then) then(); };
+  if (audioEl.readyState >= 1) apply();
+  else audioEl.addEventListener('loadedmetadata', apply, { once: true });
 }
 
 // ===================================================================
@@ -572,25 +385,10 @@ async function maybeDeepLinkFromUrl() {
 // ===================================================================
 function switchView(view) {
   state.view = view;
-  const listView    = document.getElementById('listView');
-  const detailView  = document.getElementById('detailView');
-  const playerBar   = document.getElementById('playerBar');
-  const topList     = document.getElementById('topList');
-  const topDetail   = document.getElementById('topDetail');
-
-  if (view === 'list') {
-    listView.classList.remove('hidden');
-    detailView.classList.add('hidden');
-    playerBar.classList.add('hidden');
-    topList.classList.remove('hidden');    topList.style.display = 'flex';
-    topDetail.classList.add('hidden');     topDetail.style.display = 'none';
-  } else {
-    listView.classList.add('hidden');
-    detailView.classList.remove('hidden');
-    playerBar.classList.remove('hidden');
-    topList.classList.add('hidden');       topList.style.display = 'none';
-    topDetail.classList.remove('hidden');  topDetail.style.display = 'flex';
-  }
+  document.getElementById('listView').hidden = view !== 'list';
+  document.getElementById('detailView').hidden = view !== 'detail';
+  document.getElementById('lrPlayer').hidden = view !== 'detail';
+  window.scrollTo(0, 0);
 }
 
 // ===================================================================
@@ -598,7 +396,7 @@ function switchView(view) {
 // ===================================================================
 async function loadProjects() {
   const r = await API.get('/api/listening_review/list');
-  if (r.error) { showToast(r.error); return; }
+  if (r.error) { showToast(r.error, 'error'); return; }
   state.projects = r.projects || [];
   renderListView();
 
@@ -622,95 +420,233 @@ async function loadProjects() {
   }
 }
 
+function listFilterMatch(p, f) {
+  if (f === 'done') return !!p.mastered;
+  if (f === 'todo') return !p.mastered;
+  return true;
+}
+
 function renderListView() {
+  const projects = state.projects;
+  document.getElementById('projCount').textContent = projects.length ? `${projects.length} 篇` : '';
+  const notesTotal = projects.reduce((s, p) => s + (p.vocab_count || 0) + (p.note_count || 0), 0);
+  document.getElementById('allNotesCount').textContent = notesTotal ? String(notesTotal) : '';
+
+  const toolbar = document.getElementById('listToolbar');
+  toolbar.hidden = projects.length === 0;
+  ['all', 'todo', 'done'].forEach(f => {
+    toolbar.querySelector(`[data-count="${f}"]`).textContent = projects.filter(p => listFilterMatch(p, f)).length;
+  });
+  toolbar.querySelectorAll('.list-filter').forEach(b => {
+    const on = b.dataset.filter === state.listFilter;
+    b.classList.toggle('is-on', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+
+  renderContinue();
+
   const grid = document.getElementById('projectGrid');
-  if (state.projects.length === 0) {
+  if (projects.length === 0) {
     grid.innerHTML = `
-      <div class="col-span-full text-center py-16 text-slate-400">
-        <div class="text-5xl mb-3">&#127911;</div>
-        <div>No listening projects yet.<br>Click "+ New Project" to get started.</div>
-      </div>`;
+      <section class="ui-card" style="grid-column: 1 / -1; padding: 8px 24px;">
+        <div class="ui-empty">
+          <p class="ui-empty__title">还没有听力项目</p>
+          <p class="ui-empty__text">上传一段听力音频，转录完成后就能逐句精听、记生词和笔记。</p>
+          <button class="ui-btn ui-btn--md ui-btn--primary" type="button" onclick="openUploadModal()">上传音频</button>
+        </div>
+      </section>`;
     return;
   }
-  grid.innerHTML = state.projects.map(p => {
-    const statusCls = { completed: 'bg-emerald-50 text-emerald-600', processing: 'bg-amber-50 text-amber-600', translating: 'bg-purple-50 text-purple-600', error: 'bg-red-50 text-red-600' }[p.status] || '';
-    const statusText = { completed: 'Completed', processing: 'Processing...', translating: 'Translating...', error: 'Error' }[p.status] || p.status;
-    const dur = p.duration ? formatTime(p.duration) : '--:--';
-    const date = p.created_at ? new Date(p.created_at).toLocaleDateString('zh-CN') : '';
-    const isMastered = !!p.mastered;
-    const checkinCount = p.checkin_count || 0;
-    const vocabCount = p.vocab_count || 0;
-    const noteCount = p.note_count || 0;
-    const cardBorder = isMastered ? 'border-slate-100 opacity-60' : 'border-slate-200';
-    const retryBtn = p.status === 'error'
-      ? `<button class="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-md mt-2 ml-1.5 bg-blue-50 text-blue-600 border-none cursor-pointer hover:bg-blue-100 transition-colors dark:bg-blue-950 dark:text-blue-300" onclick="event.stopPropagation();retryProject('${p.id}')">&#8635; Retry</button>`
-      : '';
-    const masteredBadge = isMastered ? '<span class="inline-block text-[11px] font-semibold px-2 py-0.5 rounded-md mt-2 ml-1.5 bg-emerald-50 text-emerald-500 dark:bg-emerald-950">&#10003; 已掌握</span>' : '';
-    return `
-      <div class="group relative bg-white border ${cardBorder} rounded-xl p-5 cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg hover:border-blue-200 dark:bg-slate-900" onclick="openProject('${p.id}')">
-        <button class="absolute top-2.5 right-2.5 w-7 h-7 flex items-center justify-center bg-transparent border-none text-slate-300 hover:text-red-500 hover:bg-red-50 cursor-pointer text-lg rounded transition-colors" onclick="event.stopPropagation();deleteProject('${p.id}')" title="Delete">&times;</button>
-        <div class="font-bold text-slate-800 text-[15px] mb-1.5 pr-6 break-words dark:text-slate-100">${esc(p.title)}</div>
-        <div class="text-xs text-slate-400 flex items-center gap-3 flex-wrap">
-          <span>${date}</span><span>${dur}</span>${checkinCount > 0 ? `<span class="text-amber-500" title="打卡次数">&#9998; ${checkinCount}</span>` : ''}${vocabCount > 0 ? `<span class="text-blue-400" title="标注单词数">&#9679; ${vocabCount} 词</span>` : ''}${noteCount > 0 ? `<span class="text-amber-500" title="笔记数">&#128221; ${noteCount}</span>` : ''}
-        </div>
-        <div class="flex items-center flex-wrap">
-          <span class="inline-block text-[11px] font-semibold px-2 py-0.5 rounded-md mt-2 ${statusCls}">${statusText}</span>
-          ${retryBtn}${masteredBadge}
-        </div>
-      </div>`;
-  }).join('');
+  const shown = projects.filter(p => listFilterMatch(p, state.listFilter));
+  if (shown.length === 0) {
+    const name = state.listFilter === 'done' ? '已掌握' : '未掌握';
+    grid.innerHTML = `
+      <section class="ui-card" style="grid-column: 1 / -1; padding: 8px 24px;">
+        <div class="ui-empty"><p class="ui-empty__title">没有${name}的项目</p><p class="ui-empty__text">在精听页右侧点「标熟」，项目就会归到「已掌握」。</p></div>
+      </section>`;
+    return;
+  }
+  grid.innerHTML = shown.map(projectCardHtml).join('');
+}
+
+function projectCardHtml(p) {
+  const busy = p.status !== 'completed';
+  const title = esc(p.title);
+  const date = p.created_at ? formatDate(p.created_at) : '';
+  const dur = p.duration ? `<span class="lr-dot">${formatTime(p.duration)}</span>` : '';
+  let tag = '', body = '';
+  if (p.status === 'processing') {
+    tag = '<span class="ui-tag ui-tag--warn">转录中</span>';
+    body = '<div class="lr-proj__status">正在转成字幕，完成后这里自动刷新</div>';
+  } else if (p.status === 'translating') {
+    tag = '<span class="ui-tag ui-tag--warn">翻译中</span>';
+    body = '<div class="lr-proj__status">字幕已出，正在润色和翻译</div>';
+  } else if (p.status === 'error') {
+    tag = '<span class="ui-tag ui-tag--err">失败</span>';
+    body = `<div class="lr-proj__status is-err"><span>${esc(errorPhaseText(p))}</span><button class="ui-btn ui-btn--sm" type="button" data-act="retry" data-id="${esc(p.id)}">${ICONS.retry}重试</button></div>`;
+  } else {
+    if (p.mastered) tag = `<span class="ui-tag ui-tag--ok">${ICONS.check}已掌握</span>`;
+    const stat = (n, label) => `<div class="lr-proj__stat"><span class="lr-proj__num">${n}</span><span class="lr-proj__label">${label}</span></div>`;
+    body = `<div class="lr-proj__stats">${stat(p.checkin_count || 0, '打卡')}${stat(p.vocab_count || 0, '生词')}${stat(p.note_count || 0, '笔记')}</div>`;
+  }
+  const openAttrs = busy ? '' : ` role="link" tabindex="0" aria-label="打开 ${title}" data-act="open" data-id="${esc(p.id)}"`;
+  return `
+    <div class="lr-proj${busy ? ' is-busy' : ''}"${openAttrs}>
+      <div class="lr-proj__head"><h2 class="lr-proj__title">${title}</h2><button class="lr-icon lr-icon--danger" type="button" data-act="delete" data-id="${esc(p.id)}" aria-label="删除 ${title}">${ICONS.trash}</button></div>
+      <div class="lr-proj__meta"><span>${date}</span>${dur}${tag}</div>
+      ${body}
+    </div>`;
+}
+
+function errorPhaseText(p) {
+  const phase = { transcribe: '转录失败：', polish: '润色翻译失败：' }[p.error_phase] || '处理失败：';
+  return phase + (p.error || '未知错误');
+}
+
+document.getElementById('projectGrid').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-act]');
+  if (!btn) return;
+  const id = btn.dataset.id;
+  if (btn.dataset.act === 'delete') { e.stopPropagation(); openDeleteDialog(id); }
+  else if (btn.dataset.act === 'retry') { e.stopPropagation(); retryProject(id); }
+  else if (btn.dataset.act === 'open') openProject(id);
+});
+document.getElementById('projectGrid').addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const card = e.target.closest('[data-act="open"]');
+  if (card && e.target === card) { e.preventDefault(); openProject(card.dataset.id); }
+});
+document.querySelectorAll('.list-filter').forEach(b => b.addEventListener('click', () => {
+  state.listFilter = b.dataset.filter;
+  renderListView();
+}));
+
+// --- 删除确认 ---
+function openDeleteDialog(id) {
+  const p = state.projects.find(x => x.id === id);
+  if (!p) return;
+  state.pendingDelete = id;
+  const extras = [];
+  if (p.vocab_count) extras.push(`${p.vocab_count} 个生词`);
+  if (p.note_count) extras.push(`${p.note_count} 条笔记`);
+  const what = extras.length ? `音频、字幕、${extras.join('和 ')}` : '音频和字幕';
+  document.getElementById('deleteText').textContent = `「${p.title}」的${what}会一起删除，删了不能恢复。`;
+  document.getElementById('deleteModal').hidden = false;
+  document.getElementById('deleteConfirmBtn').focus();
+}
+
+function closeDeleteDialog() {
+  document.getElementById('deleteModal').hidden = true;
+  state.pendingDelete = null;
+}
+
+async function confirmDelete() {
+  const id = state.pendingDelete;
+  if (!id) return;
+  const btn = document.getElementById('deleteConfirmBtn');
+  btn.disabled = true;
+  try {
+    await deleteProject(id);
+  } finally {
+    btn.disabled = false;
+    closeDeleteDialog();
+  }
 }
 
 async function deleteProject(id) {
-  if (!confirm('Delete this project? This cannot be undone.')) return;
   const r = await API.del('/api/listening_review/project/' + id);
-  if (r.success) { showToast('Project deleted'); await loadProjects(); }
-  else showToast(r.error || 'Delete failed');
+  if (r.success) { showToast('已删除', 'success'); await loadProjects(); }
+  else showToast(r.error || '删除失败', 'error');
 }
 
 async function retryProject(id) {
   const r = await API.post('/api/listening_review/project/' + id + '/retry', {});
-  if (r.success) { showToast('重新转录已开始...'); await loadProjects(); }
-  else showToast(r.error || 'Retry failed');
+  if (r.success) { showToast('已重新开始转录'); await loadProjects(); }
+  else showToast(r.error || '重试失败', 'error');
+}
+
+// --- 继续上次（只存在这台设备的浏览器里） ---
+function readLastPosition() {
+  try { return JSON.parse(localStorage.getItem(LAST_KEY) || 'null'); } catch { return null; }
+}
+
+function saveLastPosition() {
+  if (!state.currentProject || !state.currentData || state.activeSegmentId < 0) return;
+  const segs = state.currentData.segments || [];
+  const idx = segs.findIndex(s => s.id === state.activeSegmentId);
+  if (idx < 0) return;
+  const record = {
+    pid: state.currentProject.id,
+    title: state.currentProject.title,
+    seg: state.activeSegmentId,
+    idx,
+    total: segs.length,
+    t: Math.round(audioEl.currentTime * 10) / 10
+  };
+  try { localStorage.setItem(LAST_KEY, JSON.stringify(record)); } catch {}
+}
+
+function renderContinue() {
+  const card = document.getElementById('continueCard');
+  const last = readLastPosition();
+  const proj = last && state.projects.find(p => p.id === last.pid && p.status === 'completed');
+  if (!proj) { card.hidden = true; return; }
+  card.hidden = false;
+  document.getElementById('continueTitle').textContent = proj.title;
+  const n = (last.idx || 0) + 1, total = last.total || n;
+  document.getElementById('continueBar').style.width = Math.min(100, Math.round(n / total * 100)) + '%';
+  document.getElementById('continueNum').textContent = `第 ${n} 句 / ${total} · ${formatTime(last.t)}`;
+}
+
+async function continueLast() {
+  const last = readLastPosition();
+  if (!last) return;
+  await openProject(last.pid);
+  if (state.view !== 'detail') return;
+  const seg = state.currentData?.segments.find(s => s.id === last.seg);
+  const t = typeof last.t === 'number' ? last.t : (seg ? seg.start : 0);
+  seekWhenReady(t, () => { audioEl.play().catch(() => {}); });
+  if (seg) { state.activeSegmentId = seg.id; highlightSegment(seg.id); }
 }
 
 // ===================================================================
 //  Upload Modal
 // ===================================================================
+const FILE_DROP_TEXT = '点这里选音频文件，或把文件拖进来';
+const FILE_DROP_META = 'MP3、WAV、M4A、FLAC、OGG、MP4、WebM';
+
 function openUploadModal() {
-  document.getElementById('uploadModal').classList.remove('hidden');
+  document.getElementById('uploadModal').hidden = false;
   document.getElementById('fileTitle').value = '';
   document.getElementById('urlTitle').value = '';
   document.getElementById('urlInput').value = '';
   document.getElementById('fileInput').value = '';
-  document.getElementById('fileDropText').textContent = 'Click to select or drag audio file here';
+  document.getElementById('fileDropText').textContent = FILE_DROP_TEXT;
+  document.getElementById('fileDropMeta').textContent = FILE_DROP_META;
   document.getElementById('uploadFileBtn').disabled = true;
   switchTab('file');
 }
 
-function closeUploadModal() { document.getElementById('uploadModal').classList.add('hidden'); }
+function closeUploadModal() { document.getElementById('uploadModal').hidden = true; }
 
 function switchTab(tab) {
-  const tabs = document.querySelectorAll('.modal-tab');
-  const activeClasses  = ['text-blue-600', 'border-blue-500'];
-  const inactiveClasses = ['text-slate-400', 'border-transparent'];
-  const all = [...activeClasses, ...inactiveClasses];
-
-  tabs.forEach((t, i) => {
-    t.classList.remove(...all);
-    const isActive = (i === 0 && tab === 'file') || (i === 1 && tab === 'url');
-    t.classList.add(...(isActive ? activeClasses : inactiveClasses));
+  document.querySelectorAll('.modal-tab').forEach(t => {
+    const on = t.dataset.tab === tab;
+    t.classList.toggle('is-on', on);
+    t.setAttribute('aria-selected', on ? 'true' : 'false');
   });
-
-  document.getElementById('tabFile').classList.toggle('hidden', tab !== 'file');
-  document.getElementById('tabUrl').classList.toggle('hidden', tab !== 'url');
+  document.getElementById('tabFile').hidden = tab !== 'file';
+  document.getElementById('tabUrl').hidden = tab !== 'url';
+  document.getElementById('uploadFileBtn').hidden = tab !== 'file';
+  document.getElementById('uploadUrlBtn').hidden = tab !== 'url';
 }
 
 function onFileSelected(input) {
   const file = input.files[0];
   if (!file) return;
-  if (file.size > 25 * 1024 * 1024) { showToast('File exceeds 25MB limit'); input.value = ''; return; }
+  if (file.size > 25 * 1024 * 1024) { showToast('文件超过 25 MB，换一个小一点的', 'error'); input.value = ''; return; }
   document.getElementById('fileDropText').textContent = file.name;
+  document.getElementById('fileDropMeta').textContent = `${formatSize(file.size)} · 点这里换一个文件`;
   document.getElementById('uploadFileBtn').disabled = false;
 }
 
@@ -718,30 +654,62 @@ async function doUploadFile() {
   const file = document.getElementById('fileInput').files[0];
   if (!file) return;
   const btn = document.getElementById('uploadFileBtn');
-  btn.disabled = true; btn.textContent = 'Uploading...';
+  btn.disabled = true; btn.textContent = '上传中…';
   const fd = new FormData();
   fd.append('file', file);
   fd.append('title', document.getElementById('fileTitle').value.trim());
   try {
     const r = await API.upload('/api/listening_review/upload', fd);
-    if (r.success) { showToast('Upload successful, transcribing...'); closeUploadModal(); await loadProjects(); }
-    else showToast(r.error || 'Upload failed');
-  } catch (e) { showToast('Upload failed: ' + e.message); }
-  btn.disabled = false; btn.textContent = 'Upload';
+    if (r.success) { showToast('上传成功，正在转录', 'success'); closeUploadModal(); await loadProjects(); }
+    else showToast(r.error || '上传失败', 'error');
+  } catch (e) { showToast('上传失败：' + e.message, 'error'); }
+  btn.disabled = false; btn.textContent = '上传并转录';
 }
 
 async function doUploadUrl() {
   const urlVal = document.getElementById('urlInput').value.trim();
-  if (!urlVal) { showToast('Please enter a URL'); return; }
+  if (!urlVal) { showToast('请填写音频链接', 'error'); document.getElementById('urlInput').focus(); return; }
   const btn = document.getElementById('uploadUrlBtn');
-  btn.disabled = true; btn.textContent = 'Downloading...';
+  btn.disabled = true; btn.textContent = '下载中…';
   try {
     const r = await API.post('/api/listening_review/url', { url: urlVal, title: document.getElementById('urlTitle').value.trim() });
-    if (r.success) { showToast('Download successful, transcribing...'); closeUploadModal(); await loadProjects(); }
-    else showToast(r.error || 'Download failed');
-  } catch (e) { showToast('Request failed: ' + e.message); }
-  btn.disabled = false; btn.textContent = 'Download & Transcribe';
+    if (r.success) { showToast('下载成功，正在转录', 'success'); closeUploadModal(); await loadProjects(); }
+    else showToast(r.error || '下载失败', 'error');
+  } catch (e) { showToast('请求失败：' + e.message, 'error'); }
+  btn.disabled = false; btn.textContent = '下载并转录';
 }
+
+document.getElementById('urlInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') doUploadUrl(); });
+
+// 点弹窗外的遮罩关闭
+['uploadModal', 'deleteModal'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('click', (e) => {
+    if (e.target !== el) return;
+    if (id === 'uploadModal') closeUploadModal(); else closeDeleteDialog();
+  });
+});
+
+// Drag & drop on file label
+(function initDragDrop() {
+  const label = document.getElementById('fileDropLabel');
+  ['dragenter', 'dragover'].forEach(ev => {
+    label.addEventListener(ev, (e) => { e.preventDefault(); label.classList.add('is-over'); });
+  });
+  ['dragleave', 'drop'].forEach(ev => {
+    label.addEventListener(ev, (e) => { e.preventDefault(); label.classList.remove('is-over'); });
+  });
+  label.addEventListener('drop', (e) => {
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      const input = document.getElementById('fileInput');
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      input.files = dt.files;
+      onFileSelected(input);
+    }
+  });
+})();
 
 // ===================================================================
 //  Detail View
@@ -749,29 +717,36 @@ async function doUploadUrl() {
 async function openProject(id) {
   const proj = state.projects.find(p => p.id === id);
   if (!proj) return;
-  if (proj.status === 'processing') { showToast('Still transcribing, please wait...'); return; }
-  if (proj.status === 'translating') { showToast('Translating, please wait...'); return; }
-  if (proj.status === 'error') {
-    const phase = { transcribe: 'Transcription failed: ', polish: 'Polish/translate failed: ' }[proj.error_phase] || 'Processing failed: ';
-    showToast(phase + (proj.error || 'Unknown error')); return;
-  }
+  if (proj.status === 'processing') { showToast('还在转录，稍等一会儿'); return; }
+  if (proj.status === 'translating') { showToast('还在润色翻译，稍等一会儿'); return; }
+  if (proj.status === 'error') { showToast(errorPhaseText(proj), 'error'); return; }
 
   const r = await API.get('/api/listening_review/project/' + id);
-  if (r.error) { showToast(r.error); return; }
+  if (r.error) { showToast(r.error, 'error'); return; }
 
   state.currentProject = r.project;
   state.currentData = r.data;
   state.activeSegmentId = -1;
+  state.pickerSeg = null;
 
   switchView('detail');
   document.getElementById('detailTitle').textContent = r.project.title;
+  const segCount = (r.data?.segments || []).length;
+  const metaParts = [];
+  if (r.project.duration) metaParts.push(formatTime(r.project.duration));
+  if (segCount) metaParts.push(`${segCount} 句`);
+  document.getElementById('detailMeta').textContent = metaParts.join(' · ');
+  document.getElementById('sideUploaded').textContent = r.project.created_at ? `${formatDate(r.project.created_at)}上传` : '';
   updateMasteredBtn(!!r.project.mastered);
   updateCheckinBtn(r.project.checkin_count || 0);
+  toggleSide(window.matchMedia('(min-width: 1100px)').matches);
 
   const tk = localStorage.getItem('authToken');
   audioEl.src = `/api/listening_review/audio/${id}/${r.project.audio_filename}?token=${encodeURIComponent(tk)}`;
   audioEl.load();
+  updateProgressBar(0);
   renderLyrics();
+  renderNotesView();
   updateNotesButton();
 }
 
@@ -779,9 +754,11 @@ function backToList() {
   hideNotePopover({ resumeAudio: false });
   hideVocabPopover({ resumeAudio: false });
   hideSelectionToolbar({ resumeAudio: false });
-  if (!document.getElementById('notesView').classList.contains('hidden')) closeNotesView();
+  closeErrorPicker({ resumeAudio: false });
+  saveLastPosition();
   audioEl.pause();
-  audioEl.src = '';
+  audioEl.removeAttribute('src');
+  audioEl.load();
   state.currentProject = null;
   state.currentData = null;
   state.activeSegmentId = -1;
@@ -791,13 +768,25 @@ function backToList() {
 
 function toggleTranslations() {
   state.showTranslations = !state.showTranslations;
-  document.getElementById('lyricsContainer').classList.toggle('translations-hidden', !state.showTranslations);
+  document.getElementById('lyricsContainer').classList.toggle('lr-hide-zh', !state.showTranslations);
   const btn = document.getElementById('toggleTransBtn');
-  btn.classList.toggle('bg-blue-100', state.showTranslations);
-  btn.classList.toggle('text-blue-600', state.showTranslations);
-  btn.classList.toggle('bg-slate-100', !state.showTranslations);
-  btn.classList.toggle('text-slate-500', !state.showTranslations);
+  btn.classList.toggle('ui-btn--soft', state.showTranslations);
+  btn.setAttribute('aria-pressed', state.showTranslations ? 'true' : 'false');
+  document.getElementById('transCheck').style.display = state.showTranslations ? '' : 'none';
 }
+
+// 右侧「本篇」栏：宽屏收起 / 展开，窄屏是抽屉
+function toggleSide(force) {
+  state.sideOpen = typeof force === 'boolean' ? force : !state.sideOpen;
+  document.getElementById('detailGrid').classList.toggle('is-side-open', state.sideOpen);
+  document.getElementById('notesBtn').setAttribute('aria-pressed', state.sideOpen ? 'true' : 'false');
+}
+
+window.matchMedia('(min-width: 1100px)').addEventListener('change', (e) => {
+  if (state.view === 'detail') toggleSide(e.matches);
+});
+
+function isDrawerMode() { return !window.matchMedia('(min-width: 1100px)').matches; }
 
 // ===================================================================
 //  Lyrics Rendering
@@ -805,56 +794,34 @@ function toggleTranslations() {
 function renderLyrics() {
   const container = document.getElementById('lyricsContainer');
   if (!state.currentData || !state.currentData.segments) {
-    container.innerHTML = '<div class="text-center py-16 text-slate-400">No transcript data available.</div>';
+    container.innerHTML = '<div class="ui-empty"><p class="ui-empty__title">这篇没有字幕数据</p></div>';
     return;
   }
+  container.innerHTML = state.currentData.segments.map(lineHtml).join('');
+  renderSideNums();
+}
 
-  const segs = state.currentData.segments;
-  const starred = state.currentData.starred_segments || [];
-  const annots = state.currentData.vocab_annotations || [];
-  const notes = state.currentData.notes || [];
-
-  container.innerHTML = segs.map(seg => {
-    const isActive = seg.id === state.activeSegmentId;
-    const isStarred = starred.includes(seg.id);
-    const segAnnots = annots.filter(a => a.segment_id === seg.id);
-    const segNotes = notes.filter(n => n.segment_id === seg.id);
-    const textHtml = renderAnnotatedText(seg.text, segAnnots, segNotes);
-
-    let cls = 'lyrics-line group flex items-start gap-2 px-5 md:px-8 py-3 cursor-pointer rounded-r-lg transition-all duration-300';
-    if (isActive)  cls += ' active';
-    if (isStarred) cls += ' starred';
-
-    const translationHtml = seg.translation ? `<div class="translation-line">${esc(seg.translation)}</div>` : '';
-
-    return `
-      <div class="${cls}" data-seg-id="${seg.id}" data-start="${seg.start}" data-end="${seg.end}">
-        <span class="w-14 flex-shrink-0 text-slate-400 font-mono text-xs pt-0.5 text-right select-none">${formatTime(seg.start)}</span>
-        <button class="star-btn flex-shrink-0 bg-transparent border-none cursor-pointer text-base p-0 leading-none mt-0.5 transition-all ${isStarred ? 'text-amber-400 opacity-100' : 'text-slate-300 opacity-0 group-hover:opacity-100 hover:text-amber-400'}" data-seg-id="${seg.id}">${isStarred ? '\u2605' : '\u2606'}</button>
-        <div class="flex-1 min-w-0 pr-2">
-          <span class="line-text text-[15px] leading-relaxed select-text cursor-text" data-seg-id="${seg.id}">${textHtml}</span>
-          ${translationHtml}
-        </div>
-        ${renderErrorTagZone(seg.id)}
-      </div>`;
-  }).join('');
-
-  bindErrorTagZoneAudio();
+function lineHtml(seg) {
+  const starred = (state.currentData.starred_segments || []).includes(seg.id);
+  const segAnnots = (state.currentData.vocab_annotations || []).filter(a => a.segment_id === seg.id);
+  const segNotes = (state.currentData.notes || []).filter(n => n.segment_id === seg.id);
+  const cls = 'lr-line' + (seg.id === state.activeSegmentId ? ' is-active' : '') + (starred ? ' is-starred' : '');
+  const translation = seg.translation ? `<div class="lr-line__zh">${esc(seg.translation)}</div>` : '';
+  return `
+    <div class="${cls}" data-seg-id="${seg.id}" data-start="${seg.start}" data-end="${seg.end}">
+      <button class="lr-line__time" type="button" tabindex="-1">${formatTime(seg.start)}</button>
+      <button class="lr-line__star star-btn${starred ? ' is-on' : ''}" type="button" data-seg-id="${seg.id}" aria-label="${starred ? '取消收藏' : '收藏这句'}" aria-pressed="${starred}">${starred ? ICONS.starOn : ICONS.star}</button>
+      <div class="lr-line__body">
+        <div class="lr-line__en line-text" data-seg-id="${seg.id}">${renderAnnotatedText(seg.text, segAnnots, segNotes)}</div>
+        ${translation}
+        <div class="lr-why-slot" data-seg-id="${seg.id}">${starred ? whyHtml(seg.id) : ''}</div>
+      </div>
+    </div>`;
 }
 
 function getSegmentErrorTags(segId) {
   const all = (state.currentData && state.currentData.error_tags) || {};
   return all[String(segId)] || all[segId] || [];
-}
-
-function fanOffset(index, total) {
-  const spread = 168 * Math.PI / 180;
-  const angle = -spread / 2 + (spread / (total - 1)) * index;
-  const radius = 108;
-  return {
-    dx: Math.round(-Math.cos(angle) * radius),
-    dy: Math.round(Math.sin(angle) * radius)
-  };
 }
 
 function errorTagLabel(id) {
@@ -863,25 +830,49 @@ function errorTagLabel(id) {
 }
 
 function renderRestChips(tagIds) {
-  return tagIds.map(id => `<span class="error-rest-chip" data-tag="${id}">${errorTagLabel(id)}</span>`).join('');
+  return tagIds.map(id => `<span class="ui-tag error-rest-chip" data-tag="${esc(id)}">${esc(errorTagLabel(id))}</span>`).join('');
 }
 
-function renderErrorTagZone(segId) {
+// 收藏句下面的「听错原因」：平时只列已选标签，点「改」展开 A–E 五个标签（可多选）
+function whyHtml(segId) {
   const selected = getSegmentErrorTags(segId);
-  const bubbles = ERROR_TAGS.map((tag, i) => {
-    const on = selected.includes(tag.id) ? ' selected' : '';
-    const { dx, dy } = fanOffset(i, ERROR_TAGS.length);
-    const title = tag.hint ? `${tag.label} — ${tag.hint}` : tag.label;
-    return `<button type="button" class="error-bubble${on}" data-tag="${tag.id}" data-seg-id="${segId}" style="--i:${i};--dx:${dx}px;--dy:${dy}px" title="${title}">${tag.label}</button>`;
-  }).join('');
-  return `<div class="error-tag-zone" data-seg-id="${segId}"><div class="error-tag-rest">${renderRestChips(selected)}</div><div class="error-bubbles">${bubbles}</div></div>`;
+  if (state.pickerSeg === segId) {
+    const chips = ERROR_TAGS.map(tag => {
+      const on = selected.includes(tag.id);
+      return `<button class="ui-chip error-bubble${on ? ' is-on' : ''}" type="button" data-tag="${tag.id}" data-seg-id="${segId}" aria-pressed="${on}" title="${esc(tag.hint)}">${tag.label}</button>`;
+    }).join('');
+    return `<div class="lr-why__picker" role="group" aria-label="听错原因，可多选">
+      <span class="lr-why__hint">这句为什么没听出来？可多选，再点一次取消。展开时音频暂停。</span>
+      ${chips}
+      <button class="ui-btn ui-btn--sm" type="button" data-act="close-picker">完成</button>
+    </div>`;
+  }
+  const btnText = selected.length ? '改' : '选原因';
+  return `<div class="lr-why"><span class="lr-why__label">听错原因</span>${renderRestChips(selected)}<button class="lr-why__add" type="button" data-act="open-picker" data-seg-id="${segId}">${btnText}</button></div>`;
 }
 
-function bindErrorTagZoneAudio() {
-  document.querySelectorAll('.error-tag-zone').forEach(zone => {
-    zone.addEventListener('mouseenter', beginErrorTagAudioPause);
-    zone.addEventListener('mouseleave', endErrorTagAudioPause);
-  });
+function syncErrorTagUi(segId) {
+  const slot = document.querySelector(`.lr-why-slot[data-seg-id="${segId}"]`);
+  if (!slot) return;
+  const starred = (state.currentData?.starred_segments || []).includes(segId);
+  slot.innerHTML = starred ? whyHtml(segId) : '';
+}
+
+function openErrorPicker(segId) {
+  const prev = state.pickerSeg;
+  if (prev === segId) return;
+  state.pickerSeg = segId;
+  if (prev !== null) syncErrorTagUi(prev);
+  syncErrorTagUi(segId);
+  beginErrorTagAudioPause();
+}
+
+function closeErrorPicker({ resumeAudio = true } = {}) {
+  const prev = state.pickerSeg;
+  if (prev === null) return;
+  state.pickerSeg = null;
+  syncErrorTagUi(prev);
+  if (resumeAudio) endErrorTagAudioPause();
 }
 
 function beginErrorTagAudioPause() {
@@ -889,26 +880,11 @@ function beginErrorTagAudioPause() {
 }
 
 function endErrorTagAudioPause() {
-  const vpop = document.getElementById('vocabPopover');
-  const npop = document.getElementById('notePopover');
-  const toolbar = document.getElementById('selectionToolbar');
-  if (vpop && !vpop.classList.contains('hidden')) return;
-  if (npop && !npop.classList.contains('hidden')) return;
-  if (toolbar && !toolbar.classList.contains('hidden')) return;
+  if (!document.getElementById('vocabPopover').hidden) return;
+  if (!document.getElementById('notePopover').hidden) return;
+  if (!document.getElementById('selectionToolbar').hidden) return;
   endVocabAudioPause();
 }
-
-function syncErrorTagUi(lineEl, segId) {
-  if (!lineEl) return;
-  const tags = getSegmentErrorTags(segId);
-  lineEl.querySelectorAll('.error-bubble').forEach(btn => {
-    btn.classList.toggle('selected', tags.includes(btn.dataset.tag));
-  });
-  const rest = lineEl.querySelector('.error-tag-rest');
-  if (rest) rest.innerHTML = renderRestChips(tags);
-}
-
-
 
 // Render a segment's text with overlap-safe vocab underlines + note highlights.
 // Both annotation types can coexist on the same characters; we split the text at
@@ -938,73 +914,87 @@ function renderAnnotatedText(text, vocabAnnots, noteAnnots) {
     const note  = covering.find(r => r.type === 'note');
     const cls = [];
     let attrs = '';
-    if (vocab) { cls.push('annotated-word'); attrs += ` data-aid="${vocab.id}" data-seg-id="${vocab.segId}" data-meaning="${esc(vocab.meaning)}"`; }
-    if (note)  { cls.push('note-mark');      attrs += ` data-note-id="${note.id}"`; }
+    if (vocab) { cls.push('lr-vocab'); attrs += ` data-aid="${esc(vocab.id)}" data-seg-id="${vocab.segId}" data-meaning="${esc(vocab.meaning)}"`; }
+    if (note)  { cls.push('lr-note');  attrs += ` data-note-id="${esc(note.id)}"`; }
     html += `<span class="${cls.join(' ')}"${attrs}>${esc(slice)}</span>`;
   }
   return html;
 }
 
 // ===================================================================
-//  Lyrics Event Delegation (click, mouseup)
+//  Lyrics Event Delegation (click, selection)
 // ===================================================================
 const lyricsContainer = document.getElementById('lyricsContainer');
 
-// Click: seek / star / view annotation
+function hasTextSelection() {
+  const sel = window.getSelection();
+  return !!(sel && !sel.isCollapsed && sel.toString().trim());
+}
+
+// Click: seek / star / error reasons / view annotation
 lyricsContainer.addEventListener('click', (e) => {
-  // Star button
   const starBtn = e.target.closest('.star-btn');
-  if (starBtn) {
-    e.stopPropagation();
-    toggleStar(parseInt(starBtn.dataset.segId));
-    return;
-  }
+  if (starBtn) { e.stopPropagation(); toggleStar(parseInt(starBtn.dataset.segId)); return; }
 
   const errorBubble = e.target.closest('.error-bubble');
-  if (errorBubble) {
-    e.stopPropagation();
-    toggleErrorTag(parseInt(errorBubble.dataset.segId), errorBubble.dataset.tag);
-    return;
-  }
+  if (errorBubble) { e.stopPropagation(); toggleErrorTag(parseInt(errorBubble.dataset.segId), errorBubble.dataset.tag); return; }
 
-  if (e.target.closest('.error-tag-zone')) {
-    e.stopPropagation();
-    return;
-  }
+  const act = e.target.closest('[data-act]');
+  if (act && act.dataset.act === 'open-picker') { e.stopPropagation(); openErrorPicker(parseInt(act.dataset.segId)); return; }
+  if (act && act.dataset.act === 'close-picker') { e.stopPropagation(); closeErrorPicker(); return; }
+
+  if (e.target.closest('.lr-why, .lr-why__picker')) { e.stopPropagation(); return; }
 
   // Note highlight → view note (checked first so it wins over vocab on overlap)
-  const noteEl = e.target.closest('.note-mark');
+  const noteEl = e.target.closest('.lr-note');
   if (noteEl) {
     e.stopPropagation();
-    const sel = window.getSelection();
-    if (sel && !sel.isCollapsed && sel.toString().trim()) return; // user was selecting
+    if (hasTextSelection()) return; // user was selecting
     openNoteView(noteEl);
     return;
   }
 
   // Annotated word → view mode (only if not selecting text)
-  const annotEl = e.target.closest('.annotated-word');
+  const annotEl = e.target.closest('.lr-vocab');
   if (annotEl) {
     e.stopPropagation();
-    const sel = window.getSelection();
-    if (sel && !sel.isCollapsed && sel.toString().trim()) return; // user was selecting
+    if (hasTextSelection()) return; // user was selecting
     beginVocabAudioPause();
     showViewPopover(annotEl);
     return;
   }
 
   // Don't seek if user was selecting text
-  const sel = window.getSelection();
-  if (sel && !sel.isCollapsed && sel.toString().trim()) return;
+  if (hasTextSelection()) return;
 
-  // Seek to segment
-  const line = e.target.closest('.lyrics-line');
+  const line = e.target.closest('.lr-line');
   if (line) seekToSegment(parseInt(line.dataset.segId));
 });
 
-// Mouseup on line-text → show selection badge (non-intrusive, doesn't steal focus)
+document.addEventListener('pointerdown', (e) => { state.lastPointer = e.pointerType || 'mouse'; }, true);
+
+// Mouse: selection finished on mouseup → show the "释义 / 笔记" toolbar
 lyricsContainer.addEventListener('mouseup', (e) => {
-  const lineText = e.target.closest('.line-text');
+  if (state.lastPointer === 'touch') return;
+  handleSelection(e.target.closest('.line-text'));
+});
+
+// Touch: long-press selection never fires a useful mouseup, so watch selectionchange instead
+let touchSelTimer = null;
+document.addEventListener('selectionchange', () => {
+  if (state.lastPointer !== 'touch' || state.view !== 'detail') return;
+  clearTimeout(touchSelTimer);
+  touchSelTimer = setTimeout(() => {
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.rangeCount) return;
+    const node = sel.getRangeAt(0).startContainer;
+    const el = node.nodeType === 1 ? node : node.parentElement;
+    const lineText = el && el.closest ? el.closest('.line-text') : null;
+    if (lineText && lyricsContainer.contains(lineText)) handleSelection(lineText);
+  }, 450);
+});
+
+function handleSelection(lineText) {
   if (!lineText) return;
 
   const sel = window.getSelection();
@@ -1040,7 +1030,7 @@ lyricsContainer.addEventListener('mouseup', (e) => {
 
   beginVocabAudioPause();
   showSelectionToolbar(range.getBoundingClientRect());
-});
+}
 
 /** Walk text nodes inside `root` and return the plain-text offset of `(node, offset)`. */
 function getTextOffset(root, node, offset) {
@@ -1055,31 +1045,40 @@ function getTextOffset(root, node, offset) {
 }
 
 // ===================================================================
-//  Selection Badge & Vocab Popover
+//  Selection toolbar & vocab popover
 // ===================================================================
+function navHeight() {
+  const nav = document.querySelector('.app-shell-nav');
+  return nav ? nav.getBoundingClientRect().bottom : 0;
+}
 
-// --- Toolbar: "+释义 / +笔记" pill shown on text selection ---
+// --- Toolbar: "释义 / 笔记" shown on text selection ---
 function showSelectionToolbar(rect) {
   hideSelectionToolbar({ resumeAudio: false }); // clear any previous toolbar
   const tb = document.getElementById('selectionToolbar');
-  tb.classList.remove('hidden');
-  // Centre the (variable-width) pill above the selection.
+  tb.hidden = false;
   const cx = rect.left + window.scrollX + rect.width / 2;
   const w = tb.offsetWidth;
   let left = cx - w / 2;
   left = Math.max(6, Math.min(left, document.documentElement.clientWidth - w - 6));
-  let top = rect.top + window.scrollY - tb.offsetHeight - 8;
-  if (top < window.scrollY + 6) top = rect.bottom + window.scrollY + 8;
+  // 手机上系统的「拷贝」菜单在选区上方，工具条放到选区下方免得被盖住
+  let top = state.lastPointer === 'touch'
+    ? rect.bottom + window.scrollY + 12
+    : rect.top + window.scrollY - tb.offsetHeight - 8;
+  if (top < window.scrollY + navHeight() + 6) top = rect.bottom + window.scrollY + 8;
   tb.style.left = left + 'px';
   tb.style.top  = top  + 'px';
 }
 
 function hideSelectionToolbar({ resumeAudio = true } = {}) {
-  document.getElementById('selectionToolbar').classList.add('hidden');
+  document.getElementById('selectionToolbar').hidden = true;
   if (resumeAudio) endVocabAudioPause();
 }
 
-// "+释义" → quick vocab meaning (existing flow)
+// 工具条按钮不要抢走选区（手机上一碰就会清掉选中）
+document.getElementById('selectionToolbar').addEventListener('mousedown', (e) => e.preventDefault());
+
+// "释义" → quick vocab meaning
 document.getElementById('selVocabBtn').addEventListener('click', (e) => {
   e.stopPropagation();
   if (!state.pendingVocab) return;
@@ -1088,7 +1087,7 @@ document.getElementById('selVocabBtn').addEventListener('click', (e) => {
   showAddPopover(state.pendingVocab.word, rect);
 });
 
-// "+笔记" → rich note on the selected word/sentence
+// "笔记" → rich note on the selected word/sentence
 document.getElementById('selNoteBtn').addEventListener('click', (e) => {
   e.stopPropagation();
   if (!state.pendingVocab) return;
@@ -1097,17 +1096,21 @@ document.getElementById('selNoteBtn').addEventListener('click', (e) => {
   openNoteAdd(state.pendingVocab, rect);
 });
 
-// --- Popover: full annotation form ---
+function setVocabMode(mode) {
+  document.getElementById('vpAddMode').hidden = mode !== 'edit';
+  document.getElementById('vpViewMode').hidden = mode !== 'view';
+}
+
 function showAddPopover(word, rect) {
   beginVocabAudioPause();
   const pop = document.getElementById('vocabPopover');
   document.getElementById('vpWord').textContent = word;
   document.getElementById('vpInput').value = '';
-  document.getElementById('vpAddMode').classList.remove('hidden');
-  document.getElementById('vpViewMode').classList.add('hidden');
+  setVocabMode('edit');
   state.viewingAnnot = null;
+  state.editingAnnot = null;
 
-  pop.classList.remove('hidden');
+  pop.hidden = false;
   positionPopover(pop, rect);
   setTimeout(() => document.getElementById('vpInput').focus(), 30);
 }
@@ -1120,16 +1123,28 @@ function showViewPopover(annotEl) {
 
   beginVocabAudioPause();
   hideSelectionToolbar({ resumeAudio: false });
+  hideNotePopover({ resumeAudio: false });
   const pop = document.getElementById('vocabPopover');
   document.getElementById('vpWord').textContent = annot.word;
   document.getElementById('vpMeaning').textContent = annot.meaning;
-  document.getElementById('vpAddMode').classList.add('hidden');
-  document.getElementById('vpViewMode').classList.remove('hidden');
+  setVocabMode('view');
   state.viewingAnnot = { id: aid, segmentId: segId };
+  state.editingAnnot = null;
   state.pendingVocab = null;
 
-  pop.classList.remove('hidden');
+  pop.hidden = false;
   positionPopover(pop, annotEl.getBoundingClientRect());
+}
+
+// 看释义 → 改释义（后端按 id 更新 meaning）
+function editVocabMeaning() {
+  if (!state.viewingAnnot) return;
+  const annot = state.currentData?.vocab_annotations.find(a => a.id === state.viewingAnnot.id);
+  if (!annot) return;
+  state.editingAnnot = annot;
+  document.getElementById('vpInput').value = annot.meaning;
+  setVocabMode('edit');
+  setTimeout(() => { const i = document.getElementById('vpInput'); i.focus(); i.select(); }, 30);
 }
 
 function positionPopover(pop, rect) {
@@ -1141,34 +1156,43 @@ function positionPopover(pop, rect) {
     const cy = rect.top  + window.scrollY;
     let left = cx - pw / 2;
     let top  = cy - ph - 8;
-    left = Math.max(8, Math.min(left, document.documentElement.scrollWidth - pw - 8));
-    if (top < window.scrollY + 8) top = rect.bottom + window.scrollY + 8;
+    left = Math.max(8, Math.min(left, document.documentElement.clientWidth - pw - 8));
+    if (top < window.scrollY + navHeight() + 8) top = rect.bottom + window.scrollY + 8;
     pop.style.left = left + 'px';
     pop.style.top  = top  + 'px';
   });
 }
 
 function hideVocabPopover({ resumeAudio = true } = {}) {
-  document.getElementById('vocabPopover').classList.add('hidden');
+  document.getElementById('vocabPopover').hidden = true;
   state.pendingVocab = null;
   state.viewingAnnot = null;
+  state.editingAnnot = null;
   if (resumeAudio) endVocabAudioPause();
 }
 
 async function saveVocab() {
   const meaning = document.getElementById('vpInput').value.trim();
-  if (!meaning || !state.pendingVocab) return;
-  const pv = state.pendingVocab;
-  const r = await API.put(`/api/listening_review/project/${state.currentProject.id}/vocab`, {
-    segment_id: pv.segmentId, word: pv.word, meaning,
-    start_offset: pv.startOffset, end_offset: pv.endOffset
-  });
+  if (!meaning) return;
+  let payload;
+  if (state.editingAnnot) {
+    const a = state.editingAnnot;
+    payload = { id: a.id, segment_id: a.segment_id, word: a.word, meaning, start_offset: a.start_offset, end_offset: a.end_offset };
+  } else if (state.pendingVocab) {
+    const pv = state.pendingVocab;
+    payload = { segment_id: pv.segmentId, word: pv.word, meaning, start_offset: pv.startOffset, end_offset: pv.endOffset };
+  } else {
+    return;
+  }
+  const r = await API.put(`/api/listening_review/project/${state.currentProject.id}/vocab`, payload);
   if (r.success && r.data) {
     state.currentData = r.data;
     renderLyrics();
     refreshNotesView();
     updateNotesButton();
-    showToast('标注已保存');
+    showToast(payload.id ? '释义已更新' : '生词已保存', 'success');
+  } else if (r.error) {
+    showToast(r.error, 'error');
   }
   hideVocabPopover();
 }
@@ -1181,39 +1205,41 @@ async function deleteVocab() {
     renderLyrics();
     refreshNotesView();
     updateNotesButton();
-    showToast('标注已删除');
+    showToast('生词已删除');
   }
   hideVocabPopover();
 }
 
 document.getElementById('vpInput').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') { e.preventDefault(); saveVocab(); }
+  if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); saveVocab(); }
   if (e.key === 'Escape') hideVocabPopover();
 });
 
-// Dismiss toolbar / popovers on outside click
+// Dismiss toolbar / popovers / picker on outside click
 document.addEventListener('mousedown', (e) => {
   const vpop    = document.getElementById('vocabPopover');
   const npop    = document.getElementById('notePopover');
   const toolbar = document.getElementById('selectionToolbar');
+  // 点的是播放键：只收起浮层，播放交给按钮自己（否则先自动恢复播放、再被按钮暂停）
+  const resumeAudio = !e.target.closest('#playBtn');
 
-  if (!vpop.classList.contains('hidden') && !vpop.contains(e.target)) {
-    hideVocabPopover();
-    return;
-  }
-  if (!npop.classList.contains('hidden') && !npop.contains(e.target)) {
-    hideNotePopover();
-    return;
-  }
-  if (!toolbar.classList.contains('hidden') && !toolbar.contains(e.target)) {
-    hideSelectionToolbar();
+  if (!vpop.hidden && !vpop.contains(e.target)) { hideVocabPopover({ resumeAudio }); return; }
+  if (!npop.hidden && !npop.contains(e.target)) { hideNotePopover({ resumeAudio }); return; }
+  if (!toolbar.hidden && !toolbar.contains(e.target)) {
+    hideSelectionToolbar({ resumeAudio });
     state.pendingVocab = null;
+    return;
   }
+  if (state.pickerSeg !== null && !e.target.closest('.lr-why__picker')) closeErrorPicker({ resumeAudio });
 });
 
 // ===================================================================
 //  Notes (rich note on a word / sentence)
 // ===================================================================
+function setNoteMode(mode) {
+  document.getElementById('npEditMode').hidden = mode !== 'edit';
+  document.getElementById('npViewMode').hidden = mode !== 'view';
+}
 
 // Open the editor for a brand-new note on the current selection.
 function openNoteAdd(pending, rect) {
@@ -1225,10 +1251,9 @@ function openNoteAdd(pending, rect) {
   const pop = document.getElementById('notePopover');
   document.getElementById('npQuote').textContent = pending.word;
   document.getElementById('npInput').value = '';
-  document.getElementById('npEditMode').classList.remove('hidden');
-  document.getElementById('npViewMode').classList.add('hidden');
+  setNoteMode('edit');
 
-  pop.classList.remove('hidden');
+  pop.hidden = false;
   positionPopover(pop, rect);
   setTimeout(() => document.getElementById('npInput').focus(), 30);
 }
@@ -1241,6 +1266,7 @@ function openNoteView(noteEl) {
 
   beginVocabAudioPause();
   hideSelectionToolbar({ resumeAudio: false });
+  hideVocabPopover({ resumeAudio: false });
   state.viewingNote = note;
   state.notePending = null;
   state.editingNote = null;
@@ -1248,10 +1274,10 @@ function openNoteView(noteEl) {
   const pop = document.getElementById('notePopover');
   document.getElementById('npQuote').textContent = note.quote;
   document.getElementById('npBody').textContent = note.note;
-  document.getElementById('npEditMode').classList.add('hidden');
-  document.getElementById('npViewMode').classList.remove('hidden');
+  document.getElementById('npDate').textContent = note.created_at ? formatDate(note.created_at) : '';
+  setNoteMode('view');
 
-  pop.classList.remove('hidden');
+  pop.hidden = false;
   positionPopover(pop, noteEl.getBoundingClientRect());
 }
 
@@ -1260,14 +1286,13 @@ function editCurrentNote() {
   if (!state.viewingNote) return;
   state.editingNote = state.viewingNote;
   document.getElementById('npInput').value = state.viewingNote.note;
-  document.getElementById('npEditMode').classList.remove('hidden');
-  document.getElementById('npViewMode').classList.add('hidden');
+  setNoteMode('edit');
   setTimeout(() => document.getElementById('npInput').focus(), 30);
 }
 
 async function saveNote() {
   const body = document.getElementById('npInput').value.trim();
-  if (!body) { showToast('请输入笔记内容'); return; }
+  if (!body) { showToast('请输入笔记内容', 'error'); return; }
 
   let payload;
   if (state.editingNote) {
@@ -1285,9 +1310,9 @@ async function saveNote() {
     renderLyrics();
     refreshNotesView();
     updateNotesButton();
-    showToast('笔记已保存');
+    showToast('笔记已保存', 'success');
   } else if (r.error) {
-    showToast(r.error);
+    showToast(r.error, 'error');
   }
   hideNotePopover();
 }
@@ -1307,7 +1332,7 @@ async function deleteNote() {
 }
 
 function hideNotePopover({ resumeAudio = true } = {}) {
-  document.getElementById('notePopover').classList.add('hidden');
+  document.getElementById('notePopover').hidden = true;
   state.notePending = null;
   state.viewingNote = null;
   state.editingNote = null;
@@ -1320,65 +1345,53 @@ document.getElementById('npInput').addEventListener('keydown', (e) => {
 });
 
 // ===================================================================
-//  Notes Article View (single article — context-first 批注稿)
+//  「本篇」栏：打卡 / 标熟 / 本篇笔记
 // ===================================================================
 function updateNotesButton() {
   const n = (state.currentData?.notes || []).length + (state.currentData?.vocab_annotations || []).length;
-  const el = document.getElementById('notesCount');
-  if (el) el.textContent = n > 0 ? `(${n})` : '';
+  document.getElementById('notesCount').textContent = n > 0 ? String(n) : '';
+  renderSideNums();
 }
 
-function openNotesView() {
-  const v = document.getElementById('notesView');
-  v.classList.remove('hidden');
-  setNotesFilter(state.notesFilter || 'all');
-  requestAnimationFrame(() => {
-    document.getElementById('notesViewOverlay').classList.remove('opacity-0');
-    const card = document.getElementById('notesViewCard');
-    card.classList.remove('opacity-0', 'scale-95');
-  });
-}
-
-function closeNotesView() {
-  document.getElementById('notesViewOverlay').classList.add('opacity-0');
-  document.getElementById('notesViewCard').classList.add('opacity-0', 'scale-95');
-  setTimeout(() => document.getElementById('notesView').classList.add('hidden'), 300);
+function renderSideNums() {
+  if (!state.currentData) return;
+  const d = state.currentData;
+  document.getElementById('sideStarNum').textContent = (d.starred_segments || []).length;
+  document.getElementById('sideNotesNum').textContent = (d.notes || []).length + (d.vocab_annotations || []).length;
+  document.getElementById('sideCheckinNum').textContent = state.currentProject?.checkin_count || 0;
 }
 
 function refreshNotesView() {
-  if (!document.getElementById('notesView').classList.contains('hidden')) renderNotesView();
+  renderNotesView();
 }
 
 function setNotesFilter(f) {
   state.notesFilter = f;
   document.querySelectorAll('.notes-filter-btn').forEach(b => {
-    const active = b.dataset.filter === f;
-    b.classList.toggle('bg-blue-500', active);
-    b.classList.toggle('text-white', active);
-    b.classList.toggle('border-blue-500', active);
-    b.classList.toggle('bg-slate-50', !active);
-    b.classList.toggle('text-slate-500', !active);
-    b.classList.toggle('border-slate-200', !active);
+    const on = b.dataset.filter === f;
+    b.classList.toggle('is-on', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
   });
   renderNotesView();
 }
+document.querySelectorAll('.notes-filter-btn').forEach(b => b.addEventListener('click', () => setNotesFilter(b.dataset.filter)));
 
 // Render a sentence with one entry's span highlighted (no tooltip — for reading).
 function renderSentenceWithSpan(text, start, end, kind) {
   if (text == null) return '';
   const s = Math.max(0, Math.min(start ?? 0, text.length));
   const e = Math.max(s, Math.min(end ?? 0, text.length));
-  const cls = kind === 'note' ? 'ctx-mark note' : 'ctx-mark vocab';
+  const cls = kind === 'note' ? 'lr-note' : 'lr-vocab';
   return esc(text.substring(0, s)) + `<span class="${cls}">` + esc(text.substring(s, e)) + '</span>' + esc(text.substring(e));
 }
 
 function renderNotesView() {
   const body = document.getElementById('notesViewBody');
   const countEl = document.getElementById('notesViewCount');
-  document.getElementById('notesViewTitle').textContent = state.currentProject?.title || '本篇笔记';
+  if (!state.currentData) { body.innerHTML = ''; countEl.textContent = ''; return; }
 
   const segMap = {};
-  (state.currentData?.segments || []).forEach(s => { segMap[s.id] = s; });
+  (state.currentData.segments || []).forEach(s => { segMap[s.id] = s; });
 
   const mk = (kind, a) => {
     const seg = segMap[a.segment_id] || {};
@@ -1390,57 +1403,51 @@ function renderNotesView() {
       start: seg.start ?? 0, sentence: seg.text || ''
     };
   };
-  const notes = (state.currentData?.notes || []).map(n => mk('note', n));
-  const vocab = (state.currentData?.vocab_annotations || []).map(v => mk('vocab', v));
+  const notes = (state.currentData.notes || []).map(n => mk('note', n));
+  const vocab = (state.currentData.vocab_annotations || []).map(v => mk('vocab', v));
 
   const all = [...notes, ...vocab].sort((a, b) => a.start - b.start || a.startOff - b.startOff);
-  countEl.textContent = `${notes.length} 条笔记 · ${vocab.length} 个生词释义`;
+  countEl.textContent = `${notes.length} 笔记 · ${vocab.length} 生词`;
 
   const f = state.notesFilter;
   const items = all.filter(it => f === 'all' || it.kind === f);
 
   if (items.length === 0) {
-    const tip = f === 'vocab' ? '还没有生词释义' : f === 'note' ? '还没有笔记' : '还没有任何标注';
-    body.innerHTML = `
-      <div class="text-center py-16 text-slate-300 text-sm">
-        <div class="text-4xl mb-3">&#128221;</div>
-        ${tip}<br>
-        <span class="text-xs">在正文里选中词或句子，即可添加</span>
-      </div>`;
+    const tip = f === 'vocab' ? '还没有生词' : f === 'note' ? '还没有笔记' : '还没有笔记和生词';
+    body.innerHTML = `<div class="ui-empty"><p class="ui-empty__title">${tip}</p><p class="ui-empty__text">在左边字幕里选中词或句子，就能加释义或写笔记。</p></div>`;
     return;
   }
 
   body.innerHTML = items.map(it => {
     const isNote = it.kind === 'note';
-    const tag = isNote
-      ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:text-amber-300 dark:bg-amber-900">笔记</span>'
-      : '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">生词</span>';
-    const accent = isNote ? 'bg-amber-300' : 'bg-blue-300';
-    const editBtn = isNote
-      ? `<button onclick="editNoteFromView('${it.id}')" title="编辑" class="w-6 h-6 rounded flex items-center justify-center text-slate-400 hover:text-blue-500 hover:bg-blue-50 border-none bg-transparent cursor-pointer text-xs">&#9998;</button>`
-      : '';
-    const sentenceHtml = renderSentenceWithSpan(it.sentence, it.startOff, it.endOff, it.kind);
+    const tag = isNote ? '<span class="ui-tag">笔记</span>' : '<span class="ui-tag ui-tag--accent">生词</span>';
+    const what = isNote ? '这条笔记' : '这个生词';
     return `
-      <article class="group py-4 border-b border-slate-100 last:border-0 first:pt-0 dark:border-slate-800">
-        <div class="flex items-center gap-2 mb-2">
-          ${tag}
-          <button onclick="jumpToNote(${it.segId})" class="text-[11px] text-slate-400 hover:text-blue-500 font-mono border-none bg-transparent cursor-pointer p-0 inline-flex items-center gap-1" title="跳到音频此处">&#9655; ${formatTime(it.start)}</button>
-          <div class="ml-auto flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-            ${editBtn}
-            <button onclick="deleteFromView('${it.kind}','${it.id}')" title="删除" class="w-6 h-6 rounded flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 border-none bg-transparent cursor-pointer text-base leading-none">&times;</button>
+      <article class="lr-entry">
+        <div class="lr-entry__top">${tag}<button class="lr-entry__time" type="button" data-act="jump" data-seg-id="${it.segId}" aria-label="跳到 ${formatTime(it.start)}">${formatTime(it.start)}</button>
+          <div class="lr-entry__acts">
+            <button class="lr-icon" type="button" data-act="edit" data-kind="${it.kind}" data-id="${esc(it.id)}" aria-label="${isNote ? '编辑这条笔记' : '改这个生词的释义'}">${ICONS.edit}</button>
+            <button class="lr-icon lr-icon--danger" type="button" data-act="delete" data-kind="${it.kind}" data-id="${esc(it.id)}" aria-label="删除${what}">${ICONS.trash}</button>
           </div>
         </div>
-        <p class="text-[15px] md:text-base leading-[1.9] text-slate-700 select-text dark:text-slate-200">${sentenceHtml}</p>
-        <div class="mt-2.5 flex gap-2.5">
-          <div class="w-[3px] rounded-full ${accent} flex-shrink-0"></div>
-          <div class="text-[13.5px] text-slate-600 leading-relaxed whitespace-pre-wrap break-words flex-1 pt-0.5 dark:text-slate-300">${esc(it.body)}</div>
-        </div>
+        <div class="lr-entry__en">${renderSentenceWithSpan(it.sentence, it.startOff, it.endOff, it.kind)}</div>
+        <div class="lr-entry__body">${esc(it.body)}</div>
       </article>`;
   }).join('');
 }
 
+document.getElementById('notesViewBody').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-act]');
+  if (!btn) return;
+  if (btn.dataset.act === 'jump') jumpToNote(parseInt(btn.dataset.segId));
+  else if (btn.dataset.act === 'edit') {
+    if (btn.dataset.kind === 'note') editNoteFromView(btn.dataset.id);
+    else editVocabFromView(btn.dataset.id);
+  } else if (btn.dataset.act === 'delete') deleteFromView(btn.dataset.kind, btn.dataset.id);
+});
+
 function jumpToNote(segId) {
-  closeNotesView();
+  if (isDrawerMode()) toggleSide(false);
   const seg = state.currentData?.segments.find(s => s.id === segId);
   if (!seg) return;
   audioEl.currentTime = seg.start;
@@ -1448,12 +1455,22 @@ function jumpToNote(segId) {
   highlightSegment(segId);
 }
 
-function editNoteFromView(noteId) {
-  closeNotesView();
-  const el = document.querySelector(`.note-mark[data-note-id="${noteId}"]`);
-  if (!el) return;
+function scrollThen(el, fn) {
+  if (isDrawerMode()) toggleSide(false);
   el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-  setTimeout(() => { openNoteView(el); editCurrentNote(); }, 320);
+  setTimeout(fn, 360);
+}
+
+function editNoteFromView(noteId) {
+  const el = document.querySelector(`.lr-note[data-note-id="${CSS.escape(noteId)}"]`);
+  if (!el) return;
+  scrollThen(el, () => { openNoteView(el); editCurrentNote(); });
+}
+
+function editVocabFromView(vocabId) {
+  const el = document.querySelector(`.lr-vocab[data-aid="${CSS.escape(vocabId)}"]`);
+  if (!el) return;
+  scrollThen(el, () => { showViewPopover(el); editVocabMeaning(); });
 }
 
 async function deleteFromView(kind, id) {
@@ -1470,16 +1487,10 @@ async function deleteFromView(kind, id) {
   }
 }
 
-document.getElementById('notesViewOverlay').addEventListener('click', closeNotesView);
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && !document.getElementById('notesView').classList.contains('hidden')) {
-    closeNotesView();
-  }
-});
-
 // ===================================================================
 //  Audio Player
 // ===================================================================
+let lastSavedAt = 0;
 audioEl.addEventListener('timeupdate', () => {
   if (!state.currentData) return;
   const t = audioEl.currentTime;
@@ -1500,10 +1511,21 @@ audioEl.addEventListener('timeupdate', () => {
     state.activeSegmentId = newActive;
     highlightSegment(newActive);
   }
+  // 只在真正播放时记「上次听到哪」，光打开看一眼不算
+  if (!audioEl.paused && Date.now() - lastSavedAt > 3000) {
+    lastSavedAt = Date.now();
+    saveLastPosition();
+  }
 });
 
-audioEl.addEventListener('play',  () => { document.getElementById('playBtn').innerHTML = '&#10074;&#10074;'; });
-audioEl.addEventListener('pause', () => { document.getElementById('playBtn').innerHTML = '&#9654;'; });
+function setPlayIcon(playing) {
+  const btn = document.getElementById('playBtn');
+  btn.innerHTML = playing ? ICONS.pause : ICONS.play;
+  btn.setAttribute('aria-label', playing ? '暂停' : '播放');
+}
+
+audioEl.addEventListener('play',  () => setPlayIcon(true));
+audioEl.addEventListener('pause', () => { setPlayIcon(false); saveLastPosition(); });
 audioEl.addEventListener('loadedmetadata', () => {
   document.getElementById('totTime').textContent = formatTime(audioEl.duration);
   audioEl.playbackRate = state.playbackRate;
@@ -1511,28 +1533,32 @@ audioEl.addEventListener('loadedmetadata', () => {
 
 function togglePlay() {
   markVocabAudioManualOverride();
-  audioEl.paused ? audioEl.play() : audioEl.pause();
+  audioEl.paused ? audioEl.play().catch(() => {}) : audioEl.pause();
 }
 
 function updateProgressBar(t) {
-  const dur = audioEl.duration || 1;
-  const pct = (t / dur) * 100;
+  const dur = audioEl.duration || 0;
+  const pct = dur ? Math.min(100, (t / dur) * 100) : 0;
   document.getElementById('progressFill').style.width = pct + '%';
   document.getElementById('progressThumb').style.left = pct + '%';
   document.getElementById('curTime').textContent = formatTime(t);
+  const wrap = document.getElementById('progressWrap');
+  wrap.setAttribute('aria-valuemin', '0');
+  wrap.setAttribute('aria-valuemax', String(Math.round(dur)));
+  wrap.setAttribute('aria-valuenow', String(Math.round(t)));
 }
 
 function highlightSegment(segId) {
   const container = document.getElementById('lyricsContainer');
-  container.querySelectorAll('.lyrics-line.active').forEach(el => el.classList.remove('active'));
-  const lineEl = container.querySelector(`.lyrics-line[data-seg-id="${segId}"]`);
+  container.querySelectorAll('.lr-line.is-active').forEach(el => el.classList.remove('is-active'));
+  const lineEl = container.querySelector(`.lr-line[data-seg-id="${segId}"]`);
   if (!lineEl) return;
 
-  lineEl.classList.add('active');
+  lineEl.classList.add('is-active');
 
-  // Scroll to center between top bar and player bar
-  const topH = document.getElementById('topBar').offsetHeight;
-  const bottomH = document.getElementById('playerBar').offsetHeight;
+  // 滚到导航栏和播放条之间的正中间
+  const topH = navHeight();
+  const bottomH = document.getElementById('lrPlayer').offsetHeight;
   const visibleH = window.innerHeight - topH - bottomH;
   const targetY = lineEl.getBoundingClientRect().top + window.scrollY - topH - visibleH / 2 + lineEl.offsetHeight / 2;
   window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
@@ -1542,12 +1568,12 @@ function seekToSegment(segId) {
   const seg = state.currentData.segments.find(s => s.id === segId);
   if (!seg) return;
   audioEl.currentTime = seg.start;
-  if (audioEl.paused) audioEl.play();
+  if (audioEl.paused) audioEl.play().catch(() => {});
   state.activeSegmentId = segId;
   highlightSegment(segId);
 }
 
-// Progress bar interaction
+// Progress bar interaction (mouse, touch and pen)
 (function initProgressBar() {
   const wrap = document.getElementById('progressWrap');
   let dragging = false;
@@ -1558,13 +1584,15 @@ function seekToSegment(segId) {
     if (audioEl.duration) audioEl.currentTime = ratio * audioEl.duration;
   }
 
-  wrap.addEventListener('mousedown', (e) => { dragging = true; seekFromEvent(e); });
-  document.addEventListener('mousemove', (e) => { if (dragging) seekFromEvent(e); });
-  document.addEventListener('mouseup', () => { dragging = false; });
-
-  wrap.addEventListener('touchstart',  (e) => { dragging = true; seekFromEvent(e.touches[0]); }, { passive: true });
-  wrap.addEventListener('touchmove',   (e) => { if (dragging) seekFromEvent(e.touches[0]); }, { passive: true });
-  wrap.addEventListener('touchend',    ()  => { dragging = false; });
+  wrap.addEventListener('pointerdown', (e) => { dragging = true; wrap.setPointerCapture(e.pointerId); seekFromEvent(e); });
+  wrap.addEventListener('pointermove', (e) => { if (dragging) seekFromEvent(e); });
+  wrap.addEventListener('pointerup', () => { dragging = false; });
+  wrap.addEventListener('pointercancel', () => { dragging = false; });
+  wrap.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') e.stopPropagation();
+    if (e.key === 'ArrowLeft') audioEl.currentTime = Math.max(0, audioEl.currentTime - 3);
+    if (e.key === 'ArrowRight') audioEl.currentTime = Math.min(audioEl.duration || 0, audioEl.currentTime + 3);
+  });
 })();
 
 // Speed control
@@ -1572,38 +1600,36 @@ function setSpeed(rate) {
   state.playbackRate = rate;
   audioEl.playbackRate = rate;
   document.querySelectorAll('.speed-btn').forEach(b => {
-    const isActive = parseFloat(b.dataset.rate) === rate;
-    b.classList.toggle('bg-blue-500', isActive);
-    b.classList.toggle('text-white', isActive);
-    b.classList.toggle('border-blue-500', isActive);
-    b.classList.toggle('bg-slate-50', !isActive);
-    b.classList.toggle('text-slate-500', !isActive);
-    b.classList.toggle('border-slate-200', !isActive);
-    b.classList.toggle('hover:bg-slate-100', !isActive);
+    const on = parseFloat(b.dataset.rate) === rate;
+    b.classList.toggle('is-on', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
   });
 }
 
 // ===================================================================
-//  Star Toggle
+//  Star Toggle & error reasons
 // ===================================================================
 async function toggleStar(segId) {
   if (!state.currentProject) return;
   const r = await API.put(`/api/listening_review/project/${state.currentProject.id}/star`, { segment_id: segId });
-  if (!r.success) return;
+  if (!r.success) { showToast(r.error || '收藏失败', 'error'); return; }
 
   state.currentData.starred_segments = r.starred_segments;
-  const lineEl = document.querySelector(`.lyrics-line[data-seg-id="${segId}"]`);
+  const lineEl = document.querySelector(`.lr-line[data-seg-id="${segId}"]`);
   if (!lineEl) return;
 
   const isStarred = r.starred_segments.includes(segId);
-  lineEl.classList.toggle('starred', isStarred);
+  if (!isStarred && state.pickerSeg === segId) closeErrorPicker();
+  lineEl.classList.toggle('is-starred', isStarred);
   const btn = lineEl.querySelector('.star-btn');
   if (btn) {
-    btn.textContent = isStarred ? '\u2605' : '\u2606';
-    btn.classList.toggle('text-amber-400', isStarred);
-    btn.classList.toggle('opacity-100', isStarred);
-    btn.classList.toggle('text-slate-300', !isStarred);
+    btn.innerHTML = isStarred ? ICONS.starOn : ICONS.star;
+    btn.classList.toggle('is-on', isStarred);
+    btn.setAttribute('aria-pressed', isStarred ? 'true' : 'false');
+    btn.setAttribute('aria-label', isStarred ? '取消收藏' : '收藏这句');
   }
+  syncErrorTagUi(segId);
+  renderSideNums();
 }
 
 async function toggleErrorTag(segId, tag) {
@@ -1612,10 +1638,9 @@ async function toggleErrorTag(segId, tag) {
     segment_id: segId,
     tag
   });
-  if (!r.success) { showToast(r.error || '分类失败'); return; }
+  if (!r.success) { showToast(r.error || '分类失败', 'error'); return; }
   state.currentData.error_tags = r.error_tags || {};
-  const lineEl = document.querySelector(`.lyrics-line[data-seg-id="${segId}"]`);
-  syncErrorTagUi(lineEl, segId);
+  syncErrorTagUi(segId);
 }
 
 // ===================================================================
@@ -1624,51 +1649,54 @@ async function toggleErrorTag(segId, tag) {
 async function toggleMastered() {
   if (!state.currentProject) return;
   const r = await API.put(`/api/listening_review/project/${state.currentProject.id}/mastered`, {});
-  if (!r.success) { showToast(r.error || '操作失败'); return; }
+  if (!r.success) { showToast(r.error || '操作失败', 'error'); return; }
   state.currentProject.mastered = r.mastered;
   const proj = state.projects.find(p => p.id === state.currentProject.id);
   if (proj) proj.mastered = r.mastered;
   updateMasteredBtn(r.mastered);
-  showToast(r.mastered ? '已标记为掌握' : '已取消标熟');
+  showToast(r.mastered ? '已标记为掌握' : '已取消标熟', 'success');
 }
 
 function updateMasteredBtn(mastered) {
   const btn = document.getElementById('masteredBtn');
-  if (!btn) return;
-  if (mastered) {
-    btn.innerHTML = '&#10003; 已掌握';
-    btn.className = btn.className.replace(/bg-slate-100 text-slate-500/g, '').replace(/bg-emerald-50 text-emerald-600/g, '');
-    btn.classList.add('bg-emerald-50', 'text-emerald-600');
-    btn.classList.remove('bg-slate-100', 'text-slate-500');
-  } else {
-    btn.innerHTML = '&#10003; 标熟';
-    btn.classList.remove('bg-emerald-50', 'text-emerald-600');
-    btn.classList.add('bg-slate-100', 'text-slate-500');
-  }
+  btn.classList.toggle('is-mastered', !!mastered);
+  btn.setAttribute('aria-pressed', mastered ? 'true' : 'false');
+  btn.innerHTML = mastered ? `${ICONS.check}已掌握` : '标熟';
+  btn.title = mastered ? '再点一次取消标熟' : '标记为已掌握';
 }
 
 async function doCheckin() {
   if (!state.currentProject) return;
   const r = await API.post(`/api/listening_review/project/${state.currentProject.id}/checkin`, {});
-  if (!r.success) { showToast(r.error || '操作失败'); return; }
+  if (!r.success) { showToast(r.error || '操作失败', 'error'); return; }
   state.currentProject.checkin_count = r.checkin_count;
   const proj = state.projects.find(p => p.id === state.currentProject.id);
   if (proj) proj.checkin_count = r.checkin_count;
   updateCheckinBtn(r.checkin_count);
-  showToast(`打卡成功！已打卡 ${r.checkin_count} 次`);
+  showToast(`打卡成功，已打卡 ${r.checkin_count} 次`, 'success');
 }
 
 function updateCheckinBtn(count) {
-  const span = document.getElementById('checkinCount');
-  if (span) span.textContent = count > 0 ? `(${count})` : '';
+  document.getElementById('sideCheckinNum').textContent = count || 0;
 }
 
 // ===================================================================
 //  Keyboard Shortcuts
 // ===================================================================
 document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if (!document.getElementById('uploadModal').hidden) { closeUploadModal(); return; }
+    if (!document.getElementById('deleteModal').hidden) { closeDeleteDialog(); return; }
+    if (!document.getElementById('vocabPopover').hidden) { hideVocabPopover(); return; }
+    if (!document.getElementById('notePopover').hidden) { hideNotePopover(); return; }
+    if (!document.getElementById('selectionToolbar').hidden) { hideSelectionToolbar(); state.pendingVocab = null; return; }
+    if (state.pickerSeg !== null) { closeErrorPicker(); return; }
+    if (state.view === 'detail' && state.sideOpen && isDrawerMode()) { toggleSide(false); return; }
+    return;
+  }
   if (state.view !== 'detail') return;
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
   if (e.code === 'Space')      { e.preventDefault(); togglePlay(); }
   else if (e.code === 'ArrowLeft')  { e.preventDefault(); audioEl.currentTime = Math.max(0, audioEl.currentTime - 3); }
   else if (e.code === 'ArrowRight') { e.preventDefault(); audioEl.currentTime = Math.min(audioEl.duration || 0, audioEl.currentTime + 3); }
@@ -1677,11 +1705,10 @@ document.addEventListener('keydown', (e) => {
 // ===================================================================
 //  Utilities
 // ===================================================================
+// 文本和属性值都会经过这里，所以引号也要转义（生词释义里有英文双引号时不会弄坏那一句）
 function esc(s) {
-  if (!s) return '';
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
+  if (s == null) return '';
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
 function formatTime(s) {
@@ -1691,40 +1718,23 @@ function formatTime(s) {
   return m + ':' + (sec < 10 ? '0' : '') + sec;
 }
 
-let toastTimer = null;
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('toast-show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('toast-show'), 3000);
+function formatDate(value) {
+  const d = new Date(value);
+  if (isNaN(d)) return '';
+  const now = new Date();
+  const md = `${d.getMonth() + 1} 月 ${d.getDate()} 日`;
+  return d.getFullYear() === now.getFullYear() ? md : `${d.getFullYear()} 年 ${md}`;
 }
 
-// Close modal on overlay click
-document.getElementById('uploadModal').addEventListener('click', (e) => {
-  if (e.target === document.getElementById('uploadModal')) closeUploadModal();
-});
+function formatSize(bytes) {
+  if (bytes >= 1024 * 1024) return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+  return Math.max(1, Math.round(bytes / 1024)) + ' KB';
+}
 
-// Drag & drop on file label
-(function initDragDrop() {
-  const label = document.getElementById('fileDropLabel');
-  ['dragenter', 'dragover'].forEach(ev => {
-    label.addEventListener(ev, (e) => { e.preventDefault(); label.classList.add('border-blue-500', 'bg-blue-50'); });
-  });
-  ['dragleave', 'drop'].forEach(ev => {
-    label.addEventListener(ev, (e) => { e.preventDefault(); label.classList.remove('border-blue-500', 'bg-blue-50'); });
-  });
-  label.addEventListener('drop', (e) => {
-    const file = e.dataTransfer.files[0];
-    if (file) {
-      const input = document.getElementById('fileInput');
-      const dt = new DataTransfer();
-      dt.items.add(file);
-      input.files = dt.files;
-      onFileSelected(input);
-    }
-  });
-})();
+function showToast(msg, type) {
+  if (window.IELTSUI && IELTSUI.toast) IELTSUI.toast(msg, type || 'info');
+  else console.log(msg);
+}
 </script>
 </body>
 </html>
