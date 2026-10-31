@@ -80,6 +80,8 @@
 
 * [IELTS Lab 设计系统](https://claude.ai/artifact/7P4rmuAtB389e4FDcYLFMC)：配色 / 字号 / 圆角等令牌（亮色 + 暗色）、导航栏与通用组件、「名称与导航」对照表。令牌在 `static/theme.css` 顶部（每个页面都有），组件在 `static/plain.css`（改版后的页面在 theme.css 之后加载它，并给 body 加 `ui-plain`）。改样式时设计系统和这两个文件一起改。
 
+* [首页 · 改版](https://claude.ai/artifact/WmSUNPMJpDoLx7dtMiMN4F)：三列网格，所有框的边线对齐；亮色、暗色、新账号（没有数据）三块画板。页面是 `templates/modules.html`，数据来自 `/api/home`（`routers/home.py`）。合集播放和 Reading 真题不在首页放入口，网址照常能开。
+
 写作模块（`templates/writing_practice.html`）的界面画在 claude.ai 的设计画布上，调样式先在画布里改，再改代码：
 
 * [写作逻辑训练 · 当前线上样式](https://claude.ai/artifact/HRkUGCw4bpjoub42N6MYFt)：2026-10-19 按线上页面（提交 `ac89a72`）原样搬过去的，桌面 23 块、手机 6 块、暗色 3 块画板，顶部导航条是共用组件。

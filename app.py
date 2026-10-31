@@ -29,6 +29,7 @@ from routers.asr_transcription import asr_bp
 from routers.writing_logic import writing_bp
 from routers.listening_review import listening_review_bp
 from routers.learning import learning_bp
+from routers.home import home_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(speaking_bp)
@@ -42,6 +43,7 @@ app.register_blueprint(asr_bp)
 app.register_blueprint(writing_bp)
 app.register_blueprint(listening_review_bp)
 app.register_blueprint(learning_bp)
+app.register_blueprint(home_bp)
 
 # ==================== 默认要求登录 ====================
 # 所有请求默认都要带有效的 Authorization: Bearer <token>，只有下面列出的端点例外。
