@@ -1,13 +1,13 @@
 (function () {
   // 手机上 7 个模块横排放不下：以前是一条横滑的链接带，实宽 166px 装 379px 的内容，
   // 后 4 个模块既看不见也没有可滑的提示。窄屏改成「字标 + 当前模块 ▾ + 主题 + 头像」，
-  // 模块列表收进一个下拉面板，一屏全见。宽屏仍然是原来的七个链接平铺。
+  // 模块列表收进一个下拉面板，一屏全见。宽屏是七个链接平铺，分「听说读写 ｜ 积累与交流」两组。
   var ICON = {
-    home: '<path d="M2.5 7.5 8 3l5.5 4.5V13h-3.5V9.5h-4V13H2.5z"></path>',
     speaking: '<rect x="6" y="2" width="4" height="7" rx="2"></rect><path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2"></path>',
     reading: '<path d="M2.5 3.5h4A1.5 1.5 0 0 1 8 5v8a1.5 1.5 0 0 0-1.5-1.5h-4zM13.5 3.5h-4A1.5 1.5 0 0 0 8 5v8a1.5 1.5 0 0 1 1.5-1.5h4z"></path>',
     vocab: '<path d="M3 4.5h10M3 8h10M3 11.5h6"></path>',
     writing: '<path d="M11 2.5 13.5 5 5.5 13H3v-2.5z"></path>',
+    tips: '<path d="M6 12.5h4M6.5 14.5h3"></path><path d="M8 1.8a4.2 4.2 0 0 0-2.4 7.6c.5.4.9 1 .9 1.6v.3h3v-.3c0-.6.4-1.2.9-1.6A4.2 4.2 0 0 0 8 1.8z"></path>',
     listening: '<path d="M3 9.5V8a5 5 0 0 1 10 0v1.5"></path><path d="M3 9.8h1.6a.7.7 0 0 1 .7.7v2a.7.7 0 0 1-.7.7H3.6a.7.7 0 0 1-.6-.7zM13 9.8h-1.6a.7.7 0 0 0-.7.7v2a.7.7 0 0 0 .7.7h1a.7.7 0 0 0 .6-.7z"></path>',
     board: '<path d="M13.5 8.5c0 2.5-2.5 4.5-5.5 4.5-.8 0-1.5-.1-2.2-.4L2.5 13.5l1-2.6C2.6 10 2.5 9.3 2.5 8.5c0-2.5 2.5-4.5 5.5-4.5s5.5 2 5.5 4.5z"></path>'
   };
@@ -25,20 +25,22 @@
 
   var CARET = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 6 8 10.5 12.5 6"></path></svg>';
 
+  // 名称与顺序见设计系统「名称与导航」一节。字标 IELTS Lab 本身回首页，所以不再放「首页」。
+  // Reading 真题（/reading）不给入口，网址照常能开；Speaking 合集（/combined）归在口语下。
   var moduleLinks = [
-    { label: '首页', href: '/', match: ['/'], icon: ICON.home },
     { label: '口语', href: '/speaking', match: ['/speaking', '/combined'], icon: ICON.speaking },
-    { label: '阅读', href: '/reading', match: ['/reading', '/intensive', '/vocab_summary'], icon: ICON.reading },
-    { label: '词汇', href: '/vocabulary', match: ['/vocabulary'], icon: ICON.vocab },
+    { label: '精读', href: '/intensive', match: ['/intensive', '/vocab_summary'], icon: ICON.reading },
     { label: '写作', href: '/writing_practice', match: ['/writing_practice'], icon: ICON.writing },
     { label: '听力', href: '/listening_review', match: ['/listening_review'], icon: ICON.listening },
+    { label: '单词本', href: '/vocabulary', match: ['/vocabulary'], icon: ICON.vocab, groupStart: true },
+    { label: '技巧', href: '/study_techniques', match: ['/study_techniques'], icon: ICON.tips },
     { label: '交流', href: '/message_board', match: ['/message_board'], icon: ICON.board }
   ];
 
   function isActive(link) {
     var path = window.location.pathname;
     return link.match.some(function (prefix) {
-      return prefix === '/' ? path === '/' : path.indexOf(prefix) === 0;
+      return path === prefix || path.indexOf(prefix + '/') === 0;
     });
   }
 
@@ -79,14 +81,17 @@
     nav.setAttribute('aria-label', '全局导航');
     nav.innerHTML = [
       '<a class="app-shell-mark" href="/" aria-label="回首页">IL</a>',
-      '<a class="app-shell-brand" href="/">IELTS Lab</a>',
+      '<a class="app-shell-brand" href="/" aria-label="IELTS Lab · 回首页"><span class="app-shell-brand__mark" aria-hidden="true">IL</span>IELTS Lab</a>',
       '<button type="button" class="app-shell-current" aria-expanded="false" aria-controls="appShellPanel" aria-haspopup="true">',
       '<span class="app-shell-current__name">' + escapeHtml(active ? active.label : 'IELTS Lab') + '</span>',
       '<span class="app-shell-current__caret">' + CARET + '</span>',
       '</button>',
       '<div class="app-shell-links">',
       moduleLinks.map(function (link) {
-        return '<a class="app-shell-link ' + (isActive(link) ? 'is-active' : '') + '" href="' + link.href + '">' + escapeHtml(link.label) + '</a>';
+        var on = isActive(link);
+        return (link.groupStart ? '<span class="app-shell-sep" aria-hidden="true"></span>' : '') +
+          '<a class="app-shell-link ' + (on ? 'is-active' : '') + '" href="' + link.href + '"' +
+          (on ? ' aria-current="page"' : '') + '>' + escapeHtml(link.label) + '</a>';
       }).join(''),
       '</div>',
       wantsTheme ? '<button type="button" class="app-shell-theme" aria-label="切换深浅色"></button>' : '',

@@ -76,12 +76,16 @@
 
 ## 🎨 设计稿（在线画布）
 
+全站样式以写作逻辑训练页为准，整理成一套设计系统：
+
+* [IELTS Lab 设计系统](https://claude.ai/artifact/7P4rmuAtB389e4FDcYLFMC)：配色 / 字号 / 圆角等令牌（亮色 + 暗色）、导航栏与通用组件、「名称与导航」对照表。令牌在 `static/theme.css` 顶部（每个页面都有），组件在 `static/plain.css`（改版后的页面在 theme.css 之后加载它，并给 body 加 `ui-plain`）。改样式时设计系统和这两个文件一起改。
+
 写作模块（`templates/writing_practice.html`）的界面画在 claude.ai 的设计画布上，调样式先在画布里改，再改代码：
 
 * [写作逻辑训练 · 当前线上样式](https://claude.ai/artifact/HRkUGCw4bpjoub42N6MYFt)：2026-10-19 按线上页面（提交 `ac89a72`）原样搬过去的，桌面 23 块、手机 6 块、暗色 3 块画板，顶部导航条是共用组件。
 * [写作逻辑训练 · 课堂 Focus 全站设计](https://claude.ai/artifact/6bz4MnRnVDdJQDmToRi4hA)：2026-09 改版用的设计稿（暖色、衬线标题）。10-16 页面改成朴素风格后，它已经和线上对不上了，只作历史参考。
 
-两张画布都是私有的，只有作者的 claude.ai 账号能打开。
+这些画布都是私有的，只有作者的 claude.ai 账号能打开。
 
 ## 🛠️ 近期重构纪要 (v2.0)
 

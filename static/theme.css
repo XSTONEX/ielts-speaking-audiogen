@@ -63,6 +63,112 @@ html[data-theme="dark"] {
   background: var(--bg-page);
 }
 
+/* ============================================================
+   朴素风格令牌：全站统一的样式（取自写作逻辑训练页）。
+   与设计系统「IELTS Lab 设计系统」的 tokens.json 一一对应，改值两边一起改：
+   https://claude.ai/artifact/7P4rmuAtB389e4FDcYLFMC
+   放在 theme.css 里，是因为每个页面都加载它：导航栏、提示条直接用这套令牌，
+   改版后的页面再加载 static/plain.css 拿到组件样式。
+   写作页、精读页在自己的 body 上还有一份同名同值的令牌，互不冲突。
+   ============================================================ */
+:root {
+  --w-paper: #f7f7f5;
+  --w-surface: #ffffff;
+  --w-sunken: #f3f3f1;
+  --w-line: #e3e3df;
+  --w-line-strong: #cfcfca;
+  --w-ink: #1f1f1f;
+  --w-ink2: #555555;
+  --w-ink3: #8a8a85;
+  --w-big: #2f5d9e;
+  --w-big-hover: #244a80;
+  --w-big-soft: #eef3fa;
+  --w-big-line: #b7c8e2;
+  --w-big-track: #e8e8e4;
+  /* 压在主色实底上的字：暗色主色提亮后白字只有 2.2:1，换成纸面深色 */
+  --w-on-big: #ffffff;
+  --w-err: #b3261e;
+  --w-err-soft: #fbefee;
+  --w-err-line: #efcfcc;
+  --w-err-ink: #7a4a45;
+  --w-ok: #2e7d4f;
+  --w-ok-soft: #edf6f0;
+  --w-ok-line: #c9e2d2;
+  --w-warn: #9a6400;
+  --w-warn-soft: #faf3e3;
+  --w-hl-yellow: #f7e6a8;
+  --w-hl-green: #d6efd8;
+  --w-hl-pink: #f8dce8;
+  --w-hl-blue: #d9e8f6;
+  --w-hl-ink: #1f1f1f;
+  --w-mask: rgba(247, 247, 245, 0.78);
+  --w-shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --w-ring: 0 0 0 3px rgba(47, 93, 158, 0.15);
+
+  --font-cn: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  --font-en: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  /* 字号只有四档 */
+  --w-fs-meta: 13px;
+  --w-fs-ui: 15px;
+  --w-fs-en: 17px;
+  --w-fs-title: 22px;
+
+  --gap-4: 4px;
+  --gap-8: 8px;
+  --gap-12: 12px;
+  --gap-18: 18px;
+  --pad-card-y: 22px;
+  --pad-card-x: 24px;
+  --gutter: 44px;
+  --rail-w: 228px;
+  --page-max: 1180px;
+
+  --w-r-card: 8px;
+  --w-r-inner: 6px;
+  --w-r-chip: 6px;
+  --w-r-round: 50%;
+
+  --h-btn: 46px;
+  --h-nav: 40px;
+  --h-sm: 34px;
+  --h-icon: 44px;
+  --h-appbar: 56px;
+}
+
+html[data-theme="dark"] {
+  --w-paper: #161616;
+  --w-surface: #1e1e1e;
+  --w-sunken: #1a1a1a;
+  --w-line: #2f2f2f;
+  --w-line-strong: #404040;
+  --w-ink: #ececea;
+  --w-ink2: #adada8;
+  --w-ink3: #7c7c77;
+  --w-big: #8ab0e6;
+  --w-big-hover: #a7c4ee;
+  --w-big-soft: rgba(138, 176, 230, 0.13);
+  --w-big-line: rgba(138, 176, 230, 0.35);
+  --w-big-track: #2f2f2f;
+  --w-on-big: #161616;
+  --w-err: #ec8379;
+  --w-err-soft: rgba(236, 131, 121, 0.12);
+  --w-err-line: rgba(236, 131, 121, 0.32);
+  --w-err-ink: #c9a49c;
+  --w-ok: #7cc293;
+  --w-ok-soft: rgba(124, 194, 147, 0.11);
+  --w-ok-line: rgba(124, 194, 147, 0.3);
+  --w-warn: #ddb36a;
+  --w-warn-soft: rgba(221, 179, 106, 0.13);
+  --w-hl-yellow: rgba(247, 230, 168, 0.24);
+  --w-hl-green: rgba(214, 239, 216, 0.2);
+  --w-hl-pink: rgba(248, 220, 232, 0.2);
+  --w-hl-blue: rgba(217, 232, 246, 0.2);
+  --w-hl-ink: #ececea;
+  --w-mask: rgba(22, 22, 22, 0.78);
+  --w-shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.45);
+  --w-ring: 0 0 0 3px rgba(138, 176, 230, 0.22);
+}
+
 html[data-theme="dark"] body.theme-page {
   background: var(--page-gradient) !important;
   color: var(--text-primary);
@@ -248,15 +354,21 @@ body.page-modules #themeSwitcherMount .theme-switcher {
   left: 0;
   right: 0;
   z-index: 1200;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 22px;
   height: var(--app-shell-h);
-  padding: 0 18px;
-  background: rgba(255, 255, 255, 0.92);
-  border-bottom: 1px solid var(--border-default);
-  box-shadow: 0 10px 28px rgba(var(--shadow-rgb), 0.08);
-  backdrop-filter: blur(16px);
+  padding: 0 24px;
+  /* 朴素风格：白底一条细线，不加阴影和毛玻璃。字体写死，不跟各页面的正文字体走 */
+  background: var(--w-surface);
+  border-bottom: 1px solid var(--w-line);
+  color: var(--w-ink);
+  font-family: var(--font-cn);
+  font-size: var(--w-fs-ui);
+  line-height: 1.4;
+  letter-spacing: 0;
+  -webkit-font-smoothing: antialiased;
 }
 
 body.has-app-shell {
@@ -290,23 +402,38 @@ body.has-app-shell.page-message-board .modal-overlay { z-index: 1300; }
 body.has-app-shell.page-listening #uploadModal,
 body.has-app-shell.page-listening #notesView { z-index: 1300; }
 
-html[data-theme="dark"] .app-shell-nav {
-  background: rgba(16, 27, 45, 0.92);
-}
-
 .app-shell-brand {
   flex: 0 0 auto;
-  color: var(--text-primary);
-  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--w-ink);
+  font-size: var(--w-fs-ui);
+  font-weight: 600;
   text-decoration: none;
   letter-spacing: 0;
 }
 
+.app-shell-brand__mark {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--w-r-chip);
+  background: var(--w-big);
+  color: var(--w-on-big);
+  font-size: var(--w-fs-meta);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
 .app-shell-links {
   flex: 1 1 auto;
+  min-width: 0;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 2px;
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -317,24 +444,37 @@ html[data-theme="dark"] .app-shell-nav {
 
 .app-shell-link {
   flex: 0 0 auto;
-  color: var(--text-secondary);
+  height: var(--h-sm);
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--w-r-chip);
+  color: var(--w-ink2);
   text-decoration: none;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 7px 12px;
-  border-radius: 999px;
+  font-size: var(--w-fs-ui);
+  font-weight: 400;
+  white-space: nowrap;
   transition: background-color .15s ease, color .15s ease;
 }
 
 .app-shell-link:hover {
-  background: var(--bg-subtle);
-  color: var(--text-primary);
+  background: var(--w-sunken);
+  color: var(--w-ink);
 }
 
 .app-shell-link.is-active {
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: var(--w-big-soft);
+  color: var(--w-big);
   font-weight: 600;
+}
+
+/* 听说读写 ｜ 积累与交流 两组之间的竖线 */
+.app-shell-sep {
+  flex: 0 0 auto;
+  width: 1px;
+  height: 18px;
+  margin: 0 8px;
+  background: var(--w-line);
 }
 
 .app-shell-user {
@@ -342,28 +482,37 @@ html[data-theme="dark"] .app-shell-nav {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: var(--text-secondary);
-  font-size: 13px;
+  color: var(--w-ink2);
+  font-size: var(--w-fs-meta);
+}
+
+.app-shell-user__name {
+  max-width: 10em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .app-shell-theme {
+  position: relative;
   flex: 0 0 auto;
-  width: 38px;
-  height: 38px;
+  width: var(--h-sm);
+  height: var(--h-sm);
+  margin: 0;
   padding: 0;
-  border: 1px solid var(--border-default);
-  background: var(--bg-surface);
-  color: var(--text-secondary);
-  border-radius: 999px;
-  cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  /* 视觉 38，四周各留 3px 透明内边距凑够 44×44 的点击区 */
+  border: none;
+  border-radius: var(--w-r-chip);
+  background: transparent;
+  color: var(--w-ink2);
+  cursor: pointer;
   outline-offset: 3px;
-  transition: border-color .15s ease, color .15s ease, background-color .15s ease;
+  transition: background-color .15s ease, color .15s ease;
 }
 
+/* 视觉 34，点击区撑到 44×44 */
 .app-shell-theme::before {
   content: '';
   position: absolute;
@@ -371,36 +520,37 @@ html[data-theme="dark"] .app-shell-nav {
   height: 44px;
 }
 
-.app-shell-theme {
-  position: relative;
-}
-
 .app-shell-theme:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: var(--accent-soft);
+  background: var(--w-sunken);
+  color: var(--w-ink);
 }
 
 .app-shell-logout {
-  border: 1px solid var(--border-default);
-  background: var(--bg-surface);
-  color: var(--text-secondary);
-  border-radius: 999px;
-  padding: 7px 13px;
+  height: var(--h-sm);
+  margin: 0;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--w-line);
+  border-radius: var(--w-r-chip);
+  background: var(--w-surface);
+  color: var(--w-ink2);
+  font-family: var(--font-cn);
+  font-size: var(--w-fs-meta);
+  font-weight: 400;
+  line-height: 1;
   cursor: pointer;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 700;
+  transition: border-color .15s ease, color .15s ease;
 }
 
 .app-shell-logout:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--w-line-strong);
+  color: var(--w-ink);
 }
 
 /* ============================================================
    窄屏导航：字标 + 当前模块 ▾ + 主题 + 头像，模块列表进下拉面板。
-   这四个元素在宽屏上不出现，宽屏仍是原来的七个链接平铺。
+   这四个元素在宽屏上不出现，宽屏是七个链接平铺。
    ============================================================ */
 
 .app-shell-mark,
@@ -415,11 +565,11 @@ html[data-theme="dark"] .app-shell-nav {
   height: 34px;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-weight: 700;
-  font-size: 14px;
+  border-radius: var(--w-r-chip);
+  background: var(--w-big);
+  color: var(--w-on-big);
+  font-weight: 600;
+  font-size: var(--w-fs-meta);
   letter-spacing: 0.02em;
   text-decoration: none;
 }
@@ -428,23 +578,24 @@ html[data-theme="dark"] .app-shell-nav {
   flex: 0 1 auto;
   min-width: 0;
   height: 40px;
+  margin: 0;
   padding: 0 8px 0 10px;
   align-items: center;
   gap: 6px;
   border: none;
-  border-radius: 9px;
+  border-radius: var(--w-r-chip);
   background: transparent;
-  color: var(--text-primary);
-  font: inherit;
+  color: var(--w-ink);
+  font-family: var(--font-cn);
   cursor: pointer;
 }
 
 .app-shell-nav.is-panel-open .app-shell-current {
-  background: var(--bg-subtle);
+  background: var(--w-sunken);
 }
 
 .app-shell-current__name {
-  font-size: 16px;
+  font-size: var(--w-fs-en);
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
@@ -454,44 +605,27 @@ html[data-theme="dark"] .app-shell-nav {
 .app-shell-current__caret {
   display: inline-flex;
   flex: 0 0 auto;
-  color: var(--text-muted);
+  color: var(--w-ink3);
 }
 
 .app-shell-nav.is-panel-open .app-shell-current__caret {
   transform: rotate(180deg);
 }
 
-.app-shell-theme {
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
-  border: none;
-  border-radius: 9px;
-  background: transparent;
-  color: var(--text-secondary);
-  cursor: pointer;
-}
-
-.app-shell-theme:hover {
-  background: var(--bg-subtle);
-  color: var(--text-primary);
-}
-
 .app-shell-avatar {
   flex: 0 0 auto;
   width: 34px;
   height: 34px;
+  margin: 0;
+  padding: 0;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--border-default);
-  border-radius: 999px;
-  background: var(--bg-subtle);
-  color: var(--text-secondary);
-  font: inherit;
-  font-size: 13px;
+  border: 1px solid var(--w-line);
+  border-radius: 50%;
+  background: var(--w-sunken);
+  color: var(--w-ink2);
+  font-family: var(--font-cn);
+  font-size: var(--w-fs-meta);
   cursor: pointer;
 }
 
@@ -503,7 +637,7 @@ html[data-theme="dark"] .app-shell-nav {
   bottom: 0;
   /* 压在栏下面：面板打开时顶栏本身仍然是亮的 */
   z-index: 1190;
-  background: rgba(15, 23, 42, 0.44);
+  background: var(--w-mask);
 }
 
 .app-shell-panel {
@@ -514,10 +648,13 @@ html[data-theme="dark"] .app-shell-nav {
   z-index: 1210;
   box-sizing: border-box;
   padding: 10px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-default);
-  border-radius: 16px;
-  box-shadow: 0 22px 50px -18px rgba(var(--shadow-rgb), 0.5);
+  background: var(--w-surface);
+  border: 1px solid var(--w-line);
+  border-radius: var(--w-r-card);
+  box-shadow: var(--w-shadow-lg);
+  color: var(--w-ink);
+  font-family: var(--font-cn);
+  line-height: 1.4;
 }
 
 .app-shell-scrim[hidden],
@@ -537,11 +674,11 @@ html[data-theme="dark"] .app-shell-nav {
   gap: 11px;
   height: 54px;
   padding: 0 12px;
-  border-radius: 11px;
-  background: var(--bg-muted);
-  color: var(--text-primary);
+  border-radius: var(--w-r-card);
+  background: var(--w-sunken);
+  color: var(--w-ink);
   text-decoration: none;
-  font-size: 15px;
+  font-size: var(--w-fs-ui);
 }
 
 .app-shell-tile:last-child:nth-child(odd) {
@@ -551,7 +688,7 @@ html[data-theme="dark"] .app-shell-nav {
 .app-shell-tile__icon {
   display: inline-flex;
   flex: 0 0 auto;
-  color: var(--text-muted);
+  color: var(--w-ink3);
 }
 
 .app-shell-tile__label {
@@ -563,27 +700,27 @@ html[data-theme="dark"] .app-shell-nav {
 }
 
 .app-shell-tile.is-active {
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: var(--w-big-soft);
+  color: var(--w-big);
   font-weight: 600;
 }
 
 .app-shell-tile.is-active .app-shell-tile__icon {
-  color: var(--accent);
+  color: var(--w-big);
 }
 
 .app-shell-tile__dot {
   flex: 0 0 auto;
   width: 6px;
   height: 6px;
-  border-radius: 999px;
-  background: var(--accent);
+  border-radius: 50%;
+  background: var(--w-big);
 }
 
 .app-shell-panel__sep {
   height: 1px;
   margin: 10px 0;
-  background: var(--border-default);
+  background: var(--w-line);
 }
 
 .app-shell-panel__foot {
@@ -600,10 +737,10 @@ html[data-theme="dark"] .app-shell-nav {
   justify-content: center;
   width: 30px;
   height: 30px;
-  border-radius: 999px;
-  background: var(--bg-subtle);
-  color: var(--text-secondary);
-  font-size: 12.5px;
+  border-radius: 50%;
+  background: var(--w-sunken);
+  color: var(--w-ink2);
+  font-size: var(--w-fs-meta);
 }
 
 .app-shell-panel__who {
@@ -614,19 +751,18 @@ html[data-theme="dark"] .app-shell-nav {
 }
 
 .app-shell-panel__name {
-  font-size: 13.5px;
-  color: var(--text-primary);
+  font-size: var(--w-fs-ui);
+  color: var(--w-ink);
 }
 
 .app-shell-panel__account {
-  font-size: 11.5px;
-  color: var(--text-muted);
+  font-size: var(--w-fs-meta);
+  color: var(--w-ink3);
 }
 
 .app-shell-logout--panel {
   height: 36px;
   padding: 0 13px;
-  font-size: 13px;
 }
 
 @media (min-width: 821px) {
@@ -675,25 +811,48 @@ html[data-theme="dark"] .app-shell-nav {
   max-width: min(360px, calc(100vw - 32px));
 }
 
+/* 提示条：白底细线，左边一个状态圆点；只有浮层才用 w-shadow-lg */
 .ielts-toast {
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-default);
-  color: var(--text-primary);
-  box-shadow: 0 14px 34px rgba(var(--shadow-rgb), 0.18);
-  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 16px;
+  border-radius: var(--w-r-card);
+  background: var(--w-surface);
+  border: 1px solid var(--w-line);
+  color: var(--w-ink);
+  box-shadow: var(--w-shadow-lg);
+  font-family: var(--font-cn);
+  font-size: var(--w-fs-meta);
+  line-height: 1.5;
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
+.ielts-toast::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--w-big);
+}
+
 .ielts-toast--success {
-  border-color: var(--success);
-  background: var(--success-soft);
+  border-color: var(--w-ok-line);
+}
+
+.ielts-toast--success::before {
+  background: var(--w-ok);
 }
 
 .ielts-toast--error {
-  border-color: var(--danger);
-  background: var(--danger-soft);
+  border-color: var(--w-err-line);
+  background: var(--w-err-soft);
+  color: var(--w-err-ink);
+}
+
+.ielts-toast--error::before {
+  background: var(--w-err);
 }
 
 .ielts-toast.is-leaving {
