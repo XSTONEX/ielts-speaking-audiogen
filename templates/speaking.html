@@ -120,6 +120,10 @@ body.page-speaking * { box-sizing: border-box; }
 /* UA 的 [hidden]{display:none} 特异度只有 (0,1,0)，会被 .sp-section{display:flex}
    这类规则盖掉，导致 hidden 的元素照样显示。统一兜一条。 */
 body.page-speaking [hidden] { display: none !important; }
+/* sp-ph 只在手机（≤820px）出现，sp-dt 只在桌面出现；两边共用的元素不打这两个类 */
+@media (min-width: 821px) { body.page-speaking .sp-ph { display: none !important; } }
+@media (max-width: 820px) { body.page-speaking .sp-dt { display: none !important; } }
+/* 悬停效果都包在 @media (hover: hover) 里：触屏上点一下不会留下一块灰底（桌面照常） */
 .sp-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 body.page-speaking button,
 body.page-speaking input,
@@ -180,7 +184,7 @@ body.page-speaking.has-player .sp-main { padding-bottom: 116px; }
   white-space: nowrap;
   transition: border-color .15s ease, background .15s ease;
 }
-.sp-btn:hover { border-color: var(--sp-ink-4); }
+@media (hover: hover) { .sp-btn:hover { border-color: var(--sp-ink-4); } }
 .sp-btn:disabled { opacity: .5; cursor: default; }
 .sp-btn--primary {
   border-color: var(--sp-accent);
@@ -188,12 +192,12 @@ body.page-speaking.has-player .sp-main { padding-bottom: 116px; }
   color: var(--sp-accent-on);
   font-weight: 500;
 }
-.sp-btn--primary:hover { background: var(--sp-accent-strong); border-color: var(--sp-accent-strong); }
-html[data-theme="dark"] .sp-btn--primary:hover { color: var(--sp-accent-on); }
+@media (hover: hover) { .sp-btn--primary:hover { background: var(--sp-accent-strong); border-color: var(--sp-accent-strong); } }
+@media (hover: hover) { html[data-theme="dark"] .sp-btn--primary:hover { color: var(--sp-accent-on); } }
 .sp-btn--ghost { border-color: transparent; background: transparent; color: var(--sp-ink-2); }
-.sp-btn--ghost:hover { border-color: var(--sp-line); background: var(--sp-surface); }
+@media (hover: hover) { .sp-btn--ghost:hover { border-color: var(--sp-line); background: var(--sp-surface); } }
 .sp-btn--danger { border-color: var(--sp-danger-line); color: var(--sp-danger); }
-.sp-btn--danger:hover { border-color: var(--sp-danger); }
+@media (hover: hover) { .sp-btn--danger:hover { border-color: var(--sp-danger); } }
 .sp-btn--danger-solid {
   border-color: var(--sp-danger);
   background: var(--sp-danger);
@@ -215,9 +219,9 @@ html[data-theme="dark"] .sp-btn--danger-solid { color: #2A0F0C; }
   color: var(--sp-ink-2);
   cursor: pointer;
 }
-.sp-icon-btn:hover { color: var(--sp-ink); border-color: var(--sp-line-strong); }
+@media (hover: hover) { .sp-icon-btn:hover { color: var(--sp-ink); border-color: var(--sp-line-strong); } }
 .sp-icon-btn--plain { border-color: transparent; background: transparent; }
-.sp-icon-btn--plain:hover { background: var(--sp-sunken); border-color: transparent; }
+@media (hover: hover) { .sp-icon-btn--plain:hover { background: var(--sp-sunken); border-color: transparent; } }
 .sp-icon-btn--danger { border-color: var(--sp-danger-line); color: var(--sp-danger); }
 
 .sp-input,
@@ -291,7 +295,7 @@ html[data-theme="dark"] .sp-seg button.is-active { background: #3B3A32; box-shad
   cursor: pointer;
   white-space: nowrap;
 }
-.sp-chip:hover { border-color: var(--sp-line-strong); }
+@media (hover: hover) { .sp-chip:hover { border-color: var(--sp-line-strong); } }
 .sp-chip.is-active {
   background: var(--sp-ink);
   border-color: var(--sp-ink);
@@ -375,7 +379,7 @@ body.page-speaking .sp-sort {
   cursor: pointer;
   text-align: left;
 }
-.sp-recent:hover { border-color: var(--sp-line-strong); }
+@media (hover: hover) { .sp-recent:hover { border-color: var(--sp-line-strong); } }
 .sp-recent__name {
   font-family: var(--sp-serif);
   font-size: 18px;
@@ -403,8 +407,8 @@ body.page-speaking .sp-sort {
   border-top: none;
 }
 .sp-list__row:last-child { border-bottom: none; }
-.sp-list__row:hover { background: var(--sp-raised); }
-html[data-theme="dark"] .sp-list__row:hover { background: var(--sp-sunken); }
+@media (hover: hover) { .sp-list__row:hover { background: var(--sp-raised); } }
+@media (hover: hover) { html[data-theme="dark"] .sp-list__row:hover { background: var(--sp-sunken); } }
 .sp-list__name { font-size: 15px; font-weight: 500; color: var(--sp-ink); }
 .sp-list__sub { font-size: 12.5px; color: var(--sp-ink-3); margin-top: 2px; }
 .sp-list__meta { font-size: 12.5px; color: var(--sp-ink-3); white-space: nowrap; }
@@ -423,6 +427,8 @@ html[data-theme="dark"] .sp-list__row:hover { background: var(--sp-sunken); }
 }
 .sp-composer[hidden] { display: none; }
 .sp-composer__controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+/* 包住「生成音频」的壳子：桌面上不产生盒子（按钮照旧排在这一行里），手机上变成钉在面板底部的一条 */
+.sp-composer__cta { display: contents; }
 .sp-composer__foot { flex-wrap: wrap; gap: 8px 14px; }
 .sp-topicfield { position: relative; flex-grow: 1; min-width: 190px; max-width: 330px; }
 .sp-composer__sheet-head { display: none; }
@@ -460,7 +466,7 @@ html[data-theme="dark"] .sp-list__row:hover { background: var(--sp-sunken); }
   cursor: pointer;
 }
 .sp-suggest button:first-child { border-top: none; }
-.sp-suggest button:hover { background: var(--sp-accent-wash); }
+@media (hover: hover) { .sp-suggest button:hover { background: var(--sp-accent-wash); } }
 .sp-suggest .sp-suggest__new { color: var(--sp-accent); }
 
 .sp-question {
@@ -474,6 +480,8 @@ html[data-theme="dark"] .sp-list__row:hover { background: var(--sp-sunken); }
 }
 .sp-question__label { font-size: 11.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sp-clay-ink); }
 .sp-question__text { margin: 5px 0 0; font-family: var(--sp-serif); font-size: 16px; line-height: 1.55; color: var(--sp-clay-body); white-space: pre-line; }
+/* 生成面板里「题卡问题 · 已填写」只要一行摘要；上一条的 pre-line 写在 .sp-truncate 后面，会把 nowrap 盖掉 */
+.sp-question__text.sp-truncate { white-space: nowrap; }
 
 .sp-queue { border: 1px solid var(--sp-line); border-radius: 11px; overflow: hidden; }
 .sp-queue__head { display: flex; align-items: center; gap: 10px; padding: 10px 13px; border-bottom: 1px solid var(--sp-line); background: var(--sp-raised); }
@@ -519,7 +527,7 @@ html[data-theme="dark"] .sp-done { color: #86D6C4; }
   border-radius: 8px;
   margin-bottom: 8px;
 }
-.sp-back:hover { background: var(--sp-sunken); }
+@media (hover: hover) { .sp-back:hover { background: var(--sp-sunken); } }
 .sp-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 14px 0; }
 
 .sp-clip { border-bottom: 1px solid var(--sp-line); }
@@ -542,7 +550,7 @@ html[data-theme="dark"] .sp-done { color: #86D6C4; }
   color: var(--sp-ink);
   cursor: pointer;
 }
-.sp-play:hover { border-color: var(--sp-accent); color: var(--sp-accent); }
+@media (hover: hover) { .sp-play:hover { border-color: var(--sp-accent); color: var(--sp-accent); } }
 .sp-play.is-playing {
   background: var(--sp-accent);
   border-color: var(--sp-accent);
@@ -596,6 +604,8 @@ html[data-theme="dark"] .sp-done { color: #86D6C4; }
   border: none;
   background: transparent;
   padding: 0;
+  /* 触屏上不让浏览器把拖动当成页面滚动：否则它会发 pointercancel，拖到一半就断了 */
+  touch-action: none;
 }
 /* 两个都得显式 block：track 是 flex 子项会被 blockify，fill 不是，
    留成 inline 的话宽度直接被忽略，进度条永远是空的。 */
@@ -616,7 +626,7 @@ html[data-theme="dark"] .sp-done { color: #86D6C4; }
   /* timeupdate 一秒只来四次，补一段线性过渡才不会一跳一跳 */
   transition: width .2s linear;
 }
-.sp-seek:hover .sp-seek__track { background: var(--sp-line-strong); }
+@media (hover: hover) { .sp-seek:hover .sp-seek__track { background: var(--sp-line-strong); } }
 .sp-play--lg {
   width: 44px;
   height: 44px;
@@ -624,7 +634,7 @@ html[data-theme="dark"] .sp-done { color: #86D6C4; }
   background: var(--sp-accent);
   color: var(--sp-accent-on);
 }
-.sp-play--lg:hover { background: var(--sp-accent-strong); color: var(--sp-accent-on); border-color: transparent; }
+@media (hover: hover) { .sp-play--lg:hover { background: var(--sp-accent-strong); color: var(--sp-accent-on); border-color: transparent; } }
 
 /* ---------- 浮动按钮 / 遮罩 / 弹窗 ---------- */
 .sp-fab {
@@ -680,57 +690,441 @@ body.page-speaking.on-topic .sp-fab { display: none; }
 .sp-dialog__actions { display: flex; gap: 10px; margin-top: 2px; }
 .sp-dialog__actions .sp-btn { flex-grow: 1; height: 44px; }
 
-/* ---------- 手机 ---------- */
+/* ---------- 手机（≤820px）----------
+   屏幕底部只有一摞东西：最下面是安全区，往上是迷你播放条（在放音频时）、话题页的操作条或「新建音频」浮动按钮，
+   提示条再浮在它们上面。这一摞的总高度由脚本写进 body 的 --ui-bottom-bar-h（theme.css 的提示条读它），
+   页面底部留白也用它，所以最后一行永远不会被盖住。 */
 @media (max-width: 820px) {
-  .sp-main { padding: 16px 16px 32px; }
-  body.page-speaking.has-player .sp-main { padding-bottom: 132px; }
-  .sp-h1 { font-size: 25px; }
-
-  .sp-recent-grid { grid-template-columns: minmax(0, 1fr); }
-  .sp-composer__controls { flex-direction: column; align-items: stretch; }
-  .sp-seg { width: 100%; }
-  .sp-seg button { flex-grow: 1; height: 38px; }
-  .sp-topicfield { max-width: none; }
-  #generateBtn { width: 100%; height: 50px; }
-  #kbdHint { display: none; }
-  .sp-fab { display: inline-flex; }
-
-  /* 生成面板在手机上是底部抽屉 */
-  .sp-composer {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 1350;
-    margin: 0;
-    max-height: 88vh;
-    overflow-y: auto;
-    border: none;
-    border-radius: 18px 18px 0 0;
-    padding: 10px 16px calc(20px + env(safe-area-inset-bottom));
-    box-shadow: var(--sp-shadow-lg);
-    transform: translateY(110%);
-    transition: transform .24s ease;
+  body.page-speaking .sp-main,
+  body.page-speaking.has-player .sp-main {
+    padding: 8px 16px calc(var(--ui-bottom-bar-h, 0px) + 28px + env(safe-area-inset-bottom));
   }
-  .sp-composer.is-open { transform: none; }
-  .sp-composer__sheet-head { display: flex; flex-direction: column; gap: 10px; }
-  .sp-grabber { width: 38px; height: 4px; align-self: center; border-radius: 999px; background: var(--sp-line-strong); }
+  .sp-h1 { font-size: 24px; }
 
-  .sp-clip__q, .sp-clip__body { margin-left: 0; padding-left: 16px; }
-  .sp-clip__index { display: none; }
-  .sp-player { padding: 10px 14px calc(14px + env(safe-area-inset-bottom)); flex-wrap: wrap; gap: 8px; }
-  .sp-player__seekline { order: -1; width: 100%; display: flex; align-items: center; gap: 10px; }
-  /* 换行的 flex 容器是按 flex-basis 分行的，先分行后收缩。标题的基准宽度
-     一大，倍速和关闭就被挤到第三行去了，所以这里给它一个很小的基准。 */
-  .sp-player > .sp-grow { max-width: none; flex: 1 1 56px; }
-  .sp-play, .sp-icon-btn { min-width: 44px; min-height: 44px; }
-  .sp-play--lg { width: 48px; height: 48px; }
+  /* 字号下限：标签、徽章 12px，说明文字 13px；要打字的框都是 16px */
+  .sp-label, .sp-question__label { font-size: 12px; }
+  .sp-badge { font-size: 12px; height: 22px; padding: 0 8px; }
+  .sp-hint, .sp-sub, .sp-list__sub, .sp-list__meta, .sp-clip__meta, .sp-player__sub, .sp-player__time { font-size: 13px; }
+  body.page-speaking .sp-search input,
+  body.page-speaking .sp-input,
+  body.page-speaking .sp-textarea,
+  body.page-speaking #part2Question,
+  body.page-speaking #dialogQuestion { font-size: 16px !important; }
+
   .sp-btn { height: 44px; }
-  .sp-btn--sm { height: 36px; }
-  .sp-list__row { padding: 12px 14px; min-height: 60px; }
-  .sp-search { height: 46px; }
-  body.page-speaking .sp-sort { height: 46px; }
+  .sp-btn--sm { height: 40px; padding: 0 14px; font-size: 14px; }
+  .sp-play, .sp-icon-btn { min-width: 44px; min-height: 44px; }
+  .sp-icon-btn--plain svg { width: 18px; height: 18px; }
+
+  /* ---------- 音频库 ---------- */
+  .sp-page-head { margin-bottom: 0; gap: 2px; }
+  .sp-more {
+    width: 44px; height: 44px; margin-right: -10px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: none; border-radius: 10px; background: transparent; color: var(--sp-ink-2); cursor: pointer;
+  }
+  .sp-more:active { background: var(--sp-sunken); }
+
+  /* 搜索框和 Part 筛选吸在导航栏下面，翻到哪儿都能换 Part */
+  .sp-searchbar {
+    position: sticky; top: var(--app-shell-h, 52px); z-index: 20;
+    margin: 6px -16px 0; padding: 8px 16px; gap: 8px; background: var(--sp-paper);
+  }
+  .sp-search { height: 44px; }
+  /* 排序收成一个 44px 的图标按钮，点开是系统自己的选择器。用 id 压过 theme.css 深色下给所有 select 的底色和字色 */
+  body.page-speaking #sortSelect {
+    flex: none; width: 44px; height: 44px; padding: 0;
+    color: transparent;
+    background: var(--sp-surface) url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 16 16' fill='none' stroke='%2355514A' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 13V3M2.5 5.5 5 3l2.5 2.5M11 3v10M8.5 10.5 11 13l2.5-2.5'/%3E%3C/svg%3E") no-repeat center;
+  }
+  html[data-theme="dark"] body.page-speaking #sortSelect {
+    background-color: var(--sp-surface); border-color: var(--sp-line);
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 16 16' fill='none' stroke='%23C5BFB0' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 13V3M2.5 5.5 5 3l2.5 2.5M11 3v10M8.5 10.5 11 13l2.5-2.5'/%3E%3C/svg%3E");
+  }
+  body.page-speaking #sortSelect option { color: var(--sp-ink); }
+  .sp-chips {
+    position: sticky; top: calc(var(--app-shell-h, 52px) + 60px); z-index: 19;
+    display: block; margin: 0 -16px; padding: 0 0 10px; background: var(--sp-paper); overflow: hidden;
+  }
+  .sp-chips__track {
+    display: flex; gap: 8px; padding: 0 16px; overflow-x: auto; scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+  }
+  .sp-chips__track::-webkit-scrollbar { display: none; }
+  .sp-chips__track.is-end { -webkit-mask-image: none; mask-image: none; }
+  .sp-chip { height: 40px; padding: 0 15px; font-size: 14px; flex: none; }
+
+  .sp-section { margin-top: 14px; gap: 8px; }
+
+  /* 最近使用：两列小卡片（像音乐 App 首页的快捷入口），一屏里留给话题列表 */
+  .sp-recent-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .sp-rchip {
+    display: flex; align-items: center; gap: 2px; min-height: 60px;
+    padding: 0 4px 0 0; background: var(--sp-surface); border: 1px solid var(--sp-line); border-radius: 10px;
+  }
+  .sp-rchip__open {
+    flex: 1; min-width: 0; align-self: stretch; display: flex; flex-direction: column; justify-content: center; gap: 2px;
+    padding: 8px 4px 8px 11px; border: none; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
+    border-radius: 10px 0 0 10px;
+  }
+  .sp-rchip__name {
+    font-size: 14px; font-weight: 500; line-height: 1.3; color: var(--sp-ink);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere;
+  }
+  .sp-rchip__meta { font-size: 12px; color: var(--sp-ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* 话题：一行两张卡片。整张卡片点开话题，右下角的圆按钮连播 */
+  body.page-speaking #topicList {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;
+    background: none; border: none; border-radius: 0; overflow: visible;
+  }
+  .sp-tcard {
+    position: relative; display: flex; min-height: 96px;
+    background: var(--sp-surface); border: 1px solid var(--sp-line); border-radius: 12px;
+  }
+  .sp-tcard.is-playing { border-color: var(--sp-accent); }
+  .sp-tcard__open {
+    flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: stretch; gap: 8px;
+    padding: 11px 12px 12px; border: none; background: none; color: inherit; font: inherit; text-align: left;
+    cursor: pointer; border-radius: 12px;
+  }
+  .sp-tcard__name {
+    font-size: 15px; font-weight: 500; line-height: 1.35; color: var(--sp-ink);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere;
+  }
+  .sp-tcard__meta {
+    margin-top: auto; display: block; line-height: 30px; padding-right: 42px;
+    font-size: 13px; color: var(--sp-ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .sp-tcard__name .sp-badge { height: 20px; padding: 0 6px; margin-right: 6px; vertical-align: 1px; }
+  .sp-tcard__play, .sp-rchip__play, .sp-hit__play {
+    flex: none; width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid var(--sp-line); border-radius: 999px; background: var(--sp-surface); color: var(--sp-ink); cursor: pointer;
+  }
+  .sp-tcard__play { position: absolute; right: 6px; bottom: 6px; }
+  .sp-rchip__play { border-color: transparent; background: transparent; }
+  .sp-tcard__play.is-playing, .sp-rchip__play.is-playing, .sp-hit__play.is-playing {
+    background: var(--sp-accent); border-color: var(--sp-accent); color: var(--sp-accent-on);
+  }
+  .sp-tcard__open:active, .sp-rchip__open:active, .sp-hit__open:active { background: var(--sp-sunken); }
+
+  /* 列表的读取中 / 空 / 出错 */
+  .sp-skel { height: 96px; border-radius: 12px; background: var(--sp-sunken); animation: sp-pulse 1.2s ease-in-out infinite alternate; }
+  @keyframes sp-pulse { from { opacity: .55; } to { opacity: 1; } }
+  .sp-state {
+    grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; gap: 12px;
+    padding: 28px 16px; text-align: center; color: var(--sp-ink-3); font-size: 15px;
+    background: var(--sp-surface); border: 1px solid var(--sp-line); border-radius: 12px;
+  }
+  .sp-state b { color: var(--sp-ink); font-size: 16px; font-weight: 500; }
+
+  /* 搜原文的结果：一条一行，命中词高亮，右边可以直接播 */
+  .sp-hit { display: flex; align-items: flex-start; gap: 4px; padding-right: 8px; border-bottom: 1px solid var(--sp-line); }
+  .sp-hit:last-child { border-bottom: none; }
+  .sp-hit__open {
+    flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; padding: 12px 6px 12px 14px;
+    border: none; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
+  }
+  .sp-hit__title { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 15px; font-weight: 500; color: var(--sp-ink); }
+  .sp-hit__q { font-size: 13px; color: var(--sp-ink-3); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .sp-hit__snip {
+    font-family: var(--sp-serif); font-size: 15px; line-height: 1.5; color: var(--sp-ink-2);
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .sp-hit__snip mark { background: var(--sp-accent-soft); color: var(--sp-ink); border-radius: 3px; padding: 0 1px; }
+  .sp-hit__play { margin-top: 10px; }
+
+  /* 浮动按钮：滚下去以后缩成圆的；搜索框有焦点时让开 */
+  .sp-fab {
+    display: inline-flex; height: 52px; padding: 0 20px 0 18px; right: 16px;
+    transition: width .2s ease, padding .2s ease;
+  }
+  body.page-speaking .sp-fab,
+  body.page-speaking.has-player .sp-fab { bottom: calc(16px + var(--sp-player-h, 0px) + env(safe-area-inset-bottom)); }
+  body.page-speaking.has-player .sp-fab { bottom: calc(12px + var(--sp-player-h, 0px)); }
+  body.page-speaking.sp-scrolled .sp-fab { width: 52px; padding: 0; justify-content: center; }
+  body.page-speaking.sp-scrolled .sp-fab__label { display: none; }
+  body.page-speaking.sp-search-focus .sp-fab { display: none; }
+
+  /* ---------- 话题详情 ---------- */
+  .sp-back { display: none; }
+  .sp-topbar {
+    position: sticky; top: var(--app-shell-h, 52px); z-index: 30;
+    display: flex; align-items: center; gap: 4px; height: 52px;
+    margin: -8px -16px 4px; padding: 0 6px; background: var(--sp-paper);
+    border-bottom: 1px solid transparent; transition: border-color .15s ease;
+  }
+  .sp-topbar.is-stuck { border-bottom-color: var(--sp-line); }
+  .sp-topbar__back {
+    display: inline-flex; align-items: center; gap: 4px; height: 44px; padding: 0 10px 0 6px; flex: none;
+    border: none; border-radius: 10px; background: transparent; color: var(--sp-ink-2); font-size: 15px; cursor: pointer;
+  }
+  .sp-topbar__back:active { background: var(--sp-sunken); }
+  .sp-topbar__title {
+    flex: 1; min-width: 0; text-align: center; font-size: 15px; font-weight: 500; color: var(--sp-ink);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0; transition: opacity .15s ease;
+  }
+  .sp-topbar.is-stuck .sp-topbar__title { opacity: 1; }
+  .sp-topbar .sp-more { margin-right: 0; }
+  .sp-topic-head { margin-bottom: 12px; }
+  #topicToolbar { margin: 0; }
+  #topicToolbar:empty { display: none; }
+  .sp-managebar {
+    position: sticky; top: calc(var(--app-shell-h, 52px) + 52px); z-index: 29;
+    display: flex; align-items: center; gap: 10px; width: 100%;
+    margin: 0 0 10px; padding: 4px 4px 4px 14px; border-radius: 10px;
+    background: var(--sp-clay-soft); border: 1px solid var(--sp-clay-line); color: var(--sp-clay-ink); font-size: 14px;
+  }
+
+  /* Part 2 题卡：默认三行，点「展开」看全 */
+  .sp-cue { flex-direction: column; gap: 6px; padding: 12px 14px 6px; margin-bottom: 12px; }
+  .sp-cue .sp-question__text {
+    margin: 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .sp-cue.is-open .sp-question__text { display: block; }
+  .sp-cue__toggle {
+    align-self: flex-start; height: 40px; margin-left: -8px; padding: 0 8px; border: none; background: none;
+    color: var(--sp-clay-ink); font-size: 14px; font-weight: 500; cursor: pointer;
+  }
+
+  /* 一条音频：左边播放，中间是问题 + 答案的前两行，点中间展开全文；可以同时展开好几条 */
+  .sp-clip.is-current {
+    background: var(--sp-accent-wash);
+    background: color-mix(in srgb, var(--sp-accent) 9%, var(--sp-surface));
+    box-shadow: inset 3px 0 0 var(--sp-accent);
+  }
+  .sp-clip--ph .sp-clip__row { align-items: flex-start; gap: 10px; padding: 12px 8px 12px 12px; }
+  .sp-clip--ph .sp-play { margin-top: 2px; }
+  .sp-clip__main {
+    flex: 1; min-width: 0; min-height: 44px; display: flex; flex-direction: column; gap: 3px;
+    padding: 0 4px 0 0; border: none; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
+  }
+  .sp-clip__qtext {
+    font-size: 15px; font-weight: 500; line-height: 1.4; color: var(--sp-ink-2);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .sp-clip__ans {
+    font-family: var(--sp-serif); font-size: 16px; line-height: 1.5; color: var(--sp-ink);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .sp-clip.is-open .sp-clip__ans { display: none; }
+  .sp-clip__chev { flex: none; width: 28px; height: 44px; display: inline-flex; align-items: center; justify-content: center; color: var(--sp-ink-4); }
+  .sp-clip--ph .sp-clip__body { padding: 0 16px 14px; }
+  .sp-clip--ph .sp-clip__text { font-size: 17px; line-height: 1.65; margin-bottom: 12px; }
+  .sp-clip__actions { display: flex; align-items: center; gap: 8px; }
+  .sp-clip--ph .sp-clip__q { display: none; }
+
+  /* 话题页底部操作条：没在放音频时是「连续播放 + 添加」，管理时是「删除整个话题 + 完成」 */
+  .sp-actionbar {
+    position: fixed; left: 0; right: 0; bottom: var(--sp-player-h, 0px); z-index: 1245;
+    display: flex; gap: 10px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    background: var(--sp-surface); border-top: 1px solid var(--sp-line);
+  }
+  body.page-speaking.has-player .sp-actionbar { padding-bottom: 10px; }
+  .sp-actionbar .sp-btn { height: 48px; font-size: 15px; }
+  .sp-actionbar .sp-btn--primary, .sp-actionbar .sp-btn--danger { flex: 1; min-width: 0; }
+
+  /* ---------- 迷你播放条：64px，顶上一条 2px 进度；点中间打开完整播放器 ---------- */
+  .sp-player {
+    min-height: 64px; padding: 10px 8px calc(10px + env(safe-area-inset-bottom)) 10px;
+    flex-wrap: nowrap; gap: 6px; box-shadow: 0 -6px 18px -14px rgba(28, 27, 24, 0.45);
+  }
+  .sp-player__seekline { position: absolute; left: 0; right: 0; top: -1px; height: 2px; display: block; pointer-events: none; }
+  .sp-player__seekline .sp-player__time { display: none; }
+  .sp-player .sp-seek { position: absolute; inset: 0; height: 2px; min-width: 0; }
+  .sp-player .sp-seek__track { height: 2px; border-radius: 0; background: transparent; }
+  .sp-player .sp-seek__fill { height: 2px; border-radius: 0; }
+  .sp-player #prevBtn, .sp-player #rateBtn, .sp-player #closePlayer { display: none; }
+  html[data-theme="dark"] body.page-speaking #playerBar {
+    background: var(--sp-surface); border-color: var(--sp-line); box-shadow: 0 -6px 18px -12px rgba(0, 0, 0, 0.6);
+  }
+  .sp-player #toggleBtn { order: 0; width: 44px; height: 44px; }
+  .sp-player > .sp-grow {
+    order: 1; flex: 1 1 auto; max-width: none !important; min-height: 44px;
+    display: flex; flex-direction: column; justify-content: center; padding: 0 4px; cursor: pointer;
+  }
+  .sp-player #nextBtn { order: 2; }
+  .sp-player__title { font-size: 15px; }
+  .sp-player__sub { margin-top: 2px; }
+
+  /* ---------- 完整播放器（从底部升起，92% 屏高）---------- */
+  .sp-fp {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 1420;
+    height: 92vh; height: 92dvh; display: flex; flex-direction: column;
+    background: var(--sp-surface); border-radius: 14px 14px 0 0; box-shadow: var(--sp-shadow-lg);
+    padding-bottom: env(safe-area-inset-bottom); animation: sp-sheet-in .24s ease-out;
+  }
+  .sp-fp__grab { flex: none; height: 26px; display: flex; align-items: center; justify-content: center; touch-action: none; cursor: grab; }
+  .sp-fp__grab span { width: 40px; height: 5px; border-radius: 999px; background: var(--sp-line-strong); }
+  .sp-fp__head { flex: none; display: flex; align-items: center; gap: 8px; padding: 0 8px 8px 20px; touch-action: none; }
+  .sp-fp__where { flex: 1; min-width: 0; }
+  .sp-fp__topic { font-size: 16px; font-weight: 500; color: var(--sp-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sp-fp__index { font-size: 13px; color: var(--sp-ink-3); }
+  .sp-fp__body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 4px 20px 20px; }
+  .sp-fp__q { margin: 0 0 10px; font-size: 15px; font-weight: 500; line-height: 1.45; color: var(--sp-ink-2); }
+  .sp-fp__text { margin: 0; font-family: var(--sp-serif); font-size: 17px; line-height: 1.65; color: var(--sp-ink); white-space: pre-wrap; }
+  .sp-fp__controls { flex: none; display: flex; flex-direction: column; gap: 10px; padding: 8px 20px 12px; border-top: 1px solid var(--sp-line); }
+  .sp-fp__seekrow { display: flex; align-items: center; gap: 10px; }
+  .sp-fp__seekrow .sp-player__time { min-width: 38px; }
+  .sp-fp__seekrow .sp-player__time:last-child { text-align: right; }
+  .sp-fp .sp-seek { position: relative; height: 44px; }
+  .sp-fp .sp-seek__track { height: 4px; overflow: visible; position: relative; }
+  .sp-fp .sp-seek__fill { height: 4px; position: relative; }
+  .sp-seek__thumb {
+    position: absolute; right: -8px; top: 50%; width: 16px; height: 16px; margin-top: -8px;
+    border-radius: 50%; background: var(--sp-accent); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+  .sp-fp__transport { display: flex; align-items: center; justify-content: center; gap: 28px; }
+  .sp-fp__transport .sp-icon-btn { width: 56px; height: 56px; border-radius: 999px; }
+  .sp-fp__transport .sp-icon-btn svg { width: 22px; height: 22px; }
+  .sp-fp__transport .sp-play--lg { width: 64px; height: 64px; }
+  .sp-fp__transport .sp-play--lg svg { width: 18px; height: 20px; }
+  .sp-fp__rate { display: flex; width: 100%; }
+  .sp-fp__rate button { flex: 1; height: 40px; }
+  .sp-fp__stop { width: 100%; }
+
+  /* ---------- 底部菜单（⋯）---------- */
+  .sp-sheet {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 1410;
+    max-height: calc(100dvh - env(safe-area-inset-top) - 24px); overflow-y: auto; overscroll-behavior: contain;
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+    background: var(--sp-surface); border-radius: 14px 14px 0 0; box-shadow: var(--sp-shadow-lg);
+    animation: sp-sheet-in .22s ease-out;
+  }
+  .sp-sheet__title { padding: 8px 12px 6px; font-size: 13px; color: var(--sp-ink-3); text-align: center; overflow-wrap: anywhere; }
+  .sp-sheet__item {
+    display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 6px 12px;
+    border: none; border-radius: 10px; background: none; color: var(--sp-ink); font: inherit; font-size: 16px;
+    text-align: left; text-decoration: none; cursor: pointer;
+  }
+  .sp-sheet__item:active { background: var(--sp-sunken); }
+  .sp-sheet__item svg { flex: none; color: var(--sp-ink-3); }
+  .sp-sheet__item.is-danger, .sp-sheet__item.is-danger svg { color: var(--sp-danger); }
+  .sp-sheet__item.is-on { color: var(--sp-accent); font-weight: 500; }
+  .sp-sheet__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .sp-sheet__sub { font-size: 13px; color: var(--sp-ink-3); font-weight: 400; }
+  .sp-sheet__cancel {
+    display: block; width: 100%; height: 52px; margin-top: 6px; border: none; border-radius: 10px;
+    background: var(--sp-sunken); color: var(--sp-ink); font: inherit; font-size: 16px; font-weight: 500; cursor: pointer;
+  }
+
+  /* ---------- 长文全屏阅读 ---------- */
+  .sp-reader {
+    position: fixed; inset: 0; z-index: 1430; display: flex; flex-direction: column;
+    background: var(--sp-paper); padding-top: env(safe-area-inset-top);
+  }
+  .sp-reader__bar {
+    flex: none; display: flex; align-items: center; gap: 4px; height: 52px; padding: 0 8px 0 6px;
+    background: var(--sp-surface); border-bottom: 1px solid var(--sp-line);
+  }
+  .sp-reader__title { flex: 1; min-width: 0; font-size: 15px; font-weight: 500; color: var(--sp-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sp-reader__body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 20px 20px 32px; }
+  .sp-reader__text { max-width: 640px; margin: 0 auto; font-family: var(--sp-serif); font-size: 17px; line-height: 1.75; color: var(--sp-ink); white-space: pre-wrap; overflow-wrap: anywhere; }
+  .sp-reader__foot {
+    flex: none; display: flex; gap: 8px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    background: var(--sp-surface); border-top: 1px solid var(--sp-line);
+  }
+  .sp-reader__foot .sp-btn { flex: 1; min-width: 0; padding: 0 10px; }
+  body.page-speaking.sp-reading .app-shell-nav { visibility: hidden; }
+
+  /* ---------- 确认框：底部升起 ---------- */
+  .sp-backdrop { background: var(--w-mask, rgba(28, 27, 24, 0.48)); }
+  .sp-dialog {
+    left: 0; right: 0; top: auto; bottom: var(--sp-kb, 0px); transform: none; width: 100%;
+    max-height: calc(var(--sp-vvh, 100dvh) - env(safe-area-inset-top) - 24px); overflow-y: auto;
+    padding: 18px 16px calc(16px + env(safe-area-inset-bottom));
+    border-width: 1px 0 0; border-radius: 14px 14px 0 0; animation: sp-sheet-in .22s ease-out;
+  }
+  .sp-dialog h2 { font-size: 19px; }
+  .sp-dialog p { font-size: 15px; }
+  .sp-dialog__warn { font-size: 13px !important; }
+  .sp-dialog__actions .sp-btn { height: 48px; font-size: 15px; }
+
+  /* ---------- 新建音频：几乎全屏的底部面板 ----------
+     顺序按手机上填的先后排：存到哪 → Part 2 题卡（要填时）→ 英文 → 选项 → 生成结果，「生成音频」钉在最底下。
+     桌面是一张横排的卡片，DOM 顺序不能动，这里用 order 重排，两个分组容器在手机上 display: contents 拆开。 */
+  .sp-composer {
+    position: fixed; left: 0; right: 0; bottom: var(--sp-kb, 0px); z-index: 1350; margin: 0;
+    height: calc(var(--sp-vvh, 100dvh) - env(safe-area-inset-top) - 12px); max-height: none;
+    overflow-y: auto; overscroll-behavior: contain;
+    border: none; border-radius: 14px 14px 0 0; padding: 0 16px; gap: 14px;
+    box-shadow: var(--sp-shadow-lg);
+    transform: translateY(105%); visibility: hidden;
+    transition: transform .24s ease, visibility 0s linear .24s;
+  }
+  .sp-composer.is-open { transform: none; visibility: visible; transition: transform .24s ease; }
+  .sp-composer__sheet-head {
+    order: 0; position: sticky; top: 0; z-index: 3; display: block;
+    margin: 0 -16px; padding: 10px 6px 4px 16px; background: var(--sp-surface);
+  }
+  .sp-grabber { display: none; }
+  .sp-composer__sheet-head .sp-h1 { font-size: 20px !important; }
+  .sp-composer__controls { display: contents; }
+  .sp-composer__controls > .sp-grow { display: none; }
+  .sp-dest {
+    order: 1; display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 4px 4px 4px 14px;
+    border-radius: 10px; background: var(--sp-sunken); font-size: 14px; color: var(--sp-ink-3);
+  }
+  .sp-dest b { flex: 1; min-width: 0; color: var(--sp-ink); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sp-dest .sp-btn { flex: none; }
+  #partSeg { order: 2; }
+  .sp-seg { display: flex; width: 100%; }
+  .sp-seg button { flex: 1; height: 40px; font-size: 14px; }
+  .sp-topicfield { order: 3; flex-grow: 0; max-width: none; min-width: 0; }
+  .sp-input { height: 48px; }
+  #folderHint { order: 4; margin-top: -6px; }
+  #part2Wrap, #part2Known { order: 5; }
+  #textInput { order: 6; flex: none; min-height: calc(6 * 1.65em + 26px); max-height: 40vh; resize: none; }
+  #part2Question { resize: none; }
+  .sp-composer__foot { order: 7; gap: 4px 10px; margin-top: -6px; }
+  #kbdHint { display: none; }
+  .sp-queue { order: 8; flex: none; }
+  .sp-composer__cta {
+    order: 9; position: sticky; bottom: 0; z-index: 3; display: block; margin: auto -16px 0;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); background: var(--sp-surface); border-top: 1px solid var(--sp-line);
+  }
+  #generateBtn { width: 100%; height: 52px; font-size: 16px; }
+  .sp-composer.is-dest-fixed #partSeg,
+  .sp-composer.is-dest-fixed .sp-topicfield,
+  .sp-composer.is-dest-fixed #folderHint { display: none; }
+
+  /* 话题联想：直接排在输入框下面，不再盖住别的东西 */
+  .sp-suggest { position: static; margin-top: 6px; max-height: none; box-shadow: none; }
+  .sp-suggest button { min-height: 44px; font-size: 15px; }
+
+  /* 「生成后留在这个话题」做成一行开关 */
+  .sp-check {
+    flex-basis: 100%; min-height: 48px; align-items: center; justify-content: space-between; flex-direction: row-reverse;
+    font-size: 15px; color: var(--sp-ink-2); cursor: pointer;
+  }
+  .sp-check input {
+    -webkit-appearance: none; appearance: none; position: relative; width: 46px; height: 28px; margin: 0;
+    border-radius: 999px; background: var(--sp-line-strong); cursor: pointer; transition: background .15s ease;
+  }
+  .sp-check input::after {
+    content: ''; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%;
+    background: #FFFFFF; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25); transition: transform .15s ease;
+  }
+  .sp-check input:checked { background: var(--sp-accent); }
+  .sp-check input:checked::after { transform: translateX(18px); }
+
+  .sp-queue__row { min-height: 52px; padding: 6px 10px 6px 12px; }
+  .sp-queue__row .sp-play { width: 44px !important; height: 44px !important; }
+  .sp-queue__head { padding: 6px 6px 6px 12px; }
+  .sp-queue__head [data-action="open-topic"] { min-height: 40px; padding: 0 8px; font-size: 14px !important; }
+
+  /* 浮层打开时背景不滚。只锁 html：body 一旦 overflow:hidden 就成了滚动容器，吸顶的栏会错位 */
+  html.sp-lock { overflow: hidden; }
 }
+@keyframes sp-sheet-in { from { transform: translateY(40px); opacity: .4; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .sp-fp, .sp-sheet, .sp-dialog { animation: none !important; } }
+/* 生成失败时的原因和「重试」（桌面、手机都有） */
+.sp-queue__row--error { flex-wrap: wrap; }
+.sp-queue__row--error .sp-grow { flex-basis: 0; }
+.sp-queue__why { flex-basis: 100%; font-size: 13px; color: var(--sp-danger); }
+/* 提示条里偶尔有很长的英文或路径，没有断行点也要换行，别伸出屏幕 */
+body.page-speaking .ielts-toast { overflow-wrap: anywhere; }
 @media (min-width: 821px) {
   /* 桌面上进度条要夹在标题和倍速之间，但它在 DOM 里必须排在最前
      （手机上整行进度条要落到第一行），所以用 order 把顺序摆回设计稿。 */
@@ -760,7 +1154,10 @@ body.page-speaking.on-topic .sp-fab { display: none; }
       <div class="sp-page-head__row">
         <h1 class="sp-h1 sp-grow">口语音频库</h1>
         <div class="sp-head-actions">
-          <button type="button" class="sp-btn sp-btn--sm" id="manageToggle">管理</button>
+          <button type="button" class="sp-btn sp-btn--sm sp-dt" id="manageToggle">管理</button>
+          <button type="button" class="sp-more sp-ph" data-action="lib-more" aria-label="更多：管理、合集播放页">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="4.5" cy="10" r="1.6"></circle><circle cx="10" cy="10" r="1.6"></circle><circle cx="15.5" cy="10" r="1.6"></circle></svg>
+          </button>
         </div>
       </div>
       <p class="sp-sub" id="libStats">读取中…</p>
@@ -792,7 +1189,7 @@ body.page-speaking.on-topic .sp-fab { display: none; }
         <h2 class="sp-label sp-grow" id="topicsLabel">全部话题</h2>
         <span class="sp-hint" id="topicsCount"></span>
       </div>
-      <div class="sp-card sp-list" id="topicList"></div>
+      <div class="sp-card sp-list" id="topicList"><div class="sp-skel sp-ph"></div><div class="sp-skel sp-ph"></div><div class="sp-skel sp-ph"></div><div class="sp-skel sp-ph"></div><div class="sp-skel sp-ph"></div><div class="sp-skel sp-ph"></div></div>
     </section>
 
     <section class="sp-section" id="hitsSection" hidden>
@@ -803,6 +1200,16 @@ body.page-speaking.on-topic .sp-fab { display: none; }
 
   <!-- ==================== 话题详情 ==================== -->
   <section id="viewTopic" class="sp-view" hidden>
+    <div class="sp-topbar sp-ph" id="topicBar">
+      <button type="button" class="sp-topbar__back" data-action="back">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5 5.5 8l4.5 4.5"></path></svg>
+        音频库
+      </button>
+      <span class="sp-topbar__title" id="topbarTitle" aria-hidden="true"></span>
+      <button type="button" class="sp-more" data-action="topic-more" aria-label="更多：管理、题卡、合集、删除话题">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="4.5" cy="10" r="1.6"></circle><circle cx="10" cy="10" r="1.6"></circle><circle cx="15.5" cy="10" r="1.6"></circle></svg>
+      </button>
+    </div>
     <button type="button" class="sp-back" data-action="back">
       <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3.5 5.5 8l4.5 4.5"></path></svg>
       音频库
@@ -833,6 +1240,11 @@ body.page-speaking.on-topic .sp-fab { display: none; }
     <span class="sp-hint">tts-1 · nova</span>
   </div>
 
+  <div class="sp-dest sp-ph" id="composerDest" hidden>
+    <span>存入</span><b id="composerDestName"></b>
+    <button type="button" class="sp-btn sp-btn--sm sp-btn--ghost" data-action="dest-change">更改</button>
+  </div>
+
   <label for="textInput" class="sp-sr">英文文本</label>
   <textarea id="textInput" class="sp-textarea" rows="2" placeholder="粘贴要生成音频的英文段落…"></textarea>
 
@@ -850,10 +1262,10 @@ body.page-speaking.on-topic .sp-fab { display: none; }
     </div>
     <span class="sp-hint" id="folderHint"></span>
     <span class="sp-grow"></span>
-    <button type="button" class="sp-btn sp-btn--primary" id="generateBtn">
+    <div class="sp-composer__cta"><button type="button" class="sp-btn sp-btn--primary" id="generateBtn">
       <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M8 3v10M3 8h10"></path></svg>
-      生成音频
-    </button>
+      <span id="generateLabel">生成音频</span>
+    </button></div>
   </div>
 
   <div id="part2Wrap" hidden>
@@ -873,10 +1285,13 @@ body.page-speaking.on-topic .sp-fab { display: none; }
   <div class="sp-queue" id="queueBox" hidden></div>
 </section>
 
-<button type="button" class="sp-fab" id="composerFab">
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 3v10M3 8h10"></path></svg>
-  生成音频
+<button type="button" class="sp-fab" id="composerFab" aria-label="新建音频">
+  <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M8 3v10M3 8h10"></path></svg>
+  <span class="sp-fab__label">新建音频</span>
 </button>
+
+<!-- ==================== 手机：话题页底部操作条 ==================== -->
+<div class="sp-actionbar sp-ph" id="topicActions" hidden></div>
 
 <div class="sp-backdrop" id="sheetBackdrop" hidden></div>
 
@@ -907,6 +1322,65 @@ body.page-speaking.on-topic .sp-fab { display: none; }
 </div>
 <audio id="audioEl" preload="none"></audio>
 
+<!-- ==================== 手机：完整播放器 ==================== -->
+<div class="sp-backdrop sp-ph" id="fpBackdrop" hidden></div>
+<section class="sp-fp sp-ph" id="fullPlayer" role="dialog" aria-modal="true" aria-label="播放器" hidden>
+  <div class="sp-fp__grab" id="fpGrab"><span></span></div>
+  <div class="sp-fp__head" id="fpHead">
+    <div class="sp-fp__where">
+      <div class="sp-fp__topic" id="fpTopic"></div>
+      <div class="sp-fp__index sp-num" id="fpIndex"></div>
+    </div>
+    <button type="button" class="sp-btn sp-btn--sm sp-btn--ghost" data-action="fp-open-topic">打开话题</button>
+    <button type="button" class="sp-icon-btn sp-icon-btn--plain" data-action="close-fullplayer" aria-label="收起播放器">
+      <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 6 8 10.5 12.5 6"></path></svg>
+    </button>
+  </div>
+  <div class="sp-fp__body" id="fpBody"></div>
+  <div class="sp-fp__controls">
+    <div class="sp-fp__seekrow">
+      <span class="sp-player__time sp-num" id="fpCur">0:00</span>
+      <button type="button" class="sp-seek" id="fpSeek" role="slider" aria-label="播放进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <span class="sp-seek__track"><span class="sp-seek__fill"><span class="sp-seek__thumb"></span></span></span>
+      </button>
+      <span class="sp-player__time sp-num" id="fpDur">0:00</span>
+    </div>
+    <div class="sp-fp__transport">
+      <button type="button" class="sp-icon-btn sp-icon-btn--plain" data-action="prev" aria-label="上一条">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4 3h1.7v10H4zM12.5 3v10L6.3 8z"></path></svg>
+      </button>
+      <button type="button" class="sp-play sp-play--lg" data-action="toggle" id="fpToggle" aria-label="播放或暂停"></button>
+      <button type="button" class="sp-icon-btn sp-icon-btn--plain" data-action="next" aria-label="下一条">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M10.3 3H12v10h-1.7zM3.5 3v10l6.2-5z"></path></svg>
+      </button>
+    </div>
+    <div class="sp-seg sp-fp__rate" id="fpRate" role="group" aria-label="播放速度">
+      <button type="button" data-rate="0.75">0.75×</button>
+      <button type="button" data-rate="1">1.0×</button>
+      <button type="button" data-rate="1.25">1.25×</button>
+      <button type="button" data-rate="1.5">1.5×</button>
+    </div>
+    <button type="button" class="sp-btn sp-btn--ghost sp-fp__stop" data-action="stop-player">停止并关闭播放器</button>
+  </div>
+</section>
+
+<!-- ==================== 手机：底部菜单（⋯） ==================== -->
+<div class="sp-backdrop sp-ph" id="moreBackdrop" hidden></div>
+<div class="sp-sheet sp-ph" id="moreSheet" role="dialog" aria-modal="true" aria-label="更多操作" hidden></div>
+
+<!-- ==================== 手机：长文全屏阅读 ==================== -->
+<section class="sp-reader sp-ph" id="reader" role="dialog" aria-modal="true" aria-label="全文" hidden>
+  <div class="sp-reader__bar">
+    <button type="button" class="sp-topbar__back" data-action="close-reader">
+      <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5 5.5 8l4.5 4.5"></path></svg>
+      返回
+    </button>
+    <span class="sp-reader__title" id="readerTitle"></span>
+  </div>
+  <div class="sp-reader__body"><p class="sp-reader__text" id="readerText"></p></div>
+  <div class="sp-reader__foot" id="readerFoot"></div>
+</section>
+
 <!-- ==================== 通用弹窗 ==================== -->
 <div class="sp-backdrop" id="dialogBackdrop" hidden></div>
 <div class="sp-dialog" id="dialog" role="dialog" aria-modal="true" hidden></div>
@@ -927,7 +1401,14 @@ body.page-speaking.on-topic .sp-fab { display: none; }
     trash: '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 4h11M6 4V2.5h4V4M4 4l.7 9.5h6.6L12 4"></path></svg>',
     check: '<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5 6.5 12 13 4.5"></path></svg>',
     moon: '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M13.5 9.5A6 6 0 0 1 6.5 2.5a6 6 0 1 0 7 7z"></path></svg>',
-    sun: '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="3.2"></circle><path d="M8 1.5v1.6M8 12.9v1.6M1.5 8h1.6M12.9 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M12.6 3.4l-1.1 1.1M4.5 11.5l-1.1 1.1"></path></svg>'
+    sun: '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="3.2"></circle><path d="M8 1.5v1.6M8 12.9v1.6M1.5 8h1.6M12.9 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M12.6 3.4l-1.1 1.1M4.5 11.5l-1.1 1.1"></path></svg>',
+    // 手机菜单里用的图标
+    edit: '<svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 2.5l3 3L6 13H3v-3z"></path></svg>',
+    expand: '<svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h10M3 8h10M3 12h6"></path></svg>',
+    layers: '<svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2 2 5l6 3 6-3zM2 8l6 3 6-3M2 11l6 3 6-3"></path></svg>',
+    gear: '<svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 4h11M2.5 8h11M2.5 12h11"></path><circle cx="5" cy="4" r="1.3" fill="currentColor"></circle><circle cx="11" cy="8" r="1.3" fill="currentColor"></circle><circle cx="7" cy="12" r="1.3" fill="currentColor"></circle></svg>',
+    plusLg: '<svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M8 3v10M3 8h10"></path></svg>',
+    trashLg: '<svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 4h11M6 4V2.5h4V4M4 4l.7 9.5h6.6L12 4"></path></svg>'
   };
 
   function esc(value) {
@@ -978,12 +1459,18 @@ body.page-speaking.on-topic .sp-fab { display: none; }
     return '其他';
   }
   var PART_BADGE = { Part1: ['p1', 'P1'], Part2: ['p2', 'P2'], Part3: ['p3', 'P3'], '其他': ['other', '其他'] };
+  var PART_LABEL = { Part1: 'Part 1', Part2: 'Part 2', Part3: 'Part 3', '其他': '其他' };
+  var SORT_LABEL = { recent: '最近使用', name: '按话题名', count: '音频最多' };
+  // 超过这个字数的原文在手机上不在列表里展开，改用全屏阅读
+  var LONG_TEXT = 600;
   function badge(part, long) {
     var info = PART_BADGE[part] || PART_BADGE['其他'];
     var text = long && part !== '其他' ? part.toUpperCase().replace('PART', 'PART ') : info[1];
     return '<span class="sp-badge sp-badge--' + info[0] + '">' + esc(text) + '</span>';
   }
-  function isMobile() { return window.matchMedia('(max-width: 820px)').matches; }
+  // 手机 / 桌面的分界和 CSS 一致；跨过分界时整页按另一套重画（见文件末尾的 change 监听）
+  var PHONE = window.matchMedia('(max-width: 820px)');
+  function isMobile() { return PHONE.matches; }
 
   // ==================== 状态 ====================
   var state = {
@@ -1000,7 +1487,15 @@ body.page-speaking.on-topic .sp-fab { display: none; }
     composerOpen: false,
     suggestOpen: false,
     busy: false,
-    player: { folder: null, file: null, list: [], index: -1, rate: 1, playing: false }
+    player: { folder: null, file: null, list: [], index: -1, rate: 1, playing: false },
+    // 下面是手机专用的状态
+    openClips: {},      // 同时展开的几条（桌面仍然一次只展开一条，用 expanded）
+    autoOpenKey: null,  // 连播时自动展开的那一条，换到下一条时收回去
+    cueOpen: false,     // Part 2 题卡是否展开
+    fpOpen: false,      // 完整播放器
+    readerKey: null,    // 正在全屏阅读的那一条
+    hits: null,         // 最近一次原文搜索的结果，播放状态变了要重画
+    listError: false
   };
 
   var audio = $('audioEl');
@@ -1010,6 +1505,51 @@ body.page-speaking.on-topic .sp-fab { display: none; }
       if (state.topics[i].folder === key) return state.topics[i];
     }
     return null;
+  }
+  function fileInfo(folder, name) {
+    var topic = topicByKey(folder);
+    if (!topic) return null;
+    for (var i = 0; i < topic.files.length; i++) {
+      if (topic.files[i].name === name) return topic.files[i];
+    }
+    return null;
+  }
+  function asksQuestion(topic) { return !!topic && (topic.part === 'Part1' || topic.part === 'Part3'); }
+  // 一条音频叫什么：Part 1 / 3 用它的问题，其余用答案开头
+  function clipTitle(topic, file) {
+    if (!file) return '';
+    if (asksQuestion(topic) && file.question) return file.question;
+    return file.preview || file.question || file.name;
+  }
+  // 话题卡片 / 删除确认里用的一句话：问题，或者答案的前 8 个词
+  function clipLabel(topic, file) {
+    if (!file) return '';
+    if (asksQuestion(topic) && file.question) return file.question;
+    var words = String(file.preview || file.question || file.name).split(/\s+/);
+    return words.slice(0, 8).join(' ') + (words.length > 8 ? '…' : '');
+  }
+  // Part 1 / 3 的原文首行就是问题；手机上问题已经单独显示，展开的全文里不再重复
+  function answerOnly(text, question) {
+    if (!question) return text;
+    var lines = String(text).split('\n');
+    if (lines[0].trim() !== question.trim()) return text;
+    return lines.slice(1).join('\n').replace(/^\s+/, '');
+  }
+  function isTopicPlaying(folder) { return state.player.folder === folder && state.player.playing; }
+  function isClipPlaying(folder, file) {
+    return state.player.folder === folder && state.player.file === file && state.player.playing;
+  }
+  // 把命中的词包成 <mark>（先转义再包，大小写不敏感）
+  function highlight(text, query) {
+    var safe = esc(text);
+    var q = esc(query.trim());
+    if (!q) return safe;
+    var lower = safe.toLowerCase(), needle = q.toLowerCase(), out = '', from = 0, at;
+    while ((at = lower.indexOf(needle, from)) >= 0) {
+      out += safe.slice(from, at) + '<mark>' + safe.slice(at, at + q.length) + '</mark>';
+      from = at + q.length;
+    }
+    return out + safe.slice(from);
   }
 
   // ==================== 数据 ====================
@@ -1063,20 +1603,35 @@ body.page-speaking.on-topic .sp-fab { display: none; }
     var counts = { all: state.topics.length, Part1: 0, Part2: 0, Part3: 0, '其他': 0 };
     state.topics.forEach(function (t) { counts[t.part] += 1; });
     var defs = [['all', '全部'], ['Part1', 'Part 1'], ['Part2', 'Part 2'], ['Part3', 'Part 3'], ['其他', '其他']];
-    $('partChips').innerHTML = defs.map(function (d) {
+    var html = defs.map(function (d) {
       return '<button type="button" class="sp-chip' + (state.partFilter === d[0] ? ' is-active' : '') +
         '" data-action="filter" data-part="' + esc(d[0]) + '">' + esc(d[1]) + ' · ' + counts[d[0]] + '</button>';
     }).join('');
+    if (!isMobile()) { $('partChips').innerHTML = html; return; }
+    // 手机：外层吸顶不滚，里层横向滚；重画时保住横向滚动位置，右边没滚到头时有渐隐提示
+    var old = $('chipTrack');
+    var left = old ? old.scrollLeft : 0;
+    $('partChips').innerHTML = '<div class="sp-chips__track" id="chipTrack">' + html + '</div>';
+    var track = $('chipTrack');
+    track.scrollLeft = left;
+    track.addEventListener('scroll', updateChipFade, { passive: true });
+    updateChipFade();
+  }
+  function updateChipFade() {
+    var track = $('chipTrack');
+    if (track) track.classList.toggle('is-end', track.scrollLeft + track.clientWidth >= track.scrollWidth - 2);
   }
 
   function renderRecent() {
     var searching = !!state.query.trim();
     var section = $('recentSection');
     if (searching) { section.hidden = true; return; }
+    if (isMobile()) { renderRecentPhone(section); return; }
     var recent = state.topics.slice().sort(function (a, b) { return b.latest - a.latest; }).slice(0, 3);
     if (!recent.length) { section.hidden = true; return; }
     section.hidden = false;
     $('recentGrid').innerHTML = recent.map(function (t) {
+      var playing = isTopicPlaying(t.folder);
       return '<div class="sp-card sp-recent" data-action="open-topic" data-folder="' + esc(t.folder) + '" role="button" tabindex="0">' +
         '<div class="sp-row">' + badge(t.part, true) + '<span class="sp-grow"></span>' +
         '<span class="sp-hint">' + esc(fmtAgo(t.latest)) + '</span></div>' +
@@ -1084,9 +1639,31 @@ body.page-speaking.on-topic .sp-fab { display: none; }
         '<div class="sp-row"><span class="sp-hint sp-num">' + t.files.length + ' 条 · ' + fmtTime(t.duration) + '</span>' +
         '<span class="sp-grow"></span>' +
         '<button type="button" class="sp-btn sp-btn--sm" data-action="play-topic" data-folder="' + esc(t.folder) + '">' +
-        ICON.play + ' 连播</button></div>' +
+        (playing ? ICON.pause + ' 暂停' : ICON.play + ' 连播') + '</button></div>' +
         '</div>';
     }).join('');
+  }
+
+  // 手机：两列小卡片，最多 4 个；选了某个 Part 时整块收起，把屏幕让给筛出来的列表
+  function renderRecentPhone(section) {
+    if (state.partFilter !== 'all') { section.hidden = true; return; }
+    var recent = state.topics.slice().sort(function (a, b) { return b.latest - a.latest; }).slice(0, 4);
+    if (!recent.length) { section.hidden = true; return; }
+    section.hidden = false;
+    $('recentGrid').innerHTML = recent.map(function (t) {
+      return '<div class="sp-rchip">' +
+        '<button type="button" class="sp-rchip__open" data-action="open-topic" data-folder="' + esc(t.folder) + '">' +
+        '<span class="sp-rchip__name">' + esc(displayName(t)) + '</span>' +
+        '<span class="sp-rchip__meta">' + esc(PART_BADGE[t.part][1] + ' · ' + fmtAgo(t.latest)) + '</span></button>' +
+        topicPlayButton('sp-rchip__play', t) + '</div>';
+    }).join('');
+  }
+
+  function topicPlayButton(cls, t) {
+    var playing = isTopicPlaying(t.folder);
+    return '<button type="button" class="' + cls + (playing ? ' is-playing' : '') + '" data-action="play-topic" data-folder="' +
+      esc(t.folder) + '" aria-label="' + (playing ? '暂停 ' : '连播 ') + esc(displayName(t)) + '">' +
+      (playing ? ICON.pause : ICON.play) + '</button>';
   }
 
   function displayName(topic) {
@@ -1094,6 +1671,8 @@ body.page-speaking.on-topic .sp-fab { display: none; }
   }
 
   function renderTopicList() {
+    if (isMobile()) { renderTopicListPhone(); return; }
+    $('topicList').parentNode.hidden = false;
     var list = visibleTopics();
     $('topicsLabel').textContent = state.query.trim() ? '话题名命中' : '全部话题';
     $('topicsCount').textContent = list.length + ' 个话题';
@@ -1106,14 +1685,51 @@ body.page-speaking.on-topic .sp-fab { display: none; }
       var sub = t.part === 'Part2' && t.question
         ? t.question
         : t.files.length + ' 条音频 · 最早 ' + fmtDate(t.ctime);
+      var playing = isTopicPlaying(t.folder);
       return '<button type="button" class="sp-list__row" data-action="open-topic" data-folder="' + esc(t.folder) + '">' +
         '<span class="sp-badge sp-badge--' + PART_BADGE[t.part][0] + '" style="width:54px;">' + esc(PART_BADGE[t.part][1]) + '</span>' +
         '<span class="sp-grow"><span class="sp-list__name sp-truncate" style="display:block;">' + esc(displayName(t)) + '</span>' +
         '<span class="sp-list__sub sp-truncate" style="display:block;">' + esc(sub) + '</span></span>' +
         '<span class="sp-list__meta sp-num">' + t.files.length + ' 条 · ' + fmtTime(t.duration) + '</span>' +
-        '<span class="sp-icon-btn" data-action="play-topic" data-folder="' + esc(t.folder) + '" role="button" tabindex="0" aria-label="连播 ' + esc(displayName(t)) + '">' + ICON.play + '</span>' +
+        '<span class="sp-icon-btn" data-action="play-topic" data-folder="' + esc(t.folder) + '" role="button" tabindex="0" aria-label="' +
+        (playing ? '暂停 ' : '连播 ') + esc(displayName(t)) + '">' + (playing ? ICON.pause : ICON.play) + '</span>' +
         '<span style="color:var(--sp-ink-4);display:inline-flex;">' + ICON.chevron + '</span>' +
         '</button>';
+    }).join('');
+  }
+
+  // 手机：一行两张卡片。卡片本身是「打开话题」按钮，连播按钮是它旁边的兄弟元素（不嵌套，读屏能分开读）
+  function renderTopicListPhone() {
+    var list = visibleTopics();
+    var query = state.query.trim();
+    // 搜索时话题名一个都没对上、又会去搜原文（≥2 个字）：整块收起，把位置让给原文命中
+    $('topicList').parentNode.hidden = !!query && query.length >= 2 && !list.length && !state.listError;
+    $('topicsLabel').textContent = query ? '话题名命中'
+      : (state.partFilter === 'all' ? '全部话题' : PART_LABEL[state.partFilter] + ' 话题');
+    $('topicsCount').textContent = list.length + ' 个 · ' + SORT_LABEL[state.sort];
+    if (state.listError) {
+      $('topicList').innerHTML = '<div class="sp-state"><b>列表没加载出来</b><span>检查一下网络，再试一次</span>' +
+        '<button type="button" class="sp-btn sp-btn--primary" data-action="reload-list">重试</button></div>';
+      return;
+    }
+    if (!list.length) {
+      var html;
+      if (query) html = '<span>没有话题名匹配「' + esc(query) + '」</span>';
+      else if (!state.topics.length) {
+        html = '<b>还没有音频</b><span>粘贴一段英文，生成第一条朗读</span>' +
+          '<button type="button" class="sp-btn sp-btn--primary" data-action="new-first">' + ICON.plus + ' 新建第一条</button>';
+      } else html = '<span>' + esc(PART_LABEL[state.partFilter]) + ' 还没有话题</span>';
+      $('topicList').innerHTML = '<div class="sp-state">' + html + '</div>';
+      return;
+    }
+    $('topicList').innerHTML = list.map(function (t) {
+      var playing = isTopicPlaying(t.folder);
+      return '<div class="sp-tcard' + (playing ? ' is-playing' : '') + '">' +
+        '<button type="button" class="sp-tcard__open" data-action="open-topic" data-folder="' + esc(t.folder) + '">' +
+        '<span class="sp-tcard__name"><span class="sp-badge sp-badge--' + PART_BADGE[t.part][0] + '">' + esc(PART_BADGE[t.part][1]) + '</span>' +
+        esc(displayName(t)) + '</span>' +
+        '<span class="sp-tcard__meta sp-num">' + t.files.length + ' 条 · ' + fmtTime(t.duration) + '</span></button>' +
+        topicPlayButton('sp-tcard__play', t) + '</div>';
     }).join('');
   }
 
@@ -1121,24 +1737,50 @@ body.page-speaking.on-topic .sp-fab { display: none; }
     if (query.length < 2) { $('hitsSection').hidden = true; return; }
     fetch('/search_audio?q=' + encodeURIComponent(query)).then(function (r) { return r.json(); }).then(function (data) {
       if (data.query !== state.query.trim()) return;
-      var results = data.results || [];
-      $('hitsSection').hidden = false;
-      $('hitsLabel').textContent = '原文命中 · ' + results.length + (data.truncated ? '+' : '') + ' 条';
-      if (!results.length) {
-        $('hitsList').innerHTML = '<div class="sp-empty">没有音频的原文包含「' + esc(query) + '」</div>';
-        return;
-      }
-      $('hitsList').innerHTML = results.map(function (hit) {
-        return '<button type="button" class="sp-list__row" data-action="open-clip" data-folder="' + esc(hit.folder) +
-          '" data-file="' + esc(hit.filename) + '">' +
-          '<span class="sp-badge sp-badge--' + PART_BADGE[partOf(hit.folder)][0] + '" style="width:54px;">' +
-          esc(PART_BADGE[partOf(hit.folder)][1]) + '</span>' +
-          '<span class="sp-grow"><span class="sp-list__name sp-truncate" style="display:block;">' + esc(hit.folder) + '</span>' +
-          '<span class="sp-list__sub sp-en" style="display:block;">' + esc(hit.snippet) + '</span></span>' +
-          '<span style="color:var(--sp-ink-4);display:inline-flex;">' + ICON.chevron + '</span></button>';
-      }).join('');
+      state.hits = { query: query, results: data.results || [], truncated: data.truncated };
+      renderHits();
     }).catch(function () { $('hitsSection').hidden = true; });
   }, 300);
+
+  function renderHits() {
+    var hits = state.hits;
+    if (!hits || hits.query !== state.query.trim()) return;
+    var results = hits.results;
+    $('hitsSection').hidden = false;
+    $('hitsLabel').textContent = '原文命中 · ' + results.length + (hits.truncated ? '+' : '') + ' 条';
+    if (!results.length) {
+      $('hitsList').innerHTML = '<div class="sp-empty">没有音频的原文包含「' + esc(hits.query) + '」</div>';
+      return;
+    }
+    if (isMobile()) { $('hitsList').innerHTML = results.map(function (hit) { return hitRowPhone(hit, hits.query); }).join(''); return; }
+    $('hitsList').innerHTML = results.map(function (hit) {
+      return '<button type="button" class="sp-list__row" data-action="open-clip" data-folder="' + esc(hit.folder) +
+        '" data-file="' + esc(hit.filename) + '">' +
+        '<span class="sp-badge sp-badge--' + PART_BADGE[partOf(hit.folder)][0] + '" style="width:54px;">' +
+        esc(PART_BADGE[partOf(hit.folder)][1]) + '</span>' +
+        '<span class="sp-grow"><span class="sp-list__name sp-truncate" style="display:block;">' + esc(hit.folder) + '</span>' +
+        '<span class="sp-list__sub sp-en" style="display:block;">' + esc(hit.snippet) + '</span></span>' +
+        '<span style="color:var(--sp-ink-4);display:inline-flex;">' + ICON.chevron + '</span></button>';
+    }).join('');
+  }
+
+  // 手机：话题名（不带「P1 -」）、这一条的问题、命中的那句（高亮），右边直接播放
+  function hitRowPhone(hit, query) {
+    var topic = topicByKey(hit.folder);
+    var part = partOf(hit.folder);
+    var file = fileInfo(hit.folder, hit.filename);
+    var question = asksQuestion(topic) && file && file.question ? file.question : '';
+    var playing = isClipPlaying(hit.folder, hit.filename);
+    return '<div class="sp-hit">' +
+      '<button type="button" class="sp-hit__open" data-action="open-clip" data-folder="' + esc(hit.folder) + '" data-file="' + esc(hit.filename) + '">' +
+      '<span class="sp-hit__title"><span class="sp-badge sp-badge--' + PART_BADGE[part][0] + '">' + esc(PART_BADGE[part][1]) + '</span>' +
+      '<span class="sp-truncate">' + esc(topic ? displayName(topic) : hit.folder) + '</span></span>' +
+      (question ? '<span class="sp-hit__q">' + esc(question) + '</span>' : '') +
+      '<span class="sp-hit__snip">' + highlight(hit.snippet, query) + '</span></button>' +
+      '<button type="button" class="sp-hit__play' + (playing ? ' is-playing' : '') + '" data-action="play-clip" data-folder="' + esc(hit.folder) +
+      '" data-file="' + esc(hit.filename) + '" aria-label="' + (playing ? '暂停这一条' : '播放这一条') + '">' + (playing ? ICON.pause : ICON.play) + '</button>' +
+      '</div>';
+  }
 
   function renderLibrary() {
     renderStats();
@@ -1151,6 +1793,7 @@ body.page-speaking.on-topic .sp-fab { display: none; }
   function renderTopic() {
     var topic = topicByKey(state.topicKey);
     if (!topic) { showLibrary(); return; }
+    if (isMobile()) { renderTopicPhone(topic); return; }
     var current = state.player;
 
     $('topicHead').innerHTML =
@@ -1180,7 +1823,8 @@ body.page-speaking.on-topic .sp-fab { display: none; }
       '<button type="button" class="sp-btn sp-btn--ghost" data-action="toggle-manage">' + ICON.trash +
       (state.manage ? ' 退出管理' : ' 管理') + '</button>' +
       '<span class="sp-grow"></span>' +
-      '<a class="sp-hint" href="/combined" style="color:var(--sp-ink-3);">合集播放页 →</a>';
+      // 带上 #folder=，合集页会直接定位到这个话题
+      '<a class="sp-hint" href="/combined#folder=' + encodeURIComponent(topic.folder) + '" style="color:var(--sp-ink-3);">合集播放页 →</a>';
 
     var rows = topic.files.map(function (file, index) {
       var key = topic.folder + '__' + file.name;
@@ -1229,6 +1873,84 @@ body.page-speaking.on-topic .sp-fab { display: none; }
     renderTopicDangerZone(topic);
   }
 
+  // 手机版话题页：顶栏（返回 / 标题 / ⋯）、可折叠的题卡、一条一行的音频（点中间展开全文，可同时展开多条），
+  // 「连续播放 / 添加」放到底部操作条，其余操作都在 ⋯ 里
+  function renderTopicPhone(topic) {
+    var current = state.player;
+    $('topbarTitle').textContent = displayName(topic);
+    $('topicHead').innerHTML =
+      '<div class="sp-topic-head"><div class="sp-grow">' + badge(topic.part, true) +
+      '<h1 class="sp-h1" style="margin-top:7px;">' + esc(displayName(topic)) + '</h1>' +
+      '<p class="sp-sub sp-num">' + topic.files.length + ' 条音频 · ' + fmtTime(topic.duration) +
+      ' · 最近生成 ' + esc(fmtAgo(topic.latest)) + '</p></div></div>';
+
+    if (topic.part === 'Part2') {
+      if (topic.question) {
+        var long = topic.question.split('\n').length > 3 || topic.question.length > 110;
+        $('topicQuestion').innerHTML = '<section class="sp-question sp-cue' + (state.cueOpen ? ' is-open' : '') + '">' +
+          '<span class="sp-question__label">题卡问题</span>' +
+          '<p class="sp-question__text">' + esc(topic.question) + '</p>' +
+          (long ? '<button type="button" class="sp-cue__toggle" data-action="toggle-cue" aria-expanded="' + state.cueOpen + '">' +
+            (state.cueOpen ? '收起' : '展开全部') + '</button>' : '<span style="height:6px;"></span>') +
+          '</section>';
+      } else {
+        $('topicQuestion').innerHTML = '<section class="sp-question sp-cue">' +
+          '<span class="sp-question__label">题卡问题</span>' +
+          '<p class="sp-question__text" style="color:var(--sp-ink-4);">还没填</p>' +
+          '<button type="button" class="sp-cue__toggle" data-action="edit-question">填写题卡问题</button></section>';
+      }
+    } else {
+      $('topicQuestion').innerHTML = '';
+    }
+
+    $('topicToolbar').innerHTML = state.manage
+      ? '<div class="sp-managebar"><span class="sp-grow">管理中 · 点右边的垃圾桶删单条</span>' +
+        '<button type="button" class="sp-btn sp-btn--sm" data-action="toggle-manage">完成</button></div>'
+      : '';
+
+    var total = topic.files.length;
+    var rows = topic.files.map(function (file, index) {
+      var key = topic.folder + '__' + file.name;
+      var isCurrent = current.folder === topic.folder && current.file === file.name;
+      var playingThis = isCurrent && current.playing;
+      var open = !!state.openClips[key];
+      var question = asksQuestion(topic) && file.question ? file.question : '';
+      var keyAttrs = ' data-key="' + esc(key) + '" data-folder="' + esc(topic.folder) + '" data-file="' + esc(file.name) + '"';
+      var html = '<div class="sp-clip sp-clip--ph' + (isCurrent ? ' is-current' : '') + (open ? ' is-open' : '') + '" data-clip="' + esc(key) + '">' +
+        '<div class="sp-clip__row">' +
+        '<button type="button" class="sp-play' + (playingThis ? ' is-playing' : '') + '" data-action="play-clip" data-folder="' +
+        esc(topic.folder) + '" data-file="' + esc(file.name) + '" aria-label="' + (playingThis ? '暂停' : '播放') + '第 ' + (index + 1) + ' 条">' +
+        (playingThis ? ICON.pause : ICON.play) + '</button>' +
+        '<button type="button" class="sp-clip__main" data-action="toggle-text"' + keyAttrs + ' aria-expanded="' + open + '">' +
+        (question ? '<span class="sp-clip__qtext">' + esc(question) + '</span>' : '') +
+        '<span class="sp-clip__ans">' + esc(file.preview || (question ? '' : file.question) || file.name) + '</span>' +
+        '<span class="sp-clip__meta sp-num">' + (index + 1) + ' / ' + total + ' · ' + fmtTime(file.duration) +
+        (playingThis ? ' · 正在播放' : '') + '</span></button>' +
+        (state.manage
+          ? '<button type="button" class="sp-icon-btn sp-icon-btn--danger" data-action="delete-clip" data-folder="' + esc(topic.folder) +
+            '" data-file="' + esc(file.name) + '" aria-label="删除第 ' + (index + 1) + ' 条音频">' + ICON.trash + '</button>'
+          : '<span class="sp-clip__chev" data-action="toggle-text"' + keyAttrs + ' aria-hidden="true">' + (open ? ICON.up : ICON.down) + '</span>') +
+        '</div>';
+      if (open) {
+        var text = state.textCache[key];
+        html += '<div class="sp-clip__body">' +
+          '<p class="sp-clip__text">' + (text === undefined ? '加载中…' : esc(answerOnly(text, question))) + '</p>' +
+          '<div class="sp-clip__actions">' +
+          '<button type="button" class="sp-btn sp-btn--sm" data-action="copy-text" data-key="' + esc(key) + '">复制原文</button>' +
+          '<a class="sp-btn sp-btn--sm" href="/audio/' + encodeURIComponent(topic.folder) + '/' + encodeURIComponent(file.name) +
+          '" download style="text-decoration:none;">下载 MP3</a>' +
+          '<span class="sp-grow"></span>' +
+          '<button type="button" class="sp-btn sp-btn--sm sp-btn--ghost" data-action="toggle-text"' + keyAttrs + '>' + ICON.up + ' 收起</button>' +
+          '</div></div>';
+      }
+      return html + '</div>';
+    });
+    $('clipList').innerHTML = rows.length ? rows.join('') : '<div class="sp-empty">这个话题下还没有音频</div>';
+    var danger = $('topicDanger');
+    if (danger) danger.remove();
+    renderActionBar();
+  }
+
   function renderTopicDangerZone(topic) {
     var existing = $('topicDanger');
     if (existing) existing.remove();
@@ -1241,11 +1963,67 @@ body.page-speaking.on-topic .sp-fab { display: none; }
     $('viewTopic').appendChild(box);
   }
 
+  // 手机话题页的底部操作条：没在放音频时「连续播放 + 添加」；管理时「删除整个话题 + 完成」（在迷你播放条上面）
+  function renderActionBar() {
+    var bar = $('topicActions');
+    var topic = state.view === 'topic' ? topicByKey(state.topicKey) : null;
+    var show = isMobile() && !!topic && (state.manage || !state.player.file);
+    bar.hidden = !show;
+    if (show) {
+      bar.innerHTML = state.manage
+        ? '<button type="button" class="sp-btn sp-btn--danger" data-action="delete-folder">' + ICON.trash +
+          ' 删除整个话题（' + topic.files.length + ' 条）</button>' +
+          '<button type="button" class="sp-btn" data-action="toggle-manage">完成</button>'
+        : '<button type="button" class="sp-btn sp-btn--primary" data-action="play-topic" data-folder="' + esc(topic.folder) + '">' +
+          ICON.play + ' 连续播放 ' + topic.files.length + ' 条</button>' +
+          '<button type="button" class="sp-btn" data-action="add-here">' + ICON.plus + ' 添加</button>';
+    }
+    updateBottomStack();
+  }
+
+  // ==================== 手机：底部一摞的高度 ====================
+  // 迷你播放条、话题页操作条、浮动按钮加起来有多高。写进 --ui-bottom-bar-h：提示条浮在它上面，
+  // 页面底部留白也按它算。--sp-player-h 是播放条自己的高度，操作条和浮动按钮叠在它上面。
+  var safeProbe = document.createElement('div');
+  safeProbe.style.cssText = 'position:fixed;left:0;bottom:0;width:0;height:0;visibility:hidden;padding-bottom:env(safe-area-inset-bottom);';
+  document.body.appendChild(safeProbe);
+  function safeBottom() { return parseFloat(getComputedStyle(safeProbe).paddingBottom) || 0; }
+
+  function updateBottomStack() {
+    var body = document.body;
+    if (!isMobile()) {
+      body.style.removeProperty('--ui-bottom-bar-h');
+      body.style.removeProperty('--sp-player-h');
+      return;
+    }
+    var safe = safeBottom();
+    var player = $('playerBar');
+    var playerH = player.hidden ? 0 : player.offsetHeight;
+    body.style.setProperty('--sp-player-h', playerH + 'px');
+    var stack = playerH ? playerH - safe : 0;
+    var bar = $('topicActions');
+    if (!bar.hidden) stack += bar.offsetHeight - (playerH ? 0 : safe);
+    var fab = $('composerFab');
+    if (getComputedStyle(fab).display !== 'none') stack += fab.offsetHeight + (playerH ? 12 : 16);
+    if (state.composerOpen) {
+      // 面板开着时提示条要浮在「生成音频」上面
+      var cta = composer.querySelector('.sp-composer__cta');
+      stack = (cta ? cta.offsetHeight - safe : 72) + (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sp-kb')) || 0);
+    }
+    body.style.setProperty('--ui-bottom-bar-h', Math.max(0, Math.round(stack)) + 'px');
+  }
+
   // ==================== 视图切换 ====================
-  function showLibrary(skipHash) {
+  // 当前地址对应的视图已经显示过就不再重画：返回键会同时触发 popstate 和 hashchange，
+  // 以前同一个地址会被处理两次（找不到话题时提示弹两遍）。
+  var lastRouteHash = null;
+
+  function showLibrary(skipHash, restoreY) {
     state.view = 'library';
     state.topicKey = null;
     state.expanded = null;
+    state.openClips = {};
+    state.autoOpenKey = null;
     $('viewLibrary').hidden = false;
     $('viewTopic').hidden = true;
     document.body.classList.remove('on-topic');
@@ -1253,35 +2031,133 @@ body.page-speaking.on-topic .sp-fab { display: none; }
     if (danger) danger.remove();
     renderLibrary();
     placeComposer();
+    renderActionBar();
     if (!skipHash && location.hash) history.replaceState(null, '', location.pathname);
-    window.scrollTo(0, 0);
+    lastRouteHash = location.hash;
+    // 从话题页回来时回到进去前的位置（翻了几十个话题再回来，不用从头翻）
+    window.scrollTo(0, restoreY || 0);
+    onScroll();
   }
 
   function showTopic(folder, file, skipHash) {
     var topic = topicByKey(folder);
     if (!topic) { toast('找不到话题：' + folder, 'error'); return; }
+    // 先压历史记录、再换视图：浏览器在 pushState 那一刻记下当前滚动位置，返回时会按它恢复。
+    // 要是先换成（可能很短的）话题页，记下的就是被截短后的位置。spY 是自己再记一份，返回时主动恢复。
+    if (!skipHash) {
+      var hash = '#folder=' + encodeURIComponent(folder) + (file ? '&file=' + encodeURIComponent(file) : '');
+      if (location.hash !== hash) {
+        if (state.view === 'library') {
+          try { history.replaceState(Object.assign({}, history.state || {}, { spY: window.scrollY }), '', location.href); } catch (e) { /* 忽略 */ }
+        }
+        // fromLibrary：上一条历史就是音频库，「‹ 音频库」可以直接退一步（话题跳话题时不行）
+        history.pushState({ spTopic: true, fromLibrary: state.view === 'library' }, '', hash);
+      }
+    }
     state.view = 'topic';
     state.topicKey = folder;
     state.expanded = null;
+    state.openClips = {};
+    state.autoOpenKey = null;
+    state.cueOpen = false;
+    var key = file ? folder + '__' + file : null;
+    // 手机上从搜索结果点进来：那一条直接展开（短文），要读的字马上能看到
+    if (key && isMobile()) {
+      state.openClips[key] = true;
+      fetchText(folder, file).then(function (text) {
+        if (state.topicKey !== folder || !state.openClips[key]) return;
+        if (text.length > LONG_TEXT) { delete state.openClips[key]; renderTopic(); openReader(folder, file); return; }
+        renderTopic();
+        markLinkedClip(key);
+      });
+    }
     $('viewLibrary').hidden = true;
     $('viewTopic').hidden = false;
     document.body.classList.add('on-topic');
     renderTopic();
     placeComposer();
-    if (!skipHash) {
-      var hash = '#folder=' + encodeURIComponent(folder) + (file ? '&file=' + encodeURIComponent(file) : '');
-      if (location.hash !== hash) history.pushState(null, '', hash);
-    }
+    lastRouteHash = location.hash;
     window.scrollTo(0, 0);
-    if (file) {
-      setTimeout(function () {
-        var node = $('clipList').querySelector('[data-clip="' + (window.CSS && CSS.escape ? CSS.escape(folder + '__' + file) : folder + '__' + file) + '"]');
-        if (!node) return;
-        node.classList.add('is-linked');
-        node.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        setTimeout(function () { node.classList.remove('is-linked'); }, 3000);
-      }, 60);
+    onScroll();
+    if (file) setTimeout(function () { markLinkedClip(key); }, 60);
+  }
+
+  function markLinkedClip(key) {
+    var node = $('clipList').querySelector('[data-clip="' + (window.CSS && CSS.escape ? CSS.escape(key) : key) + '"]');
+    if (!node) return;
+    node.classList.add('is-linked');
+    if (isMobile()) scrollClipIntoView(node, true);
+    else node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(function () { node.classList.remove('is-linked'); }, 3000);
+  }
+
+  // 手机：把一条滚到顶栏下面（被顶栏或底部一摞挡住时才滚）
+  function scrollClipIntoView(node, force) {
+    var rect = node.getBoundingClientRect();
+    var top = ($('topicBar').getBoundingClientRect().bottom || 104) + 8;
+    var bottomLimit = window.innerHeight - (parseFloat(document.body.style.getPropertyValue('--ui-bottom-bar-h')) || 0) - 40;
+    if (!force && rect.top >= top && rect.top < bottomLimit - 60) return;
+    window.scrollTo({ top: Math.max(0, window.scrollY + rect.top - top), behavior: 'smooth' });
+  }
+
+  // 返回音频库：是从音频库点进来的就退一步历史（恢复滚动位置，iOS 侧滑返回也走这条路），否则直接换视图
+  function backToLibrary() {
+    if (history.state && history.state.fromLibrary) history.back();
+    else showLibrary();
+  }
+
+  // ==================== 手机：浮层与返回键 ====================
+  // 手机上每打开一层（新建音频、⋯ 菜单、确认框、完整播放器、全屏阅读）就压一条同地址的历史记录，
+  // 侧滑返回 / 安卓返回键先关掉最上面那层，而不是离开页面。桌面不压记录，行为和以前一样。
+  var layers = [];
+  function pushLayer(name, hide) {
+    if (!isMobile()) return;
+    layers.push({ name: name, hide: hide, resolve: null });
+    history.pushState({ spLayer: name }, '', location.href);
+  }
+  function hasLayer(name) {
+    return layers.length > 0 && layers[layers.length - 1].name === name;
+  }
+  // 由界面上的按钮关闭：有对应的历史记录就退一步，由 popstate 真正关闭；Promise 在关好之后兑现，
+  // 这样「关掉菜单再打开别的」不会和退历史的异步顺序打架。
+  function closeLayer(name, hide) {
+    if (hasLayer(name)) {
+      return new Promise(function (resolve) {
+        layers[layers.length - 1].resolve = resolve;
+        history.back();
+      });
     }
+    for (var i = layers.length - 1; i >= 0; i--) {
+      if (layers[i].name === name) layers.splice(i, 1);
+    }
+    hide();
+    return Promise.resolve();
+  }
+  window.addEventListener('popstate', function (event) {
+    if (layers.length) {
+      var top = layers.pop();
+      top.hide();
+      if (top.resolve) top.resolve();
+      return;
+    }
+    routeFromHash(true, event.state);
+  });
+
+  var lockCount = 0;
+  function lockScroll(on) {
+    lockCount = Math.max(0, lockCount + (on ? 1 : -1));
+    document.documentElement.classList.toggle('sp-lock', lockCount > 0);
+  }
+
+  // 键盘弹出时可见区域变矮：面板和确认框跟着可见区域走，「生成音频」和输入框都留在键盘上面
+  function fitViewport() {
+    if (!isMobile()) return;
+    var vv = window.visualViewport;
+    var height = vv ? vv.height : window.innerHeight;
+    var keyboard = vv ? Math.max(0, window.innerHeight - vv.height - vv.offsetTop) : 0;
+    document.documentElement.style.setProperty('--sp-vvh', Math.round(height) + 'px');
+    document.documentElement.style.setProperty('--sp-kb', Math.round(keyboard) + 'px');
+    if (state.composerOpen) updateBottomStack();
   }
 
   // ==================== 生成面板 ====================
@@ -1300,6 +2176,8 @@ body.page-speaking.on-topic .sp-fab { display: none; }
   // 挑中已有话题时记住它的真实文件夹名：库里有「P1 -  Shoes」这种双空格的历史命名，
   // 按 Part + 名字重新拼会拼出一个新文件夹。
   var pinnedFolder = null;
+  // 手机上从话题页打开时，「存到哪」已经定了，只显示一行摘要（点「更改」才展开 Part 和话题名）
+  var destFixed = false;
 
   function composedFolder() {
     if (pinnedFolder) return pinnedFolder;
@@ -1316,9 +2194,16 @@ body.page-speaking.on-topic .sp-fab { display: none; }
       if (composer.parentNode !== document.body) document.body.appendChild(composer);
       composer.hidden = false;
       composer.classList.toggle('is-open', state.composerOpen);
+      // 收起时只是移到屏幕外，用 inert 让里面的输入框不能被 Tab / 读屏碰到
+      composer.inert = !state.composerOpen;
+      if (state.composerOpen) composer.removeAttribute('aria-hidden'); else composer.setAttribute('aria-hidden', 'true');
+      composer.classList.toggle('is-dest-fixed', destFixed);
       $('sheetBackdrop').hidden = !state.composerOpen;
       $('composerHead').hidden = true;
     } else {
+      composer.inert = false;
+      composer.removeAttribute('aria-hidden');
+      composer.classList.remove('is-dest-fixed');
       composer.classList.remove('is-open');
       $('sheetBackdrop').hidden = true;
       $('composerHead').hidden = false;
@@ -1326,9 +2211,17 @@ body.page-speaking.on-topic .sp-fab { display: none; }
       if (composer.parentNode !== slot) slot.appendChild(composer);
       composer.hidden = state.view === 'topic' && !state.composerOpen;
     }
+    renderDest();
+  }
+
+  function renderDest() {
+    var show = destFixed && isMobile();
+    $('composerDest').hidden = !show;
+    if (show) $('composerDestName').textContent = composedFolder();
   }
 
   function openComposer(folder) {
+    var wasOpen = state.composerOpen;
     state.composerOpen = true;
     if (folder) {
       pinnedFolder = folder;
@@ -1336,14 +2229,38 @@ body.page-speaking.on-topic .sp-fab { display: none; }
       setPart(topic ? (topic.part === '其他' ? 'other' : topic.part.replace('Part', 'P')) : 'other');
       $('topicInput').value = topic ? displayName(topic) : folder;
     }
+    destFixed = !!folder && isMobile();
     placeComposer();
     onTopicFieldChange();
+    if (isMobile() && !wasOpen) {
+      fitViewport();
+      lockScroll(true);
+      pushLayer('composer', hideComposer);
+      composer.scrollTop = 0;
+      growText();
+    }
+    updateBottomStack();
     setTimeout(function () { $('textInput').focus(); }, 60);
   }
 
-  function closeComposer() {
+  function hideComposer() {
+    if (!state.composerOpen) return;
     state.composerOpen = false;
     placeComposer();
+    if (isMobile()) lockScroll(false);
+    updateBottomStack();
+  }
+  function closeComposer() {
+    if (!state.composerOpen) return Promise.resolve();
+    return closeLayer('composer', hideComposer);
+  }
+
+  // 手机上英文框跟着内容长高（至少 6 行，最多 40% 屏高），贴进一整段 Part 2 也能从头看到尾
+  function growText() {
+    var el = $('textInput');
+    if (!isMobile()) { el.style.height = ''; return; }
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight + 2, Math.round(window.innerHeight * 0.4)) + 'px';
   }
 
   function updateWordCount() {
@@ -1410,6 +2327,7 @@ body.page-speaking.on-topic .sp-fab { display: none; }
       : (topic ? '这个话题已有 ' + topic.files.length + ' 条' : '');
     if (folder) checkPart2(folder); else { $('part2Wrap').hidden = true; $('part2Known').hidden = true; }
     renderSuggest();
+    renderDest();
   }
 
   function renderQueue() {
@@ -1420,15 +2338,18 @@ body.page-speaking.on-topic .sp-fab { display: none; }
     box.innerHTML = '<div class="sp-queue__head"><span class="sp-label sp-grow">本次生成 · ' + esc(folder) + '</span>' +
       '<button type="button" class="sp-hint" data-action="open-topic" data-folder="' + esc(folder) +
       '" style="border:none;background:none;color:var(--sp-accent);cursor:pointer;">查看话题</button></div>' +
-      state.queue.map(function (item) {
+      state.queue.map(function (item, index) {
         if (item.status === 'pending') {
           return '<div class="sp-queue__row"><span class="sp-spinner"></span>' +
             '<span class="sp-grow sp-truncate sp-en" style="color:var(--sp-ink-3);">' + esc(item.text) + '</span>' +
             '<span class="sp-hint">生成中</span></div>';
         }
         if (item.status === 'error') {
-          return '<div class="sp-queue__row"><span class="sp-hint" style="color:var(--sp-danger);">失败</span>' +
-            '<span class="sp-grow sp-truncate sp-en">' + esc(item.text) + '</span></div>';
+          // 失败要说清楚为什么，并且能原样再试一次（文本、话题都还在这一条里）
+          return '<div class="sp-queue__row sp-queue__row--error"><span class="sp-hint" style="color:var(--sp-danger);">失败</span>' +
+            '<span class="sp-grow sp-truncate sp-en">' + esc(item.text) + '</span>' +
+            '<button type="button" class="sp-btn sp-btn--sm" data-action="retry-generate" data-index="' + index + '">重试</button>' +
+            '<span class="sp-queue__why">' + esc(item.reason || '生成失败') + '</span></div>';
         }
         return '<div class="sp-queue__row"><span class="sp-done">' + ICON.check + '</span>' +
           '<button type="button" class="sp-play" style="width:32px;height:32px;" data-action="play-clip" data-folder="' +
@@ -1436,6 +2357,23 @@ body.page-speaking.on-topic .sp-fab { display: none; }
           '<span class="sp-grow sp-truncate sp-en">' + esc(item.text) + '</span>' +
           '<span class="sp-hint sp-num">' + fmtTime(item.duration) + '</span></div>';
       }).join('');
+  }
+
+  // 后端把 TTS 的原始异常（「TTS API错误: 401, 响应: …」「HTTPSConnectionPool…」）原样返回，
+  // 给人看的换成一句能照着做的话；原文打到控制台，排查时还能看到
+  function friendlyError(error) {
+    var message = (error && error.message) || '';
+    if (/Invalid folder name/i.test(message)) return '话题名里不能有 / 或 \\，改一下再试';
+    if (/Missing text or folder/i.test(message)) return '英文和话题名都要填';
+    if (error && error.name === 'TypeError') return '网络连不上，文本已保留，稍后点重试';
+    return '语音服务暂时不可用，文本已保留，稍后点重试';
+  }
+
+  function setGenerating(busy) {
+    state.busy = busy;
+    // 只换按钮里的字，图标留着（以前用 textContent 整个替换，生成一次后「＋」就没了）
+    $('generateBtn').disabled = busy;
+    $('generateLabel').textContent = busy ? '生成中…' : '生成音频';
   }
 
   function generate() {
@@ -1450,29 +2388,44 @@ body.page-speaking.on-topic .sp-fab { display: none; }
       if (!question) { toast('Part 2 话题请先填题卡问题', 'error'); $('part2Question').focus(); return; }
       body.question = question;
     }
-
-    var item = { folder: folder, text: text, status: 'pending', duration: 0 };
+    var item = { folder: folder, text: text, body: body, status: 'pending', duration: 0, reason: '' };
     state.queue.unshift(item);
+    sendGenerate(item);
+  }
+
+  // 手机上结果列表在面板下半截，生成 / 失败时把它滚进视野（按钮钉在底部，挡不住它）
+  function revealQueue() {
+    if (!isMobile() || !state.composerOpen) return;
+    var box = $('queueBox');
+    if (!box.hidden) composer.scrollTop = Math.max(0, box.offsetTop - composer.clientHeight * 0.35);
+  }
+
+  function sendGenerate(item) {
+    item.status = 'pending';
+    item.reason = '';
     renderQueue();
-    state.busy = true;
-    window.IELTSUI && window.IELTSUI.setBusy($('generateBtn'), true, '生成中…');
+    revealQueue();
+    setGenerating(true);
 
     fetch('/generate_audio', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+      body: JSON.stringify(item.body)
     }).then(function (r) { return r.json(); }).then(function (data) {
       if (data.error) throw new Error(data.error);
       item.status = 'done';
       item.file = data.filename;
       item.folder = data.folder;
-      $('part2Question').value = '';
+      // 重试成功时，输入框里可能已经是新写的一段了，只有还是这一条的文本才清掉
+      var stillHere = $('textInput').value.trim() === item.text;
+      if (stillHere) $('part2Question').value = '';
       if ($('stayCheck').checked) {
-        $('textInput').value = '';
+        if (stillHere) $('textInput').value = '';
         pinnedFolder = data.folder;
         updateWordCount();
+        growText();
         $('textInput').focus();
-      } else {
+      } else if (stillHere) {
         resetComposer();
       }
       return loadTopics().then(function () {
@@ -1488,11 +2441,14 @@ body.page-speaking.on-topic .sp-fab { display: none; }
       });
     }).catch(function (error) {
       item.status = 'error';
+      item.reason = friendlyError(error);
+      if (window.console) console.warn('生成音频失败：', error && error.message);
       renderQueue();
-      toast(error.message || '生成失败', 'error');
+      revealQueue();
+      // 手机上面板开着时，失败那一行（原因 + 重试）已经滚到眼前了，不再叠一条提示把它盖住
+      if (!(isMobile() && state.composerOpen)) toast('生成失败：' + item.reason, 'error');
     }).then(function () {
-      state.busy = false;
-      window.IELTSUI && window.IELTSUI.setBusy($('generateBtn'), false);
+      setGenerating(false);
       renderQueue();
     });
   }
@@ -1502,6 +2458,7 @@ body.page-speaking.on-topic .sp-fab { display: none; }
     $('part2Question').value = '';
     pinnedFolder = null;
     updateWordCount();
+    growText();
     onTopicFieldChange();
   }
 
@@ -1521,15 +2478,12 @@ body.page-speaking.on-topic .sp-fab { display: none; }
     player.file = file;
     player.list = playlistFor(folder);
     player.index = player.list.indexOf(file);
-    $('seekFill').style.transition = 'none';
-    $('seekFill').style.width = '0%';
-    $('curTime').textContent = '0:00';
-    $('durTime').textContent = '0:00';
-    setTimeout(function () { $('seekFill').style.transition = ''; }, 50);
+    resetProgress();
     audio.src = '/audio/' + encodeURIComponent(folder) + '/' + encodeURIComponent(file);
     audio.playbackRate = player.rate;
     audio.play().catch(function () { /* 用户还没交互过时浏览器会拒绝，忽略即可 */ });
     renderPlayer();
+    followCurrentClip();
   }
 
   function playTopic(folder) {
@@ -1549,12 +2503,22 @@ body.page-speaking.on-topic .sp-fab { display: none; }
     playClip(player.folder, player.list[next]);
   }
 
+  function stopPlayer() {
+    audio.pause();
+    state.player.file = null;
+    renderPlayer();
+    refreshClipStates();
+  }
+
   function renderPlayer() {
     var player = state.player;
     var bar = $('playerBar');
     if (!player.file) {
       bar.hidden = true;
       document.body.classList.remove('has-player');
+      if (state.fpOpen) closeFullPlayer();
+      updateMediaSession();
+      renderActionBar();
       return;
     }
     bar.hidden = false;
@@ -1562,23 +2526,68 @@ body.page-speaking.on-topic .sp-fab { display: none; }
     $('toggleBtn').innerHTML = player.playing ? ICON.pause : ICON.play;
     $('toggleBtn').setAttribute('aria-label', player.playing ? '暂停' : '播放');
     var topic = topicByKey(player.folder);
-    $('playerTitle').textContent = String(player.index + 1).padStart(2, '0') + ' · ' +
-      (topic ? displayName(topic) : player.folder);
-    $('playerSub').textContent = (topic ? topic.part.replace('Part', 'Part ') : '') +
-      ' · ' + (player.index + 1) + ' / ' + player.list.length;
+    var info = $('playerTitle').parentNode;
+    if (isMobile()) {
+      // 手机：标题是这一条在说什么（问题或答案开头），下面是「话题 · 第几条」；点这块打开完整播放器
+      $('playerTitle').textContent = clipTitle(topic, fileInfo(player.folder, player.file));
+      $('playerSub').textContent = (topic ? displayName(topic) : player.folder) + ' · ' + (player.index + 1) + '/' + player.list.length;
+      info.setAttribute('role', 'button');
+      info.setAttribute('tabindex', '0');
+      info.setAttribute('aria-label', '打开播放器：' + $('playerTitle').textContent);
+    } else {
+      $('playerTitle').textContent = String(player.index + 1).padStart(2, '0') + ' · ' +
+        (topic ? displayName(topic) : player.folder);
+      $('playerSub').textContent = (topic ? topic.part.replace('Part', 'Part ') : '') +
+        ' · ' + (player.index + 1) + ' / ' + player.list.length;
+      info.removeAttribute('role');
+      info.removeAttribute('tabindex');
+      info.removeAttribute('aria-label');
+    }
     $('prevBtn').disabled = player.index <= 0;
     $('nextBtn').disabled = player.index >= player.list.length - 1;
     $('rateBtn').textContent = player.rate.toFixed(2).replace(/0$/, '') + '×';
+    updateFullPlayer();
+    updateMediaSession();
+    renderActionBar();
   }
 
-  audio.addEventListener('play', function () { state.player.playing = true; renderPlayer(); refreshClipStates(); });
-  audio.addEventListener('pause', function () { state.player.playing = false; renderPlayer(); refreshClipStates(); });
+  // 进度：迷你条、桌面条、完整播放器的进度条一起画
+  function paintProgress(ratio) {
+    var pct = (Math.max(0, Math.min(1, ratio)) * 100) + '%';
+    Array.prototype.forEach.call(document.querySelectorAll('.sp-seek__fill'), function (fill) { fill.style.width = pct; });
+    $('fpSeek').setAttribute('aria-valuenow', String(Math.round(ratio * 100)));
+  }
+  function paintTimes() {
+    $('curTime').textContent = fmtTime(audio.currentTime);
+    $('fpCur').textContent = fmtTime(audio.currentTime);
+  }
+  function resetProgress() {
+    var fills = document.querySelectorAll('.sp-seek__fill');
+    Array.prototype.forEach.call(fills, function (fill) { fill.style.transition = 'none'; });
+    paintProgress(0);
+    $('curTime').textContent = '0:00';
+    $('durTime').textContent = '0:00';
+    $('fpCur').textContent = '0:00';
+    $('fpDur').textContent = '0:00';
+    setTimeout(function () {
+      Array.prototype.forEach.call(fills, function (fill) { fill.style.transition = ''; });
+    }, 50);
+  }
+
+  audio.addEventListener('play', function () { state.player.playing = true; renderPlayer(); refreshClipStates(); updatePositionState(); });
+  audio.addEventListener('pause', function () { state.player.playing = false; renderPlayer(); refreshClipStates(); updatePositionState(); });
   audio.addEventListener('ended', function () { step(1); });
-  audio.addEventListener('loadedmetadata', function () { $('durTime').textContent = fmtTime(audio.duration); });
+  audio.addEventListener('loadedmetadata', function () {
+    $('durTime').textContent = fmtTime(audio.duration);
+    $('fpDur').textContent = fmtTime(audio.duration);
+    updatePositionState();
+  });
+  audio.addEventListener('ratechange', updatePositionState);
+  audio.addEventListener('seeked', updatePositionState);
   audio.addEventListener('timeupdate', function () {
     if (seeking) return;
-    $('curTime').textContent = fmtTime(audio.currentTime);
-    $('seekFill').style.width = (audio.duration ? audio.currentTime / audio.duration * 100 : 0) + '%';
+    paintTimes();
+    paintProgress(audio.duration ? audio.currentTime / audio.duration : 0);
   });
   audio.addEventListener('error', function () {
     if (audio.src) toast('这条音频加载失败', 'error');
@@ -1586,14 +2595,201 @@ body.page-speaking.on-topic .sp-fab { display: none; }
 
   function refreshClipStates() {
     if (state.view === 'topic') renderTopic();
-    else renderRecent();
+    else { renderRecent(); renderTopicList(); if (isMobile()) renderHits(); }
+    if (state.readerKey) renderReaderFoot();
+  }
+
+  // 手机：连播换到下一条时，把这一条展开（上一条自动展开的收回去）；用户几秒内没自己滚动时才跟着滚
+  var lastUserScroll = 0;
+  function followCurrentClip() {
+    var player = state.player;
+    if (!isMobile() || state.view !== 'topic' || state.topicKey !== player.folder || !player.file) return;
+    var key = player.folder + '__' + player.file;
+    if (state.autoOpenKey && state.autoOpenKey !== key) {
+      delete state.openClips[state.autoOpenKey];
+      state.autoOpenKey = null;
+    }
+    if (state.openClips[key]) return;
+    var folder = player.folder, file = player.file;
+    fetchText(folder, file).then(function (text) {
+      if (state.player.file !== file || state.topicKey !== folder || state.openClips[key]) return;
+      if (text.length > LONG_TEXT) return;
+      state.openClips[key] = true;
+      state.autoOpenKey = key;
+      renderTopic();
+      if (Date.now() - lastUserScroll > 4000) {
+        var node = $('clipList').querySelector('[data-clip="' + (window.CSS && CSS.escape ? CSS.escape(key) : key) + '"]');
+        if (node) scrollClipIntoView(node, false);
+      }
+    });
+  }
+
+  // ==================== 手机：完整播放器 ====================
+  function openFullPlayer() {
+    if (!isMobile() || !state.player.file || state.fpOpen) return;
+    state.fpOpen = true;
+    $('fullPlayer').hidden = false;
+    $('fpBackdrop').hidden = false;
+    $('fpBody').dataset.key = '';
+    lockScroll(true);
+    updateFullPlayer();
+    $('fpCur').textContent = fmtTime(audio.currentTime);
+    $('fpDur').textContent = fmtTime(audio.duration);
+    pushLayer('fullplayer', hideFullPlayer);
+  }
+  function hideFullPlayer() {
+    if (!state.fpOpen) return;
+    state.fpOpen = false;
+    $('fullPlayer').hidden = true;
+    $('fpBackdrop').hidden = true;
+    $('fullPlayer').style.transform = '';
+    $('fullPlayer').style.transition = '';
+    lockScroll(false);
+  }
+  function closeFullPlayer() { return closeLayer('fullplayer', hideFullPlayer); }
+
+  function updateFullPlayer() {
+    if (!state.fpOpen) return;
+    var player = state.player;
+    if (!player.file) return;
+    var topic = topicByKey(player.folder);
+    var file = fileInfo(player.folder, player.file);
+    $('fpTopic').textContent = topic ? displayName(topic) : player.folder;
+    $('fpIndex').textContent = (topic ? PART_LABEL[topic.part] + ' · ' : '') + '第 ' + (player.index + 1) + ' / ' + player.list.length + ' 条';
+    $('fpToggle').innerHTML = player.playing ? ICON.pause : ICON.play;
+    $('fpToggle').setAttribute('aria-label', player.playing ? '暂停' : '播放');
+    $('fullPlayer').querySelector('[data-action="prev"]').disabled = player.index <= 0;
+    $('fullPlayer').querySelector('[data-action="next"]').disabled = player.index >= player.list.length - 1;
+    Array.prototype.forEach.call($('fpRate').children, function (btn) {
+      btn.classList.toggle('is-active', Number(btn.dataset.rate) === player.rate);
+    });
+    // 正文只在换了一条或刚读到原文时重画，播放 / 暂停不打断阅读位置
+    var key = player.folder + '__' + player.file;
+    var text = state.textCache[key];
+    var body = $('fpBody');
+    var stamp = key + (text === undefined ? '' : '#loaded');
+    if (body.dataset.key === stamp) return;
+    body.dataset.key = stamp;
+    var question = asksQuestion(topic) && file && file.question ? file.question : '';
+    body.innerHTML = (question ? '<p class="sp-fp__q">' + esc(question) + '</p>' : '') +
+      '<p class="sp-fp__text">' + (text === undefined ? '加载中…' : esc(answerOnly(text, question))) + '</p>';
+    body.scrollTop = 0;
+    if (text === undefined) {
+      fetchText(player.folder, player.file).then(function () { updateFullPlayer(); });
+    }
+  }
+
+  // 往下拖顶部把手（或标题行）收起完整播放器
+  (function () {
+    var sheet = $('fullPlayer');
+    var startY = null, dy = 0;
+    function down(event) {
+      if (event.target.closest('button')) return;
+      startY = event.clientY; dy = 0;
+      sheet.style.transition = 'none';
+      try { event.currentTarget.setPointerCapture(event.pointerId); } catch (e) { /* 忽略 */ }
+    }
+    function move(event) {
+      if (startY === null) return;
+      dy = Math.max(0, event.clientY - startY);
+      sheet.style.transform = dy ? 'translateY(' + dy + 'px)' : '';
+    }
+    function up() {
+      if (startY === null) return;
+      startY = null;
+      if (dy > 110) { closeFullPlayer(); return; }
+      sheet.style.transition = 'transform .2s ease';
+      sheet.style.transform = '';
+    }
+    [$('fpGrab'), $('fpHead')].forEach(function (el) {
+      el.addEventListener('pointerdown', down);
+      el.addEventListener('pointermove', move);
+      el.addEventListener('pointerup', up);
+      el.addEventListener('pointercancel', up);
+    });
+  })();
+
+  function setRate(rate) {
+    state.player.rate = rate;
+    audio.playbackRate = rate;
+    renderPlayer();
+  }
+
+  // ==================== 锁屏 / 耳机控制（Media Session） ====================
+  // 锁屏、控制中心、AirPods 上能看到这一条的标题，能播放 / 暂停 / 上一条 / 下一条 / 拖进度
+  var media = ('mediaSession' in navigator) ? navigator.mediaSession : null;
+  var mediaKey = null;
+  function updateMediaSession() {
+    if (!media) return;
+    var player = state.player;
+    try {
+      if (!player.file) {
+        media.metadata = null;
+        mediaKey = null;
+        media.playbackState = 'none';
+        return;
+      }
+      var key = player.folder + '__' + player.file;
+      if (key !== mediaKey && window.MediaMetadata) {
+        var topic = topicByKey(player.folder);
+        media.metadata = new MediaMetadata({
+          title: clipTitle(topic, fileInfo(player.folder, player.file)) || player.file,
+          artist: (topic ? displayName(topic) : player.folder) + ' · ' + (player.index + 1) + '/' + player.list.length,
+          album: '口语音频库',
+          artwork: [{ src: '/static/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }]
+        });
+        mediaKey = key;
+      }
+      media.playbackState = player.playing ? 'playing' : 'paused';
+    } catch (e) { /* 老浏览器不支持某些字段，忽略 */ }
+  }
+  function updatePositionState() {
+    if (!media || !media.setPositionState || !audio.duration || !isFinite(audio.duration)) return;
+    try {
+      media.setPositionState({
+        duration: audio.duration,
+        playbackRate: audio.playbackRate || 1,
+        position: Math.min(audio.currentTime, audio.duration)
+      });
+    } catch (e) { /* 忽略 */ }
+  }
+  if (media) {
+    var mediaHandlers = {
+      play: function () { audio.play(); },
+      pause: function () { audio.pause(); },
+      previoustrack: function () { step(-1); },
+      nexttrack: function () { step(1); },
+      seekto: function (details) {
+        if (details && details.seekTime != null && audio.duration) {
+          audio.currentTime = Math.min(details.seekTime, audio.duration);
+          updatePositionState();
+        }
+      },
+      stop: stopPlayer
+    };
+    Object.keys(mediaHandlers).forEach(function (action) {
+      try { media.setActionHandler(action, mediaHandlers[action]); } catch (e) { /* 这个动作不支持 */ }
+    });
   }
 
   // ==================== 弹窗 ====================
-  function closeDialog() {
+  function hideDialog() {
+    if ($('dialog').hidden) return;
     $('dialog').hidden = true;
     $('dialogBackdrop').hidden = true;
     $('dialog').innerHTML = '';
+    if (isMobile()) lockScroll(false);
+  }
+  function closeDialog() { return closeLayer('dialog', hideDialog); }
+  function showDialog() {
+    var wasHidden = $('dialog').hidden;
+    $('dialog').hidden = false;
+    $('dialogBackdrop').hidden = false;
+    if (wasHidden && isMobile()) {
+      fitViewport();
+      lockScroll(true);
+      pushLayer('dialog', hideDialog);
+    }
   }
 
   function confirmDialog(options) {
@@ -1607,10 +2803,9 @@ body.page-speaking.on-topic .sp-fab { display: none; }
       '<button type="button" class="sp-btn ' + (options.danger ? 'sp-btn--danger-solid' : 'sp-btn--primary') +
       '" data-dialog="ok">' + esc(options.confirmText || '确定') + '</button>' +
       '</div>';
-    dialog.hidden = false;
-    $('dialogBackdrop').hidden = false;
+    showDialog();
     dialog.querySelector('[data-dialog="cancel"]').onclick = closeDialog;
-    dialog.querySelector('[data-dialog="ok"]').onclick = function () { closeDialog(); options.onConfirm(); };
+    dialog.querySelector('[data-dialog="ok"]').onclick = function () { closeDialog().then(options.onConfirm); };
   }
 
   function questionDialog(topic) {
@@ -1623,8 +2818,7 @@ body.page-speaking.on-topic .sp-fab { display: none; }
       '<button type="button" class="sp-btn" data-dialog="cancel">取消</button>' +
       '<button type="button" class="sp-btn sp-btn--primary" data-dialog="ok">保存</button>' +
       '</div>';
-    dialog.hidden = false;
-    $('dialogBackdrop').hidden = false;
+    showDialog();
     $('dialogQuestion').value = topic.question || '';
     $('dialogQuestion').focus();
     dialog.querySelector('[data-dialog="cancel"]').onclick = closeDialog;
@@ -1688,6 +2882,173 @@ body.page-speaking.on-topic .sp-fab { display: none; }
       });
   }
 
+  // 复制：没有 navigator.clipboard（非 https、老浏览器）时退回 execCommand，失败要告诉用户
+  function copyText(text) {
+    function fallback() {
+      return new Promise(function (resolve, reject) {
+        var area = document.createElement('textarea');
+        area.value = text;
+        area.setAttribute('readonly', '');
+        area.style.cssText = 'position:fixed;top:0;left:0;opacity:0;';
+        document.body.appendChild(area);
+        area.select();
+        var ok = false;
+        try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+        area.remove();
+        if (ok) resolve(); else reject(new Error('copy failed'));
+      });
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).catch(fallback);
+    }
+    return fallback();
+  }
+
+  // ==================== 手机：底部菜单（⋯） ====================
+  var sheetItems = [];
+  function openSheet(title, items) {
+    sheetItems = items;
+    $('moreSheet').innerHTML = (title ? '<div class="sp-sheet__title">' + esc(title) + '</div>' : '') +
+      items.map(function (item, index) {
+        return '<button type="button" class="sp-sheet__item' + (item.danger ? ' is-danger' : '') + (item.on ? ' is-on' : '') +
+          '" data-sheet-index="' + index + '">' + (item.icon || '') +
+          '<span class="sp-sheet__text"><span>' + esc(item.label) + '</span>' +
+          (item.sub ? '<span class="sp-sheet__sub">' + esc(item.sub) + '</span>' : '') + '</span>' +
+          (item.on ? ICON.check : '') + '</button>';
+      }).join('') +
+      '<button type="button" class="sp-sheet__cancel" data-sheet-cancel>取消</button>';
+    $('moreSheet').hidden = false;
+    $('moreBackdrop').hidden = false;
+    lockScroll(true);
+    pushLayer('sheet', hideSheet);
+  }
+  function hideSheet() {
+    if ($('moreSheet').hidden) return;
+    $('moreSheet').hidden = true;
+    $('moreBackdrop').hidden = true;
+    lockScroll(false);
+  }
+  function closeSheet() { return closeLayer('sheet', hideSheet); }
+
+  function toggleLibraryManage() {
+    state.manage = !state.manage;
+    $('manageToggle').textContent = state.manage ? '退出管理' : '管理';
+    toast(state.manage ? '管理模式已开，进入话题后可以删除' : '已退出管理模式');
+  }
+
+  function libraryMenu() {
+    openSheet('口语音频库', [
+      { label: state.manage ? '退出管理模式' : '管理音频', sub: '打开后，进到话题里可以删单条或整个话题', icon: ICON.gear, on: state.manage,
+        run: toggleLibraryManage },
+      { label: '合集播放页', sub: '把一个话题的音频拼成一整条播放', icon: ICON.layers,
+        run: function () { location.href = '/combined'; } }
+    ]);
+  }
+
+  function topicMenu() {
+    var topic = topicByKey(state.topicKey);
+    if (!topic) return;
+    var allOpen = topic.files.every(function (f) { return state.openClips[topic.folder + '__' + f.name]; });
+    var items = [
+      { label: '添加音频到这个话题', icon: ICON.plusLg, run: function () { openComposer(topic.folder); } }
+    ];
+    if (topic.part === 'Part2') {
+      items.push({ label: topic.question ? '编辑题卡问题' : '填写题卡问题', icon: ICON.edit, run: function () { questionDialog(topic); } });
+    }
+    items.push(
+      { label: allOpen ? '全部收起' : '全部展开', sub: allOpen ? '' : '一次看完每一条的原文（特别长的除外）', icon: ICON.expand,
+        run: function () { expandAll(topic, !allOpen); } },
+      { label: state.manage ? '退出管理' : '管理（删除音频）', icon: ICON.gear, on: state.manage,
+        run: function () { state.manage = !state.manage; renderTopic(); } },
+      { label: '合集播放页', sub: '这个话题拼成一整条播放', icon: ICON.layers,
+        run: function () { location.href = '/combined#folder=' + encodeURIComponent(topic.folder); } },
+      { label: '删除整个话题…', sub: topic.files.length + ' 条音频和原文都会删掉', icon: ICON.trashLg, danger: true,
+        run: function () { confirmDeleteFolder(topic); } }
+    );
+    openSheet(displayName(topic), items);
+  }
+
+  function expandAll(topic, open) {
+    if (!open) { state.openClips = {}; state.autoOpenKey = null; renderTopic(); return; }
+    Promise.all(topic.files.map(function (f) { return fetchText(topic.folder, f.name); })).then(function (texts) {
+      if (state.topicKey !== topic.folder) return;
+      topic.files.forEach(function (f, i) {
+        if (texts[i].length <= LONG_TEXT) state.openClips[topic.folder + '__' + f.name] = true;
+      });
+      renderTopic();
+    });
+  }
+
+  function confirmDeleteFolder(topic) {
+    confirmDialog({
+      title: '删除整个话题？',
+      body: esc(topic.folder) + ' · ' + topic.files.length + ' 条音频',
+      warn: '这个话题下所有音频和原文都会被删除，无法恢复。',
+      confirmText: '删除话题',
+      danger: true,
+      onConfirm: function () { deleteFolder(topic.folder); }
+    });
+  }
+
+  // ==================== 手机：长文全屏阅读 ====================
+  function openReader(folder, file) {
+    var key = folder + '__' + file;
+    var topic = topicByKey(folder);
+    var index = topic ? topic.files.map(function (f) { return f.name; }).indexOf(file) : -1;
+    state.readerKey = key;
+    $('reader').dataset.folder = folder;
+    $('reader').dataset.file = file;
+    $('readerTitle').textContent = (topic ? displayName(topic) : folder) + (index >= 0 ? ' · 第 ' + (index + 1) + ' 条' : '');
+    $('readerText').textContent = state.textCache[key] === undefined ? '加载中…' : state.textCache[key];
+    if (state.textCache[key] === undefined) {
+      fetchText(folder, file).then(function (text) { if (state.readerKey === key) $('readerText').textContent = text; });
+    }
+    renderReaderFoot();
+    var wasHidden = $('reader').hidden;
+    $('reader').hidden = false;
+    $('reader').querySelector('.sp-reader__body').scrollTop = 0;
+    document.body.classList.add('sp-reading');
+    if (wasHidden) { lockScroll(true); pushLayer('reader', hideReader); }
+  }
+  function renderReaderFoot() {
+    var folder = $('reader').dataset.folder, file = $('reader').dataset.file;
+    if (!folder) return;
+    var playing = isClipPlaying(folder, file);
+    $('readerFoot').innerHTML =
+      '<button type="button" class="sp-btn sp-btn--primary" data-action="play-clip" data-folder="' + esc(folder) + '" data-file="' + esc(file) + '">' +
+      (playing ? ICON.pause + ' 暂停' : ICON.play + ' 播放') + '</button>' +
+      '<button type="button" class="sp-btn" data-action="copy-text" data-key="' + esc(folder + '__' + file) + '">复制原文</button>' +
+      '<a class="sp-btn" href="/audio/' + encodeURIComponent(folder) + '/' + encodeURIComponent(file) + '" download style="text-decoration:none;">下载</a>';
+  }
+  function hideReader() {
+    if ($('reader').hidden) return;
+    $('reader').hidden = true;
+    state.readerKey = null;
+    document.body.classList.remove('sp-reading');
+    lockScroll(false);
+  }
+  function closeReader() { return closeLayer('reader', hideReader); }
+
+  // 手机上点一条：短文就地展开（可以同时展开几条），长文进全屏阅读
+  function toggleClipPhone(folder, file) {
+    var key = folder + '__' + file;
+    if (state.openClips[key]) {
+      delete state.openClips[key];
+      if (state.autoOpenKey === key) state.autoOpenKey = null;
+      renderTopic();
+      return;
+    }
+    var cached = state.textCache[key];
+    if (cached !== undefined && cached.length > LONG_TEXT) { openReader(folder, file); return; }
+    state.openClips[key] = true;
+    renderTopic();
+    fetchText(folder, file).then(function (text) {
+      if (!state.openClips[key]) return;
+      if (text.length > LONG_TEXT) { delete state.openClips[key]; renderTopic(); openReader(folder, file); return; }
+      renderTopic();
+    });
+  }
+
   // ==================== 事件 ====================
   document.addEventListener('click', function (event) {
     var target = event.target.closest('[data-action]');
@@ -1700,13 +3061,18 @@ body.page-speaking.on-topic .sp-fab { display: none; }
       state.partFilter = target.dataset.part;
       renderChips();
       renderTopicList();
+      if (isMobile()) renderRecent();
       return;
     }
-    if (action === 'open-topic') { event.stopPropagation(); closeComposer(); showTopic(folder); return; }
-    if (action === 'open-clip') { closeComposer(); showTopic(folder, file); return; }
+    if (action === 'open-topic') {
+      event.stopPropagation();
+      closeComposer().then(function () { showTopic(folder); });
+      return;
+    }
+    if (action === 'open-clip') { closeComposer().then(function () { showTopic(folder, file); }); return; }
     if (action === 'play-topic') { event.stopPropagation(); playTopic(folder); return; }
     if (action === 'play-clip') { event.stopPropagation(); playClip(folder, file); return; }
-    if (action === 'back') { showLibrary(); return; }
+    if (action === 'back') { backToLibrary(); return; }
     if (action === 'add-here') { openComposer(state.topicKey); return; }
     if (action === 'close-composer') { closeComposer(); return; }
     if (action === 'toggle-manage') {
@@ -1716,6 +3082,7 @@ body.page-speaking.on-topic .sp-fab { display: none; }
     }
     if (action === 'edit-question') { questionDialog(topicByKey(state.topicKey)); return; }
     if (action === 'toggle-text') {
+      if (isMobile() && target.dataset.folder) { toggleClipPhone(target.dataset.folder, target.dataset.file); return; }
       var key = target.dataset.key;
       state.expanded = state.expanded === key ? null : key;
       renderTopic();
@@ -1728,17 +3095,19 @@ body.page-speaking.on-topic .sp-fab { display: none; }
       return;
     }
     if (action === 'copy-text') {
-      var text = state.textCache[target.dataset.key] || '';
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(text).then(function () { toast('原文已复制', 'success'); });
-      }
+      var text = state.textCache[target.dataset.key];
+      if (text === undefined) { toast('原文还在加载，稍等一下', 'error'); return; }
+      copyText(text).then(function () { toast('原文已复制', 'success'); },
+        function () { toast('没能复制，长按文字可以手动选择', 'error'); });
       return;
     }
     if (action === 'delete-clip') {
       event.stopPropagation();
+      var clipTopic = topicByKey(folder);
       confirmDialog({
         title: '删除这条音频？',
-        body: esc(file),
+        // 手机上说这条讲的是什么（问题或答案开头），比文件名好认
+        body: isMobile() ? esc(clipLabel(clipTopic, fileInfo(folder, file))) : esc(file),
         warn: '音频文件和它的英文原文会一起删除，无法恢复。',
         confirmText: '删除',
         danger: true,
@@ -1747,15 +3116,7 @@ body.page-speaking.on-topic .sp-fab { display: none; }
       return;
     }
     if (action === 'delete-folder') {
-      var topic = topicByKey(state.topicKey);
-      confirmDialog({
-        title: '删除整个话题？',
-        body: esc(topic.folder) + ' · ' + topic.files.length + ' 条音频',
-        warn: '这个话题下所有音频和原文都会被删除，无法恢复。',
-        confirmText: '删除话题',
-        danger: true,
-        onConfirm: function () { deleteFolder(topic.folder); }
-      });
+      confirmDeleteFolder(topicByKey(state.topicKey));
       return;
     }
     if (action === 'pick-topic') {
@@ -1774,6 +3135,42 @@ body.page-speaking.on-topic .sp-fab { display: none; }
       $('textInput').focus();
       return;
     }
+    if (action === 'retry-generate') {
+      var item = state.queue[Number(target.dataset.index)];
+      if (item && item.status === 'error' && !state.busy) sendGenerate(item);
+      return;
+    }
+    // ---- 下面这些只在手机上出现 ----
+    if (action === 'lib-more') { libraryMenu(); return; }
+    if (action === 'topic-more') { topicMenu(); return; }
+    if (action === 'toggle-cue') { state.cueOpen = !state.cueOpen; renderTopic(); return; }
+    if (action === 'new-first') { openComposer(null); return; }
+    if (action === 'reload-list') { bootList(); return; }
+    if (action === 'dest-change') {
+      destFixed = false;
+      composer.classList.remove('is-dest-fixed');
+      renderDest();
+      $('topicInput').focus();
+      return;
+    }
+    if (action === 'close-fullplayer') { closeFullPlayer(); return; }
+    if (action === 'fp-open-topic') {
+      var playing = state.player;
+      closeFullPlayer().then(function () {
+        if (state.view === 'topic' && state.topicKey === playing.folder) {
+          var node = $('clipList').querySelector('.sp-clip.is-current');
+          if (node) scrollClipIntoView(node, true);
+        } else if (playing.folder) {
+          showTopic(playing.folder, playing.file);
+        }
+      });
+      return;
+    }
+    if (action === 'toggle') { if (audio.paused) audio.play(); else audio.pause(); return; }
+    if (action === 'prev') { step(-1); return; }
+    if (action === 'next') { step(1); return; }
+    if (action === 'stop-player') { closeFullPlayer().then(stopPlayer); return; }
+    if (action === 'close-reader') { closeReader(); return; }
   });
 
   // 回车也能打开话题（列表行是 button，卡片是 div[role=button]）
@@ -1793,12 +3190,18 @@ body.page-speaking.on-topic .sp-fab { display: none; }
     if (query.length < 2) $('hitsSection').hidden = true;
     else runTextSearch(query);
   });
-  $('sortSelect').addEventListener('change', function () { state.sort = this.value; renderTopicList(); });
-  $('manageToggle').addEventListener('click', function () {
-    state.manage = !state.manage;
-    this.textContent = state.manage ? '退出管理' : '管理';
-    toast(state.manage ? '管理模式已开，进入话题后可以删除' : '已退出管理模式');
+  // 手机上搜索框有焦点时浮动按钮让开（安卓键盘弹起时它会浮到结果上面）
+  $('searchInput').addEventListener('focus', function () {
+    if (!isMobile()) return;
+    document.body.classList.add('sp-search-focus');
+    updateBottomStack();
   });
+  $('searchInput').addEventListener('blur', function () {
+    document.body.classList.remove('sp-search-focus');
+    updateBottomStack();
+  });
+  $('sortSelect').addEventListener('change', function () { state.sort = this.value; renderTopicList(); });
+  $('manageToggle').addEventListener('click', toggleLibraryManage);
   $('partSeg').addEventListener('click', function (event) {
     var btn = event.target.closest('[data-part]');
     if (!btn) return;
@@ -1810,7 +3213,7 @@ body.page-speaking.on-topic .sp-fab { display: none; }
   $('topicInput').addEventListener('blur', function () {
     setTimeout(function () { state.suggestOpen = false; renderSuggest(); }, 160);
   });
-  $('textInput').addEventListener('input', updateWordCount);
+  $('textInput').addEventListener('input', function () { updateWordCount(); growText(); });
   $('textInput').addEventListener('keydown', function (event) {
     if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') { event.preventDefault(); generate(); }
   });
@@ -1820,8 +3223,18 @@ body.page-speaking.on-topic .sp-fab { display: none; }
   });
   $('sheetBackdrop').addEventListener('click', closeComposer);
   $('dialogBackdrop').addEventListener('click', closeDialog);
+  $('moreBackdrop').addEventListener('click', closeSheet);
+  $('fpBackdrop').addEventListener('click', closeFullPlayer);
+  $('moreSheet').addEventListener('click', function (event) {
+    if (event.target.closest('[data-sheet-cancel]')) { closeSheet(); return; }
+    var btn = event.target.closest('[data-sheet-index]');
+    if (!btn) return;
+    var item = sheetItems[Number(btn.dataset.sheetIndex)];
+    closeSheet().then(function () { if (item && item.run) item.run(); });
+  });
   document.addEventListener('keydown', function (event) {
     if (event.key !== 'Escape') return;
+    if (layers.length) { history.back(); return; }
     if (!$('dialog').hidden) closeDialog();
     else if (state.composerOpen && isMobile()) closeComposer();
   });
@@ -1829,12 +3242,7 @@ body.page-speaking.on-topic .sp-fab { display: none; }
   $('toggleBtn').addEventListener('click', function () { if (audio.paused) audio.play(); else audio.pause(); });
   $('prevBtn').addEventListener('click', function () { step(-1); });
   $('nextBtn').addEventListener('click', function () { step(1); });
-  $('closePlayer').addEventListener('click', function () {
-    audio.pause();
-    state.player.file = null;
-    renderPlayer();
-    refreshClipStates();
-  });
+  $('closePlayer').addEventListener('click', stopPlayer);
   $('rateBtn').addEventListener('click', function () {
     var rates = [1, 1.25, 1.5, 0.75];
     var next = rates[(rates.indexOf(state.player.rate) + 1) % rates.length];
@@ -1842,41 +3250,112 @@ body.page-speaking.on-topic .sp-fab { display: none; }
     audio.playbackRate = next;
     renderPlayer();
   });
-  function seekTo(clientX) {
+  $('fpRate').addEventListener('click', function (event) {
+    var btn = event.target.closest('[data-rate]');
+    if (btn) setRate(Number(btn.dataset.rate));
+  });
+  // 手机：点迷你播放条中间（标题那块）打开完整播放器
+  $('playerTitle').parentNode.addEventListener('click', function () { if (isMobile()) openFullPlayer(); });
+  $('playerTitle').parentNode.addEventListener('keydown', function (event) {
+    if (isMobile() && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); openFullPlayer(); }
+  });
+
+  // ---- 拖动进度条 ----
+  var seeking = null;   // 正在拖的那根进度条
+  function seekTo(bar, clientX) {
     if (!audio.duration) return;
-    var rect = $('seekBar').getBoundingClientRect();
+    var rect = bar.getBoundingClientRect();
     var ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
     // 手动跳转时关掉过渡，否则往回拖会看到指针慢慢“滑”回去
-    $('seekFill').style.transition = 'none';
-    $('seekFill').style.width = (ratio * 100) + '%';
+    var fills = document.querySelectorAll('.sp-seek__fill');
+    Array.prototype.forEach.call(fills, function (fill) { fill.style.transition = 'none'; });
+    paintProgress(ratio);
     audio.currentTime = ratio * audio.duration;
-    setTimeout(function () { $('seekFill').style.transition = ''; }, 50);
+    paintTimes();
+    setTimeout(function () {
+      Array.prototype.forEach.call(fills, function (fill) { fill.style.transition = ''; });
+    }, 50);
   }
-  var seeking = false;
-  $('seekBar').addEventListener('pointerdown', function (event) {
-    seeking = true;
-    this.setPointerCapture(event.pointerId);
-    seekTo(event.clientX);
-  });
-  $('seekBar').addEventListener('pointermove', function (event) {
-    if (seeking) seekTo(event.clientX);
-  });
-  $('seekBar').addEventListener('pointerup', function (event) {
-    seeking = false;
-    this.releasePointerCapture(event.pointerId);
+  function bindSeek(bar) {
+    bar.addEventListener('pointerdown', function (event) {
+      seeking = bar;
+      try { bar.setPointerCapture(event.pointerId); } catch (e) { /* 忽略 */ }
+      seekTo(bar, event.clientX);
+    });
+    bar.addEventListener('pointermove', function (event) {
+      if (seeking === bar) seekTo(bar, event.clientX);
+    });
+    function end(event) {
+      if (seeking !== bar) return;
+      seeking = null;
+      try { bar.releasePointerCapture(event.pointerId); } catch (e) { /* 忽略 */ }
+      paintTimes();
+      paintProgress(audio.duration ? audio.currentTime / audio.duration : 0);
+    }
+    bar.addEventListener('pointerup', end);
+    // 触屏上浏览器接管手势时只发 pointercancel，不发 pointerup。以前没接这个事件，
+    // seeking 一直是 true，timeupdate 从此直接 return，进度和时间就冻住了。
+    bar.addEventListener('pointercancel', end);
+    bar.addEventListener('lostpointercapture', end);
+  }
+  bindSeek($('seekBar'));
+  bindSeek($('fpSeek'));
+  $('fpSeek').addEventListener('keydown', function (event) {
+    if (!audio.duration) return;
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+      event.preventDefault();
+      audio.currentTime = Math.min(audio.duration, Math.max(0, audio.currentTime + (event.key === 'ArrowLeft' ? -5 : 5)));
+    }
   });
 
-  window.addEventListener('resize', debounce(placeComposer, 150));
-  window.addEventListener('popstate', function () { routeFromHash(true); });
+  // ---- 滚动：浮动按钮缩成圆的、话题页顶栏显示标题 ----
+  function onScroll() {
+    if (!isMobile()) return;
+    var y = window.scrollY;
+    document.body.classList.toggle('sp-scrolled', y > 160);
+    var bar = $('topicBar');
+    if (state.view === 'topic') {
+      var head = $('topicHead').getBoundingClientRect();
+      bar.classList.toggle('is-stuck', head.bottom < bar.getBoundingClientRect().bottom);
+    }
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  ['touchmove', 'wheel'].forEach(function (type) {
+    window.addEventListener(type, function () { lastUserScroll = Date.now(); }, { passive: true });
+  });
+
+  window.addEventListener('resize', debounce(function () { placeComposer(); updateBottomStack(); growText(); }, 150));
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', fitViewport);
+    window.visualViewport.addEventListener('scroll', fitViewport);
+  }
   window.addEventListener('hashchange', function () { routeFromHash(true); });
 
-  function routeFromHash(skipHash) {
+  function routeFromHash(skipHash, historyState) {
+    if (location.hash === lastRouteHash) return;
     var hash = location.hash.replace(/^#/, '');
-    if (!hash) { showLibrary(true); return; }
+    var restoreY = historyState && historyState.spY;
+    if (!hash) { showLibrary(true, restoreY); return; }
     var params = new URLSearchParams(hash);
     var folder = params.get('folder');
-    if (!folder) { showLibrary(true); return; }
+    if (!folder) { showLibrary(true, restoreY); return; }
+    lastRouteHash = location.hash;
     showTopic(folder, params.get('file'), skipHash);
+  }
+
+  // 跨过 820px（转屏、拖窗口）时按另一套重画
+  function onModeChange() {
+    placeComposer();
+    setSearchPlaceholder();
+    if (state.view === 'topic') renderTopic(); else { renderLibrary(); renderHits(); }
+    renderPlayer();
+    updateBottomStack();
+  }
+  if (PHONE.addEventListener) PHONE.addEventListener('change', onModeChange);
+  else if (PHONE.addListener) PHONE.addListener(onModeChange);
+
+  function setSearchPlaceholder() {
+    $('searchInput').placeholder = isMobile() ? '搜话题名或英文原文' : '搜话题名，或搜音频里的英文原文…';
   }
 
   // ==================== 启动 ====================
@@ -1900,18 +3379,27 @@ body.page-speaking.on-topic .sp-fab { display: none; }
     });
   }
 
-  verifyToken().then(function (valid) {
-    if (!valid) { window.location.href = '/login'; return; }
-    updateWordCount();
-    onTopicFieldChange();
-    placeComposer();
-    loadTopics().then(function () {
+  function bootList() {
+    state.listError = false;
+    return loadTopics().then(function () {
       renderLibrary();
       routeFromHash(true);
     }).catch(function () {
+      state.listError = true;
       $('libStats').textContent = '音频列表加载失败';
+      if (isMobile()) renderTopicList();
       toast('音频列表加载失败', 'error');
     });
+  }
+
+  verifyToken().then(function (valid) {
+    if (!valid) { window.location.href = '/login'; return; }
+    setSearchPlaceholder();
+    updateWordCount();
+    onTopicFieldChange();
+    placeComposer();
+    updateBottomStack();
+    bootList();
   });
 
 })();
