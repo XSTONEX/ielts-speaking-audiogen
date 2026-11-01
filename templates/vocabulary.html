@@ -224,49 +224,215 @@
         .vb-review__word { font-family: var(--font-en); font-size: var(--w-fs-en); font-weight: 600; color: var(--w-ink); overflow-wrap: anywhere; }
         .vb-review__mean { flex-grow: 1; min-width: 0; font-size: var(--w-fs-ui); color: var(--w-ink2); overflow-wrap: anywhere; }
 
-        /* ---------- 手机（≤ 820px）：一套 DOM，目录栏收成分类条 + 子分类折叠 ---------- */
+        /* ---------- 只在手机上出现的东西（桌面一律不显示，桌面布局不受影响） ---------- */
+        .vb-more-btn, .vb-prow, .vb-pbar, .vb-add__head, .vb-act--more, .vb-only-phone { display: none; }
+        /* 手机面板（子分类 / 排序 / 操作菜单）里的行，只在手机上打开 */
+        .vb-sheet-tools { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: var(--w-fs-meta); color: var(--w-ink3); }
+        .vb-sheet-tools .vb-tool { height: 40px; padding: 0 12px; margin-right: -8px; font-size: var(--w-fs-meta); color: var(--w-ink2); }
+        .vb-rows { display: flex; flex-direction: column; margin: 0 -8px; }
+        .vb-row { display: flex; align-items: stretch; min-width: 0; }
+        .vb-row + .vb-row { border-top: 1px solid var(--w-line); }
+        .vb-row__main, .vb-actitem {
+            flex: 1 1 auto; min-width: 0; min-height: 48px; display: flex; align-items: center; gap: 12px; padding: 8px;
+            border: none; border-radius: var(--w-r-inner); background: transparent; color: var(--w-ink);
+            font-size: var(--w-fs-ui); line-height: 1.45; text-align: left; cursor: pointer;
+        }
+        .vb-row__main:hover, .vb-actitem:hover, .vb-row__more:hover { background: var(--w-sunken); }
+        .vb-row__name { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+        .vb-row__count { font-size: var(--w-fs-meta); color: var(--w-ink3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .vb-row__check { width: 18px; flex-shrink: 0; display: inline-flex; color: var(--w-big); }
+        .vb-row.is-on .vb-row__name { color: var(--w-big); font-weight: 600; }
+        .vb-row__more {
+            width: 44px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; padding: 0;
+            border: none; border-radius: var(--w-r-inner); background: transparent; color: var(--w-ink3); cursor: pointer;
+        }
+        .vb-actitem svg { flex-shrink: 0; color: var(--w-ink3); }
+        .vb-actitem.is-danger, .vb-actitem.is-danger svg { color: var(--w-err); }
+        .vb-actitem:disabled { opacity: .5; cursor: not-allowed; }
+        .vb-actsheet__desc { margin: -6px 0 0 0; font-size: var(--w-fs-ui); line-height: 1.6; color: var(--w-ink2); overflow-wrap: anywhere; white-space: pre-line; }
+        .vb-actsheet .ui-dialog__title.ui-en { font-family: var(--font-en); }
+        .vb-switchrow {
+            display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 8px 0; margin-top: 4px;
+            border: none; border-top: 1px solid var(--w-line); background: transparent; color: var(--w-ink); text-align: left; cursor: pointer;
+            font-size: var(--w-fs-ui);
+        }
+        .vb-switchrow__text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+        .vb-switchrow__text small { font-size: var(--w-fs-meta); color: var(--w-ink3); }
+        .vb-switch { position: relative; width: 44px; height: 26px; flex-shrink: 0; border-radius: 13px; background: var(--w-line-strong); transition: background .15s; }
+        .vb-switch::after { content: ''; position: absolute; left: 3px; top: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--w-surface); transition: transform .15s; box-shadow: 0 1px 2px rgba(0, 0, 0, .2); }
+        .vb-switchrow[aria-checked="true"] .vb-switch { background: var(--w-big); }
+        .vb-switchrow[aria-checked="true"] .vb-switch::after { transform: translateX(18px); }
+        .vb-switchrow:disabled { opacity: .5; cursor: not-allowed; }
+
+        /* ---------- 手机 / 竖屏平板（≤ 820px）：一套 DOM。
+           页头一行（标题 + ⋯）；分类 + 子分类 + 查找 + 排序收成吸顶的一条；单词卡一行两张；
+           遮释义 / 加词 / 单词挑战放在底部操作条；加词、子分类、排序、导入导出都进面板 ---------- */
         @media (max-width: 820px) {
+            :root { --vb-pbar-h: 65px; }
+            body.vb-ready { --ui-bottom-bar-h: var(--vb-pbar-h); }
             .vb-page { --gutter: 0px; }
-            .vb-shell { width: auto; margin: 0 16px; }
-            .vb-page .ui-head { flex-wrap: wrap; padding-top: 20px; padding-bottom: 14px; }
-            .vb-page .ui-head__tools { width: 100%; }
-            .vb-page .ui-head__tools .ui-btn { flex: 1 1 0; padding: 0 10px; }
+            .vb-shell { width: auto; margin: 0 16px; padding-bottom: calc(var(--vb-pbar-h) + 24px + env(safe-area-inset-bottom)); }
+            .vb-only-desk { display: none; }
+            .vb-only-phone { display: inline; }
+
+            /* 页头：只留标题和一个 ⋯（导入、导出、管理子分类）。说明里的 H 键提示在手机上没用 */
+            .vb-page .ui-head { flex-wrap: nowrap; padding: 10px 0 4px 0; border-bottom: none; }
+            .vb-head__desc { display: none; }
+            /* 说明收起来了，卡片上也没放小喇叭，在标题后面用一小句话告诉第一次来的人点单词能听 */
+            .vb-head__tip { margin-left: -5px; white-space: nowrap; }
+            body:not(.vb-ready) .vb-head__tip { display: none; }
+            .vb-page .ui-head__tools > .ui-btn { display: none; }
+            .vb-more-btn {
+                display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin-right: -10px; padding: 0;
+                border: none; border-radius: var(--w-r-chip); background: transparent; color: var(--w-ink2); cursor: pointer;
+            }
+            body:not(.vb-ready) .vb-more-btn { visibility: hidden; }
+
+            /* 吸顶条：分类分段 + [子分类 ▾][查找][排序]，滚到列表深处也能换子分类、查词 */
             .vb-page .ui-dir { grid-template-columns: minmax(0, 1fr); }
-            .vb-rail-col { border-right: none; border-bottom: 1px solid var(--w-line); }
-            .vb-rail { position: static; max-height: none; overflow: visible; padding: 14px 0; }
-            .vb-rail > .ui-rail__label { display: none; }
-            .vb-cats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
-            .vb-cats .ui-rail__item { justify-content: center; gap: 6px; padding: 8px 4px; border-radius: var(--w-r-chip); background: var(--w-surface); border: 1px solid var(--w-line); text-align: center; }
-            .vb-cats .ui-rail__item.is-active { background: var(--w-big-soft); border-color: var(--w-big-line); }
-            .vb-cats .ui-rail__name { flex-grow: 0; }
+            .vb-rail-col {
+                position: sticky; top: var(--app-shell-h); z-index: 30; margin: 0 -16px; padding: 6px 16px 8px 16px;
+                background: var(--w-paper); border-right: none; border-bottom: 1px solid var(--w-line);
+            }
+            body:not(.vb-ready) .vb-rail-col { display: none; }
+            .vb-rail { position: static; max-height: none; overflow: visible; padding: 0; gap: 8px; }
+            .vb-rail > .ui-rail__label, .vb-subhead, .vb-subs { display: none; }
+            .vb-cats {
+                display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; padding: 2px;
+                border-radius: var(--w-r-chip); background: var(--w-big-track);
+            }
+            .vb-cats .ui-rail__item { justify-content: center; gap: 5px; min-height: 40px; padding: 0 4px; border-radius: var(--w-r-chip); text-align: center; }
+            .vb-cats .ui-rail__item:hover { background: transparent; }
+            .vb-cats .ui-rail__item.is-active { background: var(--w-surface); box-shadow: 0 0 0 1px var(--w-line); }
+            .vb-cats .ui-rail__name { flex-grow: 0; white-space: nowrap; }
+            .vb-cats .ui-rail__item.is-active .ui-rail__name { color: var(--w-ink); }
+            .vb-cats .ui-rail__item.is-active .ui-rail__count { color: var(--w-ink2); }
+            .vb-prow { display: flex; align-items: center; gap: 8px; }
             .vb-sub-toggle {
-                display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 10px; height: var(--h-nav); padding: 0 14px;
+                display: flex; align-items: center; gap: 8px; flex: 1 1 auto; min-width: 0; height: 44px; padding: 0 12px 0 14px;
                 border: 1px solid var(--w-line-strong); border-radius: var(--w-r-inner); background: var(--w-surface);
                 font-size: var(--w-fs-ui); color: var(--w-ink); cursor: pointer; text-align: left;
             }
-            .vb-sub-toggle__name { flex-grow: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
-            .vb-sub-toggle__count { font-size: var(--w-fs-meta); color: var(--w-ink3); }
-            .vb-sub-toggle svg { flex-shrink: 0; transition: transform .15s; }
-            .vb-subhead, .vb-subs { display: none; }
-            .vb-rail.is-open .vb-subhead { display: flex; }
-            .vb-rail.is-open .vb-subs { display: flex; padding: 4px; border: 1px solid var(--w-line); border-radius: var(--w-r-card); background: var(--w-surface); }
-            .vb-rail.is-open .vb-sub-toggle svg { transform: rotate(180deg); }
-            .vb-page .ui-dir__main { padding: 16px 0 0 0; }
-            .vb-main-head { align-items: flex-start; }
-            .vb-main-title { font-size: var(--w-fs-en); }
-            .vb-add { grid-template-columns: minmax(0, 1fr); padding: 12px; }
-            .vb-add .ui-btn { width: 100%; }
-            .vb-search { order: -1; width: 100%; margin-left: 0; }
-            .vb-sort { flex: 1 1 100%; }
-            .vb-sort .ui-select { flex-grow: 1; }
+            .vb-sub-toggle__name { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+            .vb-sub-toggle__count { flex: 1 0 auto; font-size: var(--w-fs-meta); color: var(--w-ink3); white-space: nowrap; }
+            .vb-sub-toggle svg { flex-shrink: 0; color: var(--w-ink3); }
+            .vb-pico {
+                width: 44px; height: 44px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; padding: 0;
+                border: 1px solid var(--w-line-strong); border-radius: var(--w-r-inner); background: var(--w-surface); color: var(--w-ink2); cursor: pointer;
+            }
+            .vb-pico.is-on { border-color: var(--w-big-line); background: var(--w-big-soft); color: var(--w-big); }
+            .vb-psearch { display: none; position: relative; flex: 1 1 auto; min-width: 0; }
+            .vb-psearch svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--w-ink3); pointer-events: none; }
+            .vb-psearch .ui-input { height: 44px; padding-left: 36px; font-size: 16px; }
+            .vb-psearch-cancel { height: 44px; padding: 0 6px 0 4px; border: none; background: transparent; color: var(--w-big); font-size: var(--w-fs-ui); cursor: pointer; white-space: nowrap; }
+            .vb-rail.is-searching .vb-cats, .vb-rail.is-searching .vb-sub-toggle, .vb-rail.is-searching .vb-pico { display: none; }
+            .vb-rail.is-searching .vb-psearch { display: block; }
+            .vb-rail:not(.is-searching) .vb-psearch-cancel { display: none; }
+
+            /* 主区：子分类名和重命名 / 删除收进面板，加词收进面板，工具条拆到吸顶条和底部条 */
+            .vb-page .ui-dir__main { padding: 12px 0 0 0; }
+            .vb-main-head, .vb-toolbar { display: none; }
+            .vb-count-line { margin: 0 0 10px 0; }
+            .vb-empty-btns { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; }
+            .vb-empty-btns .ui-btn { height: 44px; }
+            .vb-empty-btns .vb-only-phone { display: inline-flex; }
+
+            /* 单词卡：一行两张，去掉日期和常驻垃圾桶；右上 ⋯（删除等），右下 ★，点卡片听发音 */
             .vb-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-            .vb-card { padding: 11px 10px 6px 12px; }
+            /* 90px 高：右上 ⋯ 和右下 ★ 各 40px 高的点击区，中间隔开 8px（卡片有 1px 边框） */
+            .vb-card { position: relative; gap: 2px; min-height: 90px; padding: 10px 12px; }
+            /* 小喇叭不放：IELTS 长词（deforestation、questionnaire…）加上它会把喇叭挤到第二行；
+               整张卡都能点着听，正在读的卡会变蓝 */
+            .vb-word { display: block; max-width: none; padding-right: 24px; font-size: var(--w-fs-en); line-height: 1.4; }
+            .vb-word svg { display: none; }
+            .vb-meaning {
+                padding-right: 20px; line-height: 1.55;
+                display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden;
+            }
+            .vb-card__foot { min-height: 0; margin: 0; padding: 0; }
+            .vb-date, .vb-act--del { display: none; }
+            .vb-act--more, .vb-act--fav { position: absolute; right: 0; width: 44px; height: 40px; justify-content: flex-end; padding-right: 11px; border-radius: var(--w-r-card); }
+            .vb-act--more { display: inline-flex; top: 0; }
+            .vb-act--fav { bottom: 0; }
+            @media (hover: none) { .vb-act:hover { background: transparent; } }
+
+            /* 底部操作条：拇指够得着的三个常用动作 */
+            .vb-pbar {
+                display: flex; gap: 8px; position: fixed; left: 0; right: 0; bottom: 0; z-index: 100;
+                padding: 10px max(16px, env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+                background: var(--w-surface); border-top: 1px solid var(--w-line);
+            }
+            body:not(.vb-ready) .vb-pbar { display: none; }
+            .vb-pbar .ui-btn { flex: 1 1 0; min-width: 0; height: 44px; padding: 0 8px; gap: 6px; }
+            .vb-pbar .ui-btn.is-on { background: var(--w-big-soft); border-color: var(--w-big-line); color: var(--w-big); font-weight: 600; }
+            .vb-pbar .ui-btn svg { flex-shrink: 0; }
+            .vb-eye-off { display: none; }
+            .vb-pbar .ui-btn.is-on .vb-eye-off { display: inline; }
+
+            /* 加词面板：同一个表单，手机上平时收起，点「加词」才浮出来 */
+            .vb-addwrap { display: none; }
+            .vb-addwrap.is-open {
+                display: flex; position: fixed; left: 0; right: 0; top: var(--vb-vv-top, 0px); bottom: var(--vb-kb, 0px);
+                align-items: center; justify-content: center; padding: 16px; background: var(--w-mask);
+            }
+            .vb-add { width: min(520px, 100%); max-height: 100%; overflow: auto; grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 18px 16px 16px 16px; box-shadow: var(--w-shadow-lg); }
+            .vb-add__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; order: 0; }
+            .vb-add__title { margin: 0; min-width: 0; font-size: var(--w-fs-en); font-weight: 600; color: var(--w-ink); overflow-wrap: anywhere; }
+            .vb-add__head .ui-dialog__close { width: 40px; height: 40px; margin-right: -8px; flex-shrink: 0; }
+            .vb-add .ui-input { height: 48px; font-size: 16px; }
+            .vb-add .ui-input.ui-en { font-size: var(--w-fs-en); }
+            #vbWord { order: 1; }
+            #vbMeaning { order: 2; }
+            .vb-add__hint { order: 3; margin: 0; min-height: 20px; }
+            .vb-add__hint.is-ok { color: var(--w-ok); }
+            .vb-add .ui-btn { order: 4; width: 100%; height: 48px; }
+            #vbAddBtn { background: var(--w-big); border-color: transparent; color: var(--w-on-big); }
+
+            /* 弹窗跟着键盘：iOS 键盘弹出不缩布局视口，用 visualViewport 算出键盘高度，把遮罩收进看得见的那块 */
+            .ui-dialog-backdrop { top: var(--vb-vv-top, 0px); bottom: var(--vb-kb, 0px); }
+            .ui-dialog { max-height: 100%; }
+
             .vb-row2 { grid-template-columns: minmax(0, 1fr); }
+            .vb-checks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 12px; }
+            .vb-check { min-height: 44px; gap: 10px; }
+            .vb-check input { width: 20px; height: 20px; }
+            #chCount { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+            #chCount .ui-chip { justify-content: center; height: 44px; padding: 0 4px; }
             .vb-options { grid-template-columns: minmax(0, 1fr); }
-            .vb-option { min-height: 54px; }
+            .vb-option { min-height: 60px; }
             .vb-quiz-body { padding: 22px 16px 18px 16px; }
+            .vb-replay { width: 44px; height: 44px; }
+            .vb-review__row { padding: 4px 4px 4px 14px; }
+            .vb-review__word { flex: 0 1 auto; max-width: 50%; overflow-wrap: break-word; }
+            .vb-review__row .vb-act { width: 44px; height: 44px; flex-shrink: 0; }
+        }
+        /* 竖屏平板：弹窗还是居中的小窗，单词卡按宽度多排几张 */
+        @media (min-width: 600px) and (max-width: 820px) {
+            .vb-grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+        }
+        @media (min-width: 641px) and (max-width: 820px) {
             .ui-dialog-backdrop { padding: 16px; }
         }
+        /* 手机（≤ 640px）：弹窗是底部面板（plain.css），答题铺满全屏，选项压在下半屏 */
+        @media (max-width: 640px) {
+            .vb-addwrap.is-open { align-items: flex-end; padding: calc(env(safe-area-inset-top) + 24px) 0 0 0; }
+            .vb-add { width: 100%; border-width: 1px 0 0 0; border-radius: 14px 14px 0 0; padding-bottom: calc(16px + env(safe-area-inset-bottom)); animation: ui-sheet-in .22s ease-out; }
+            /* 面板底部的主按钮（开始挑战、导出、再来一次…）是这一步的主要动作，44px */
+            .ui-dialog__foot > .ui-btn { height: 44px; }
+            #dlgQuiz { padding: 0; align-items: stretch; }
+            #qDialog {
+                width: 100%; height: 100%; max-height: none; display: flex; flex-direction: column;
+                border: none; border-radius: 0; padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0;
+            }
+            .vb-quiz-head { padding: 6px 16px 0 6px; gap: 10px; }
+            .vb-quiz-head .ui-dialog__close { order: -1; width: 44px; height: 44px; margin: 0; flex-shrink: 0; }
+            .vb-quiz-body { flex: 1 1 auto; justify-content: flex-start; padding: 6vh 16px 16px 16px; }
+            .vb-quiz-q { min-height: 88px; }
+            .vb-options { margin-top: auto; gap: 10px; }
+            .vb-option__key { display: none; }
+            .vb-quiz-foot { min-height: 20px; }
+        }
+        @media (max-width: 640px) and (prefers-reduced-motion: reduce) { .vb-add { animation: none; } }
     </style>
 </head>
 
@@ -275,7 +441,7 @@
         <header class="ui-head">
             <div class="ui-head__lead">
                 <div class="ui-head__main">
-                    <h1 class="ui-head__title">单词本 <span class="ui-head__meta ui-num" id="vbTotal"></span></h1>
+                    <h1 class="ui-head__title">单词本 <span class="ui-head__meta ui-num" id="vbTotal"></span><span class="ui-head__meta vb-only-phone vb-head__tip">· 点单词听发音</span></h1>
                     <p class="vb-head__desc">按听说读写分类收词，点单词听发音，按 H 键遮住释义自测。</p>
                 </div>
             </div>
@@ -283,6 +449,8 @@
                 <button type="button" class="ui-btn ui-btn--md" id="vbImportBtn">导入</button>
                 <button type="button" class="ui-btn ui-btn--md" id="vbExportBtn">导出</button>
                 <button type="button" class="ui-btn ui-btn--md ui-btn--primary" id="vbChallengeBtn">单词挑战</button>
+                <!-- 手机：导入、导出、子分类管理收进这个 ⋯ -->
+                <button type="button" class="vb-more-btn" id="vbMoreBtn" aria-label="更多：导入、导出、管理子分类" aria-haspopup="dialog"><svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="4.5" cy="10" r="1.7"></circle><circle cx="10" cy="10" r="1.7"></circle><circle cx="15.5" cy="10" r="1.7"></circle></svg></button>
             </div>
         </header>
 
@@ -291,11 +459,21 @@
                 <nav class="ui-rail vb-rail" id="vbRail" aria-label="单词分类">
                     <p class="ui-rail__label">分类</p>
                     <div class="vb-cats" id="vbCats"></div>
-                    <button type="button" class="vb-sub-toggle" id="vbSubToggle" aria-expanded="false" aria-controls="vbSubs">
-                        <span class="vb-sub-toggle__name" id="vbSubToggleName"></span>
-                        <span class="vb-sub-toggle__count ui-num" id="vbSubToggleCount"></span>
-                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 6 8 10.5 12.5 6"></path></svg>
-                    </button>
+                    <!-- 手机吸顶条第二行：[子分类 ▾][查找][排序]；点查找换成一个搜索框 -->
+                    <div class="vb-prow">
+                        <button type="button" class="vb-sub-toggle" id="vbSubToggle" aria-haspopup="dialog">
+                            <span class="vb-sub-toggle__name" id="vbSubToggleName"></span>
+                            <span class="vb-sub-toggle__count ui-num" id="vbSubToggleCount"></span>
+                            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 6 8 10.5 12.5 6"></path></svg>
+                        </button>
+                        <button type="button" class="vb-pico" id="vbSearchBtn" aria-label="在当前子分类里查找"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="4.5"></circle><path d="M10.5 10.5 14 14"></path></svg></button>
+                        <button type="button" class="vb-pico" id="vbSortBtn" aria-haspopup="dialog"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3v10M2.5 10.5 5 13l2.5-2.5M11 13V3M8.5 5.5 11 3l2.5 2.5"></path></svg></button>
+                        <div class="vb-psearch">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="4.5"></circle><path d="M10.5 10.5 14 14"></path></svg>
+                            <input class="ui-input" type="search" id="vbPSearch" placeholder="查找单词或释义" aria-label="在当前子分类里查找" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
+                        </div>
+                        <button type="button" class="vb-psearch-cancel" id="vbPSearchCancel">取消</button>
+                    </div>
                     <div class="vb-subhead">
                         <p class="ui-rail__label">子分类</p>
                         <div class="vb-subhead__tools">
@@ -318,19 +496,26 @@
                         </div>
                     </div>
 
-                    <form class="vb-add" id="vbAddForm" autocomplete="off">
-                        <label class="vb-sr" for="vbWord">单词</label>
-                        <input id="vbWord" name="word" class="ui-input ui-en" placeholder="单词，例如 sustainable" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="200">
-                        <label class="vb-sr" for="vbMeaning">释义</label>
-                        <input id="vbMeaning" name="meaning" class="ui-input" placeholder="释义（可以先不填）" autocomplete="off" maxlength="500">
-                        <button type="submit" class="ui-btn ui-btn--soft" id="vbAddBtn">添加</button>
-                        <p class="vb-add__hint" id="vbAddHint" aria-live="polite"></p>
-                    </form>
+                    <!-- 桌面上就是页面里的加词表单；手机上平时收起，点底部「加词」变成底部面板 -->
+                    <div class="vb-addwrap" id="vbAddSheet">
+                        <form class="vb-add" id="vbAddForm" autocomplete="off" role="group" aria-label="加词">
+                            <div class="vb-add__head"><h3 class="vb-add__title" id="vbAddTitle"></h3><button type="button" class="ui-dialog__close" id="vbAddClose" aria-label="关闭">×</button></div>
+                            <label class="vb-sr" for="vbWord">单词</label>
+                            <input id="vbWord" name="word" class="ui-input ui-en" placeholder="单词，例如 sustainable" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="200" enterkeyhint="next">
+                            <label class="vb-sr" for="vbMeaning">释义</label>
+                            <input id="vbMeaning" name="meaning" class="ui-input" placeholder="释义（可以先不填）" autocomplete="off" maxlength="500" enterkeyhint="done">
+                            <button type="submit" class="ui-btn ui-btn--soft" id="vbAddBtn">添加</button>
+                            <p class="vb-add__hint" id="vbAddHint" aria-live="polite"></p>
+                        </form>
+                    </div>
 
                     <div class="ui-empty" id="vbEmpty" hidden>
                         <p class="ui-empty__title" id="vbEmptyTitle"></p>
-                        <p class="ui-empty__text">在上面输入单词和释义，回车就能添加；<br>也可以从 CSV 文件批量导入。</p>
-                        <button type="button" class="ui-btn ui-btn--md" id="vbEmptyImport">导入 CSV</button>
+                        <p class="ui-empty__text"><span class="vb-only-desk">在上面输入单词和释义，回车就能添加；<br>也可以从 CSV 文件批量导入。</span><span class="vb-only-phone" id="vbEmptyPhoneText"></span></p>
+                        <div class="vb-empty-btns">
+                            <button type="button" class="ui-btn ui-btn--md ui-btn--primary vb-only-phone" id="vbEmptyAdd"></button>
+                            <button type="button" class="ui-btn ui-btn--md" id="vbEmptyImport">导入 CSV</button>
+                        </div>
                     </div>
 
                     <div id="vbList">
@@ -358,6 +543,47 @@
                     </div>
                 </div>
             </main>
+        </div>
+
+        <!-- 手机底部操作条：遮释义（等于桌面的 H 键）/ 加词 / 单词挑战 -->
+        <div class="vb-pbar" id="vbPbar" role="toolbar" aria-label="单词本常用操作">
+            <button type="button" class="ui-btn" id="vbPHide" aria-pressed="false"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.8 10S5 4.5 10 4.5 18.2 10 18.2 10 15 15.5 10 15.5 1.8 10 1.8 10z"></path><circle cx="10" cy="10" r="2.6"></circle><path class="vb-eye-off" d="M3.5 3.5l13 13"></path></svg><span id="vbPHideLabel">遮释义</span></button>
+            <button type="button" class="ui-btn" id="vbPAdd"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M8 3v10M3 8h10"></path></svg>加词</button>
+            <button type="button" class="ui-btn ui-btn--primary" id="vbPChallenge">单词挑战</button>
+        </div>
+    </div>
+
+    <!-- 手机：选子分类（也在这里新建、重命名、删除） -->
+    <div class="ui-dialog-backdrop" id="dlgSubs" hidden>
+        <div class="ui-dialog" role="dialog" aria-modal="true" aria-labelledby="subsTitle">
+            <div class="ui-dialog__head"><h3 class="ui-dialog__title" id="subsTitle"></h3><button type="button" class="ui-dialog__close" data-close aria-label="关闭">×</button></div>
+            <div class="ui-dialog__body">
+                <div class="vb-sheet-tools"><span id="subsCount"></span><button type="button" class="vb-tool" id="subsSort"></button></div>
+                <div class="vb-rows" id="subsList"></div>
+            </div>
+            <div class="ui-dialog__foot"><button type="button" class="ui-btn ui-btn--md ui-btn--soft" id="subsNew"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M8 3v10M3 8h10"></path></svg>新建子分类</button></div>
+        </div>
+    </div>
+
+    <!-- 手机：排序 -->
+    <div class="ui-dialog-backdrop" id="dlgSort" hidden>
+        <div class="ui-dialog" role="dialog" aria-modal="true" aria-labelledby="sortTitle">
+            <div class="ui-dialog__head"><h3 class="ui-dialog__title" id="sortTitle">排序</h3><button type="button" class="ui-dialog__close" data-close aria-label="关闭">×</button></div>
+            <div class="ui-dialog__body">
+                <div class="vb-rows" role="radiogroup" aria-labelledby="sortTitle" id="sortList"></div>
+                <button type="button" class="vb-switchrow" id="sortFav" role="switch" aria-checked="true"><span class="vb-switchrow__text">收藏置顶<small id="sortFavHint"></small></span><i class="vb-switch" aria-hidden="true"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 手机：操作菜单（页头 ⋯、单词卡 ⋯、子分类 ⋯ 共用） -->
+    <div class="ui-dialog-backdrop" id="dlgActions" hidden>
+        <div class="ui-dialog vb-actsheet" role="dialog" aria-modal="true" aria-labelledby="actTitle">
+            <div class="ui-dialog__head"><h3 class="ui-dialog__title" id="actTitle"></h3><button type="button" class="ui-dialog__close" data-close aria-label="关闭">×</button></div>
+            <div class="ui-dialog__body">
+                <p class="vb-actsheet__desc" id="actDesc"></p>
+                <div class="vb-rows" id="actList"></div>
+            </div>
         </div>
     </div>
 
@@ -567,6 +793,12 @@ acquire,v. 获得，习得</pre>
         const ICON_STAR_OFF = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true">' + STAR_PATH + '</svg>';
         const ICON_TRASH = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 8.5h5.8l.6-8.5"></path></svg>';
         const ICON_SORT = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3v10M2.5 10.5 5 13l2.5-2.5M11 13V3M8.5 5.5 11 3l2.5 2.5"></path></svg>';
+        const ICON_MORE = '<svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="4.5" cy="10" r="1.6"></circle><circle cx="10" cy="10" r="1.6"></circle><circle cx="15.5" cy="10" r="1.6"></circle></svg>';
+        const ICON_CHECK = '<svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5 6.5 12 13 4.5"></path></svg>';
+        const ICON_PLUS = '<svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M8 3v10M3 8h10"></path></svg>';
+        const ICON_EDIT = '<svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 2.8l2.7 2.7-7.7 7.7H2.8v-2.7z"></path></svg>';
+        const ICON_UPLOAD = '<svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 10.5V2.5M4.8 5.5 8 2.3l3.2 3.2M2.5 10.5v2.8h11v-2.8"></path></svg>';
+        const ICON_DOWNLOAD = '<svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2.5v8M4.8 7.5 8 10.7l3.2-3.2M2.5 10.5v2.8h11v-2.8"></path></svg>';
 
         const $ = (id) => document.getElementById(id);
         const els = {
@@ -579,8 +811,18 @@ acquire,v. 获得，习得</pre>
             empty: $('vbEmpty'), emptyTitle: $('vbEmptyTitle'), emptyImport: $('vbEmptyImport'), list: $('vbList'),
             sort: $('vbSort'), favFirst: $('vbFavFirst'), hide: $('vbHide'), hideLabel: $('vbHideLabel'),
             search: $('vbSearch'), countLine: $('vbCountLine'), grid: $('vbGrid'),
-            importBtn: $('vbImportBtn'), exportBtn: $('vbExportBtn'), challengeBtn: $('vbChallengeBtn')
+            importBtn: $('vbImportBtn'), exportBtn: $('vbExportBtn'), challengeBtn: $('vbChallengeBtn'),
+            // 手机专用
+            railCol: document.querySelector('.vb-rail-col'), dir: document.querySelector('.vb-page .ui-dir'),
+            moreBtn: $('vbMoreBtn'), searchBtn: $('vbSearchBtn'), sortBtn: $('vbSortBtn'), pSearch: $('vbPSearch'), pSearchCancel: $('vbPSearchCancel'),
+            addSheet: $('vbAddSheet'), addTitle: $('vbAddTitle'), addClose: $('vbAddClose'),
+            emptyAdd: $('vbEmptyAdd'), emptyPhoneText: $('vbEmptyPhoneText'),
+            pHide: $('vbPHide'), pHideLabel: $('vbPHideLabel'), pAdd: $('vbPAdd'), pChallenge: $('vbPChallenge')
         };
+
+        // 手机布局（和 CSS 的 820px 断点一致）：底部操作条、面板、返回键关面板都只在这时生效，桌面行为不变
+        const phoneMq = window.matchMedia ? window.matchMedia('(max-width: 820px)') : { matches: false };
+        const isPhone = () => phoneMq.matches;
 
         let vocab = null;                 // /api/vocabulary 返回的 data：{ categories: { listening: { subcategories: {...} }, ... } }
         let currentCategory = 'listening';
@@ -805,6 +1047,8 @@ acquire,v. 获得，习得</pre>
                 ensureCurrentSub();
                 els.status.hidden = true;
                 els.content.hidden = false;
+                // 手机上吸顶条、底部操作条和页头 ⋯ 等数据到了才出现（加载中 / 出错时不显示空的下拉和点不动的按钮）
+                document.body.classList.add('vb-ready');
                 render();
             } catch (error) {
                 if (vocab) {
@@ -864,7 +1108,24 @@ acquire,v. 获得，习得</pre>
 
             const sub = currentSub();
             els.subToggleName.textContent = sub ? sub.name : '没有子分类';
-            els.subToggleCount.textContent = sub ? String(sub.words.length) : '';
+            els.subToggleCount.textContent = sub ? sub.words.length + ' 词' : '';
+            els.subToggle.setAttribute('aria-label', sub
+                ? '子分类：' + sub.name + '，' + sub.words.length + ' 个单词。点一下换子分类或管理子分类'
+                : '这个分类还没有子分类，点一下新建');
+            if (!subsDlg.back.hidden) renderSubsSheet();
+        }
+
+        // 手机底部操作条和排序按钮的状态
+        function renderPhoneBar() {
+            const sub = currentSub();
+            els.pHide.classList.toggle('is-on', !meaningsVisible);
+            els.pHide.setAttribute('aria-pressed', meaningsVisible ? 'false' : 'true');
+            els.pHideLabel.textContent = meaningsVisible ? '遮释义' : '已遮住';
+            els.pAdd.disabled = !sub;
+            const label = (els.sort.querySelector('option[value="' + sortBase + '"]') || {}).textContent || '';
+            const fav = favFirst && !SORTS_PURE_ONLY.includes(sortBase);
+            els.sortBtn.setAttribute('aria-label', '排序：' + label + (fav ? '，收藏置顶' : ''));
+            els.sortBtn.classList.toggle('is-on', sortBase !== 'newest' || !favFirst);
         }
 
         function renderMain() {
@@ -884,6 +1145,12 @@ acquire,v. 获得，习得</pre>
             els.empty.hidden = !isEmpty;
             els.list.hidden = isEmpty;
             els.emptyTitle.textContent = sub ? '「' + sub.name + '」还没有单词' : '这个分类还没有子分类';
+            // 手机的空状态：加词在底部面板里，不是「上面」
+            els.emptyPhoneText.textContent = sub ? '点「加词」一个个加，也可以从 CSV 文件批量导入。' : '先新建一个子分类，再往里面加词。';
+            els.emptyAdd.textContent = sub ? '加词' : '新建子分类';
+            els.emptyImport.hidden = !sub && isPhone();
+            els.addTitle.textContent = sub ? '加到「' + sub.name + '」' : '加词';
+            renderPhoneBar();
             if (!isEmpty) {
                 renderToolbar();
                 renderGrid();
@@ -900,6 +1167,7 @@ acquire,v. 获得，习得</pre>
             els.hide.classList.toggle('is-on', !meaningsVisible);
             els.hide.setAttribute('aria-pressed', meaningsVisible ? 'false' : 'true');
             els.hideLabel.textContent = meaningsVisible ? '隐藏释义' : '释义已隐藏';
+            renderPhoneBar();
         }
 
         function randomKey(id) {
@@ -936,6 +1204,8 @@ acquire,v. 获得，习得</pre>
                 '<button type="button" class="vb-word" data-act="play" aria-label="播放 ' + esc(w.word) + ' 的发音">' + esc(w.word) + ICON_SPEAKER + '</button>' +
                 '<p class="vb-meaning' + (meaning ? '' : ' is-empty') + (meaningsVisible ? '' : ' is-masked') + '" data-act="peek"><span>' + esc(meaning || '暂无释义') + '</span></p>' +
                 '<div class="vb-card__foot"><span class="vb-date">' + esc(shortDate(w.created_at)) + '</span><span class="vb-acts">' +
+                // 手机上没有悬停：删除等不常用的操作收进右上角的 ⋯（桌面不显示）
+                '<button type="button" class="vb-act vb-act--more" data-act="more" aria-haspopup="dialog" aria-label="更多操作：' + esc(w.word) + '">' + ICON_MORE + '</button>' +
                 '<button type="button" class="vb-act vb-act--del" data-act="delete" aria-label="删除 ' + esc(w.word) + '" title="删除">' + ICON_TRASH + '</button>' +
                 '<button type="button" class="vb-act vb-act--fav' + (fav ? ' is-on' : '') + '" data-act="fav" aria-pressed="' + fav + '" aria-label="' + (fav ? '取消收藏 ' : '收藏 ') + esc(w.word) + '" title="' + (fav ? '取消收藏' : '收藏') + '">' + (fav ? ICON_STAR_ON : ICON_STAR_OFF) + '</button>' +
                 '</span></div></article>';
@@ -962,17 +1232,24 @@ acquire,v. 获得，习得</pre>
             if (target) target.focus({ preventScroll: true });
         }
 
+        let addNote = null;   // 手机加词面板里最近一次的结果：{ text, ok }，开始输入下一个词就换回普通提示
+
         function updateAddHint() {
             const sub = currentSub();
             const typed = els.word.value.trim();
             const dup = !!(typed && sub && sub.words.some(w => w.word.toLowerCase() === typed.toLowerCase()));
-            els.addHint.classList.toggle('is-warn', dup);
+            const phone = isPhone();
+            if (typed || !phone) addNote = null;
+            els.addHint.classList.toggle('is-warn', dup || !!(addNote && !addNote.ok));
+            els.addHint.classList.toggle('is-ok', !dup && !!(addNote && addNote.ok));
             if (dup) {
                 els.addHint.textContent = '「' + typed + '」已经在这个子分类里了，不能重复添加';
+            } else if (addNote) {
+                els.addHint.textContent = addNote.text;
             } else if (sub) {
-                els.addHint.textContent = '回车添加到「' + sub.name + '」，加完点单词就能听有道发音';
+                els.addHint.textContent = phone ? '释义可以先不填，加完点单词就能听发音' : '回车添加到「' + sub.name + '」，加完点单词就能听有道发音';
             } else {
-                els.addHint.textContent = '先在左边新建一个子分类，再往里面加词';
+                els.addHint.textContent = phone ? '先新建一个子分类，再往里面加词' : '先在左边新建一个子分类，再往里面加词';
             }
         }
 
@@ -1038,32 +1315,95 @@ acquire,v. 获得，习得</pre>
             markPlaying(done.id, false);
         });
 
+        // iOS / iPad 的 Safari 只让「在手指点的那一下里调用过 play()」的音频元素以后自己播放。
+        // 挑战里「看单词选释义」是在定时器里自动读的，所以点「开始挑战」时，如果这个 audio 还没被点过，
+        // 先在这一下里静音播一小段把它解锁（整页只有这一个 audio，解锁一次以后都能自动读）
+        const SILENT_WAV = 'data:audio/wav;base64,UklGRkQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YSAAAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==';
+        let audioUnlocked = false;
+
+        function unlockAudio() {
+            if (audioUnlocked || playing) return;
+            audioUnlocked = true;
+            try {
+                audio.src = SILENT_WAV;
+                const promise = audio.play();
+                if (promise && promise.catch) promise.catch(() => {});
+            } catch (error) { /* 解锁不了就算了，再听一遍按钮照样能播 */ }
+        }
+
         // ==================== 弹窗 ====================
 
         const dialogStack = [];   // { back, onCancel, returnFocus }
 
         function topDialog() { return dialogStack[dialogStack.length - 1] || null; }
 
+        // 手机加词面板就是页面里那个表单的外层，不能用 hidden 藏（桌面上它一直显示），用 is-open 开关
+        function setLayerShown(back, on) {
+            if (back === els.addSheet) {
+                back.classList.toggle('is-open', on);
+                if (!on) back.style.zIndex = '';
+            } else {
+                back.hidden = !on;
+            }
+        }
+
         function openDialog(back, options) {
             const opts = options || {};
             if (dialogStack.some(d => d.back === back)) return;
-            back.hidden = false;
+            setLayerShown(back, true);
             back.style.zIndex = String(1300 + dialogStack.length * 2);
             dialogStack.push({ back: back, onCancel: opts.onCancel || null, returnFocus: opts.returnFocus || document.activeElement });
             document.documentElement.classList.add('vb-lock');
             const target = opts.focus || back.querySelector('input:not([type=hidden]):not([type=file]):not([disabled]), select, .ui-btn--primary');
             if (target) target.focus({ preventScroll: true });
+            layersChanged();
         }
 
         function closeDialog(back) {
             const index = dialogStack.findIndex(d => d.back === back);
             if (index === -1) return;
             const entry = dialogStack.splice(index, 1)[0];
-            back.hidden = true;
+            setLayerShown(back, false);
             if (!dialogStack.length) document.documentElement.classList.remove('vb-lock');
             const focus = entry.returnFocus;
             if (focus && focus.focus && document.contains(focus) && focus.getClientRects().length) focus.focus({ preventScroll: true });
+            layersChanged();
         }
+
+        // 手机上的返回（iOS 边缘右滑 / 安卓返回键）先关最上面那层面板，而不是离开单词本：
+        // 有面板开着时历史里多压一条记录；用户按返回就关掉最上面一层（还有别的层开着就再压一条），
+        // 用界面上的按钮关掉最后一层时，自己把那条记录退掉。开关在同一轮里连着发生（关一个开另一个）只算一次
+        let histEntry = false;   // 历史里是不是压着我们的那条
+        let histIgnore = 0;      // 自己 history.back() 引起的 popstate 要跳过几次
+        let histTimer = null;
+
+        function layersChanged() {
+            clearTimeout(histTimer);
+            histTimer = setTimeout(() => {
+                if (dialogStack.length && !histEntry) {
+                    if (!isPhone()) return;
+                    // 退回这条记录时浏览器默认会把页面滚回压记录那一刻的位置（面板里换了子分类、删了词以后就跳错地方），
+                    // 所以压之前先改成不自动恢复滚动，退回来以后再改回去（刷新页面时照样记得滚到哪）
+                    history.scrollRestoration = 'manual';
+                    history.pushState({ vbLayer: true }, '');
+                    histEntry = true;
+                } else if (!dialogStack.length && histEntry) {
+                    histEntry = false;
+                    histIgnore++;
+                    history.back();
+                }
+            }, 0);
+        }
+
+        window.addEventListener('popstate', () => {
+            setTimeout(() => { if (!histEntry) history.scrollRestoration = 'auto'; }, 0);
+            if (histIgnore) { histIgnore--; return; }
+            if (!histEntry) return;
+            histEntry = false;
+            const top = topDialog();
+            if (top) cancelDialog(top.back);
+            layersChanged();
+        });
 
         function cancelDialog(back) {
             const entry = dialogStack.find(d => d.back === back);
@@ -1165,21 +1505,31 @@ acquire,v. 获得，习得</pre>
             resetListView();
             savePrefs();
             render();
+            scrollListTop();
         }
 
         function selectSub(id) {
             currentSubcategory = id;
             resetListView();
-            els.rail.classList.remove('is-open');
-            els.subToggle.setAttribute('aria-expanded', 'false');
             savePrefs();
             render();
+            scrollListTop();
         }
 
         function resetListView() {
             searchText = '';
             els.search.value = '';
+            els.pSearch.value = '';
+            els.rail.classList.remove('is-searching');
             randomKeys.clear();
+        }
+
+        // 手机：在列表深处换了分类 / 子分类 / 查找时，回到新列表的开头（吸顶条正好贴在顶上，页头不重新露出来）
+        function scrollListTop() {
+            if (!isPhone() || !els.dir) return;
+            const stuckTop = parseFloat(getComputedStyle(els.railCol).top) || 0;
+            const target = Math.max(0, Math.round(els.dir.getBoundingClientRect().top + window.scrollY - stuckTop));
+            if (window.scrollY > target) window.scrollTo(0, target);
         }
 
         els.cats.addEventListener('click', e => {
@@ -1192,32 +1542,223 @@ acquire,v. 获得，习得</pre>
             if (btn) selectSub(btn.dataset.sub);
         });
 
-        els.subToggle.addEventListener('click', () => {
-            const open = !els.rail.classList.contains('is-open');
-            els.rail.classList.toggle('is-open', open);
-            els.subToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-        });
-
-        els.subSort.addEventListener('click', () => {
+        function toggleSubOrder() {
             subcategorySortOrder[currentCategory] = subcategorySortOrder[currentCategory] === 'desc' ? 'asc' : 'desc';
             savePrefs();
             renderRail();
+        }
+
+        els.subSort.addEventListener('click', toggleSubOrder);
+
+        // ==================== 手机：子分类面板 ====================
+
+        const subsDlg = { back: $('dlgSubs'), title: $('subsTitle'), count: $('subsCount'), sort: $('subsSort'), list: $('subsList'), add: $('subsNew') };
+
+        function renderSubsSheet() {
+            const entries = subEntries(currentCategory);
+            subsDlg.title.textContent = CAT_NAME[currentCategory] + ' · 子分类';
+            subsDlg.count.textContent = entries.length ? entries.length + ' 个子分类' : '还没有子分类';
+            const desc = subcategorySortOrder[currentCategory] === 'desc';
+            subsDlg.sort.innerHTML = (desc ? 'Z–A ' : 'A–Z ') + ICON_SORT;
+            subsDlg.sort.setAttribute('aria-label', '子分类按名称排序，现在是 ' + (desc ? 'Z 到 A' : 'A 到 Z') + '，点一下反过来');
+            subsDlg.sort.hidden = entries.length < 2;
+            subsDlg.list.innerHTML = entries.map(([id, sub]) => {
+                const on = id === currentSubcategory;
+                return '<div class="vb-row' + (on ? ' is-on' : '') + '">' +
+                    '<button type="button" class="vb-row__main" data-sub="' + esc(id) + '"' + (on ? ' aria-current="true"' : '') + '>' +
+                    '<span class="vb-row__check">' + (on ? ICON_CHECK : '') + '</span>' +
+                    '<span class="vb-row__name">' + esc(sub.name) + '</span><span class="vb-row__count">' + sub.words.length + ' 词</span></button>' +
+                    '<button type="button" class="vb-row__more" data-more="' + esc(id) + '" aria-haspopup="dialog" aria-label="管理「' + esc(sub.name) + '」：重命名、删除">' + ICON_MORE + '</button></div>';
+            }).join('');
+        }
+
+        function openSubsSheet() {
+            if (!vocab) return;
+            renderSubsSheet();
+            openDialog(subsDlg.back, { focus: subsDlg.list.querySelector('[aria-current]') || subsDlg.add, returnFocus: els.subToggle });
+        }
+
+        els.subToggle.addEventListener('click', openSubsSheet);
+        subsDlg.sort.addEventListener('click', toggleSubOrder);
+        subsDlg.list.addEventListener('click', e => {
+            const pick = e.target.closest('[data-sub]');
+            if (pick) {
+                closeDialog(subsDlg.back);
+                selectSub(pick.dataset.sub);
+                return;
+            }
+            const more = e.target.closest('[data-more]');
+            if (more) openSubActions(currentCategory, more.dataset.more, more);
+        });
+        subsDlg.add.addEventListener('click', () => {
+            closeDialog(subsDlg.back);
+            openSubDialog('new');
+        });
+
+        function openSubActions(category, subId, opener) {
+            const sub = (catData(category).subcategories || {})[subId];
+            if (!sub) return;
+            openActions({
+                title: '「' + sub.name + '」',
+                desc: sub.words.length + ' 个单词',
+                returnFocus: opener,
+                items: [
+                    { label: '重命名', icon: ICON_EDIT, run: () => openSubDialog('rename', category, subId) },
+                    { label: '删除这个子分类', icon: ICON_TRASH, danger: true, run: () => deleteSub(category, subId) }
+                ]
+            });
+        }
+
+        // ==================== 手机：操作菜单（页头 ⋯、单词卡 ⋯、子分类 ⋯） ====================
+
+        const actDlg = { back: $('dlgActions'), title: $('actTitle'), desc: $('actDesc'), list: $('actList'), items: [] };
+
+        // 操作菜单里的图标统一 18px
+        const icon18 = svg => svg.replace(/width="1[56]" height="1[56]"/, 'width="18" height="18"');
+
+        function openActions(options) {
+            actDlg.items = options.items;
+            actDlg.title.textContent = options.title;
+            actDlg.title.classList.toggle('ui-en', !!options.en);
+            actDlg.desc.textContent = options.desc || '';
+            actDlg.desc.hidden = !options.desc;
+            actDlg.list.innerHTML = options.items.map((item, i) =>
+                '<div class="vb-row"><button type="button" class="vb-actitem' + (item.danger ? ' is-danger' : '') + '" data-i="' + i + '"' + (item.disabled ? ' disabled' : '') + '>' +
+                icon18(item.icon || '') + '<span>' + esc(item.label) + '</span></button></div>').join('');
+            openDialog(actDlg.back, { focus: actDlg.list.querySelector('.vb-actitem:not(:disabled)'), returnFocus: options.returnFocus });
+        }
+
+        actDlg.list.addEventListener('click', e => {
+            const btn = e.target.closest('[data-i]');
+            if (!btn || btn.disabled) return;
+            const item = actDlg.items[parseInt(btn.dataset.i, 10)];
+            // 先关菜单再做事：删除确认、重命名等会接着弹出新的面板
+            closeDialog(actDlg.back);
+            if (item && item.run) item.run();
+        });
+
+        function openMoreMenu() {
+            if (!vocab) return;
+            const sub = currentSub();
+            const items = [
+                { label: '导入 CSV', icon: ICON_UPLOAD, run: openImport },
+                { label: '导出单词', icon: ICON_DOWNLOAD, run: openExport },
+                { label: '新建子分类', icon: ICON_PLUS, run: () => openSubDialog('new') }
+            ];
+            if (sub) {
+                items.push({ label: '重命名「' + sub.name + '」', icon: ICON_EDIT, run: () => openSubDialog('rename') });
+                items.push({ label: '删除「' + sub.name + '」', icon: ICON_TRASH, danger: true, run: () => deleteSub() });
+            }
+            openActions({ title: '更多操作', items: items, returnFocus: els.moreBtn });
+        }
+
+        function openWordActions(id, opener) {
+            const hit = findWord(id);
+            if (!hit) return;
+            const w = hit.word;
+            const fav = !!w.is_favorited;
+            openActions({
+                title: w.word,
+                en: true,
+                // 遮住释义自测时不在菜单里把释义露出来
+                desc: meaningsVisible ? ((w.meaning || '').trim() || '暂无释义') : '',
+                returnFocus: opener,
+                items: [
+                    { label: '播放发音', icon: ICON_SPEAKER_LG, run: () => { audioUnlocked = true; playWord(w); } },
+                    { label: fav ? '取消收藏' : '收藏', icon: fav ? ICON_STAR_ON : ICON_STAR_OFF, run: () => toggleFavorite(id) },
+                    { label: '删除这个单词', icon: ICON_TRASH, danger: true, run: () => deleteWord(id) }
+                ]
+            });
+        }
+
+        els.moreBtn.addEventListener('click', openMoreMenu);
+
+        // ==================== 手机：排序面板 ====================
+
+        const sortDlg = { back: $('dlgSort'), list: $('sortList'), fav: $('sortFav'), favHint: $('sortFavHint') };
+
+        function renderSortSheet() {
+            sortDlg.list.innerHTML = Array.from(els.sort.options).map(option => {
+                const on = option.value === sortBase;
+                return '<div class="vb-row' + (on ? ' is-on' : '') + '"><button type="button" class="vb-row__main" role="radio" aria-checked="' + on + '" data-sort="' + option.value + '">' +
+                    '<span class="vb-row__check">' + (on ? ICON_CHECK : '') + '</span><span class="vb-row__name">' + esc(option.textContent) + '</span></button></div>';
+            }).join('');
+            const pureOnly = SORTS_PURE_ONLY.includes(sortBase);
+            sortDlg.fav.disabled = pureOnly;
+            sortDlg.fav.setAttribute('aria-checked', favFirst && !pureOnly ? 'true' : 'false');
+            sortDlg.favHint.textContent = pureOnly ? '按长度和随机排序时不分收藏' : '收藏的单词排在最前面';
+        }
+
+        els.sortBtn.addEventListener('click', () => {
+            if (!vocab) return;
+            renderSortSheet();
+            openDialog(sortDlg.back, { focus: sortDlg.list.querySelector('[aria-checked="true"]'), returnFocus: els.sortBtn });
+        });
+
+        // 选一种排序就关面板；「收藏置顶」开关就地切换，不关
+        sortDlg.list.addEventListener('click', e => {
+            const btn = e.target.closest('[data-sort]');
+            if (!btn) return;
+            setSort(btn.dataset.sort);
+            closeDialog(sortDlg.back);
+        });
+
+        sortDlg.fav.addEventListener('click', () => {
+            if (sortDlg.fav.disabled) return;
+            toggleFavFirst();
+            renderSortSheet();
+        });
+
+        // ==================== 手机：查找 ====================
+
+        function enterSearch() {
+            els.rail.classList.add('is-searching');
+            els.pSearch.value = searchText;
+            els.pSearch.focus();
+            scrollListTop();
+        }
+
+        function exitSearch() {
+            els.rail.classList.remove('is-searching');
+            els.pSearch.value = '';
+            if (searchText) {
+                searchText = '';
+                els.search.value = '';
+                renderGrid();
+            }
+        }
+
+        els.searchBtn.addEventListener('click', enterSearch);
+        els.pSearchCancel.addEventListener('click', exitSearch);
+        els.pSearch.addEventListener('input', () => {
+            els.search.value = els.pSearch.value;
+            searchText = els.pSearch.value.trim();
+            renderGrid();
+            scrollListTop();
+        });
+        // 键盘上的「搜索」键：收起键盘，看结果
+        els.pSearch.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); els.pSearch.blur(); }
+            if (e.key === 'Escape') { e.stopPropagation(); exitSearch(); els.searchBtn.focus(); }
         });
 
         // ==================== 子分类：新建 / 重命名 / 删除 ====================
 
         const subDlg = { back: $('dlgSub'), form: $('dlgSubForm'), title: $('dlgSubTitle'), label: $('dlgSubLabel'), name: $('dlgSubName'), hint: $('dlgSubHint'), ok: $('dlgSubOk'), mode: 'new' };
 
-        function openSubDialog(mode) {
-            const sub = currentSub();
+        // 默认是当前子分类；手机子分类面板里可以对任意一个子分类重命名
+        function openSubDialog(mode, category, subId) {
+            const cat = category || currentCategory;
+            const id = category ? subId : currentSubcategory;
+            const sub = (catData(cat).subcategories || {})[id] || null;
             if (mode === 'rename' && !sub) return;
             subDlg.mode = mode;
-            subDlg.category = currentCategory;
-            subDlg.subId = currentSubcategory;
+            subDlg.category = cat;
+            subDlg.subId = id;
             subDlg.title.textContent = mode === 'new' ? '新建子分类' : '重命名子分类';
             subDlg.label.textContent = mode === 'new' ? '名称' : '新名称';
             subDlg.hint.textContent = mode === 'new'
-                ? '建在「' + CAT_NAME[currentCategory] + '」下面，名称不能和已有的子分类重复。'
+                ? '建在「' + CAT_NAME[cat] + '」下面，名称不能和已有的子分类重复。'
                 : '单词和收藏都不受影响。';
             subDlg.ok.textContent = mode === 'new' ? '新建' : '保存';
             subDlg.name.value = mode === 'new' ? '' : sub.name;
@@ -1259,11 +1800,12 @@ acquire,v. 获得，习得</pre>
             }
         });
 
-        async function deleteCurrentSub() {
-            const sub = currentSub();
+        // 默认删当前子分类；手机子分类面板里可以删任意一个
+        async function deleteSub(cat, id) {
+            const category = cat || currentCategory;
+            const subId = cat ? id : currentSubcategory;
+            const sub = (catData(category).subcategories || {})[subId];
             if (!sub) return;
-            const category = currentCategory;
-            const subId = currentSubcategory;
             const ok = await confirmDialog({
                 title: '删除子分类「' + sub.name + '」？',
                 text: sub.words.length
@@ -1289,7 +1831,7 @@ acquire,v. 获得，习得</pre>
 
         els.subNew.addEventListener('click', () => openSubDialog('new'));
         els.renameBtn.addEventListener('click', () => openSubDialog('rename'));
-        els.deleteSubBtn.addEventListener('click', deleteCurrentSub);
+        els.deleteSubBtn.addEventListener('click', () => deleteSub());
 
         // ==================== 加词 ====================
 
@@ -1300,8 +1842,27 @@ acquire,v. 获得，习得</pre>
             if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !e.isComposing) {
                 e.preventDefault();
                 if (els.addForm.requestSubmit) els.addForm.requestSubmit(); else els.addForm.dispatchEvent(new Event('submit', { cancelable: true }));
+                return;
+            }
+            // 手机：单词框里按键盘的「下一项」跳到释义框，不直接提交（以前一回车就把没填释义的词加进去了）；
+            // 释义框里按「完成」才添加。桌面上回车照旧直接添加
+            if (e.key === 'Enter' && e.target === els.word && isPhone() && !e.isComposing && e.keyCode !== 229) {
+                e.preventDefault();
+                els.meaning.focus();
             }
         });
+
+        const addSheetOpen = () => els.addSheet.classList.contains('is-open');
+
+        // 手机加词面板开着时，结果写在面板里（提示条浮在面板上会挡住输入框和「添加」）
+        function addFeedback(text, ok) {
+            if (addSheetOpen()) {
+                addNote = { text: text, ok: ok };
+                updateAddHint();
+            } else {
+                toast(text, ok ? 'success' : 'error');
+            }
+        }
 
         els.addForm.addEventListener('submit', async e => {
             e.preventDefault();
@@ -1310,7 +1871,7 @@ acquire,v. 获得，习得</pre>
             const meaning = els.meaning.value.trim();
             if (!sub) return;
             if (!word) {
-                toast('先输入单词', 'error');
+                addFeedback('先输入单词', false);
                 els.word.focus();
                 return;
             }
@@ -1325,15 +1886,36 @@ acquire,v. 获得，习得</pre>
                 els.meaning.value = '';
                 searchText = '';
                 els.search.value = '';
+                els.pSearch.value = '';
+                els.rail.classList.remove('is-searching');
                 render();
                 els.word.focus();
-                toast('已添加「' + result.data.word + '」', 'success');
+                // 手机面板加完不关，接着加下一个
+                addFeedback(addSheetOpen() ? '已添加「' + result.data.word + '」✓ 接着输入下一个' : '已添加「' + result.data.word + '」', true);
             } catch (error) {
-                toast(error.message, 'error');
+                addFeedback(error.message, false);
             } finally {
                 els.addBtn.disabled = !currentSub();
             }
         });
+
+        function openAddSheet() {
+            if (!vocab || !currentSub()) return;
+            addNote = null;
+            updateAddHint();
+            openDialog(els.addSheet, { focus: els.word, returnFocus: els.pAdd });
+        }
+
+        els.pAdd.addEventListener('click', openAddSheet);
+        els.addClose.addEventListener('click', () => cancelDialog(els.addSheet));
+        (function () {
+            let downOnBackdrop = false;
+            els.addSheet.addEventListener('mousedown', e => { downOnBackdrop = e.target === els.addSheet; });
+            els.addSheet.addEventListener('click', e => {
+                if (e.target === els.addSheet && downOnBackdrop && addSheetOpen()) cancelDialog(els.addSheet);
+            });
+        })();
+        els.emptyAdd.addEventListener('click', () => { if (currentSub()) openAddSheet(); else openSubDialog('new'); });
 
         // ==================== 单词卡：播放 / 收藏 / 删除 / 隐藏释义 ====================
 
@@ -1351,12 +1933,16 @@ acquire,v. 获得，习得</pre>
             const act = actEl ? actEl.dataset.act : 'play';
             if (act === 'delete') { deleteWord(id); return; }
             if (act === 'fav') { toggleFavorite(id); return; }
+            if (act === 'more') { openWordActions(id, actEl); return; }
             if (act === 'peek' && actEl.classList.contains('is-masked') && (touchOnly.matches || lastPointer === 'touch' || lastPointer === 'pen')) {
                 actEl.classList.toggle('is-peek');
                 return;
             }
             const hit = findWord(id);
-            if (hit) playWord(hit.word);
+            if (hit) {
+                audioUnlocked = true;   // 这一下是用户点的，audio 已经解锁
+                playWord(hit.word);
+            }
         });
 
         async function toggleFavorite(id) {
@@ -1401,24 +1987,32 @@ acquire,v. 获得，习得</pre>
             savePrefs();
         }
 
-        els.sort.addEventListener('change', () => {
-            sortBase = els.sort.value;
+        function setSort(value) {
+            sortBase = value;
             if (sortBase === 'random') randomKeys.clear();
             savePrefs();
             renderMain();
-        });
+        }
 
-        els.favFirst.addEventListener('click', () => {
-            if (els.favFirst.disabled) return;
+        function toggleFavFirst() {
             favFirst = !favFirst;
             savePrefs();
             renderMain();
+        }
+
+        els.sort.addEventListener('change', () => setSort(els.sort.value));
+
+        els.favFirst.addEventListener('click', () => {
+            if (els.favFirst.disabled) return;
+            toggleFavFirst();
         });
 
         els.hide.addEventListener('click', toggleMeanings);
+        els.pHide.addEventListener('click', toggleMeanings);
 
         els.search.addEventListener('input', () => {
             searchText = els.search.value.trim();
+            els.pSearch.value = els.search.value;
             renderGrid();
         });
 
@@ -1432,12 +2026,14 @@ acquire,v. 获得，习得</pre>
                 file = null;
             }
             imp.file = file || null;
+            // 手机上没法拖文件，不提拖拽
+            const canDrag = !isPhone();
             if (imp.file) {
                 imp.dropTitle.textContent = imp.file.name;
-                imp.dropSub.innerHTML = esc(fileSize(imp.file.size)) + ' · 把别的文件拖到这里，或 <span class="vb-link">重新选择</span>';
+                imp.dropSub.innerHTML = esc(fileSize(imp.file.size)) + (canDrag ? ' · 把别的文件拖到这里，或 ' : ' · ') + '<span class="vb-link">重新选择</span>';
             } else {
                 imp.dropTitle.textContent = '选择 CSV 文件';
-                imp.dropSub.innerHTML = '点这里选择，或把文件拖到这里';
+                imp.dropSub.innerHTML = canDrag ? '点这里选择，或把文件拖到这里' : '点这里选择文件';
             }
         }
 
@@ -1717,6 +2313,8 @@ acquire,v. 获得，习得</pre>
             if (!pool.length) { toast('没有找到可用的单词', 'error'); return; }
             if (pool.length < 4) { toast('单词数量不足，至少需要 4 个单词才能挑战', 'error'); return; }
             lastChallenge = settings;
+            // 还在「点开始挑战」这一下里：先把 audio 解锁，第一题在定时器里自动读才不会被 iOS 拦下
+            unlockAudio();
             closeDialog(ch.back);
             startQuiz(settings, pool);
         });
@@ -1809,7 +2407,8 @@ acquire,v. 获得，习得</pre>
                 return '<button type="button" class="vb-option' + (toMeaning ? '' : ' is-en') + '" data-index="' + i + '">' +
                     '<span class="vb-option__key">' + (i + 1) + '</span><span class="vb-option__text">' + esc(text) + '</span></button>';
             }).join('');
-            qz.foot.textContent = '可以按 1–' + q.options.length + ' 键作答';
+            // 手机上没有数字键，不提
+            qz.foot.textContent = isPhone() ? '' : '可以按 1–' + q.options.length + ' 键作答';
             if (toMeaning) later(session, 300, () => playWord(q.word, { quiet: true }));
         }
 
@@ -1873,7 +2472,10 @@ acquire,v. 获得，习得</pre>
         });
 
         qz.question.addEventListener('click', e => {
-            if (e.target.closest('[data-replay]') && quiz) playWord(quiz.questions[quiz.index].word);
+            if (e.target.closest('[data-replay]') && quiz) {
+                audioUnlocked = true;
+                playWord(quiz.questions[quiz.index].word);
+            }
         });
 
         // ==================== 单词挑战：结果 ====================
@@ -1926,7 +2528,10 @@ acquire,v. 获得，习得</pre>
 
         rs.review.addEventListener('click', e => {
             const btn = e.target.closest('[data-index]');
-            if (btn) playWord(resultWords[parseInt(btn.dataset.index, 10)]);
+            if (btn) {
+                audioUnlocked = true;
+                playWord(resultWords[parseInt(btn.dataset.index, 10)]);
+            }
         });
 
         rs.again.addEventListener('click', () => {
@@ -1967,6 +2572,41 @@ acquire,v. 获得，习得</pre>
         els.emptyImport.addEventListener('click', openImport);
         els.exportBtn.addEventListener('click', openExport);
         els.challengeBtn.addEventListener('click', () => openChallenge(null));
+        els.pChallenge.addEventListener('click', () => openChallenge(null));
+
+        // 手机键盘：iOS 弹键盘时布局视口不变，只有 visualViewport 变矮（还可能往下挪）。
+        // 把看得见的那块的上下边算成变量，面板的遮罩就收在键盘上面，输入框和「添加」按钮不会被盖住
+        const vv = window.visualViewport;
+        function syncViewport() {
+            const root = document.documentElement.style;
+            if (!vv || !isPhone()) {
+                root.removeProperty('--vb-vv-top');
+                root.removeProperty('--vb-kb');
+                return;
+            }
+            const top = Math.max(0, Math.round(vv.offsetTop));
+            const kb = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+            root.setProperty('--vb-vv-top', top + 'px');
+            root.setProperty('--vb-kb', kb + 'px');
+        }
+        if (vv) {
+            vv.addEventListener('resize', syncViewport);
+            vv.addEventListener('scroll', syncViewport);
+        }
+
+        // 窗口在手机 / 桌面宽度之间来回拉：手机加词面板只在手机布局里有意义；查找框换到对应布局里那一个
+        const onLayoutChange = () => {
+            syncViewport();
+            if (!isPhone() && addSheetOpen()) closeDialog(els.addSheet);
+            if (isPhone() && searchText) {
+                els.rail.classList.add('is-searching');
+                els.pSearch.value = els.search.value;
+            }
+            if (vocab) render();
+        };
+        if (phoneMq.addEventListener) phoneMq.addEventListener('change', onLayoutChange);
+        else if (phoneMq.addListener) phoneMq.addListener(onLayoutChange);
+        syncViewport();
 
         loadPrefs();
         loadVocabulary();

@@ -5,6 +5,7 @@
 //   VOCAB_E2E_OUT       截图、下载文件放哪，默认系统临时目录下的 vocab-e2e（别放进仓库）
 //   VOCAB_E2E_USER / VOCAB_E2E_PASSWORD  沙盒里的假账号，默认 demo / not-a-real-password（make_fake_data.py 写的）
 //   VOCAB_E2E_OFFLINE=1 不连有道：有道发音请求换成本地生成的一小段提示音，其余检查照跑
+//   VOCAB_E2E_SUITES    只跑其中几组（desktop,prefs,missing,phone），默认全跑
 //   PLAYWRIGHT_CORE     playwright-core 的路径（仓库没装 node 依赖时指到别处装好的那份）
 // 命令行参数是要跑的浏览器内核，默认 chromium webkit。
 const fs = require('fs');
@@ -21,6 +22,8 @@ const BASE = (process.env.VOCAB_E2E_BASE || 'http://localhost:5174').replace(/\/
 const USER = process.env.VOCAB_E2E_USER || 'demo';
 const PASSWORD = process.env.VOCAB_E2E_PASSWORD || 'not-a-real-password';
 const OFFLINE = process.env.VOCAB_E2E_OFFLINE === '1';
+// 只跑其中几组：VOCAB_E2E_SUITES=phone（逗号分隔：desktop,prefs,missing,phone），默认全跑
+const SUITES = (process.env.VOCAB_E2E_SUITES || 'desktop,prefs,missing,phone').split(',').map(s => s.trim());
 const OUT_ROOT = path.resolve(process.env.VOCAB_E2E_OUT || path.join(os.tmpdir(), 'vocab-e2e'));
 const OUT = path.join(OUT_ROOT, 'shots');
 const DL = path.join(OUT_ROOT, 'downloads');
@@ -80,9 +83,10 @@ function readCategory(cat) {
 }
 
 async function newPage(browser, opts) {
-  const o = Object.assign({ width: 1280, height: 900, theme: 'light', prefs: null, mobile: false }, opts || {});
+  const o = Object.assign({ width: 1280, height: 900, theme: 'light', prefs: null, mobile: false, isMobile: true }, opts || {});
   const ctxOpts = { viewport: { width: o.width, height: o.height }, acceptDownloads: true, colorScheme: o.theme };
-  if (o.mobile) Object.assign(ctxOpts, { isMobile: true, hasTouch: true });
+  // 手机：触屏；WebKit 不用 isMobile（macOS 上的 WebKit 不支持），Chromium 用
+  if (o.mobile) Object.assign(ctxOpts, { hasTouch: true }, o.isMobile ? { isMobile: true } : {});
   const ctx = await browser.newContext(ctxOpts);
   if (OFFLINE) await ctx.route('**/dictvoice**', route => route.fulfill({ status: 200, contentType: 'audio/wav', body: TONE }));
   await ctx.addInitScript(([t, theme, prefs, user]) => {
@@ -626,67 +630,554 @@ async function prefsAndThemes(browser) {
   await page.keyboard.press('Escape');
   check('no page errors (dark)', page.errors.length === 0, page.errors);
   await ctx.close();
+}
 
-  // phone 390, light + dark
+// ============================================================ phone: WebKit 390×844 / Chromium 360×780, light + dark
+// 手机布局：首屏就看到单词卡；吸顶条（分类 / 子分类 / 查找 / 排序）；底部操作条（遮释义 / 加词 / 单词挑战）；
+// 子分类、排序、加词、⋯ 菜单都是底部面板；返回键先关面板；键盘弹出（视口约 470px 高）时输入框和按钮还看得见
+const PHONE = { webkit: { width: 390, height: 844, isMobile: false }, chromium: { width: 360, height: 780, isMobile: true } };
+const KB_HEIGHT = 470;
+
+const rect = (page, sel) => page.$eval(sel, e => { const r = e.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height, b: r.bottom, r: r.right }; }).catch(() => null);
+const shown = (page, sel) => page.isVisible(sel).catch(() => false);
+const isOpenAdd = page => page.$eval('#vbAddSheet', e => e.classList.contains('is-open')).catch(() => false);
+const activeId = page => page.evaluate(() => document.activeElement && document.activeElement.id);
+// 一段流程出错就记一条 FAIL，接着跑下一段（在 mobile/base 上跑时这些元素都不存在，要能数出每一段都失败）
+async function section(name, fn) {
+  try { await fn(); } catch (e) { check(name + ' (crashed)', false, String(e.message).split('\n')[0]); }
+}
+// 面板从底部滑上来要 0.22 秒，等它停稳再量位置
+const waitShown = async (page, sel, timeout) => { await page.waitForSelector(sel, { state: 'visible', timeout: timeout || 3000 }); await page.waitForTimeout(280); };
+const waitHidden = (page, sel, timeout) => page.waitForSelector(sel, { state: 'hidden', timeout: timeout || 3000 });
+// 底部面板：铺满宽度、贴着屏幕底边
+async function isBottomSheet(page, sel, vw, vh) {
+  const r = await rect(page, sel);
+  return !!r && Math.abs(r.x) <= 1 && Math.abs(r.w - vw) <= 1 && Math.abs(r.b - vh) <= 1;
+}
+// 手机的返回（iOS 右滑 / 安卓返回键）：退一条历史后页面没重新加载（window.__stay 还在），还在单词本
+async function pressBack(page) {
+  await page.evaluate(() => { window.__stay = 1; });
+  await page.goBack({ timeout: 5000 }).catch(() => {});
+  await page.waitForTimeout(300);
+  return page.evaluate(() => window.__stay === 1 && location.pathname === '/vocabulary' && !document.getElementById('vbContent').hidden).catch(() => false);
+}
+const cardByWord = (page, word) => page.locator('#vbGrid .vb-card', { has: page.locator('.vb-word', { hasText: new RegExp('^' + word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$') }) }).first();
+const isDark = c => { const n = (String(c).match(/\d+(\.\d+)?/g) || []).slice(0, 3).map(Number); return n.length === 3 && n.reduce((a, b) => a + b, 0) < 200; };
+
+async function phoneSuite(browser) {
+  const dev = PHONE[engine] || PHONE.webkit;
   for (const theme of ['light', 'dark']) {
     resetData();
-    ({ ctx, page } = await newPage(browser, { width: 390, height: 844, mobile: true, theme, prefs: { category: 'listening', subcategory: SUB.unfamiliar, sortType: 'newest', meaningsVisible: true } }));
+    const { ctx, page } = await newPage(browser, { width: dev.width, height: dev.height, mobile: true, isMobile: dev.isMobile, theme, prefs: { category: 'listening', subcategory: SUB.unfamiliar, sortType: 'newest', meaningsVisible: true } });
+    const P = n => `phone ${dev.width} ${theme}: ${n}`;
     await open(page);
-    check(`phone ${theme}: no horizontal overflow`, (await overflow(page)) <= 0, await overflow(page));
-    check(`phone ${theme}: 2-column grid`, (await page.$eval('#vbGrid', e => getComputedStyle(e).gridTemplateColumns.split(' ').length)) === 2);
-    check(`phone ${theme}: sub list collapsed`, !(await page.isVisible('#vbSubs')));
-    check(`phone ${theme}: trash always visible`, (await page.$eval('.vb-act--del', e => getComputedStyle(e).opacity)) === '1');
-    await shot(page, `${theme}-390-main`);
-    await shot(page, `${theme}-390-main-full`, true);
-    await page.click('#vbSubToggle');
-    check(`phone ${theme}: toggle opens subs`, await page.isVisible('#vbSubs') && (await page.$eval('#vbSubToggle', e => e.getAttribute('aria-expanded'))) === 'true');
-    await shot(page, `${theme}-390-subs-open`);
-    await page.tap(`#vbSubs [data-sub="${SUB.part3}"]`);
-    check(`phone ${theme}: picking a sub closes list`, !(await page.isVisible('#vbSubs')) && (await text(page, '#vbSubName')) === 'Part 3 学术场景');
-    await page.tap('#vbCats [data-cat="reading"]');
-    check(`phone ${theme}: category grid works`, (await text(page, '#vbSubName')) === 'Chapter1 自然地理');
-    await page.tap('#vbHide');
-    const maskedBefore = await page.$$eval('#vbGrid .vb-meaning.is-masked', els => els.length);
-    const firstMeaning = page.locator('#vbGrid .vb-meaning').first();
-    page.youdao = [];
-    await page.evaluate(() => { window.__clicks = []; document.addEventListener('click', e => window.__clicks.push((e.target.id || e.target.className) + '|' + e.pointerType + '|' + matchMedia('(hover: none)').matches), true); });
-    await firstMeaning.tap();
-    await page.waitForTimeout(200);
-    check(`phone ${theme}: tap masked meaning peeks`, await firstMeaning.evaluate(e => e.classList.contains('is-peek')) && page.youdao.length === 0, { maskedBefore, cls: await firstMeaning.getAttribute('class'), youdao: page.youdao, hidePressed: await page.$eval('#vbHide', e => e.getAttribute('aria-pressed')), clicks: await page.evaluate(() => window.__clicks) });
+    await phoneLayout(page, P, dev.width, dev.height);
+    if (theme === 'light') await phoneFlows(page, P, dev.width, dev.height);
+    else await phoneDark(page, P);
+    check(P('no page errors'), page.errors.length === 0, page.errors);
+    await ctx.close();
+  }
+  await phoneAudioUnlock(browser, dev);
+  await phoneLoadingAndError(browser, dev);
+}
+
+async function phoneLayout(page, P, vw, vh) {
+  await section(P('first screen'), async () => {
+    check(P('no horizontal overflow'), (await overflow(page)) <= 0, await overflow(page));
+    const bar = await rect(page, '#vbPbar');
+    check(P('bottom bar fixed at the bottom'), !!bar && Math.abs(bar.b - vh) <= 1 && bar.w >= vw - 1 && (await page.$eval('#vbPbar', e => getComputedStyle(e).position)) === 'fixed', bar);
+    const first = await rect(page, '#vbGrid .vb-card');
+    check(P('first word cards on the first screen'), !!first && !!bar && first.b <= bar.y, { first, bar });
+    const full = await page.$$eval('#vbGrid .vb-card', (els, limit) => els.filter(e => { const r = e.getBoundingClientRect(); return r.top >= 0 && r.bottom <= limit; }).length, bar ? bar.y : vh);
+    check(P('at least 8 cards fully visible before scrolling'), full >= 8, full);
+    check(P('2 cards per row'), (await page.$eval('#vbGrid', e => getComputedStyle(e).gridTemplateColumns.split(' ').length)) === 2);
+    const wordPx = await page.$eval('#vbGrid .vb-word', e => parseFloat(getComputedStyle(e).fontSize));
+    check(P('English word >= 16px'), wordPx >= 16, wordPx);
+    const hiddenBits = await page.evaluate(() => ['#vbGrid .vb-date', '#vbGrid .vb-act--del', '.vb-toolbar', '.vb-kbd', '.vb-head__desc', '#vbImportBtn', '#vbExportBtn', '#vbChallengeBtn', '.vb-main-head', '#vbAddForm']
+      .filter(s => { const e = document.querySelector(s); return e && e.getClientRects().length > 0; }));
+    check(P('no date / trash / H-key hint / inline add form / head buttons on phones'), hiddenBits.length === 0, hiddenBits);
+  });
+  await section(P('tap sizes'), async () => {
+    const card = await rect(page, '#vbGrid .vb-card');
+    const more = await rect(page, '#vbGrid .vb-card .vb-act--more');
+    const star = await rect(page, '#vbGrid .vb-card .vb-act--fav');
+    check(P('card ⋯ and ★ >= 40×40, 8px apart, inside the card'),
+      !!(more && star && card) && more.w >= 40 && more.h >= 40 && star.w >= 40 && star.h >= 40 && star.y - more.b >= 8 && more.y >= card.y - 0.5 && star.b <= card.b + 0.5 && more.r <= card.r + 0.5, { card, more, star });
+    const sizes = await page.evaluate(() => {
+      const r = s => Array.from(document.querySelectorAll(s)).map(e => { const b = e.getBoundingClientRect(); return [Math.round(b.width), Math.round(b.height)]; });
+      return { tabs: r('#vbCats .ui-rail__item'), row: r('#vbSubToggle, #vbSearchBtn, #vbSortBtn'), more: r('#vbMoreBtn'), bar: r('#vbPbar .ui-btn') };
+    });
+    check(P('category tabs >= 40px tall'), sizes.tabs.length === 4 && sizes.tabs.every(([, h]) => h >= 40), sizes.tabs);
+    check(P('sub picker / search / sort >= 44px'), sizes.row.length === 3 && sizes.row.every(([w, h]) => w >= 44 && h >= 44), sizes.row);
+    check(P('page ⋯ is 44×44'), sizes.more.length === 1 && sizes.more[0][0] >= 44 && sizes.more[0][1] >= 44, sizes.more);
+    check(P('bottom bar buttons >= 44px'), sizes.bar.length === 3 && sizes.bar.every(([, h]) => h >= 44), sizes.bar);
+  });
+  await section(P('scrolled'), async () => {
+    await page.evaluate(() => window.scrollTo(0, 3000));
+    await page.waitForTimeout(150);
+    const stuck = await page.evaluate(() => {
+      const col = document.querySelector('.vb-rail-col');
+      const t = document.getElementById('vbSubToggle').getBoundingClientRect();
+      const hit = document.elementFromPoint(t.x + t.width / 2, t.y + t.height / 2);
+      return { y: window.scrollY, top: col.getBoundingClientRect().top, want: parseFloat(getComputedStyle(col).top), hit: !!(hit && hit.closest('#vbSubToggle')) };
+    });
+    check(P('sticky bar stays under the top nav deep in the list'), stuck.y > 1000 && Math.abs(stuck.top - stuck.want) <= 1 && stuck.hit, stuck);
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await page.waitForTimeout(150);
+    const last = await page.evaluate(() => { const c = document.querySelectorAll('#vbGrid .vb-card'); return c[c.length - 1].getBoundingClientRect().bottom; });
+    const bar = await rect(page, '#vbPbar');
+    check(P('bottom bar does not cover the last card'), last <= bar.y, { last, bar: bar && bar.y });
+    const barVar = await page.evaluate(() => parseFloat(getComputedStyle(document.body).getPropertyValue('--ui-bottom-bar-h')));
+    check(P('--ui-bottom-bar-h = bar height (toasts float above it)'), Math.abs(barVar - bar.h) <= 1, { barVar, h: bar.h });
+    await page.evaluate(() => window.scrollTo(0, 0));
+  });
+}
+
+async function phoneFlows(page, P, vw, vh) {
+  await shot(page, 'phone-main');
+  await page.evaluate(() => window.scrollTo(0, 2400));
+  await page.waitForTimeout(150);
+  await shot(page, 'phone-deep');
+  await page.evaluate(() => window.scrollTo(0, 0));
+
+  // ---- 点卡片听发音；底部「遮释义」等于桌面的 H 键；被遮住的释义点一下偷看
+  await section(P('play + mask'), async () => {
     page.youdao = [];
     await page.locator('#vbGrid .vb-word').first().tap();
     await page.waitForTimeout(200);
-    check(`phone ${theme}: tap word plays`, page.youdao.length >= 1 && new Set(page.youdao).size === 1, page.youdao);
-    await shot(page, `${theme}-390-hidden-peek`);
-    await page.tap('#vbHide');
-    await page.fill('#vbWord', 'thoroughfare');
-    await page.fill('#vbMeaning', 'n. 通道');
-    await page.tap('#vbAddBtn');
-    check(`phone ${theme}: add works`, await toastSeen(page, '已添加「thoroughfare」'));
-    await page.tap('#vbChallengeBtn');
-    await page.waitForSelector('#dlgChallenge:not([hidden])');
-    check(`phone ${theme}: dialog fits`, (await page.$eval('#dlgChallenge .ui-dialog', e => e.getBoundingClientRect().width)) <= 390 - 24 && (await overflow(page)) <= 0);
-    await shot(page, `${theme}-390-challenge-setup`);
-    await page.tap('#chOk');
-    await page.waitForSelector('#dlgQuiz:not([hidden])');
-    await page.waitForTimeout(400);
-    check(`phone ${theme}: options single column`, (await page.$eval('#qOptions', e => getComputedStyle(e).gridTemplateColumns.split(' ').length)) === 1);
-    await shot(page, `${theme}-390-challenge-question`);
-    await page.locator('#qOptions .vb-option').first().tap();
-    await page.waitForTimeout(300);
-    await shot(page, `${theme}-390-challenge-answered`);
-    await page.tap('#dlgQuiz .ui-dialog__close');
+    check(P('tap word plays'), page.youdao.length >= 1 && new Set(page.youdao).size === 1, page.youdao);
+    await page.tap('#vbPHide');
+    check(P('遮释义 (bottom bar) masks every meaning'), (await page.$eval('#vbPHide', e => e.getAttribute('aria-pressed'))) === 'true' && await page.$$eval('#vbGrid .vb-meaning', els => els.every(e => e.classList.contains('is-masked'))) && (await prefs(page)).meaningsVisible === false);
+    const m = page.locator('#vbGrid .vb-meaning').nth(2);
+    page.youdao = [];
+    await m.tap();
+    await page.waitForTimeout(150);
+    check(P('tap a masked meaning peeks, does not play'), await m.evaluate(e => e.classList.contains('is-peek')) && page.youdao.length === 0);
+    await shot(page, 'phone-masked');
+    await page.tap('#vbPHide');
+    check(P('遮释义 again shows them'), (await page.$$eval('#vbGrid .vb-meaning.is-masked', els => els.length)) === 0);
+  });
+
+  // ---- ★ 一下就收藏；提示条浮在底部操作条上面
+  await section(P('star'), async () => {
+    const card = page.locator('#vbGrid .vb-card').nth(40);
+    const word = (await card.locator('.vb-word').textContent()).trim();
+    await card.locator('.vb-act--fav').tap();
+    check(P('★ is one tap'), await toastSeen(page, '已收藏 ' + word));
+    check(P('★ saved'), (await cardByWord(page, word).locator('.vb-act--fav').getAttribute('aria-pressed')) === 'true');
+    const t = await rect(page, '.ielts-toast');
+    const bar = await rect(page, '#vbPbar');
+    check(P('toast floats above the bottom bar'), !!t && !!bar && t.b <= bar.y, { t, bar });
+    await cardByWord(page, word).locator('.vb-act--fav').tap();
+    await toastSeen(page, '已取消收藏 ' + word);
+  });
+
+  // ---- 单词卡 ⋯：播放 / 收藏 / 删除（删除先确认）；返回键关面板
+  await section(P('card ⋯'), async () => {
+    await page.evaluate(() => window.scrollTo(0, 0));
+    const card = page.locator('#vbGrid .vb-card').nth(5);   // 收藏的词；别删 canteen，后面查找要用
+    const word = (await card.locator('.vb-word').textContent()).trim();
+    await card.locator('.vb-act--more').tap();
+    await waitShown(page, '#dlgActions');
+    const items = await page.$$eval('#actList .vb-actitem', els => els.map(e => e.textContent.trim()));
+    check(P('card ⋯ → play / star / delete'), (await text(page, '#actTitle')) === word && items.join('|') === '播放发音|取消收藏|删除这个单词', { title: await text(page, '#actTitle'), items });
+    check(P('action sheet is a bottom sheet'), await isBottomSheet(page, '#dlgActions .ui-dialog', vw, vh));
+    const rowH = await page.$$eval('#actList .vb-actitem', els => els.map(e => e.getBoundingClientRect().height));
+    check(P('action rows >= 44px'), rowH.every(h => h >= 44), rowH);
+    await shot(page, 'phone-word-actions');
+    check(P('back closes the action sheet, stays on the page'), (await pressBack(page)) && !(await shown(page, '#dlgActions')));
+    await card.locator('.vb-act--more').tap();
+    await waitShown(page, '#dlgActions');
+    await page.tap('#actList .vb-actitem.is-danger');
+    await waitShown(page, '#dlgConfirm');
+    check(P('delete asks first'), (await text(page, '#cfTitle')) === '删除单词「' + word + '」？');
+    await shot(page, 'phone-confirm-delete');
+    await page.tap('#cfCancel');
+    check(P('cancel keeps the word'), (await cards(page)).includes(word));
+    await cardByWord(page, word).locator('.vb-act--more').tap();
+    await waitShown(page, '#dlgActions');
+    await page.tap('#actList .vb-actitem.is-danger');
+    await waitShown(page, '#dlgConfirm');
     await page.tap('#cfOk');
-    await page.tap('#vbImportBtn');
-    await shot(page, `${theme}-390-import`);
-    await page.tap('#dlgImport [data-close]');
-    await page.tap('#vbExportBtn');
-    check(`phone ${theme}: export dialog no overflow`, (await overflow(page)) <= 0);
-    await shot(page, `${theme}-390-export`);
-    await page.tap('#dlgExport [data-close]');
-    check(`phone ${theme}: no page errors`, page.errors.length === 0, page.errors);
-    await ctx.close();
-  }
+    check(P('delete via ⋯'), await toastSeen(page, '已删除「' + word + '」') && !(await cards(page)).includes(word));
+  });
+
+  // ---- 子分类面板：选、返回键关、从列表深处换子分类回到新列表开头
+  await section(P('sub sheet'), async () => {
+    await page.evaluate(() => window.scrollTo(0, 2400));
+    await page.tap('#vbSubToggle');
+    await waitShown(page, '#dlgSubs');
+    const rows = await page.$$eval('#subsList .vb-row', els => els.map(e => ({ name: e.querySelector('.vb-row__name').textContent, on: e.classList.contains('is-on'), h: Math.round(e.getBoundingClientRect().height), more: Math.round(e.querySelector('.vb-row__more').getBoundingClientRect().width) })));
+    check(P('sub sheet lists subs, current one checked'), rows.length === 5 && rows.filter(r => r.on).map(r => r.name).join() === '不熟悉词汇', rows);
+    check(P('sub rows >= 44px, row ⋯ >= 44px wide'), rows.every(r => r.h >= 44 && r.more >= 44), rows);
+    const add = await rect(page, '#subsNew');
+    check(P('「新建子分类」 is a full-size button in the sheet'), !!add && add.h >= 44 && add.w >= vw / 2, add);
+    check(P('sub sheet is a bottom sheet'), await isBottomSheet(page, '#dlgSubs .ui-dialog', vw, vh));
+    await shot(page, 'phone-subs');
+    check(P('back closes the sub sheet'), (await pressBack(page)) && !(await shown(page, '#dlgSubs')));
+    await page.tap('#vbSubToggle');
+    await waitShown(page, '#dlgSubs');
+    await page.tap(`#subsList [data-sub="${SUB.part3}"]`);
+    await waitHidden(page, '#dlgSubs');
+    check(P('picking a sub switches the list'), (await text(page, '#vbSubName')) === 'Part 3 学术场景' && (await cards(page)).length === 14);
+    const top = await page.evaluate(() => ({ list: document.querySelector('#vbGrid .vb-card').getBoundingClientRect().top, bar: document.querySelector('.vb-rail-col').getBoundingClientRect().bottom }));
+    check(P('switching mid-list shows the top of the new list'), top.list >= top.bar - 1 && top.list <= top.bar + 40, top);
+  });
+
+  // ---- 子分类：在面板里新建（不靠 29px 的小加号）、重命名别的子分类、删除
+  await section(P('sub create / rename / delete'), async () => {
+    await page.tap('#vbSubToggle');
+    await waitShown(page, '#dlgSubs');
+    await page.tap('#subsNew');
+    await waitShown(page, '#dlgSub');
+    check(P('new sub: name field focused'), (await activeId(page)) === 'dlgSubName');
+    await page.fill('#dlgSubName', '手机新建');
+    await page.tap('#dlgSubOk');
+    check(P('new sub created and opened'), await toastSeen(page, '已新建「手机新建」') && (await text(page, '#vbSubName')) === '手机新建');
+    check(P('empty sub: phone wording + 加词 button'), await shown(page, '#vbEmpty') && (await text(page, '#vbEmptyPhoneText')).includes('加词') && await shown(page, '#vbEmptyAdd') && !(await page.isVisible('#vbEmpty .vb-only-desk')));
+    await shot(page, 'phone-empty');
+    await page.tap('#vbEmptyAdd');
+    check(P('empty state 加词 opens the add sheet'), await isOpenAdd(page));
+    await page.tap('#vbAddClose');
+    await page.tap('#vbSubToggle');
+    await waitShown(page, '#dlgSubs');
+    await page.tap(`#subsList [data-more="${SUB.part3}"]`);
+    await waitShown(page, '#dlgActions');
+    check(P('row ⋯ → rename / delete that sub'), (await text(page, '#actTitle')) === '「Part 3 学术场景」' && (await page.$$eval('#actList .vb-actitem', els => els.map(e => e.textContent.trim()).join('|'))) === '重命名|删除这个子分类');
+    await shot(page, 'phone-sub-actions');
+    await page.tap('#actList .vb-actitem:not(.is-danger)');
+    await waitShown(page, '#dlgSub');
+    check(P('rename prefilled with that sub'), (await page.$eval('#dlgSubName', e => e.value)) === 'Part 3 学术场景');
+    await page.fill('#dlgSubName', 'Part 3 改名');
+    await page.tap('#dlgSubOk');
+    const names = async () => page.$$eval('#subsList .vb-row__name', els => els.map(e => e.textContent));
+    check(P('rename a non-current sub from the sheet'), await toastSeen(page, '已改名为「Part 3 改名」') && await shown(page, '#dlgSubs') && (await names()).includes('Part 3 改名') && (await text(page, '#vbSubName')) === '手机新建');
+    const curId = await page.$eval('#subsList .vb-row.is-on [data-sub]', e => e.dataset.sub);
+    await page.tap(`#subsList [data-more="${curId}"]`);
+    await waitShown(page, '#dlgActions');
+    await page.tap('#actList .vb-actitem.is-danger');
+    await waitShown(page, '#dlgConfirm');
+    await page.tap('#cfOk');
+    check(P('delete from the sheet'), await toastSeen(page, '已删除「手机新建」') && !(await names()).includes('手机新建'));
+    await page.tap(`#subsList [data-sub="${SUB.unfamiliar}"]`);
+    await waitHidden(page, '#dlgSubs');
+  });
+
+  // ---- 排序面板：选一种就关；收藏置顶开关就地切换
+  await section(P('sort sheet'), async () => {
+    await page.tap('#vbSortBtn');
+    await waitShown(page, '#dlgSort');
+    const opts = await page.$$eval('#sortList [role=radio]', els => els.map(e => ({ v: e.dataset.sort, on: e.getAttribute('aria-checked') === 'true', h: Math.round(e.getBoundingClientRect().height) })));
+    check(P('sort sheet: 7 options, current checked, rows >= 44px'), opts.length === 7 && (opts.find(o => o.on) || {}).v === 'newest' && opts.every(o => o.h >= 44), opts);
+    await shot(page, 'phone-sort');
+    await page.tap('#sortList [data-sort="alphabetical"]');
+    await waitHidden(page, '#dlgSort');
+    let order = await cards(page);
+    const favs = await page.$$eval('#vbGrid .vb-act--fav', els => els.map(e => e.getAttribute('aria-pressed') === 'true'));
+    const favWords = order.filter((w, i) => favs[i]);
+    const az = list => JSON.stringify(list) === JSON.stringify([...list].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase())));
+    check(P('A→Z with favourites on top'), favs.slice(0, 38).every(Boolean) && az(favWords));
+    await page.tap('#vbSortBtn');
+    await waitShown(page, '#dlgSort');
+    await page.tap('#sortFav');
+    check(P('收藏置顶 switch toggles in place'), (await page.$eval('#sortFav', e => e.getAttribute('aria-checked'))) === 'false' && await shown(page, '#dlgSort'));
+    order = await cards(page);
+    check(P('switch off → pure A→Z, saved'), az(order) && (await prefs(page)).sortType === 'alphabetical-pure');
+    await page.tap('#sortList [data-sort="random"]');
+    await page.tap('#vbSortBtn');
+    await waitShown(page, '#dlgSort');
+    check(P('switch disabled for random'), await page.$eval('#sortFav', e => e.disabled));
+    await page.tap('#sortList [data-sort="newest"]');
+    await page.tap('#vbSortBtn');
+    await waitShown(page, '#dlgSort');
+    await page.tap('#sortFav');
+    await page.tap('#dlgSort .ui-dialog__close');
+    check(P('back to newest + 收藏置顶'), (await prefs(page)).sortType === 'newest');
+  });
+
+  // ---- 查找：吸顶条里换成搜索框，结果就在下面
+  await section(P('search'), async () => {
+    const total = (await cards(page)).length;
+    await page.evaluate(() => window.scrollTo(0, 2000));
+    await page.tap('#vbSearchBtn');
+    check(P('search: field focused, tabs make room'), (await activeId(page)) === 'vbPSearch' && !(await shown(page, '#vbCats')));
+    const px = await page.$eval('#vbPSearch', e => parseFloat(getComputedStyle(e).fontSize));
+    check(P('search field 16px'), px >= 16, px);
+    await page.fill('#vbPSearch', 'can');
+    const found = await cards(page);
+    check(P('search filters'), found.includes('canteen') && found.length < total, found.length);
+    await page.fill('#vbPSearch', '食堂');
+    check(P('search by meaning'), JSON.stringify(await cards(page)) === JSON.stringify(['canteen']), await cards(page));
+    const first = await rect(page, '#vbGrid .vb-card');
+    const bar = await rect(page, '.vb-rail-col');
+    check(P('results start right under the search bar'), !!first && !!bar && first.y >= bar.b - 1 && first.y <= bar.b + 60, { first, bar });
+    await shot(page, 'phone-search');
+    await page.tap('#vbPSearchCancel');
+    check(P('取消 clears the search'), (await cards(page)).length === total && await shown(page, '#vbCats') && (await page.$eval('#vbPSearch', e => e.value)) === '');
+  });
+
+  // ---- 加词面板：单词框回车跳到释义，释义框回车才添加；加完不关，接着加
+  await section(P('add sheet'), async () => {
+    const before = (await cards(page)).length;
+    await page.tap('#vbPAdd');
+    await page.waitForTimeout(280);
+    check(P('加词 opens the add sheet, word field focused'), await isOpenAdd(page) && (await activeId(page)) === 'vbWord');
+    check(P('add sheet is a bottom sheet'), await isBottomSheet(page, '#vbAddForm', vw, vh));
+    check(P('add sheet title names the sub'), (await text(page, '#vbAddTitle')) === '加到「不熟悉词汇」');
+    const px = await page.$$eval('#vbWord, #vbMeaning', els => els.map(e => parseFloat(getComputedStyle(e).fontSize)));
+    check(P('add fields >= 16px'), px.every(s => s >= 16), px);
+    check(P('enterkeyhint next / done'), (await page.$eval('#vbWord', e => e.getAttribute('enterkeyhint'))) === 'next' && (await page.$eval('#vbMeaning', e => e.getAttribute('enterkeyhint'))) === 'done');
+    await page.type('#vbWord', 'meticulous');
+    await page.press('#vbWord', 'Enter');
+    await page.waitForTimeout(200);
+    check(P('Return in the word field moves to the meaning, adds nothing'), (await activeId(page)) === 'vbMeaning' && (await cards(page)).length === before);
+    await page.type('#vbMeaning', 'adj. 一丝不苟的');
+    await page.press('#vbMeaning', 'Enter');
+    await page.waitForFunction(() => document.getElementById('vbAddHint').textContent.includes('已添加'), null, { timeout: 4000 }).catch(() => {});
+    check(P('Return in the meaning adds; sheet stays open for the next word'), await isOpenAdd(page) && (await text(page, '#vbAddHint')).includes('已添加「meticulous」') && (await activeId(page)) === 'vbWord' && (await cards(page)).length === before + 1);
+    check(P('no toast over the add sheet'), (await page.$$eval('.ielts-toast', els => els.filter(e => e.textContent.includes('meticulous')).length)) === 0);
+    await shot(page, 'phone-add');
+    await page.fill('#vbWord', 'canteen');
+    check(P('duplicate warning in the sheet'), (await text(page, '#vbAddHint')).includes('已经在这个子分类里了'));
+    await page.fill('#vbWord', '');
+    check(P('back closes the add sheet'), (await pressBack(page)) && !(await isOpenAdd(page)));
+  });
+
+  // ---- 页头 ⋯：导入 / 导出 / 子分类管理；导出、导入都是底部面板，范围分段不比面板宽（原来的 P0）
+  await section(P('page ⋯ / export / import'), async () => {
+    await page.tap('#vbMoreBtn');
+    await waitShown(page, '#dlgActions');
+    const items = await page.$$eval('#actList .vb-actitem', els => els.map(e => e.textContent.trim()));
+    check(P('page ⋯ holds import / export / sub management'), items.join('|') === '导入 CSV|导出单词|新建子分类|重命名「不熟悉词汇」|删除「不熟悉词汇」', items);
+    await shot(page, 'phone-more');
+    await page.tap('#actList [data-i="1"]');
+    await waitShown(page, '#dlgExport');
+    const ex = await page.evaluate(() => {
+      const dlg = document.querySelector('#dlgExport .ui-dialog');
+      const seg = document.getElementById('expScope').getBoundingClientRect();
+      return {
+        dRight: dlg.getBoundingClientRect().right, segRight: seg.right, scroll: dlg.scrollWidth - dlg.clientWidth,
+        btns: Array.from(document.querySelectorAll('#expScope .ui-seg__btn')).map(b => Math.round(b.getBoundingClientRect().width)),
+        checks: Array.from(document.querySelectorAll('#dlgExport .vb-check')).map(e => Math.round(e.getBoundingClientRect().height))
+      };
+    });
+    check(P('export: 范围 segment fits the sheet, equal buttons'), ex.segRight <= ex.dRight && ex.scroll <= 0 && Math.max(...ex.btns) - Math.min(...ex.btns) <= 1, ex);
+    check(P('export: checkbox rows >= 40px'), ex.checks.length === 5 && ex.checks.every(h => h >= 40), ex.checks);
+    check(P('export is a bottom sheet, no page overflow'), await isBottomSheet(page, '#dlgExport .ui-dialog', vw, vh) && (await overflow(page)) <= 0);
+    await shot(page, 'phone-export');
+    const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 5000 }), page.tap('#expOk')]);
+    check(P('export downloads from the sheet'), dl.suggestedFilename() === 'listening_不熟悉词汇_单词.csv', dl.suggestedFilename());
+    await page.tap('#vbMoreBtn');
+    await waitShown(page, '#dlgActions');
+    await page.tap('#actList [data-i="0"]');
+    await waitShown(page, '#dlgImport');
+    check(P('import: no drag-and-drop wording'), !(await text(page, '#impDropSub')).includes('拖'), await text(page, '#impDropSub'));
+    check(P('import is a bottom sheet'), await isBottomSheet(page, '#dlgImport .ui-dialog', vw, vh));
+    await shot(page, 'phone-import');
+    await page.tap('#dlgImport .ui-dialog__close');
+    await waitHidden(page, '#dlgImport');
+  });
+
+  // ---- 单词挑战：设置面板 → 全屏答题（选项在下半屏）→ 返回键先问 → 结果
+  await section(P('challenge'), async () => {
+    const vocab = (await (await fetch(BASE + '/api/vocabulary', { headers: { Authorization: 'Bearer ' + TOKEN } })).json()).data;
+    const words = vocab.categories.listening.subcategories[SUB.unfamiliar].words;
+    await page.tap('#vbPChallenge');
+    await waitShown(page, '#dlgChallenge');
+    await page.waitForTimeout(300);
+    const st = await page.evaluate(() => {
+      const dlg = document.querySelector('#dlgChallenge .ui-dialog');
+      return {
+        dRight: dlg.getBoundingClientRect().right, segRight: document.getElementById('chScope').getBoundingClientRect().right, scroll: dlg.scrollWidth - dlg.clientWidth,
+        chips: Array.from(document.querySelectorAll('#chCount .ui-chip')).map(e => { const r = e.getBoundingClientRect(); return [Math.round(r.top), Math.round(r.height)]; })
+      };
+    });
+    check(P('challenge: 范围 segment fits the sheet'), st.segRight <= st.dRight && st.scroll <= 0, st);
+    check(P('challenge: 题数 in one row, >= 44px'), new Set(st.chips.map(c => c[0])).size === 1 && st.chips.every(c => c[1] >= 44), st.chips);
+    check(P('challenge setup is a bottom sheet'), await isBottomSheet(page, '#dlgChallenge .ui-dialog', vw, vh));
+    await shot(page, 'phone-challenge');
+    await page.tap('#chCount [data-value="5"]');
+    await page.tap('#chOk');
+    await waitShown(page, '#dlgQuiz');
+    await page.waitForTimeout(400);
+    const qz = await page.evaluate(() => {
+      const d = document.getElementById('qDialog').getBoundingClientRect();
+      const x = document.querySelector('#dlgQuiz .ui-dialog__close').getBoundingClientRect();
+      const key = document.querySelector('#qOptions .vb-option__key');
+      return {
+        d: [d.x, d.y, d.width, d.height], x: [x.width, x.height], key: !!key && key.getClientRects().length > 0, foot: document.getElementById('qFoot').textContent,
+        opts: Array.from(document.querySelectorAll('#qOptions .vb-option')).map(e => { const r = e.getBoundingClientRect(); return [Math.round(r.top), Math.round(r.height)]; })
+      };
+    });
+    check(P('quiz fills the screen'), Math.abs(qz.d[0]) <= 1 && Math.abs(qz.d[1]) <= 1 && Math.abs(qz.d[2] - vw) <= 1 && Math.abs(qz.d[3] - vh) <= 1, qz.d);
+    check(P('quiz options in the lower half, >= 56px'), qz.opts.length === 4 && qz.opts[0][0] >= vh * 0.45 && qz.opts.every(o => o[1] >= 56), qz.opts);
+    check(P('quiz: × 44px, no 1–4 key badges or hint'), qz.x[0] >= 44 && qz.x[1] >= 44 && !qz.key && !qz.foot.includes('键'), qz);
+    await shot(page, 'phone-quiz');
+    check(P('back during the quiz asks before quitting'), (await pressBack(page)) && await shown(page, '#dlgConfirm') && (await text(page, '#cfTitle')) === '退出这次挑战？');
+    await page.tap('#cfCancel');
+    check(P('继续答题 keeps the quiz'), await shown(page, '#dlgQuiz') && !(await shown(page, '#dlgConfirm')));
+    // 故意全答错，结果里就有 5 行「需要复习」可以检查
+    for (let i = 0; i < 5; i++) {
+      await page.waitForFunction(n => document.getElementById('qCount').textContent.includes('第 ' + n + ' / 5 题') && !document.querySelector('#qOptions .vb-option:disabled'), i + 1, { timeout: 6000 });
+      const q = await page.evaluate(() => ({ word: (document.querySelector('#qQuestion .vb-quiz-word') || {}).textContent || null, mean: (document.querySelector('#qQuestion .vb-quiz-mean') || {}).textContent || null, opts: Array.from(document.querySelectorAll('#qOptions .vb-option__text')).map(e => e.textContent) }));
+      const right = q.word ? words.filter(w => w.word === q.word).map(w => w.meaning) : words.filter(w => w.meaning === q.mean).map(w => w.word);
+      const pick = Math.max(0, q.opts.findIndex(t => !right.includes(t)));
+      await page.locator('#qOptions .vb-option').nth(pick).tap();
+      await page.waitForSelector('#qOptions .vb-option.is-right');
+      if (i === 0) await shot(page, 'phone-quiz-answered');
+    }
+    await waitShown(page, '#dlgResult', 6000);
+    await page.waitForFunction(() => !document.getElementById('rSummary').textContent.includes('正在'), null, { timeout: 5000 }).catch(() => {});
+    const rv = await page.evaluate(() => ({
+      words: Array.from(document.querySelectorAll('#rReview .vb-review__word')).map(e => {
+        const range = document.createRange();
+        range.selectNodeContents(e);
+        return { w: e.textContent, lines: new Set(Array.from(range.getClientRects()).map(r => Math.round(r.top))).size };
+      }),
+      foot: Array.from(document.querySelectorAll('#dlgResult .ui-dialog__foot .ui-btn')).map(b => Math.round(b.getBoundingClientRect().height))
+    }));
+    check(P('result: review words are not broken mid-word'), rv.words.length >= 1 && rv.words.every(w => w.w.length > 14 || w.lines === 1), rv.words);
+    check(P('result is a bottom sheet with 44px buttons'), await isBottomSheet(page, '#dlgResult .ui-dialog', vw, vh) && rv.foot.length === 2 && rv.foot.every(h => h >= 44), rv.foot);
+    await shot(page, 'phone-result');
+    await page.tap('#rAgain');
+    await waitShown(page, '#dlgChallenge');
+    await page.tap('#chOk');
+    await waitShown(page, '#dlgQuiz');
+    await pressBack(page);
+    await waitShown(page, '#dlgConfirm');
+    await page.tap('#cfOk');
+    await page.waitForTimeout(300);
+    check(P('quit by back: quiz closed, still on the page'), !(await shown(page, '#dlgQuiz')) && !(await shown(page, '#dlgConfirm')) && (await page.evaluate(() => window.__stay === 1 && location.pathname === '/vocabulary')));
+  });
+
+  // ---- 键盘弹出（视口只剩约 470px）：加词、查找、新建子分类的输入框和按钮都还看得见
+  await section(P('keyboard-height viewport'), async () => {
+    await page.setViewportSize({ width: vw, height: KB_HEIGHT });
+    await page.waitForTimeout(200);
+    await page.tap('#vbPAdd');
+    await page.waitForTimeout(300);
+    const box = ids => page.evaluate(list => list.map(id => { const r = document.getElementById(id).getBoundingClientRect(); return [id, Math.round(r.top), Math.round(r.bottom)]; }), ids);
+    const a = await box(['vbAddTitle', 'vbWord', 'vbMeaning', 'vbAddBtn']);
+    check(P(`keyboard ${KB_HEIGHT}px: add sheet fields and 添加 visible`), a.every(([, t, b]) => t >= 0 && b <= KB_HEIGHT), a);
+    await shot(page, 'phone-add-kb');
+    await page.tap('#vbAddClose');
+    await page.tap('#vbSearchBtn');
+    await page.fill('#vbPSearch', 'ab');
+    const s = await box(['vbPSearch', 'vbPSearchCancel']);
+    const card = await rect(page, '#vbGrid .vb-card');
+    const bar = await rect(page, '#vbPbar');
+    check(P(`keyboard ${KB_HEIGHT}px: search field, 取消 and a result visible`), s.every(([, t, b]) => t >= 0 && b <= KB_HEIGHT) && !!card && card.b <= bar.y, { s, card, bar: bar && bar.y });
+    await shot(page, 'phone-search-kb');
+    await page.tap('#vbPSearchCancel');
+    await page.tap('#vbMoreBtn');
+    await waitShown(page, '#dlgActions');
+    await page.tap('#actList [data-i="2"]');
+    await waitShown(page, '#dlgSub');
+    const n = await box(['dlgSubName', 'dlgSubOk']);
+    check(P(`keyboard ${KB_HEIGHT}px: new-sub field and 新建 visible`), n.every(([, t, b]) => t >= 0 && b <= KB_HEIGHT), n);
+    await shot(page, 'phone-newsub-kb');
+    await page.tap('#dlgSub .ui-dialog__close');
+    await page.setViewportSize({ width: vw, height: vh });
+  });
+}
+
+async function phoneDark(page, P) {
+  await section(P('dark'), async () => {
+    const bgs = await page.evaluate(() => [document.body, document.querySelector('.vb-rail-col'), document.getElementById('vbPbar'), document.querySelector('#vbGrid .vb-card')].map(e => getComputedStyle(e).backgroundColor));
+    check(P('page, sticky bar, bottom bar and cards are dark'), bgs.every(isDark), bgs);
+    await shot(page, 'phone-dark-main');
+    await page.tap('#vbSubToggle');
+    await waitShown(page, '#dlgSubs');
+    const sheet = await page.$eval('#dlgSubs .ui-dialog', e => getComputedStyle(e).backgroundColor);
+    check(P('sheets are dark'), isDark(sheet), sheet);
+    await shot(page, 'phone-dark-subs');
+    await page.tap('#dlgSubs .ui-dialog__close');
+    await page.tap('#vbPAdd');
+    const add = await page.$eval('#vbAddForm', e => getComputedStyle(e).backgroundColor);
+    check(P('add sheet is dark'), isDark(add), add);
+    await shot(page, 'phone-dark-add');
+    await page.tap('#vbAddClose');
+    await page.tap('#vbPChallenge');
+    await waitShown(page, '#dlgChallenge');
+    await page.tap('#chOk');
+    await waitShown(page, '#dlgQuiz');
+    await page.waitForTimeout(400);
+    const quiz = await page.$eval('#qDialog', e => getComputedStyle(e).backgroundColor);
+    check(P('quiz is dark'), isDark(quiz), quiz);
+    await shot(page, 'phone-dark-quiz');
+    await page.tap('#dlgQuiz .ui-dialog__close');
+    await waitShown(page, '#dlgConfirm');
+    await page.tap('#cfOk');
+  });
+}
+
+// iOS 只让「在手指点的那一下里 play() 过」的 audio 元素以后自动播放。点「开始挑战」这一下里要先 play() 一次，
+// 之后自动读题用同一个 audio 元素。Playwright 的 WebKit 不拦自动播放，只能这样间接查；真机上还要听一下
+async function phoneAudioUnlock(browser, dev) {
+  resetData();
+  const { ctx, page } = await newPage(browser, { width: dev.width, height: dev.height, mobile: true, isMobile: dev.isMobile, prefs: { category: 'listening', subcategory: SUB.unfamiliar, sortType: 'newest', meaningsVisible: true } });
+  const P = n => `phone ${dev.width}: ${n}`;
+  await open(page);
+  await section(P('quiz audio unlock'), async () => {
+    await page.evaluate(() => {
+      window.__plays = [];
+      let inTap = false;
+      document.addEventListener('click', () => { inTap = true; setTimeout(() => { inTap = false; }, 0); }, true);
+      const seen = [];
+      const play = HTMLMediaElement.prototype.play;
+      HTMLMediaElement.prototype.play = function () {
+        if (!seen.includes(this)) seen.push(this);
+        window.__plays.push({ src: String(this.src).slice(0, 40), inTap: inTap, el: seen.indexOf(this) });
+        return play.apply(this, arguments);
+      };
+    });
+    // 用看得见的那个「单词挑战」（在 mobile/base 上是页头那个），这样旧版本是「没解锁」而不是「找不到按钮」
+    await page.tap((await shown(page, '#vbPChallenge')) ? '#vbPChallenge' : '#vbChallengeBtn');
+    await waitShown(page, '#dlgChallenge');
+    await page.tap('#chOk');
+    await waitShown(page, '#dlgQuiz');
+    for (let i = 0; i < 4; i++) {
+      await page.waitForFunction(n => document.getElementById('qCount').textContent.includes('第 ' + n + ' / 10 题') && !document.querySelector('#qOptions .vb-option:disabled'), i + 1, { timeout: 6000 });
+      await page.waitForTimeout(400);
+      await page.locator('#qOptions .vb-option').first().tap();
+    }
+    await page.waitForTimeout(700);
+    const plays = await page.evaluate(() => window.__plays);
+    const inTap = plays.filter(p => p.inTap);
+    const auto = plays.filter(p => !p.inTap);
+    check(P('开始挑战 tap itself calls play() (unlocks audio on iOS)'), inTap.length >= 1, plays);
+    check(P('auto-read words reuse that unlocked audio element'), inTap.length >= 1 && auto.length >= 1 && auto.every(p => p.el === inTap[0].el), plays);
+    await page.tap('#dlgQuiz .ui-dialog__close');
+    await waitShown(page, '#dlgConfirm');
+    await page.tap('#cfOk');
+  });
+  check(P('no page errors (audio unlock)'), page.errors.length === 0, page.errors);
+  await ctx.close();
+}
+
+// 加载中 / 出错：不显示空的子分类下拉、点不动的底部条和 ⋯
+async function phoneLoadingAndError(browser, dev) {
+  const { ctx, page } = await newPage(browser, { width: dev.width, height: dev.height, mobile: true, isMobile: dev.isMobile });
+  const P = n => `phone ${dev.width}: ${n}`;
+  await section(P('loading / error'), async () => {
+    let release;
+    const gate = new Promise(r => { release = r; });
+    await page.route('**/api/vocabulary', async route => { await gate; await route.fulfill({ status: 500, contentType: 'application/json', body: '{"success":false,"error":"测试用的错误"}' }); });
+    await page.goto(BASE + '/vocabulary');
+    await page.waitForTimeout(500);
+    const moreHidden = await page.$eval('#vbMoreBtn', e => getComputedStyle(e).visibility === 'hidden' || e.getClientRects().length === 0);
+    check(P('loading: no empty sub picker, bottom bar or ⋯ yet'), await shown(page, '#vbStatus') && !(await shown(page, '#vbSubToggle')) && !(await shown(page, '#vbPbar')) && moreHidden);
+    await shot(page, 'phone-loading');
+    release();
+    await page.waitForFunction(() => document.getElementById('vbStatus').textContent.includes('没加载出来'), null, { timeout: 5000 });
+    check(P('error: message + 重新加载, no dead buttons'), await shown(page, '#vbStatus .ui-btn') && !(await shown(page, '#vbPbar')) && !(await shown(page, '#vbSubToggle')));
+    await shot(page, 'phone-error');
+    await page.unroute('**/api/vocabulary');
+    await page.tap('#vbStatus .ui-btn');
+    await page.waitForSelector('#vbContent:not([hidden])', { timeout: 5000 });
+    check(P('重新加载 brings the bars back'), await shown(page, '#vbPbar') && await shown(page, '#vbSubToggle'));
+  });
+  await ctx.close();
 }
 
 (async () => {
@@ -697,12 +1188,14 @@ async function prefsAndThemes(browser) {
   for (const name of engines) {
     engine = name;
     const browser = await pw[name].launch();
-    try {
-      await desktopSuite(browser);
-      await prefsAndThemes(browser);
-      await missingCategoryFile(browser);
-    } catch (e) {
-      check('suite crashed', false, e.stack.split('\n').slice(0, 4).join(' | '));
+    // 每一组单独兜底：一组崩了不影响后面几组
+    for (const [key, suite] of [['desktop', desktopSuite], ['prefs', prefsAndThemes], ['missing', missingCategoryFile], ['phone', phoneSuite]]) {
+      if (!SUITES.includes(key)) continue;
+      try {
+        await suite(browser);
+      } catch (e) {
+        check(key + ' suite crashed', false, e.stack.split('\n').slice(0, 4).join(' | '));
+      }
     }
     await browser.close();
   }
