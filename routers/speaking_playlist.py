@@ -147,8 +147,18 @@ def generate_subtitles_data(folder, mp3_files, combined_audio):
 
 @speaking_playlist_bp.route('/combined_audio/<folder>')
 def serve_combined_audio(folder):
-    """提供合集音频文件"""
-    return send_from_directory(COMBINED_DIR, f"{folder}.mp3")
+    """提供合集音频文件。
+
+    合集页请求的是 /combined_audio/<话题>.mp3，以前这里又拼了一次 .mp3，
+    找的是「<话题>.mp3.mp3」，所以一直 404、合集一条都放不出来。
+    两种写法都认：先按原样找 <folder>.mp3，找不到且结尾已经是 .mp3 时去掉再找。
+    """
+    if not is_safe_path_segment(folder):
+        return jsonify({'error': 'Invalid folder name'}), 400
+    name = f"{folder}.mp3"
+    if not os.path.isfile(os.path.join(COMBINED_DIR, name)) and folder.endswith('.mp3'):
+        name = folder
+    return send_from_directory(COMBINED_DIR, name)
 
 @speaking_playlist_bp.route('/get_subtitles/<folder>')
 def get_subtitles(folder):
