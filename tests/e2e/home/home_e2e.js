@@ -75,7 +75,31 @@ function measure(wide) {
     same('第二排细线', [foot.writing, foot.listening, foot.review]);
     same('第三排细线', [foot.vocab, foot.tips, foot.board]);
   }
+  // 手机（≤640px）：两列小卡片，同一排上下边和细线对齐；交流占整排
+  const phone = innerWidth <= 640;
+  if (phone) {
+    same('手机第一列左边', ['speaking', 'writing', 'vocab'].map((k) => g(k, 'left')));
+    same('手机第二列左边', ['intensive', 'listening', 'tips'].map((k) => g(k, 'left')));
+    same('手机第一排上下边', ['speaking', 'intensive'].map((k) => g(k, 'top')));
+    same('手机第一排下边', ['speaking', 'intensive'].map((k) => g(k, 'bottom')));
+    same('手机第二排下边', ['writing', 'listening'].map((k) => g(k, 'bottom')));
+    same('手机积累一排下边', ['vocab', 'tips'].map((k) => g(k, 'bottom')));
+    same('手机第一排细线', [foot.speaking, foot.intensive]);
+    same('手机第二排细线', [foot.writing, foot.listening]);
+    same('手机积累一排细线', [foot.vocab, foot.tips]);
+    same('交流占整排', [g('vocab', 'left'), g('board', 'left')]);
+    same('交流占整排右边', [g('tips', 'right'), g('board', 'right')]);
+  }
+  const top = (sel) => { const e = q(sel); return e ? e.getBoundingClientRect().top : null; };
   return {
+    phone,
+    twoCols: phone ? g('intensive', 'left') > g('speaking', 'right') : null,
+    reviewFirst: top('.home-sec--review') < top('.home-sec--skills'),
+    // 「4 个话题」这种小块不能被拆成两行
+    brokenParts: [...document.querySelectorAll('.home-foot__part')].filter((e) => e.getBoundingClientRect().height > parseFloat(getComputedStyle(e.parentNode).lineHeight) * 1.5).map((e) => e.textContent),
+    // 数据行不能被裁掉：内容高度不超过显示高度
+    clippedFeet: [...document.querySelectorAll('[data-foot]')].filter((e) => e.scrollHeight > e.clientHeight + 1).map((e) => e.textContent.trim()),
+    descShown: [...document.querySelectorAll('.home-grid--skills .home-card__desc')].some((e) => e.offsetHeight > 0),
     bad,
     overflowX: document.documentElement.scrollWidth > innerWidth + 1,
     feet: [...document.querySelectorAll('[data-foot]')].map((e) => e.textContent.trim()),
@@ -94,7 +118,7 @@ async function layoutChecks(eng, browser) {
   if (EMPTY_URL) runs.push({ name: '新账号', base: EMPTY_URL, token: EMPTY_TOKEN, full: false });
   for (const run of runs) {
     for (const scheme of ['light', 'dark']) {
-      for (const width of [1280, 1440, 900, 375]) {
+      for (const width of [1280, 1440, 900, 375, 360]) {
         const tag = `${eng} ${run.name} ${scheme} ${width}`;
         const { ctx, page, errors } = await openHome(browser, run.base, run.token, { width, scheme });
         const r = await page.evaluate(measure, width > 1000);
@@ -105,6 +129,16 @@ async function layoutChecks(eng, browser) {
         check(tag + ' 不放合集和 Reading 入口', !r.retired);
         check(tag + ' 七个模块入口都在', ENTRIES.every((h) => r.entries.includes(h)), r.entries.join(','));
         check(tag + ' 数据行都填上了', r.feet.every((t) => t && t !== '—'), r.feet.join(' / '));
+        if (r.phone) {
+          check(tag + ' 手机上技能卡两列', r.twoCols);
+          check(tag + ' 手机上数据小块不拆行', r.brokenParts.length === 0, r.brokenParts.join(' / '));
+          check(tag + ' 手机上技能卡不放介绍', !r.descShown);
+          check(tag + ' 手机上数据行没被截断', r.clippedFeet.length === 0, r.clippedFeet.join(' / '));
+          // 有东西要复习就提到最前；空的时候不占首屏
+          check(tag + (run.full ? ' 手机上待复习排在技能前面' : ' 手机上空的待复习不往前提'), r.reviewFirst === run.full);
+        } else {
+          check(tag + ' 宽屏待复习不挪位置', !r.reviewFirst);
+        }
         if (run.full) {
           check(tag + ' 有「继续上次」', r.resume);
           check(tag + ' 待复习列出 6 行', r.reviewRows === 6, String(r.reviewRows));

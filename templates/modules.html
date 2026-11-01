@@ -332,13 +332,19 @@
     return hours ? '共 ' + hours + ' 小时 ' + (minutes % 60) + ' 分' : '共 ' + minutes + ' 分钟';
   }
 
+  // 手机两列小卡片：每一段「4 个话题」包成不折行的小块，换行时不会把「共 6 分钟」拆开；
+  // 「最近在读 …」标题太长，照常折行。桌面不包，DOM 和以前一模一样。
+  var PHONE = window.matchMedia ? window.matchMedia('(max-width: 640px)') : { matches: false };
+  function phoneParts(html) {
+    return String(html).split(' · ').map(function (part) {
+      return part.indexOf('最近在读') === 0 ? part : '<span class="home-foot__part">' + part + '</span>';
+    }).join(' · ');
+  }
+
   function setFoot(name, html, muted) {
     var foot = document.querySelector('[data-foot="' + name + '"]');
     if (!foot) return;
-    // 每一段「4 个话题」包成不折行的小块，窄屏两列卡片换行时不会把「共 6 分钟」拆开
-    foot.innerHTML = String(html).split(' · ').map(function (part) {
-      return part.indexOf('home-foot__title') >= 0 ? part : '<span class="home-foot__part">' + part + '</span>';
-    }).join(' · ');
+    foot.innerHTML = PHONE.matches && !muted ? phoneParts(html) : html; // 空状态是一句话，照常折行
     foot.classList.toggle('is-muted', !!muted);
   }
 
@@ -391,7 +397,7 @@
 
     var r = data.intensive;
     setFoot('intensive', r.articles
-      ? num(r.articles) + ' 篇文章' + (r.latest_title ? ' · <span class="home-foot__title">最近在读 ' + esc(r.latest_title) + '</span>' : '')
+      ? num(r.articles) + ' 篇文章' + (r.latest_title ? ' · 最近在读 ' + esc(r.latest_title) : '')
       : '还没有文章', !r.articles);
 
     var w = data.writing;
@@ -493,6 +499,8 @@
         renderResume(data.resume);
         renderModules(data);
         renderReview(data.review);
+        // 转屏、拖窗口跨过手机断点时重画一次数据行
+        if (PHONE.addEventListener) PHONE.addEventListener('change', function () { renderModules(data); });
       })
       .catch(function (error) {
         console.error('首页数据加载失败', error);
