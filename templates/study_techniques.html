@@ -355,6 +355,8 @@
       body.page-study-techniques .ui-dialog-backdrop { top: var(--st-vv-top, 0px); bottom: var(--st-kb, 0px); }
       body.page-study-techniques .ui-dialog { max-height: 100%; }
       body.page-study-techniques .ui-dialog__foot .ui-btn { height: 44px; }
+      /* 手机上提示条只留最新的一条：叠起来的旧提示会一路往上盖住卡片 */
+      body.page-study-techniques .ielts-toast-host > .ielts-toast:not(:last-child) { display: none; }
       .st-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 44px; gap: 6px; }
       .st-row .ui-input, #groupTitle, #renameInput { height: 44px; font-size: 16px; }
       .st-row__del { width: 44px; height: 44px; }
