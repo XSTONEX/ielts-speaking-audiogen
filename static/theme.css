@@ -816,6 +816,8 @@ body.has-app-shell.page-writing-practice .review-overlay { z-index: 1300; }
   font-family: var(--font-cn);
   font-size: var(--w-fs-meta);
   line-height: 1.5;
+  /* 很长的报错（一整串路径、英文）也要折行，不能撑出屏幕 */
+  overflow-wrap: anywhere;
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
