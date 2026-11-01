@@ -77,6 +77,57 @@ const check = (name, ok, got) => { ok ? pass++ : fail++; console.log(`${ok ? 'PA
   await page.click('#attemptMenu [data-i="0"]');
   const sw = await page.evaluate(() => ({ btn: document.getElementById('attemptBtnText').textContent, score: document.getElementById('sideScoreNum').textContent, hl: document.querySelectorAll('#questionsPane .lr-hl').length }));
   check('attempt switch', sw.btn === '第 1 次 · 9 月 24 日交卷' && sw.score === '3/5' && sw.hl === 5, sw);
+
+  // 多列表格（编的 4 列表格题，形状照线上一篇 Part 1）：表头不能被挤成一个字母一行，解析放在表格下面
+  await page.evaluate(() => {
+    localStorage.removeItem('listening-side-width');
+    applySideWidth();
+    const q = (num, answer) => ({ num, text: '', options: [], answer, evidence: null, analysis: { explain: '编的解析', trap: '', extra: [] } });
+    state.exam.groups.push({
+      id: 'g-table', range: 'Questions 6–8', kind: 'blank', instruction_html: 'Complete the table below.', image: '', title: '', options: [],
+      content_html: '<table><tr><th></th><th>Mia (daughter)</th><th>Leo (son)</th><th>Ava (daughter)</th></tr>'
+        + '<tr><th>Foods they cannot eat</th><td>none</td><td><span class="ir-blank" data-q="6">6</span></td><td><span class="ir-blank" data-q="7">7</span></td></tr>'
+        + '<tr><th>Classes they want to join</th><td><span class="ir-blank" data-q="8">8</span></td><td>(the same)</td><td>judo</td></tr></table>',
+      questions: [q('6', 'eggs'), q('7', 'nuts'), q('8', 'ballet')],
+    });
+    selectQuestion('7');
+  });
+  const tb = await page.evaluate(() => {
+    const wrap = document.querySelector('#questionsPane .lr-tblwrap');
+    const table = wrap && wrap.querySelector('table');
+    const qx = document.querySelector('#questionsPane .lr-qx');
+    const side = document.getElementById('notesSide');
+    return {
+      side: Math.round(side.getBoundingClientRect().width),
+      headCol: table && Math.round(table.rows[1].cells[0].getBoundingClientRect().width),
+      fits: wrap && wrap.scrollWidth <= wrap.clientWidth + 1,
+      sideScrollsSideways: side.scrollWidth > side.clientWidth + 1,
+      selCell: (document.querySelector('.lr-tbl .is-sel') || {}).textContent,
+      head: qx && (qx.querySelector('.lr-qx__head') || {}).textContent,
+      afterTable: qx && qx.previousElementSibling && qx.previousElementSibling.className,
+      font: qx && getComputedStyle(qx.querySelector('.lr-qx__text')).fontSize,
+    };
+  });
+  check('imported article panel defaults to 440', tb.side === 440, tb);
+  check('table fits without squeezing headers', tb.fits && tb.headCol >= 80 && !tb.sideScrollsSideways, tb);
+  check('explanation under the table, names the cell', /lr-tbl(hint|wrap)/.test(tb.afterTable || '') && tb.head === '第 7 题 · Ava (daughter) · Foods they cannot eat' && tb.font === '15px', tb);
+
+  // 拖分隔条：往左拖 120，右栏变宽并记住；重新打开还是这个宽；双击恢复 440
+  const grip = await page.evaluate(() => { const r = document.querySelector('.lr-split__grip').getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
+  await page.mouse.move(grip.x, grip.y);
+  await page.mouse.down();
+  await page.mouse.move(grip.x - 60, grip.y, { steps: 3 });
+  const badge = await page.evaluate(() => document.getElementById('sideSplitBadge').textContent);
+  await page.mouse.move(grip.x - 120, grip.y, { steps: 3 });
+  await page.mouse.up();
+  const dragged = await page.evaluate(() => ({ side: Math.round(document.getElementById('notesSide').getBoundingClientRect().width), saved: localStorage.getItem('listening-side-width') }));
+  check('drag widens panel and remembers it', dragged.side === 560 && dragged.saved === '560' && /右栏 500 px · 双击恢复 440/.test(badge), { dragged, badge });
+  await page.evaluate(async () => { backToList(); await loadProjects(); const p = state.projects.find(p => p.source_type === 'jiufen'); await openProject(p.id); });
+  check('width kept after reopening', await page.evaluate(() => Math.round(document.getElementById('notesSide').getBoundingClientRect().width)) === 560, null);
+  const grip2 = await page.evaluate(() => { const r = document.querySelector('.lr-split__grip').getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
+  await page.mouse.dblclick(grip2.x, grip2.y);
+  const reset = await page.evaluate(() => ({ side: Math.round(document.getElementById('notesSide').getBoundingClientRect().width), saved: localStorage.getItem('listening-side-width') }));
+  check('double-click restores 440', reset.side === 440 && reset.saved === null, reset);
   check('no page errors', errors.length === 0, errors);
   console.log(`${engine}: ${pass}/${pass + fail} passed`);
   await browser.close();

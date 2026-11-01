@@ -62,4 +62,4 @@ python3 tests/e2e/listening/seed.py "$SB" && LR_SANDBOX="$SB" PLAYWRIGHT_CORE=/p
 python3 tests/e2e/listening/seed.py "$SB" && python3 tests/e2e/listening/jiufen_data.py "$SB" && LR_SANDBOX="$SB" PLAYWRIGHT_CORE=/path/to/node_modules/playwright-core node tests/e2e/listening/jiufen_e2e.js webkit
 ```
 
-2026-10-31 两个内核都是 17 项全过。
+2026-10-31 两个内核都是 23 项全过（含题目栏放宽：4 列表格不挤、解析在表格下面、分隔条拖动 / 记住 / 双击恢复）。

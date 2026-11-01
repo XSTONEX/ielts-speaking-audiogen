@@ -84,7 +84,9 @@
 .lr-drop input[type="file"] { display: none; }
 
 /* ---------- 精听详情 ---------- */
-.lr-detail { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: var(--gap-18); align-items: start; }
+/* 精听页比列表页宽（最多 1440），右栏宽度由 --side-w 定：默认 320，导入的篇 440，拖过分隔条就用拖的那个宽度 */
+.lr-detail { display: grid; grid-template-columns: minmax(0, 1fr) 14px var(--side-w, 320px); column-gap: 4px; row-gap: var(--gap-18); align-items: start; }
+.lr-container.lr-detail { max-width: 1440px; }
 .lr-script { background: var(--w-surface); border: 1px solid var(--w-line); border-radius: var(--w-r-card); padding: 10px; min-width: 0; }
 .lr-line { position: relative; display: grid; grid-template-columns: 48px 26px minmax(0, 1fr); column-gap: 6px; padding: 12px 14px 12px 8px; border-radius: var(--w-r-inner); cursor: pointer; transition: background .15s; }
 .lr-line:hover { background: var(--w-sunken); }
@@ -161,11 +163,11 @@
 
 @media (min-width: 1100px) {
   .lr-detail:not(.is-side-open) { grid-template-columns: minmax(0, 1fr); }
-  .lr-detail:not(.is-side-open) .lr-side { display: none; }
+  .lr-detail:not(.is-side-open) .lr-side, .lr-detail:not(.is-side-open) .lr-split { display: none; }
 }
 @media (max-width: 1099px) {
   .lr-detail { grid-template-columns: minmax(0, 1fr); }
-  .lr-side { position: fixed; z-index: 1260; top: var(--app-shell-h); right: 0; bottom: 0; width: min(380px, 100%); max-height: none; padding: 16px; background: var(--w-paper); border-left: 1px solid var(--w-line); box-shadow: var(--w-shadow-lg); transform: translateX(100%); visibility: hidden; transition: transform .2s ease, visibility .2s; }
+  .lr-side { position: fixed; z-index: 1260; top: var(--app-shell-h); right: 0; bottom: 0; width: min(560px, 100%); max-height: none; padding: 16px; background: var(--w-paper); border-left: 1px solid var(--w-line); box-shadow: var(--w-shadow-lg); transform: translateX(100%); visibility: hidden; transition: transform .2s ease, visibility .2s; }
   .lr-detail.is-side-open .lr-side { transform: none; visibility: visible; }
   .lr-side__close { display: inline-flex; }
   .lr-detail.is-side-open .lr-side-mask { display: block; position: fixed; inset: 0; z-index: 1255; background: var(--w-mask); }
@@ -178,7 +180,7 @@
 
 /* 底部播放条 */
 .lr-player { position: fixed; z-index: 1100; left: 0; right: 0; bottom: 0; background: var(--w-surface); border-top: 1px solid var(--w-line); padding: 12px var(--gutter); }
-.lr-player__inner { max-width: var(--page-max); margin: 0 auto; display: flex; align-items: center; gap: 16px; }
+.lr-player__inner { max-width: 1440px; margin: 0 auto; display: flex; align-items: center; gap: 16px; }
 .lr-play { width: var(--h-icon); height: var(--h-icon); flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: var(--w-r-round); background: var(--w-big); color: var(--w-on-big); cursor: pointer; }
 .lr-play:hover { background: var(--w-big-hover); }
 .lr-time { font-size: var(--w-fs-meta); color: var(--w-ink2); font-variant-numeric: tabular-nums; white-space: nowrap; min-width: 84px; }
@@ -348,13 +350,15 @@
 .lr-blank__right { font-weight: 600; color: var(--w-ok); }
 
 /* 选中一题后展开的解析 */
-.lr-qx { display: flex; flex-direction: column; gap: 10px; margin: 8px 0 4px 0; padding: 12px 14px; border-radius: var(--w-r-inner); background: var(--w-sunken); font-family: var(--font-cn); }
-.lr-qx__ans { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: var(--w-fs-meta); color: var(--w-ink2); }
-.lr-qx__ans b { margin-left: 4px; font-family: var(--font-en); font-size: var(--w-fs-ui); font-weight: 600; }
+.lr-qx { display: flex; flex-direction: column; gap: 12px; margin: 8px 0 4px 0; padding: 14px 16px; border-radius: var(--w-r-inner); background: var(--w-sunken); font-family: var(--font-cn); }
+.lr-qx__ans { display: flex; flex-wrap: wrap; gap: 4px 20px; font-size: var(--w-fs-ui); color: var(--w-ink2); }
+.lr-qx__ans b { margin-left: 4px; font-family: var(--font-en); font-size: 16px; font-weight: 600; }
 .lr-qx__ans b.is-err { color: var(--w-err); text-decoration: line-through; }
 .lr-qx__ans b.is-ok { color: var(--w-ok); }
-.lr-qx__label { display: block; margin-bottom: 2px; font-size: 12px; font-weight: 600; letter-spacing: 1px; color: var(--w-ink3); }
-.lr-qx__text { margin: 0; font-size: 14px; line-height: 1.65; color: var(--w-ink); }
+.lr-qx__head { font-size: var(--w-fs-meta); font-weight: 600; color: var(--w-ink2); }
+.lr-qx__head span { font-family: var(--font-en); }
+.lr-qx__label { display: block; margin-bottom: 4px; font-size: var(--w-fs-meta); font-weight: 600; letter-spacing: .5px; color: var(--w-ink3); }
+.lr-qx__text { margin: 0; font-size: var(--w-fs-ui); line-height: 1.75; color: var(--w-ink); }
 .lr-qx__acts { display: flex; gap: 8px; }
 
 /* 选择题 */
@@ -408,12 +412,11 @@
 .lr-side__tabs .ui-seg__btn { font-size: var(--w-fs-meta); padding: 6px 14px; }
 .lr-att__menu[hidden], .lr-att__hint[hidden] { display: none; }
 .lr-qs__inst p, .lr-qs__inst ul, .lr-qs__inst ol { margin: 0; }
-.lr-qs__content { font-family: var(--font-en); font-size: var(--w-fs-ui); line-height: 1.75; color: var(--w-ink); overflow-wrap: anywhere; }
+.lr-qs__content { font-family: var(--font-en); font-size: var(--w-fs-ui); line-height: 1.75; color: var(--w-ink); overflow-wrap: break-word; }
 .lr-qs__content p, .lr-qs__content ul, .lr-qs__content ol { margin: 4px 0; }
 .lr-qs__content ul, .lr-qs__content ol { padding-left: 18px; }
 .lr-qs__content table { border-collapse: collapse; width: 100%; }
 .lr-qs__content td, .lr-qs__content th { padding: 3px 4px; vertical-align: top; text-align: left; }
-.lr-qs__content .lr-qx { font-size: var(--w-fs-meta); }
 .lr-qs__img { display: block; max-width: 100%; margin: 6px 0 10px 0; border-radius: var(--w-r-inner); }
 .lr-qs__stem { cursor: pointer; }
 .lr-qs__stem:hover > span:last-child { color: var(--w-big); }
@@ -430,7 +433,7 @@
   .lr-evi__head { padding-left: 74px; flex-wrap: wrap; gap: 4px 12px; }
 }
 .lr-qs__inst strong { color: var(--w-ink); }
-.lr-qx__text { white-space: pre-line; overflow-wrap: anywhere; }
+.lr-qx__text { white-space: pre-line; overflow-wrap: break-word; }
 .lr-qx__ans b:not(.is-ok):not(.is-err) { color: var(--w-ink3); font-family: var(--font-cn); font-weight: 400; }
 @media (max-width: 640px) {
   #uploadModal .ui-dialog__foot { flex-wrap: wrap; }
@@ -442,3 +445,37 @@
   .lr-src-tabs { align-self: stretch; }
   .lr-src-tabs .ui-seg__btn { flex: 1 1 0; min-width: 0; padding-left: 6px; padding-right: 6px; font-size: var(--w-fs-meta); white-space: nowrap; }
 }
+
+/* ============================================================
+   题目栏放宽（画布「修 · 题目栏太窄」，对应画布里的 project/lr-wide.css）
+   ============================================================ */
+/* 两栏中间的分隔条：按住左右拖调右栏宽度，双击恢复；只在宽屏、右栏开着时有 */
+.lr-split { position: relative; z-index: 4; align-self: stretch; min-height: 100%; cursor: col-resize; touch-action: none; outline: none; }   /* 压在右栏上面，拖动时的提示才不被挡住 */
+.lr-split::before { content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; margin-left: -1px; border-radius: 1px; background: transparent; transition: background .15s; }
+.lr-split:hover::before, .lr-split.is-drag::before, .lr-split:focus-visible::before { background: var(--w-big-line); }
+.lr-split::after { content: ''; position: absolute; top: 0; bottom: 0; left: -5px; right: -5px; }   /* 抓的地方比看到的线宽一点 */
+.lr-split__knob { position: sticky; top: calc(50vh - 22px); display: block; height: 44px; }
+.lr-split__grip { display: block; width: 8px; height: 44px; margin: 0 auto; border-radius: 4px; background: var(--w-line-strong); box-shadow: 0 0 0 3px var(--w-paper); transition: background .15s; }
+.lr-split:hover .lr-split__grip, .lr-split:focus-visible .lr-split__grip { background: var(--w-big-line); }
+.lr-split.is-drag .lr-split__grip { background: var(--w-big); }
+.lr-split__badge { position: absolute; top: 54px; left: 50%; transform: translateX(-50%); z-index: 3; padding: 6px 10px; border-radius: var(--w-r-chip); background: var(--w-ink); color: var(--w-surface); font-size: 12px; line-height: 1.4; white-space: nowrap; box-shadow: var(--w-shadow-lg); pointer-events: none; }
+.lr-split__badge b { font-variant-numeric: tabular-nums; }
+.lr-split__badge[hidden] { display: none; }
+body.lr-resizing, body.lr-resizing * { cursor: col-resize !important; user-select: none !important; -webkit-user-select: none !important; }
+@media (max-width: 1099px) {
+  .lr-split { display: none; }
+}
+
+/* 题目里的多列表格：按词换行、表头灰底、格子有分隔线；太窄时只让表格自己横着滑 */
+.lr-tblwrap { margin: 2px 0 10px 0; border: 1px solid var(--w-line); border-radius: var(--w-r-inner); overflow-x: auto; background: var(--w-surface); }
+.lr-qs__content table.lr-tbl { width: 100%; min-width: 340px; border-collapse: collapse; font-size: 14px; line-height: 1.5; }
+.lr-qs__content .lr-tbl th, .lr-qs__content .lr-tbl td { padding: 8px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--w-line); overflow-wrap: normal; }
+.lr-tbl th + th, .lr-tbl th + td, .lr-tbl td + td, .lr-tbl td + th { border-left: 1px solid var(--w-line); }
+.lr-tbl tr:last-child > * { border-bottom: none; }
+.lr-tbl tr:first-child > th { background: var(--w-sunken); font-size: 13px; font-weight: 600; color: var(--w-ink2); vertical-align: bottom; }
+.lr-tbl tr + tr > th:first-child { width: 26%; min-width: 6.5em; font-weight: 600; color: var(--w-ink2); }
+.lr-tbl td.is-sel, .lr-tbl th.is-sel { background: var(--w-big-soft); }
+/* 表格里的答案框可以折行（「9 → 9 / nine」放不下就换到下一行），不然整列被框撑宽 */
+.lr-tbl .lr-blank { margin: 0; height: auto; min-height: 26px; padding-top: 2px; padding-bottom: 2px; flex-wrap: wrap; row-gap: 2px; white-space: normal; text-align: left; }
+.lr-tblhint { display: flex; align-items: center; gap: 6px; margin: -4px 0 10px 0; font-family: var(--font-cn); font-size: 12px; color: var(--w-ink3); }
+.lr-tblhint[hidden] { display: none; }

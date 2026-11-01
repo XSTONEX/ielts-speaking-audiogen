@@ -31,7 +31,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
   <link rel="stylesheet" href="/static/theme.css?v=20261031">
   <link rel="stylesheet" href="/static/plain.css">
-  <link rel="stylesheet" href="/static/listening.css?v=20261031b">
+  <link rel="stylesheet" href="/static/listening.css?v=20261031c">
   <script src="/static/theme.js?v=20260919" defer></script>
   <script src="/static/api-client.js?v=20260919" defer></script>
   <script src="/static/auth.js?v=20260927" defer></script>
@@ -106,6 +106,10 @@
     <div class="lr-body lr-detail-body">
       <div id="detailGrid" class="lr-container lr-detail">
         <section id="lyricsContainer" class="lr-script" aria-label="逐句字幕"></section>
+
+        <div id="sideSplit" class="lr-split" role="separator" aria-orientation="vertical" aria-controls="notesSide" aria-label="拖动调整右栏宽度，双击恢复" tabindex="0" title="按住左右拖，调右栏宽度；双击恢复">
+          <span class="lr-split__knob"><span class="lr-split__grip"></span><span id="sideSplitBadge" class="lr-split__badge" hidden></span></span>
+        </div>
 
         <div class="lr-side-mask" onclick="toggleSide(false)"></div>
         <aside id="notesSide" class="lr-side" aria-label="本篇">
@@ -327,7 +331,8 @@ const ICONS = {
   trash: '<svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 8.5h5.8l.6-8.5"/></svg>',
   edit: '<svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 2.5 13.5 5 5.5 13H3v-2.5z"/></svg>',
   retry: '<svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 8a5 5 0 1 1-1.5-3.5M13 3v2.5h-2.5"/></svg>',
-  check: '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8.5 6.5 11.5 12.5 4.5"/></svg>'
+  check: '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8.5 6.5 11.5 12.5 4.5"/></svg>',
+  swipe: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 5.5 2 8l2.5 2.5M11.5 5.5 14 8l-2.5 2.5M2 8h12"/></svg>'
 };
 
 const audioEl = document.getElementById('audioEl');
@@ -1069,6 +1074,7 @@ async function openProject(id) {
   updateMasteredBtn(!!r.project.mastered);
   updateCheckinBtn(r.project.checkin_count || 0);
   toggleSide(window.matchMedia('(min-width: 1100px)').matches);
+  applySideWidth();
 
   const tk = localStorage.getItem('authToken');
   audioEl.src = `/api/listening_review/audio/${id}/${r.project.audio_filename}?token=${encodeURIComponent(tk)}`;
@@ -1114,6 +1120,7 @@ function toggleSide(force) {
   state.sideOpen = typeof force === 'boolean' ? force : !state.sideOpen;
   document.getElementById('detailGrid').classList.toggle('is-side-open', state.sideOpen);
   document.getElementById('notesBtn').setAttribute('aria-pressed', state.sideOpen ? 'true' : 'false');
+  updateTableHints();
 }
 
 window.matchMedia('(min-width: 1100px)').addEventListener('change', (e) => {
@@ -1121,6 +1128,98 @@ window.matchMedia('(min-width: 1100px)').addEventListener('change', (e) => {
 });
 
 function isDrawerMode() { return !window.matchMedia('(min-width: 1100px)').matches; }
+
+// 右栏宽度：按住两栏中间的分隔条左右拖，320–720（字幕至少留 480）；拖过就记在这台设备的浏览器里，
+// 以后每篇都用这个宽度；双击分隔条恢复默认（导入的篇 440，其余 320）。窄屏是抽屉，不能拖
+const SIDE_KEY = 'listening-side-width';
+const SIDE_MIN = 320, SIDE_MAX = 720, SCRIPT_MIN = 480;
+const sideSplit = document.getElementById('sideSplit');
+let sideDrag = null;
+
+function defaultSideWidth() { return state.exam ? 440 : 320; }
+
+function savedSideWidth() {
+  try {
+    const v = parseInt(localStorage.getItem(SIDE_KEY), 10);
+    return v >= SIDE_MIN && v <= SIDE_MAX ? v : null;
+  } catch { return null; }
+}
+
+function maxSideWidth() {
+  const room = document.getElementById('detailGrid').clientWidth - 22 - SCRIPT_MIN;   // 分隔条和两边间距共 22
+  return Math.max(SIDE_MIN, Math.min(SIDE_MAX, room));
+}
+
+function currentSideWidth() {
+  return parseInt(document.getElementById('detailGrid').style.getPropertyValue('--side-w'), 10) || defaultSideWidth();
+}
+
+function applySideWidth(width) {
+  const want = width ?? savedSideWidth() ?? defaultSideWidth();
+  const w = Math.round(Math.max(SIDE_MIN, Math.min(maxSideWidth(), want)));
+  document.getElementById('detailGrid').style.setProperty('--side-w', w + 'px');
+  sideSplit.setAttribute('aria-valuenow', String(w));
+  sideSplit.setAttribute('aria-valuemin', String(SIDE_MIN));
+  sideSplit.setAttribute('aria-valuemax', String(maxSideWidth()));
+  return w;
+}
+
+function rememberSideWidth() {
+  try { localStorage.setItem(SIDE_KEY, String(currentSideWidth())); } catch {}
+}
+
+function showSplitBadge(w) {
+  const badge = document.getElementById('sideSplitBadge');
+  badge.innerHTML = `右栏 <b>${w}</b> px · 双击恢复 ${defaultSideWidth()}`;
+  badge.hidden = false;
+}
+
+function endSideDrag() {
+  if (!sideDrag) return;
+  const moved = sideDrag.moved;
+  sideDrag = null;
+  sideSplit.classList.remove('is-drag');
+  document.body.classList.remove('lr-resizing');
+  document.getElementById('sideSplitBadge').hidden = true;
+  if (moved) rememberSideWidth();
+  updateTableHints();
+}
+
+sideSplit.addEventListener('pointerdown', (e) => {
+  if (e.button !== 0) return;
+  e.preventDefault();
+  sideSplit.setPointerCapture(e.pointerId);
+  sideDrag = { x: e.clientX, w: currentSideWidth(), moved: false };
+  sideSplit.classList.add('is-drag');
+  document.body.classList.add('lr-resizing');
+  showSplitBadge(sideDrag.w);
+});
+sideSplit.addEventListener('pointermove', (e) => {
+  if (!sideDrag) return;
+  if (Math.abs(e.clientX - sideDrag.x) > 2) sideDrag.moved = true;
+  showSplitBadge(applySideWidth(sideDrag.w - (e.clientX - sideDrag.x)));   // 往左拖，右栏变宽
+});
+sideSplit.addEventListener('pointerup', endSideDrag);
+sideSplit.addEventListener('pointercancel', endSideDrag);
+sideSplit.addEventListener('dblclick', () => {
+  try { localStorage.removeItem(SIDE_KEY); } catch {}
+  applySideWidth(defaultSideWidth());
+  updateTableHints();
+  showToast(`右栏恢复默认宽度 ${currentSideWidth()} px`);
+});
+sideSplit.addEventListener('keydown', (e) => {
+  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+  e.preventDefault();
+  e.stopPropagation();   // 不然会被当成快进快退
+  applySideWidth(currentSideWidth() + (e.key === 'ArrowLeft' ? 20 : -20));
+  rememberSideWidth();
+  updateTableHints();
+});
+window.addEventListener('resize', () => {
+  if (state.view !== 'detail') return;
+  applySideWidth();
+  updateTableHints();
+});
 
 // ===================================================================
 //  Lyrics Rendering
@@ -1976,6 +2075,7 @@ function setSideTab(tab) {
     b.classList.toggle('is-on', on);
     b.setAttribute('aria-selected', on ? 'true' : 'false');
   });
+  updateTableHints();
 }
 document.querySelectorAll('.side-tab').forEach(b => b.addEventListener('click', () => setSideTab(b.dataset.tab)));
 
@@ -2094,7 +2194,7 @@ function blankChipHtml(q) {
   return `<button class="${cls}" type="button" data-q="${esc(q.num)}" aria-expanded="${sel}" aria-label="第 ${esc(q.num)} 题：${esc(label)}">${inner}</button>`;
 }
 
-function qxHtml(q) {
+function qxHtml(q, labels) {
   const a = answerOf(q.num);
   const user = String(a.user || '').trim();
   const ok = a.state === 'right';
@@ -2105,7 +2205,9 @@ function qxHtml(q) {
   if (!ok) ans.push(`<span>正确答案<b class="is-ok">${esc(displayAnswer(q.answer))}</b></span>`);
   const play = evidenceSegs(q).length
     ? `<button class="ui-btn ui-btn--sm" type="button" data-act="q-play" data-q="${esc(q.num)}">${ICONS.play}播放出处</button>` : '';
-  return `<div class="lr-qx">
+  const head = labels && labels.length
+    ? `<div class="lr-qx__head">第 ${esc(q.num)} 题${labels.map(l => ` · <span>${esc(l)}</span>`).join('')}</div>` : '';
+  return `<div class="lr-qx">${head}
     <div class="lr-qx__ans">${ans.join('')}</div>
     ${para('解析', an.explain)}${para('干扰', an.trap)}${(an.extra || []).map(x => para(x.label || '补充', x.text)).join('')}
     <div class="lr-qx__acts">${play}<button class="ui-btn ui-btn--sm" type="button" data-act="q-close">收起</button></div>
@@ -2166,11 +2268,30 @@ function fillContent(box, g, gmarks) {
   // 版式里没有空格框的题，列在版式下面
   const rest = g.questions.filter(q => !placed.has(q.num));
   if (rest.length) box.insertAdjacentHTML('beforeend', rest.map(q => rowHtml(q, gmarks)).join(''));
+  // 多列的表格包一层：按词换行，太窄时只让表格自己横着滑；单列的表格其实是一列笔记，照原样排
+  box.querySelectorAll('table').forEach(table => {
+    if (Math.max(0, ...[...table.rows].map(r => r.cells.length)) < 2) return;
+    table.classList.add('lr-tbl');
+    const wrap = document.createElement('div');
+    wrap.className = 'lr-tblwrap';
+    table.before(wrap);
+    wrap.appendChild(table);
+    wrap.insertAdjacentHTML('afterend', `<div class="lr-tblhint" hidden>${ICONS.swipe}表格比较宽，左右滑动看全</div>`);
+  });
   if (state.selQ === null || !placed.has(state.selQ)) return;
   const chip = box.querySelector(`.lr-blank[data-q="${CSS.escape(state.selQ)}"]`);
   const t = document.createElement('template');
-  t.innerHTML = qxHtml(byNum[state.selQ]).trim();
+  const cell = chip.closest('table.lr-tbl td, table.lr-tbl th');
+  t.innerHTML = qxHtml(byNum[state.selQ], cell ? cellLabels(cell) : null).trim();
   const qx = t.content.firstElementChild;
+  if (cell) {
+    // 多列表格：选中的格子浅蓝底，解析放在表格下面、整栏宽，顶上写是哪一格
+    cell.classList.add('is-sel');
+    const wrap = cell.closest('.lr-tblwrap');
+    const hint = wrap.nextElementSibling;
+    (hint && hint.classList.contains('lr-tblhint') ? hint : wrap).after(qx);
+    return;
+  }
   const tr = chip.closest('tr');
   if (tr && box.contains(tr)) {
     const row = document.createElement('tr');
@@ -2186,6 +2307,30 @@ function fillContent(box, g, gmarks) {
   const block = chip.closest('p, div, h1, h2, h3, h4, h5, h6');
   if (block && block !== box && box.contains(block)) block.after(qx);
   else box.appendChild(qx);
+}
+
+// 表格里一格的列名、行名（"Ava (daughter)"、"Foods they can't eat"），写在解析顶上
+function cellLabels(cell) {
+  const row = cell.parentElement;
+  const table = row.closest('table');
+  const text = el => {
+    const c = el.cloneNode(true);
+    c.querySelectorAll('.lr-blank').forEach(b => b.remove());
+    return c.textContent.replace(/\s+/g, ' ').trim();
+  };
+  const out = [];
+  const top = table.rows[0];
+  if (top && top !== row && top.cells[cell.cellIndex] && !top.querySelector('.lr-blank')) out.push(text(top.cells[cell.cellIndex]));
+  const first = row.cells[0];
+  if (first && first !== cell && !first.querySelector('.lr-blank')) out.push(text(first));
+  return out.filter(Boolean);
+}
+
+function updateTableHints() {
+  document.querySelectorAll('#questionsPane .lr-tblwrap').forEach(wrap => {
+    const hint = wrap.nextElementSibling;
+    if (hint && hint.classList.contains('lr-tblhint')) hint.hidden = wrap.scrollWidth <= wrap.clientWidth + 1;
+  });
 }
 
 function renderQuestions() {
@@ -2206,6 +2351,7 @@ function renderQuestions() {
     const gi = +box.dataset.g;
     fillContent(box, state.exam.groups[gi], marks.filter(m => m.g === gi));
   });
+  requestAnimationFrame(updateTableHints);
 }
 
 function scrollSideTo(el) {
