@@ -19,17 +19,16 @@ def generate_audio():
         return jsonify({'error': 'Missing text or folder'}), 400
     if not is_safe_path_segment(folder):
         return jsonify({'error': 'Invalid folder name'}), 400
-    # PART2 生成时写入 question.txt
-    if folder.startswith('P2') and question:
-        folder_path = os.path.join(MOTHER_DIR, folder)
-        os.makedirs(folder_path, exist_ok=True)
-        question_file = os.path.join(folder_path, 'question.txt')
-        with open(question_file, 'w', encoding='utf-8') as f:
-            f.write(question.strip())
     try:
         folder, filename = generate_tts(text, folder)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    # PART2 生成成功后才写 question.txt：以前先写题卡再调 TTS，TTS 一失败就留下一个
+    # 只有 question.txt 的空文件夹，下次打开生成面板会显示「题卡问题 · 已填写（已存在）」却看不到内容
+    if folder.startswith('P2') and question:
+        question_file = os.path.join(MOTHER_DIR, folder, 'question.txt')
+        with open(question_file, 'w', encoding='utf-8') as f:
+            f.write(question.strip())
     return jsonify({'folder': folder, 'filename': filename})
 
 @speaking_bp.route('/list_audio', methods=['GET'])

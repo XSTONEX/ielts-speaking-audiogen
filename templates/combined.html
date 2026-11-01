@@ -581,6 +581,114 @@
         }
     </style>
     <link rel="stylesheet" href="/static/theme.css?v=20261101m">
+    <style>
+        /* ============================================================
+           手机（≤820px）上的轻量改造：桌面一律不动（上面的旧样式照旧生效）。
+           返回口语音频库、Part 横向一排、每个话题一行两个 44px 按钮、播放器从底部升起（列表停在原处）。
+           cb-ph 只在手机出现，cb-dt 只在桌面出现。
+           ============================================================ */
+        @media (min-width: 821px) { body.page-combined .cb-ph { display: none !important; } }
+        @media (max-width: 820px) {
+            body.page-combined .cb-dt { display: none !important; }
+            body.page-combined { background: var(--bg-page, #f4f6fa); }
+            body.page-combined .container {
+                margin: 0; border-radius: 0; box-shadow: none !important; border: none !important;
+                padding: 4px 16px calc(32px + env(safe-area-inset-bottom));
+            }
+            body.page-combined .header {
+                flex-direction: column; align-items: flex-start; gap: 2px; text-align: left;
+                margin-bottom: 10px; padding-bottom: 0; border-bottom: none;
+            }
+            body.page-combined .header h2 { font-size: 22px; letter-spacing: 0; }
+            body.page-combined .back-btn {
+                order: -1; height: 44px; padding: 0 12px 0 2px; margin-left: -2px; border-radius: 10px;
+                background: none !important; color: #2563eb !important; border: none !important;
+                font-size: 15px; font-weight: 500; box-shadow: none; transform: none;
+            }
+            html[data-theme] body.page-combined .back-btn { background: none !important; border: none !important; }
+            html[data-theme="dark"] body.page-combined .back-btn { color: var(--accent, #8fb3ff) !important; }
+            body.page-combined .category-nav {
+                flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; scrollbar-width: none;
+                gap: 8px; margin: 0 -16px 12px; padding: 0 16px;
+            }
+            body.page-combined .category-nav::-webkit-scrollbar { display: none; }
+            body.page-combined .category-btn {
+                flex: none; min-width: 0; height: 40px; padding: 0 16px; border-width: 1px; font-size: 14px;
+                box-shadow: none; transform: none;
+            }
+            html[data-theme="dark"] body.page-combined .category-btn:not(.active) {
+                background: transparent; color: var(--text-secondary); border-color: var(--border-default);
+            }
+            body.page-combined .category-title {
+                font-size: 14px; font-weight: 600; text-align: left; padding: 0; margin: 4px 0 8px;
+                background: none !important; border: none;
+            }
+            body.page-combined .folder-list { grid-template-columns: minmax(0, 1fr); gap: 8px; margin-bottom: 16px; }
+            body.page-combined .folder-card {
+                display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "name name" "info actions";
+                align-items: center; gap: 6px 10px; padding: 12px 12px 12px 14px; border-radius: 12px;
+                border-left-width: 3px; box-shadow: none; transform: none;
+            }
+            body.page-combined .folder-card::before { display: none; }
+            body.page-combined .folder-name { grid-area: name; margin: 0; font-size: 16px; flex-wrap: wrap; overflow-wrap: anywhere; }
+            body.page-combined .folder-info { grid-area: info; margin: 0; font-size: 13px; }
+            body.page-combined .folder-info .info-icon { display: none; }
+            body.page-combined .folder-actions { grid-area: actions; flex-direction: row; gap: 8px; }
+            body.page-combined .folder-btn {
+                flex: none; min-width: 0; height: 44px; padding: 0 14px; border-radius: 10px;
+                font-size: 14px; letter-spacing: 0; text-transform: none; transform: none;
+            }
+            body.page-combined .folder-btn::before { display: none; }
+            /* 生成 / 重新生成是次要操作：描边按钮；播放是主操作 */
+            body.page-combined .generate-btn,
+            body.page-combined .regenerate-btn {
+                background: transparent !important; background-image: none !important; color: #1e293b;
+                border: 1px solid #cbd5e1; box-shadow: none;
+            }
+            html[data-theme="dark"] body.page-combined .generate-btn,
+            html[data-theme="dark"] body.page-combined .regenerate-btn {
+                color: var(--text-primary); border-color: var(--border-default);
+                background: transparent !important; background-image: none !important;
+            }
+            body.page-combined .folder-btn.generating { color: #fff; background: #6b7280 !important; }
+
+            /* 播放器：从底部升起的面板，列表留在原处 */
+            body.page-combined .player-section.active {
+                position: fixed; left: 0; right: 0; bottom: 0; z-index: 1300;
+                max-height: 82vh; max-height: 82dvh; overflow-y: auto; overscroll-behavior: contain;
+                margin: 0; padding: 8px 16px calc(16px + env(safe-area-inset-bottom));
+                border: none; border-radius: 14px 14px 0 0; box-shadow: 0 -12px 40px rgba(15, 23, 42, 0.25);
+                animation: cb-sheet-in .22s ease-out;
+            }
+            body.page-combined .player-title {
+                font-size: 16px; text-align: left; padding: 10px 48px 10px 0; margin: 0;
+                background: none !important; border: none; border-radius: 0;
+            }
+            body.page-combined .cb-close {
+                position: absolute; top: 8px; right: 8px; width: 44px; height: 44px; border: none; border-radius: 10px;
+                background: transparent; color: inherit; font-size: 20px; cursor: pointer;
+            }
+            body.page-combined .audio-player { height: 54px; margin-bottom: 12px; box-shadow: none; }
+            body.page-combined .subtitles-container { max-height: none; overflow: visible; border: none; box-shadow: none; border-radius: 0; }
+            body.page-combined .subtitle-item { padding: 12px 4px; }
+            body.page-combined .subtitle-item.active { transform: none; padding-left: 10px; border-left-width: 4px; }
+            body.page-combined .subtitle-question { font-size: 15px; margin-bottom: 6px; }
+            body.page-combined .subtitle-answer { font-size: 17px; line-height: 1.6; }
+            body.page-combined .part2-question { font-size: 16px; padding: 14px; margin-bottom: 12px; }
+            html[data-theme="dark"] body.page-combined .player-section,
+            html[data-theme="dark"] body.page-combined .subtitles-container {
+                background: var(--bg-surface, #1f2937) !important; color: var(--text-primary);
+            }
+            html[data-theme="dark"] body.page-combined .subtitle-item { background: transparent; border-bottom-color: var(--border-default); }
+            html[data-theme="dark"] body.page-combined .subtitle-item.active { background: var(--accent-soft, rgba(79, 70, 229, 0.2)); }
+            html[data-theme="dark"] body.page-combined .subtitle-answer,
+            html[data-theme="dark"] body.page-combined .player-title,
+            html[data-theme="dark"] body.page-combined .cb-close { color: var(--text-primary); }
+            body.page-combined .cb-backdrop { position: fixed; inset: 0; z-index: 1290; background: var(--w-mask, rgba(15, 23, 42, 0.4)); }
+            html.cb-lock { overflow: hidden; }
+        }
+        @keyframes cb-sheet-in { from { transform: translateY(40px); opacity: .4; } to { transform: none; opacity: 1; } }
+    </style>
     <script src="/static/theme.js?v=20261101m" defer></script>
   <script src="/static/api-client.js?v=20260919" defer></script>
   <script src="/static/auth.js?v=20260927" defer></script>
@@ -589,13 +697,15 @@
 </head>
 <body class="theme-page page-combined">
 
+<div class="cb-backdrop cb-ph" id="playerBackdrop" hidden></div>
 <div class="container">
     <div class="header">
         <h2>IELTS Speaking - 合集播放</h2>
-        <button class="back-btn" onclick="location.href='/'">返回模块选择</button>
+        <button class="back-btn" id="backBtn" type="button"><span class="cb-ph" aria-hidden="true">‹ </span><span class="cb-dt">返回</span>口语音频库</button>
     </div>
     
     <div class="player-section" id="playerSection">
+        <button class="cb-close cb-ph" id="playerClose" type="button" aria-label="收起播放器">✕</button>
         <div class="player-title" id="playerTitle">选择文件夹开始播放</div>
         <audio id="audioPlayer" class="audio-player" controls style="display:none;">
             您的浏览器不支持音频播放。
@@ -650,6 +760,29 @@ let currentCategory = 'all';
 let allFoldersData = {};
 let currentToken = null;
 let isGenerating = false; // 全局生成状态
+
+// 文件夹名原样拼进 HTML / onclick 时，名字里有单引号（Children's games）按钮就坏了；统一转义、用 data-folder 找
+function escapeHtml(value) {
+    return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function isPhone() { return window.matchMedia('(max-width: 820px)').matches; }
+// 某个话题在页面上的所有卡片（「全部」和各 Part 里各有一张）。按 data-folder 精确比较，
+// 以前用 id 前缀匹配，「P1 - Art」会连「P1 - Art and design」一起改
+function cardsFor(folder) {
+    return Array.prototype.filter.call(document.querySelectorAll('.folder-card'), card => card.dataset.folder === folder);
+}
+function partsOf(folder, role) {
+    const out = [];
+    cardsFor(folder).forEach(card => card.querySelectorAll(role).forEach(el => out.push(el)));
+    return out;
+}
+// 从哪个话题过来（#folder=…），返回时回到那个话题
+function originFolder() {
+    const hash = window.location.hash;
+    return hash ? new URLSearchParams(hash.substring(1)).get('folder') : null;
+}
 
 // 认证相关函数
 function checkStoredToken() {
@@ -734,13 +867,12 @@ function renderCategoryFolders(foldersArr, categoryLabel, categoryKey = '') {
         const folder = folderObj.folder;
         const files = folderObj.files;
         const audioCount = files.length;
-        const idSuffix = categoryKey ? `-${categoryKey}` : '';
         
         html += `
-            <div class="folder-card" id="card-${folder}${idSuffix}">
+            <div class="folder-card" data-folder="${escapeHtml(folder)}">
                 <div class="folder-name">
-                    ${folder}
-                    <span class="status-badge" id="badge-${folder}${idSuffix}" style="display:none;">已生成</span>
+                    ${escapeHtml(folder)}
+                    <span class="status-badge" style="display:none;">已生成</span>
                 </div>
                 <div class="folder-info">
                     <svg class="info-icon" fill="currentColor" viewBox="0 0 20 20">
@@ -749,10 +881,10 @@ function renderCategoryFolders(foldersArr, categoryLabel, categoryKey = '') {
                     ${categoryLabel} • ${audioCount} 个音频
                 </div>
                 <div class="folder-actions">
-                    <button class="folder-btn generate-btn" id="generate-${folder}${idSuffix}" onclick="generateCombined('${folder}')">
+                    <button class="folder-btn generate-btn" data-role="generate">
                         生成合集
                     </button>
-                    <button class="folder-btn play-btn" id="play-${folder}${idSuffix}" onclick="playCombined('${folder}')" disabled>
+                    <button class="folder-btn play-btn" data-role="play" disabled>
                         播放合集
                     </button>
                 </div>
@@ -797,10 +929,10 @@ function checkExistingCombined() {
 // 更新文件夹状态
 function updateFolderStatus(folder, hasCombined) {
     // 查找所有可能的元素（在不同分类中可能有多个）
-    const allCards = document.querySelectorAll(`[id^="card-${folder}"]`);
-    const allBadges = document.querySelectorAll(`[id^="badge-${folder}"]`);
-    const allGenerateBtns = document.querySelectorAll(`[id^="generate-${folder}"]`);
-    const allPlayBtns = document.querySelectorAll(`[id^="play-${folder}"]`);
+    const allCards = cardsFor(folder);
+    const allBadges = partsOf(folder, '.status-badge');
+    const allGenerateBtns = partsOf(folder, '[data-role="generate"]');
+    const allPlayBtns = partsOf(folder, '[data-role="play"]');
     
     // 更新所有找到的元素
     allCards.forEach(card => {
@@ -951,13 +1083,12 @@ function disableAllButtons(disable) {
 }
 
 // 生成合集音频
-function generateCombined(folder) {
+function generateCombined(folder, generateBtn) {
     // 防止重复点击
     if (isGenerating) {
         return;
     }
-    
-    const generateBtn = event.target;
+
     const originalText = generateBtn.textContent;
     const originalClassName = generateBtn.className;
     
@@ -1005,26 +1136,57 @@ function restoreButtonState(button, originalText, originalClassName) {
 // 播放合集音频
 function playCombined(folder) {
     currentFolder = folder;
-    document.getElementById('playerSection').classList.add('active');
+    const section = document.getElementById('playerSection');
+    const wasOpen = section.classList.contains('active');
+    section.classList.add('active');
     document.getElementById('playerTitle').textContent = `正在播放：${folder}`;
     
     const audioPlayer = document.getElementById('audioPlayer');
-    audioPlayer.src = `/combined_audio/${folder}.mp3`;
+    // 名字里可能有空格、#、? 之类，必须编码
+    audioPlayer.src = `/combined_audio/${encodeURIComponent(folder)}.mp3`;
     audioPlayer.style.display = 'block';
+    if ('mediaSession' in navigator && window.MediaMetadata) {
+        try { navigator.mediaSession.metadata = new MediaMetadata({ title: folder, artist: '合集播放', album: '口语音频库' }); } catch (e) {}
+    }
     
     // 加载字幕
     loadSubtitles(folder);
     
+    if (isPhone()) {
+        // 手机：播放器从底部升起，列表停在原处；返回手势先收起播放器
+        section.scrollTop = 0;
+        document.getElementById('playerBackdrop').hidden = false;
+        document.documentElement.classList.add('cb-lock');
+        if (!wasOpen) history.pushState({ cbPlayer: true }, '', location.href);
+        return;
+    }
     // 滚动到播放器
-    document.getElementById('playerSection').scrollIntoView({behavior: 'smooth'});
+    section.scrollIntoView({behavior: 'smooth'});
 }
+
+// 手机：收起播放器（暂停）
+function hidePlayerSheet() {
+    const section = document.getElementById('playerSection');
+    if (!section.classList.contains('active')) return;
+    section.classList.remove('active');
+    document.getElementById('playerBackdrop').hidden = true;
+    document.documentElement.classList.remove('cb-lock');
+    document.getElementById('audioPlayer').pause();
+}
+function closePlayerSheet() {
+    if (history.state && history.state.cbPlayer) history.back();
+    else hidePlayerSheet();
+}
+window.addEventListener('popstate', function () {
+    if (isPhone()) hidePlayerSheet();
+});
 
 // 加载字幕
 function loadSubtitles(folder) {
     const container = document.getElementById('subtitlesContainer');
     container.innerHTML = '<div class="loading-indicator">加载字幕中...</div>';
     
-    fetch(`/get_subtitles/${folder}`)
+    fetch(`/get_subtitles/${encodeURIComponent(folder)}`)
     .then(res => res.json())
     .then(data => {
         if (data.success) {
@@ -1048,13 +1210,13 @@ function renderSubtitles(type) {
     if (type === 'part2') {
         // Part2：显示问题 + 答案列表
         if (subtitles.length > 0 && subtitles[0].question) {
-            html += `<div class="part2-question">${subtitles[0].question}</div>`;
+            html += `<div class="part2-question">${escapeHtml(subtitles[0].question)}</div>`;
         }
         
         subtitles.forEach((item, index) => {
             html += `
                 <div class="subtitle-item" data-index="${index}" onclick="jumpToSubtitle(${index})">
-                    <div class="subtitle-answer">${item.text}</div>
+                    <div class="subtitle-answer">${escapeHtml(item.text)}</div>
                 </div>
             `;
         });
@@ -1063,8 +1225,8 @@ function renderSubtitles(type) {
         subtitles.forEach((item, index) => {
             html += `
                 <div class="subtitle-item" data-index="${index}" onclick="jumpToSubtitle(${index})">
-                    <div class="subtitle-question">[${String(index + 1).padStart(2, '0')}] ${item.question || '问题'}</div>
-                    <div class="subtitle-answer">${item.text}</div>
+                    <div class="subtitle-question">[${String(index + 1).padStart(2, '0')}] ${escapeHtml(item.question || '问题')}</div>
+                    <div class="subtitle-answer">${escapeHtml(item.text)}</div>
                 </div>
             `;
         });
@@ -1073,9 +1235,12 @@ function renderSubtitles(type) {
     container.innerHTML = html;
 }
 
-// 设置音频时间更新监听
+// 设置音频时间更新监听（只绑一次：以前每加载一次字幕就多绑一个）
+let timeUpdateBound = false;
 function setupAudioTimeUpdate() {
     const audioPlayer = document.getElementById('audioPlayer');
+    if (timeUpdateBound) return;
+    timeUpdateBound = true;
     
     audioPlayer.addEventListener('timeupdate', function() {
         const currentTime = audioPlayer.currentTime;
@@ -1107,8 +1272,14 @@ function updateCurrentSubtitle(currentTime) {
             const newItem = document.querySelector(`[data-index="${newIndex}"]`);
             if (newItem) {
                 newItem.classList.add('active');
-                // 滚动到当前字幕
-                newItem.scrollIntoView({behavior: 'smooth', block: 'center'});
+                // 滚动到当前字幕。手机上只滚播放器面板本身，背后的列表不动
+                const sheet = document.getElementById('playerSection');
+                if (isPhone() && sheet.classList.contains('active')) {
+                    const top = newItem.getBoundingClientRect().top - sheet.getBoundingClientRect().top + sheet.scrollTop;
+                    sheet.scrollTo({ top: Math.max(0, top - sheet.clientHeight / 2 + newItem.offsetHeight / 2), behavior: 'smooth' });
+                } else {
+                    newItem.scrollIntoView({behavior: 'smooth', block: 'center'});
+                }
             }
         }
         
@@ -1124,8 +1295,12 @@ function jumpToSubtitle(index) {
     }
 }
 
-// 显示消息
+// 显示消息：用全站的提示条。以前插在一个不存在的 #folderList 前面，结果落到一万多像素长的页面最底下，谁也看不见
 function showMessage(message, type) {
+    if (window.IELTSUI && window.IELTSUI.toast) {
+        window.IELTSUI.toast(message, type === 'success' ? 'success' : 'error');
+        return;
+    }
     const existing = document.querySelector('.success-message, .error-message');
     if (existing) existing.remove();
     
@@ -1139,6 +1314,23 @@ function showMessage(message, type) {
         messageDiv.remove();
     }, 3000);
 }
+
+// 按钮统一在这里接（卡片是动态生成的）
+document.addEventListener('click', function (event) {
+    const btn = event.target.closest('.folder-card [data-role]');
+    if (btn) {
+        const folder = btn.closest('.folder-card').dataset.folder;
+        if (btn.dataset.role === 'generate') generateCombined(folder, btn);
+        else if (btn.dataset.role === 'play' && !btn.disabled) playCombined(folder);
+        return;
+    }
+    if (event.target.closest('#backBtn')) {
+        const origin = originFolder();
+        location.href = origin ? '/speaking#folder=' + encodeURIComponent(origin) : '/speaking';
+        return;
+    }
+    if (event.target.closest('#playerClose') || event.target.closest('#playerBackdrop')) closePlayerSheet();
+});
 
 // 页面加载
 window.onload = function() {
@@ -1174,24 +1366,13 @@ function jumpToSpecificCombined(folder) {
         let foundPlayBtn = null;
         let foundGenerateBtn = null;
         
-        // 查找所有可能的ID变体（考虑分类后缀）
-        const possibleSuffixes = ['', '-all', '-Part1', '-Part2', '-Part3', '-其他'];
-        
-        for (const suffix of possibleSuffixes) {
-            const cardId = `card-${folder}${suffix}`;
-            const playId = `play-${folder}${suffix}`;
-            const generateId = `generate-${folder}${suffix}`;
-            
-            const card = document.getElementById(cardId);
-            const playBtn = document.getElementById(playId);
-            const generateBtn = document.getElementById(generateId);
-            
-            if (card) {
-                foundCard = card;
-                foundPlayBtn = playBtn;
-                foundGenerateBtn = generateBtn;
-                break;
-            }
+        // 先找当前分类里那张（「全部」默认显示），没有再找任意一张
+        const cards = cardsFor(folder);
+        const card = cards.find(c => c.closest('.category-section.active')) || cards[0];
+        if (card) {
+            foundCard = card;
+            foundPlayBtn = card.querySelector('[data-role="play"]');
+            foundGenerateBtn = card.querySelector('[data-role="generate"]');
         }
         
         if (foundCard) {
