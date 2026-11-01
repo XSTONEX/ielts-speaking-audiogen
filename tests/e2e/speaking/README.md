@@ -53,4 +53,4 @@ PLAYWRIGHT_CORE=/Users/shiqiwen/my_project/my_own_odyssey/frontend/node_modules/
 
 3. 跑完 `tests/e2e/speaking/sandbox.sh stop "$SB"`。
 
-2026-11-01 的结果：两个内核共 260 项全部通过（WebKit 130、Chromium 131，后者多一项真手指拖进度条）。同一份脚本对着改版前的 `mobile/base` 跑，通过 29 项、失败 72 项（新布局的元素不存在、合集音频 404、拖进度条后时间冻在 0:00）。
+2026-11-01 的结果：两个内核共 265 项全部通过（WebKit 132、Chromium 133，后者多一项真手指拖进度条）。同一份脚本对着改版前的 `mobile/base` 跑，通过 29 项、失败 72 项（新布局的元素不存在，好几组检查直接跑崩；合集音频 404；拖进度条被取消后时间冻在 0:00）。
