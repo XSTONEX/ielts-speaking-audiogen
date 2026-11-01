@@ -207,6 +207,12 @@ html[data-theme="dark"] body.ui-plain.theme-page .ui-select {
 .ui-seg__count { font-variant-numeric: tabular-nums; font-size: var(--w-fs-meta); opacity: .65; margin-left: 4px; }
 /* 手机上分段按钮至少 40px 高，好点 */
 @media (max-width: 820px) { .ui-seg__btn { min-height: 40px; padding: 0 16px; } }
+/* 手机上表单和弹窗里的分段按钮铺满一行、平分宽度，窄屏（360px）也不会比弹窗还宽 */
+@media (max-width: 640px) {
+  .ui-seg { max-width: 100%; box-sizing: border-box; }
+  .ui-field > .ui-seg, .ui-dialog .ui-seg { align-self: stretch; display: flex; }
+  .ui-field > .ui-seg .ui-seg__btn, .ui-dialog .ui-seg .ui-seg__btn { flex: 1 1 0; min-width: 0; padding: 0 8px; }
+}
 
 /* ==================== 卡片 ==================== */
 .ui-card {
