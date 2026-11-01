@@ -205,6 +205,8 @@ html[data-theme="dark"] body.ui-plain.theme-page .ui-select {
 .ui-seg__btn:hover { color: var(--w-ink); }
 .ui-seg__btn.is-on { font-weight: 600; background: var(--w-surface); color: var(--w-ink); box-shadow: 0 0 0 1px var(--w-line); }
 .ui-seg__count { font-variant-numeric: tabular-nums; font-size: var(--w-fs-meta); opacity: .65; margin-left: 4px; }
+/* 手机上分段按钮至少 40px 高，好点 */
+@media (max-width: 820px) { .ui-seg__btn { min-height: 40px; padding: 0 16px; } }
 
 /* ==================== 卡片 ==================== */
 .ui-card {
