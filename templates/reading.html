@@ -787,6 +787,12 @@
             }
         }
 
+        /* 手机：「真题优先级」不再浮在 Part 按钮上面，换到下一行 */
+        @media (max-width: 640px) {
+            .part-tabs { flex-wrap: wrap; }
+            .priority-btn { position: static; flex-basis: 100%; margin: 4px 0 0; }
+        }
+
         @media (max-width: 480px) {
             .stats-grid {
                 grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
