@@ -353,8 +353,9 @@ async function openByTitle(page, re) {
     drawer: state.sideOpen,
   }));
   check('phone: paper fits, submit + progress in the bar', ph.overflow <= 0 && ph.submit !== 'none' && ph.prog !== 'none' && !ph.drawer, ph);
-  const tools = await pp.evaluate(() => { const seg = document.getElementById('modeSeg').getBoundingClientRect(), b = document.getElementById('scriptBtn').getBoundingClientRect(); return { segRight: Math.round(seg.right), segBottom: Math.round(seg.bottom), btnTop: Math.round(b.top), w: window.innerWidth }; });
-  check('phone: switch on its own row, nothing overlaps', tools.segRight <= tools.w && tools.btnTop >= tools.segBottom, tools);
+  // 2026-11 手机改版：两档开关在「题目」页签顶上占满一行，「显示原文」挪进了「⋯」
+  const tools = await pp.evaluate(() => { const seg = document.getElementById('modeSeg').getBoundingClientRect(); return { inQ: !!document.getElementById('modeSeg').closest('#pQHead'), segLeft: Math.round(seg.left), segRight: Math.round(seg.right), btn: getComputedStyle(document.getElementById('scriptBtn')).display === 'none' || document.getElementById('scriptBtn').getBoundingClientRect().width === 0, w: window.innerWidth }; });
+  check('phone: switch on its own row at the top of 题目, 显示原文 moved into ⋯', tools.inQ && tools.segLeft >= 0 && tools.segRight <= tools.w && tools.btn, tools);
   await shot(pp, 'phone');
   await pp.click('.lr-paper__submit');
   const ph2 = await pp.evaluate(() => !document.getElementById('submitModal').hidden);

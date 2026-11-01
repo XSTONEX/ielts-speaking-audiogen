@@ -708,3 +708,326 @@ button.lq-cell.is-on:focus-visible { box-shadow: var(--w-ring); }
   .lq-q__body { padding-left: 0; }
   .lq-slot__t { max-width: 7em; }
 }
+
+/* ============================================================
+   手机（≤820px）改版：精听页换成「原文 / 题目 / 本篇」页签 + 底部播放条（上一句 / 下一句 / 单句循环），
+   面板都从底部升起；列表两列；上传弹窗是底部面板。宽屏（>820px）一律不变，821–1099 还是抽屉。
+   ============================================================ */
+/* 手机才有的东西：宽屏不显示 */
+.lr-ptabs, .lr-qhead, .lr-script-off, .lr-qchip, .lr-ponly, .lr-acts, .lr-endcard, .lr-follow, .lr-scrim, .lr-proj__more { display: none; }
+
+@media (max-width: 820px) {
+  :root { --lr-player-h: 113px; --lr-ptabs-h: 57px; }
+  .lr-ponly { display: inline-flex; }
+  /* 打字的地方 16px，看得清，iOS 也不会放大 */
+  body.page-listening .ui-input, body.page-listening .ui-textarea, body.page-listening .ui-select { font-size: 16px; }
+
+  /* ---------- 列表页 ---------- */
+  #listView .lr-head .ui-head__tools > .ui-btn { height: 44px; font-size: var(--w-fs-ui); }
+  #listView .lr-head .lr-head__upload { border-color: transparent; background: var(--w-big); color: var(--w-on-big); font-weight: 600; }
+  #listToolbar > .lr-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%; }
+  #listToolbar .ui-chip { height: 44px; justify-content: center; font-size: var(--w-fs-ui); }
+
+  /* ---------- 精听页 · 页头：标题最多两行，时长和句数在下面；按钮都搬进页签条 ---------- */
+  #detailView .lr-head { padding-top: 14px; padding-bottom: 12px; }
+  #detailView .lr-head .ui-head__tools { display: none; }
+  #detailView .lr-head .ui-head__title { flex-direction: column; align-items: flex-start; gap: 2px; line-height: 1.35; }
+  #detailView .lr-title-text { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+  #detailView .lr-head .ui-icon-btn--back { width: 44px; height: 44px; }
+
+  /* 页签条：吸在导航栏下面 */
+  .lr-ptabs { display: flex; align-items: center; gap: 8px; position: sticky; top: var(--app-shell-h); z-index: 60; height: var(--lr-ptabs-h); box-sizing: border-box; padding: 0 16px; background: var(--w-paper); border-bottom: 1px solid var(--w-line); }
+  .lr-ptabs__seg { flex: 1 1 auto; min-width: 0; display: flex; gap: 4px; }
+  .lr-ptabs__seg .ui-seg__btn { flex: 1 1 0; min-width: 0; padding: 0 4px; font-size: var(--w-fs-ui); }
+  .lr-ptabs__btn { flex: none; width: 44px; height: 44px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--w-line); border-radius: var(--w-r-chip); background: var(--w-surface); color: var(--w-ink2); font-family: var(--font-cn); font-size: var(--w-fs-ui); font-weight: 600; cursor: pointer; }
+  .lr-ptabs__btn.is-on { border-color: var(--w-big-line); background: var(--w-big-soft); color: var(--w-big); }
+
+  /* 正文：一次只显示一个页签 */
+  .lr-detail-body { padding-left: 10px; padding-right: 10px; padding-top: 12px; padding-bottom: calc(var(--lr-player-h) + env(safe-area-inset-bottom) + 64px); }   /* 最后一句也能滚到「回到当前句」上面 */
+  .lr-detail { display: flex; flex-direction: column; align-items: stretch; gap: 12px; }
+  .lr-side, .lr-detail.is-side-open .lr-side { position: static; z-index: auto; width: auto; max-height: none; overflow: visible; padding: 0; transform: none; visibility: visible; transition: none; background: none; border: none; box-shadow: none; }
+  .lr-side-mask, .lr-detail.is-side-open .lr-side-mask, .lr-split, .lr-side__close, #sideTabs { display: none; }
+  .lr-detail[data-ptab="script"] > .lr-side, .lr-detail[data-ptab="script"] > .lr-paper, .lr-detail[data-ptab="script"] > .lr-qhead { display: none; }
+  .lr-detail[data-ptab="questions"] > .lr-script, .lr-detail[data-ptab="questions"] > .lr-script-off, .lr-detail[data-ptab="questions"] > .lr-qchip,
+  .lr-detail[data-ptab="questions"] #redoCard, .lr-detail[data-ptab="questions"] #sideInfoCard, .lr-detail.is-paper[data-ptab="questions"] > .lr-side { display: none; }
+  .lr-detail[data-ptab="side"] > .lr-script, .lr-detail[data-ptab="side"] > .lr-script-off, .lr-detail[data-ptab="side"] > .lr-qchip,
+  .lr-detail[data-ptab="side"] > .lr-paper, .lr-detail[data-ptab="side"] > .lr-qhead { display: none; }
+
+  /* 题目页签顶上：显示答案 / 重做、做题记录 */
+  .lr-qhead { display: flex; flex-direction: column; gap: 10px; }
+  .lr-qhead .lr-mode { display: flex; width: 100%; box-sizing: border-box; }
+  .lr-qhead .lr-mode .ui-seg__btn { flex: 1 1 0; min-height: 44px; padding: 0 8px; font-size: var(--w-fs-ui); }
+  .lr-detail.is-redo .lr-qhead #attemptBox { display: none; }
+  .lr-qhead .lr-att { margin: 0; }
+  .lr-qhead .lr-att__btn { height: 44px; font-size: var(--w-fs-ui); }
+  .lr-qhead .lr-att__menu { margin: 8px 0 0 0; }
+  .lr-att__opt { min-height: 44px; }
+  .lr-att__item { grid-template-columns: minmax(0, 1fr) 44px; }
+  .lr-att__del { width: 44px; height: 44px; }
+  .lr-srctag { font-size: 12px; }
+
+  /* 原文页签：重做时原文藏着 */
+  .lr-script-off { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; padding: 20px 16px; }
+  .lr-script-off__text { margin: 0; font-size: var(--w-fs-ui); line-height: 1.7; color: var(--w-ink2); }
+
+  /* 字幕：去掉时间、星星两列，英文占满一行；正在播的那句左边一条竖线，下面一行操作 */
+  .lr-script { padding: 4px; }
+  .lr-line { grid-template-columns: minmax(0, 1fr); padding: 12px 12px 12px 14px; column-gap: 0; }
+  .lr-line > .lr-line__time, .lr-line > .lr-line__star { display: none; }
+  .lr-line.is-active { box-shadow: inset 3px 0 0 var(--w-big); }
+  /* 手指点过的句子不留灰底（触屏上 :hover 会粘住） */
+  @media (hover: none) {
+    .lr-line:hover, .lr-evi .lr-line:hover { background: transparent; }
+    .lr-line.is-active:hover, .lr-evi .lr-line.is-active:hover { background: var(--w-big-soft); }
+  }
+  .lr-line.is-starred .lr-line__en::after { content: '★'; margin-left: 6px; font-family: var(--font-cn); font-size: 13px; color: var(--w-warn); }
+  .lr-line.is-active .lr-acts { display: flex; }
+  .lr-acts { flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 12px; cursor: default; }
+  .lr-act { height: 40px; padding: 0 10px; display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--w-line-strong); border-radius: 20px; background: var(--w-surface); color: var(--w-ink2); font-family: var(--font-cn); font-size: var(--w-fs-meta); cursor: pointer; }
+  .lr-act.is-on { border-color: var(--w-warn); background: var(--w-warn-soft); color: var(--w-warn); font-weight: 600; }
+  .lr-act--why { display: none; }
+  .lr-line.is-starred .lr-act--why { display: inline-flex; }
+  .lr-act__n { min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; border-radius: 9px; background: var(--w-big); color: var(--w-on-big); font-size: 11px; font-weight: 700; }
+  .lr-act__n:empty { display: none; }
+  .lr-acts__time { margin-left: auto; font-size: 12px; color: var(--w-ink3); font-variant-numeric: tabular-nums; }
+  /* 听错原因在手机上用底部面板改，句子下面只列已选的 */
+  .lr-why__add, .lr-why.is-empty { display: none; }
+  .lr-gap { padding-left: 12px; }
+  .lr-evi__head { padding: 8px 12px 2px 12px; }
+  .lr-evi__head .lr-linkbtn { height: 36px; padding: 0 14px; border: 1px solid var(--w-big-line); border-radius: 18px; background: var(--w-surface); font-weight: 600; }
+  .lr-qtag { position: relative; height: 24px; padding: 0 8px; font-size: 13px; }
+  .lr-qtag::before { content: ''; position: absolute; inset: -10px -4px; }   /* 点的地方 44px 高 */
+  /* 字幕最后：听完了 → 打卡 / 标熟 */
+  .lr-endcard { display: flex; flex-direction: column; gap: 12px; margin: 14px 4px 6px 4px; padding: 16px; border: 1px dashed var(--w-line-strong); border-radius: var(--w-r-card); background: var(--w-sunken); cursor: default; }
+  .lr-endcard__t b { display: block; font-size: var(--w-fs-ui); color: var(--w-ink); }
+  .lr-endcard__t span { font-size: var(--w-fs-meta); line-height: 1.6; color: var(--w-ink3); }
+  .lr-endcard__btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .lr-endcard__btns .ui-btn { height: 48px; padding: 0 10px; }
+  .lr-endcard__btns .ui-btn.is-mastered { background: var(--w-ok-soft); border-color: var(--w-ok-line); color: var(--w-ok); font-weight: 600; }
+
+  /* 从题目跳到原文：挂着的题 */
+  .lr-qchip { display: flex; align-items: center; gap: 4px; position: sticky; top: calc(var(--app-shell-h) + var(--lr-ptabs-h) + 4px); z-index: 40; min-height: 52px; box-sizing: border-box; padding: 4px 4px 4px 10px; border: 1px solid var(--w-big-line); border-radius: var(--w-r-card); background: var(--w-surface); box-shadow: var(--w-shadow-lg); font-size: var(--w-fs-meta); color: var(--w-ink2); }
+  .lr-qchip > .lq-n { margin-right: 4px; }
+  .lr-qchip__ans { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lr-qchip__ans b, .lr-qchip__ans s { font-family: var(--font-en); font-size: var(--w-fs-ui); }
+  .lr-qchip__ans b.is-ok { color: var(--w-ok); }
+  .lr-qchip__ans s { color: var(--w-err); text-decoration-thickness: 1.5px; }
+  .lr-qchip__btn { flex: none; height: 44px; padding: 0 8px; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: var(--w-r-chip); background: transparent; color: var(--w-big); font-family: var(--font-cn); font-size: var(--w-fs-meta); font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .lr-qchip__x { width: 40px; justify-content: center; color: var(--w-ink3); font-size: 18px; font-weight: 400; }
+
+  /* 题目、本篇页签里的卡片 */
+  .lr-side__card { padding: 16px; }
+  .lr-qmap { grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 6px; }
+  .lr-qmap .lr-qnum { height: 40px; font-size: 14px; }
+  .lr-qs__legend { font-size: 13px; }
+  .lr-qx__acts { flex-wrap: wrap; }
+  .lr-qx__acts .ui-btn { height: 44px; }
+  .lr-side__btns .ui-btn { height: 48px; }
+  .lr-side__filter { display: flex; width: 100%; box-sizing: border-box; }
+  .lr-side__filter .ui-seg__btn { flex: 1 1 0; min-height: 44px; font-size: var(--w-fs-ui); }
+  .lr-entry__top { min-height: 44px; }
+  .lr-entry__time { height: 36px; padding: 0 12px; border: 1px solid var(--w-big-line); border-radius: 18px; font-weight: 600; }
+  .lr-entry__acts .lr-icon { width: 44px; height: 44px; }
+  #notesPane > a.lr-link { display: flex !important; align-items: center; min-height: 44px; padding: 0 !important; font-size: var(--w-fs-ui); }
+  /* 重做的答题卡：题号 44px */
+  .lr-sheet__map { grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); }
+  .lr-sheet__map .lr-qnum { height: 44px; font-size: 15px; }
+  .lr-sheet__note { font-size: var(--w-fs-meta); }
+
+  /* 卷子顶上的进度条：吸在页签条下面，放「答题卡」「交卷」 */
+  .lr-paper__bar { position: sticky; top: calc(var(--app-shell-h) + var(--lr-ptabs-h)); z-index: 30; flex-wrap: nowrap; padding: 6px 6px 6px 14px; box-shadow: 0 0 0 1px var(--w-line), 0 -8px 0 var(--w-surface); }
+  .lr-paper__bar > .lr-ico, .lr-paper__msg, .lr-paper__script { display: none; }
+  .lr-paper__bar .ui-btn { height: 40px; }
+  .lr-paper__prog { font-size: var(--w-fs-ui); white-space: nowrap; }
+
+  /* 作答：横线、字母槽 40px 高，字 16px；表格的圈大一点，四周还有一圈能点的地方 */
+  .lq-gap, .lq-slot { height: 40px; }
+  .lq-gap__in { height: 36px; font-size: 16px; }
+  .lr-tbl button.lq-gap, .lr-tbl button.lq-slot { min-height: 40px; }
+  .lq-cell, #questionsPane .lq-cell { position: relative; width: 34px; height: 34px; font-size: 12px; }
+  .lq-cell::after { content: ''; position: absolute; inset: -5px -3px; }
+  .lq-grid td { padding: 0 3px; }
+  #questionsPane .lq-grid td { height: 46px; }
+  .lq-map__zoom { height: 36px; }
+
+  /* 点进输入框会滚到它；顶上吸着的条和底下的播放条不挡住它 */
+  html.lr-detail-on { scroll-padding-top: calc(var(--app-shell-h) + var(--lr-ptabs-h) + 64px); scroll-padding-bottom: calc(var(--lr-player-h) + 16px); }
+  /* 在卷子里打字时键盘占了半屏：播放条先收起来，腾地方给题目（收起键盘就回来） */
+  body.lr-typing .lr-player { display: none; }
+
+  /* ---------- 底部播放条：第一行进度（两头是时间），第二行 倍速 · 上一句 · 播放 · 下一句 · 单句循环 ---------- */
+  body.lr-in-detail { --ui-bottom-bar-h: var(--lr-player-h); }
+  .lr-player { padding: 4px 12px calc(8px + env(safe-area-inset-bottom)) 12px; }
+  .lr-player__inner { display: grid; grid-template-columns: 56px repeat(3, minmax(0, 1fr)) 56px; grid-template-rows: 40px 56px; row-gap: 4px; column-gap: 0; align-items: center; justify-items: center; }
+  .lr-time { grid-row: 1; grid-column: 1; justify-self: start; min-width: 0; font-size: 12px; }
+  .lr-time__tot { display: none; }
+  .lr-seek { grid-row: 1; grid-column: 2 / 5; width: 100%; height: 40px; min-width: 0; }
+  .lr-time--end { grid-row: 1; grid-column: 5; justify-self: end; }
+  .lr-seek__track { height: 4px; }
+  .lr-seek__thumb { width: 20px; height: 20px; margin-left: -10px; margin-top: -10px; box-sizing: border-box; }
+  .lr-speed, .lr-keys { display: none; }
+  .lr-play { grid-row: 2; grid-column: 3; width: 56px; height: 56px; }
+  .lr-play svg { width: 22px; height: 22px; }
+  .lr-pbtn { grid-row: 2; width: 48px; height: 48px; padding: 0; align-items: center; justify-content: center; border: none; border-radius: 50%; background: transparent; color: var(--w-ink); cursor: pointer; }
+  .lr-pbtn:active { background: var(--w-sunken); }
+  .lr-pbtn--speed { grid-column: 1; justify-self: start; width: 56px; height: 44px; border: 1px solid var(--w-line-strong); border-radius: 22px; font-family: var(--font-cn); font-size: var(--w-fs-meta); font-weight: 600; font-variant-numeric: tabular-nums; color: var(--w-ink2); }
+  .lr-pbtn--speed.is-on { border-color: var(--w-big-line); background: var(--w-big-soft); color: var(--w-big); }
+  .lr-pbtn--prev { grid-column: 2; }
+  .lr-pbtn--next { grid-column: 4; }
+  .lr-pbtn--loop { grid-column: 5; justify-self: end; color: var(--w-ink2); }
+  .lr-pbtn--loop.is-on { background: var(--w-big-soft); color: var(--w-big); box-shadow: inset 0 0 0 1px var(--w-big-line); }
+  /* 翻走以后的「回到当前句」：浮在播放条上面 */
+  .lr-follow { display: inline-flex; position: absolute; left: 50%; bottom: calc(100% + 10px); transform: translateX(-50%); align-items: center; gap: 6px; height: 40px; padding: 0 16px; border: 1px solid var(--w-big-line); border-radius: 20px; background: var(--w-surface); color: var(--w-big); font-family: var(--font-cn); font-size: var(--w-fs-meta); font-weight: 600; white-space: nowrap; box-shadow: var(--w-shadow-lg); cursor: pointer; }
+
+  /* 选中文字后：停在播放条上面的一条，带着选中的词 */
+  .lr-pop { position: fixed; z-index: 1150; left: 8px !important; right: 8px; top: auto !important; bottom: calc(var(--lr-player-h) + env(safe-area-inset-bottom) + 8px); display: flex; gap: 6px; padding: 6px; }
+  .lr-pop__quote { flex: 1 1 auto; min-width: 0; padding: 0 8px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-en); font-size: var(--w-fs-ui); font-weight: 600; line-height: 44px; color: var(--w-ink); }
+  .lr-pop__btn, .lr-pop__btn:hover { height: 44px; padding: 0 14px; background: var(--w-big-soft); color: var(--w-big); font-size: var(--w-fs-ui); font-weight: 600; }
+  .lr-pop__x, .lr-pop__x:hover { background: transparent; color: var(--w-ink2); font-weight: 400; }
+  .lr-pop__sep { display: none; }
+
+  /* 生词 / 笔记面板：从底部升起，键盘弹起时抬到键盘上面 */
+  .lr-scrim { display: block; position: fixed; inset: 0; z-index: 1305; background: var(--w-mask); cursor: pointer; }
+  .lr-panel { position: fixed; z-index: 1310; left: 0 !important; right: 0; top: auto !important; bottom: var(--lr-kb, 0px); width: auto; max-height: calc(100dvh - var(--lr-kb, 0px) - var(--app-shell-h)); overflow-y: auto; overscroll-behavior: contain; box-sizing: border-box; padding: 18px 16px calc(16px + env(safe-area-inset-bottom)) 16px; border-width: 1px 0 0 0; border-radius: 14px 14px 0 0; box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.12); animation: ui-sheet-in .22s ease-out; }
+  .lr-panel__quote { font-size: 18px; }
+  .lr-panel__label { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .lr-panel__foot { flex-wrap: wrap; gap: 10px; }
+  .lr-panel__foot .ui-btn { height: 44px; flex: 1 1 0; font-size: var(--w-fs-ui); }
+  .lr-panel__foot .lr-meta { flex-basis: 100%; }
+  .lr-panel__foot .lr-kbdhint { display: none; }
+  .lr-panel__foot .lr-panel__edit { order: -1; }
+  .lr-panel__foot .lr-panel__del { flex: 0 0 auto; margin-left: 12px; padding: 0 18px; }
+  .lr-panel .ui-textarea { min-height: 120px; }
+
+  /* 我们自己的底部面板（听错原因、更多、列表卡片的「⋯」） */
+  .lr-sheet .ui-dialog__foot { align-items: center; }
+  .lr-sheet__quote { margin: 0; font-family: var(--font-en); font-size: var(--w-fs-ui); line-height: 1.6; color: var(--w-ink2); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .lr-sheet__foothint { flex: 1 1 auto; }
+  .lr-sheet .ui-dialog__foot > .lr-sheet__foothint + .ui-btn { flex: 0 0 auto; padding: 0 32px; }
+  .lr-sheet__title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lr-whylist { display: flex; flex-direction: column; gap: 8px; }
+  .lr-whyrow { width: 100%; min-height: 56px; display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 12px; align-items: center; padding: 8px 14px; border: 1px solid var(--w-line); border-radius: var(--w-r-card); background: var(--w-surface); color: var(--w-ink); text-align: left; font-family: var(--font-cn); cursor: pointer; }
+  .lr-whyrow__box { width: 22px; height: 22px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; border: 1.5px solid var(--w-line-strong); border-radius: 6px; color: var(--w-on-big); }
+  .lr-whyrow__t b { display: block; font-size: var(--w-fs-ui); font-weight: 600; }
+  .lr-whyrow__t span { display: block; margin-top: 2px; font-size: var(--w-fs-meta); line-height: 1.5; color: var(--w-ink3); }
+  .lr-whyrow.is-on { border-color: var(--w-big); background: var(--w-big-soft); }
+  .lr-whyrow.is-on .lr-whyrow__box { border-color: var(--w-big); background: var(--w-big); }
+  .lr-mlist { gap: 8px; }
+  .lr-mrow { width: 100%; min-height: 56px; display: flex; align-items: center; gap: 12px; padding: 8px 14px; box-sizing: border-box; border: 1px solid var(--w-line); border-radius: var(--w-r-card); background: var(--w-surface); color: var(--w-ink); text-align: left; text-decoration: none; font-family: var(--font-cn); cursor: pointer; }
+  .lr-mrow__main { flex: 1 1 auto; min-width: 0; }
+  .lr-mrow__main b { display: block; font-size: var(--w-fs-ui); font-weight: 600; }
+  .lr-mrow__main span { display: block; margin-top: 2px; font-size: var(--w-fs-meta); line-height: 1.5; color: var(--w-ink3); overflow-wrap: anywhere; }
+  .lr-mrow__go { font-size: 20px; color: var(--w-ink3); }
+  .lr-mrow--danger b { color: var(--w-err); }
+  .lr-switch { flex: none; position: relative; width: 44px; height: 26px; border-radius: 13px; background: var(--w-line-strong); transition: background .15s; }
+  .lr-switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--w-surface); box-shadow: 0 1px 2px rgba(0, 0, 0, .2); transition: transform .15s; }
+  [aria-checked="true"] > .lr-switch { background: var(--w-big); }
+  [aria-checked="true"] > .lr-switch::after { transform: translateX(18px); }
+}
+
+@media (max-width: 640px) {
+  /* ---------- 列表卡片两列 ---------- */
+  .lr-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .lr-proj { min-height: 0; gap: 8px; padding: 12px 4px 12px 12px; }
+  .lr-proj__title { font-size: var(--w-fs-ui); -webkit-line-clamp: 3; }
+  .lr-proj__head { gap: 0; }
+  .lr-proj__head .lr-proj__del { display: none; }
+  .lr-proj__head .lr-proj__more { display: inline-flex; width: 36px; height: 44px; margin: -12px 0 -8px 0; }
+  .lr-proj__meta { flex-wrap: wrap; row-gap: 4px; padding-right: 8px; font-size: 12px; }
+  /* 日期 · 时长一行；九分学长 · 做过几次换到下一行，行首不留「·」 */
+  .lr-proj__meta::after { content: ''; order: 1; flex-basis: 100%; }
+  .lr-proj__meta .lr-proj__src { order: 2; }
+  .lr-proj__meta .lr-proj__src--first::before { content: none; }
+  .lr-proj__meta .ui-tag { order: 3; }
+  .lr-proj__meta .ui-tag { padding: 1px 8px; font-size: 12px; }
+  .lr-proj__stats { margin-right: 8px; padding: 7px 0; }
+  .lr-proj__num { font-size: var(--w-fs-ui); }
+  .lr-proj__label { font-size: 12px; }
+  .lr-proj__status { margin-right: 8px; padding: 8px 10px; font-size: 12px; }
+  .lr-proj__status.is-err { flex-direction: column; align-items: stretch; gap: 8px; }
+  .lr-proj__status.is-err .ui-btn { height: 40px; justify-content: center; }
+
+  /* ---------- 上传弹窗（底部面板）---------- */
+  .lr-donly { display: none; }
+  .lr-src-tabs .ui-seg__btn { min-height: 44px; font-size: var(--w-fs-ui); }
+  .lr-paste { font-size: 16px; }
+  .lr-imp__parts { overflow: visible; }
+  .lr-imp__part { grid-template-columns: 24px minmax(0, 1fr); column-gap: 10px; row-gap: 8px; padding: 10px 12px 14px 12px; }
+  .lr-imp__check { width: 22px; height: 22px; }
+  .lr-imp__label { display: flex; align-items: center; min-height: 44px; font-size: var(--w-fs-ui); cursor: pointer; }
+  .lr-imp__part > .ui-input, .lr-imp__name, .lr-imp__stats, .lr-imp__warn, .lr-imp__merge, .lr-imp__note { grid-column: 1 / -1; }
+  .lr-imp__part .ui-input { height: 44px; }
+  .lr-imp__name { white-space: normal; line-height: 1.5; }
+  .lr-imp__merge { flex-direction: column; align-items: stretch; gap: 8px; }
+  .lr-imp__merge .ui-tag { align-self: flex-start; }
+  .lr-imp__merge .ui-seg__btn { min-height: 44px; font-size: var(--w-fs-ui); }
+  /* 答题纸表格在 360 宽也放得下五个圈 */
+  .lq-cell, #questionsPane .lq-cell { width: 32px; height: 32px; }
+  .lq-grid td { padding: 0 2px; }
+  .lq-grid td:first-child { min-width: 5.5em; padding: 7px 4px 7px 8px; }
+  .lq-grid__item { gap: 8px; }
+}
+/* 没有鼠标的设备不提「拖进来」 */
+@media (hover: none) { .lr-hoveronly { display: none; } }
+
+/* ---------- 听力笔记本 · 手机 ---------- */
+.lr-nb__filters { display: contents; }
+.lr-nb__sheethead, .lr-nb__searchbtn, .lr-nb__searchx, .lr-review__sum, .lr-review__flipbtn { display: none; }
+@media (max-width: 820px) {
+  body.page-listening-notes .ui-input, body.page-listening-notes .ui-select { font-size: 16px; }
+  /* 浏览：文章、类型、放大镜挤成一行，吸在导航栏下面 */
+  .lr-nb__filters { display: flex; align-items: center; gap: 8px; position: sticky; top: var(--app-shell-h); z-index: 50; margin: -16px -16px 14px -16px; padding: 8px 16px; background: var(--w-paper); border-bottom: 1px solid var(--w-line); }
+  .lr-nb__article { flex: 1 1 auto; min-width: 0; margin: 0; }
+  .lr-nb__article .ui-field__label { display: none; }
+  .lr-nb__article .ui-select { height: 44px; padding: 0 28px 0 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lr-nb__filters .lr-toolbar { flex: none; margin: 0; gap: 8px; flex-wrap: nowrap; }
+  .lr-nb__filters .lr-toolbar .lr-row { flex-wrap: nowrap; gap: 4px; }
+  .lr-nb__filters .ui-chip { height: 44px; padding: 0 10px; gap: 4px; }
+  .lr-nb__filters .lr-search { display: none; }
+  .lr-nb__searchbtn { display: inline-flex; flex: none; width: 44px; height: 44px; padding: 0; align-items: center; justify-content: center; border: 1px solid var(--w-line); border-radius: var(--w-r-chip); background: var(--w-surface); color: var(--w-ink2); cursor: pointer; }
+  /* 点了放大镜：这一行换成搜索框 + 取消 */
+  .lr-nb__filters.is-searching .lr-nb__article, .lr-nb__filters.is-searching .lr-toolbar .lr-row, .lr-nb__filters.is-searching .lr-nb__searchbtn { display: none; }
+  .lr-nb__filters.is-searching .lr-toolbar { flex: 1 1 auto; min-width: 0; }
+  .lr-nb__filters.is-searching .lr-search { display: block; flex: 1 1 auto; width: auto; }
+  .lr-nb__filters.is-searching .lr-search .ui-input { height: 44px; }
+  .lr-nb__filters.is-searching .lr-nb__searchx { display: inline-flex; flex: none; height: 44px; padding: 0 6px; align-items: center; border: none; background: none; color: var(--w-big); font-family: var(--font-cn); font-size: var(--w-fs-ui); cursor: pointer; }
+  /* 每篇的标题：两行；数量和「去精听」在下一行 */
+  .lr-sec__head { flex-wrap: wrap; align-items: center; row-gap: 2px; }
+  .lr-sec__title { flex-basis: 100%; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.45; }
+  .lr-sec__head .lr-link { display: inline-flex; align-items: center; min-height: 44px; font-size: var(--w-fs-ui); }
+  /* 卡片：播放 44px，去原文 / 删除也好点 */
+  .lr-card__top { min-height: 44px; }
+  .lr-card__play { height: 40px; padding: 0 14px 0 12px; border-radius: 20px; font-size: var(--w-fs-ui); }
+  .lr-card__acts { gap: 2px; }
+  .lr-card__acts .lr-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 8px; font-size: var(--w-fs-ui); }
+  .lr-card__acts .lr-icon { width: 44px; height: 44px; }
+
+  /* 复习：筛选收成一行摘要，点「筛选」从底部升起；卡片占满屏幕，三个按钮固定在拇指够得着的底部 */
+  .lr-nb.is-review .lr-nb__filters { display: none; }
+  .lr-nb.is-review .lr-nb__filters.is-sheet { display: flex; flex-direction: column; align-items: stretch; gap: 14px; position: fixed; top: auto; left: 0; right: 0; bottom: var(--lr-kb, 0px); z-index: 1310; margin: 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom)) 16px; border: none; border-top: 1px solid var(--w-line); border-radius: 14px 14px 0 0; background: var(--w-surface); box-shadow: 0 -6px 24px rgba(0, 0, 0, .12); animation: ui-sheet-in .22s ease-out; }
+  .lr-nb__filters.is-sheet .lr-nb__sheethead { display: flex; align-items: center; justify-content: space-between; }
+  .lr-nb__filters.is-sheet .lr-nb__sheethead b { font-size: var(--w-fs-en); color: var(--w-ink); }
+  .lr-nb__filters.is-sheet .lr-nb__article .ui-field__label { display: block; }
+  .lr-nb__filters.is-sheet .lr-toolbar { flex-direction: column; align-items: stretch; flex-wrap: nowrap; }
+  .lr-nb__filters.is-sheet .lr-toolbar .lr-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .lr-nb__filters.is-sheet .ui-chip { justify-content: center; }
+  .lr-nb__filters.is-sheet .lr-nb__searchbtn, .lr-nb__filters.is-sheet .lr-nb__searchx { display: none; }
+  .lr-nb__filters.is-sheet .lr-search { display: block; width: 100%; }
+  .lr-nb__scrim { z-index: 1305; }
+  body.lr-nb-reviewing { --ui-bottom-bar-h: 72px; }
+  .lr-review { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
+  .lr-review__sum { display: flex; align-items: center; gap: 10px; margin: -4px 0 12px 0; padding: 4px 4px 4px 14px; border-radius: var(--w-r-inner); background: var(--w-sunken); font-size: var(--w-fs-meta); color: var(--w-ink2); }
+  .lr-review__sumtext { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lr-review__bar .ui-btn { height: 40px; }
+  .lr-flash { min-height: 0; }
+  .lr-flash:not(.is-revealed) { cursor: pointer; }
+  .lr-flash__flip { display: none; }
+  .lr-flash__center .ui-btn { height: 44px; }
+  .lr-flash__top .lr-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 4px; font-size: var(--w-fs-ui); }
+  .lr-review__nav { position: fixed; z-index: 1100; left: 0; right: 0; bottom: 0; margin: 0; display: grid; grid-template-columns: 1fr 1.3fr 1fr; gap: 8px; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)) 12px; background: var(--w-surface); border-top: 1px solid var(--w-line); }
+  .lr-review__nav .ui-btn { height: 48px; padding: 0 8px; justify-content: center; }
+  .lr-review__nav > :nth-child(1) { grid-column: 1; }
+  .lr-review__nav > .ui-btn--primary { grid-column: 2; grid-row: 1; }
+  .lr-review__nav > :last-child { grid-column: 3; grid-row: 1; }
+  .lr-review__flipbtn { display: inline-flex; }
+}
