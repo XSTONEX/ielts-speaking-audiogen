@@ -31,7 +31,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
   <link rel="stylesheet" href="/static/theme.css?v=20261101m">
   <link rel="stylesheet" href="/static/plain.css?v=20261101m">
-  <link rel="stylesheet" href="/static/listening.css?v=20261101b">
+  <link rel="stylesheet" href="/static/listening.css?v=20261101p">
   <script src="/static/theme.js?v=20261101m" defer></script>
   <script src="/static/api-client.js?v=20260919" defer></script>
   <script src="/static/auth.js?v=20260927" defer></script>
@@ -56,9 +56,12 @@
     </div>
   </header>
 
-  <div class="lr-nb">
+  <div id="nbRoot" class="lr-nb">
     <nav id="articleRail" class="ui-rail" aria-label="按文章筛选"></nav>
     <main class="lr-nb__main">
+      <!-- 文章、类型、搜索：手机上是吸顶的一行（搜索点放大镜才展开）；复习时收起来，点「筛选」从底部升起 -->
+      <div id="nbFilters" class="lr-nb__filters">
+      <div class="lr-nb__sheethead"><b>筛选卡片</b><button class="ui-btn ui-btn--md ui-btn--primary" type="button" onclick="closeFilterSheet()">完成</button></div>
       <label class="ui-field lr-nb__article"><span class="ui-field__label">文章</span><select id="articleSelect" class="ui-select"></select></label>
       <div class="lr-toolbar">
         <div class="lr-row" role="group" aria-label="按类型筛选">
@@ -66,11 +69,15 @@
           <button class="ui-chip filter-chip" type="button" data-filter="note">笔记 <span class="ui-chip__count" data-count="note"></span></button>
           <button class="ui-chip filter-chip" type="button" data-filter="vocab">生词 <span class="ui-chip__count" data-count="vocab"></span></button>
         </div>
+        <button id="searchToggle" class="lr-nb__searchbtn" type="button" aria-label="搜索" onclick="openSearch()"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 13.5 13.5"/></svg></button>
         <label class="lr-search"><span class="lr-sr">搜索</span>
           <svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 13.5 13.5"/></svg>
-          <input id="searchInput" class="ui-input" type="search" placeholder="搜索词、笔记或原句" oninput="onSearch(this.value)" />
+          <input id="searchInput" class="ui-input" type="search" placeholder="搜索词、笔记或原句" enterkeyhint="search" oninput="onSearch(this.value)" />
         </label>
+        <button id="searchCancel" class="lr-nb__searchx" type="button" onclick="closeSearch()">取消</button>
       </div>
+      </div>
+      <div id="filterScrim" class="lr-scrim lr-nb__scrim" hidden onclick="closeFilterSheet()"></div>
 
       <div id="browseRoot"></div>
       <div id="reviewRoot" hidden></div>
@@ -298,8 +305,14 @@ document.querySelectorAll('.filter-chip').forEach(b => b.addEventListener('click
 //  Mode / filter / search
 // ===================================================================
 function setMode(m) {
+  const was = state.mode;
   state.mode = m;
   audio.pause();
+  closeFilterSheet();
+  document.getElementById('nbRoot').classList.toggle('is-review', m === 'review');
+  document.body.classList.toggle('lr-nb-reviewing', m === 'review');
+  if (m === 'review' && was !== 'review') Layers.push('review', () => setMode('browse'));
+  if (m !== 'review') Layers.pop('review');
   document.getElementById('browseRoot').hidden = m !== 'browse';
   document.getElementById('reviewRoot').hidden = m !== 'review';
   [['modeBrowseBtn', 'browse'], ['modeReviewBtn', 'review']].forEach(([id, mode]) => {
@@ -413,11 +426,13 @@ function askDeleteEntry(e) {
   document.getElementById('confirmText').textContent = `「${e.quote}」${isNote ? '的笔记' : '的释义'}会从「${e.project_title}」里删掉，删了不能恢复。`;
   document.getElementById('confirmModal').hidden = false;
   document.getElementById('confirmBtn').focus();
+  Layers.push('confirm', closeConfirm);
 }
 
 function closeConfirm() {
   document.getElementById('confirmModal').hidden = true;
   state.pendingDelete = null;
+  Layers.pop('confirm');
 }
 
 document.getElementById('confirmModal').addEventListener('click', (e) => { if (e.target.id === 'confirmModal') closeConfirm(); });
@@ -524,6 +539,7 @@ function renderReview() {
     }
     root.innerHTML = `
       <div class="lr-review">
+        ${reviewSummaryHtml(total)}
         ${total ? `<div class="lr-review__bar"><span class="lr-review__pos">${total} 张 / ${total}</span><div class="ui-progress"><div class="ui-progress__bar"><i style="width: 100%;"></i></div></div></div>` : ''}
         <section class="ui-card" style="padding: 8px 24px;"><div class="ui-empty">
           <p class="ui-empty__title">${title}</p>
@@ -546,17 +562,18 @@ function renderReview() {
     : `<div class="lr-flash__center lr-flash__flip"><button class="ui-btn ui-btn--primary" type="button" onclick="revealCard()">翻面</button></div>`;
   const masterBtn = state.revealed
     ? `<button class="ui-btn ui-btn--md ui-btn--primary" type="button" onclick="masterCard()">${ICONS.check}记住了</button>`
-    : '';
+    : '<button class="ui-btn ui-btn--md ui-btn--primary lr-review__flipbtn" type="button" onclick="revealCard()">翻面</button>';
 
   root.innerHTML = `
     <div class="lr-review">
+      ${reviewSummaryHtml(total)}
       <div class="lr-review__bar">
         <span class="lr-review__pos">第 ${seen} 张 / ${total}</span>
         <div class="ui-progress"><div class="ui-progress__bar"><i style="width: ${pct}%;"></i></div></div>
         <button class="ui-btn ui-btn--sm" type="button" onclick="buildDeck()">${ICONS.shuffle}洗牌</button>
         <button class="ui-btn ui-btn--sm" type="button" onclick="setMode('browse')">退出复习</button>
       </div>
-      <article class="ui-card lr-flash">
+      <article id="flashCard" class="ui-card lr-flash${state.revealed ? ' is-revealed' : ''}">
         <div class="lr-flash__top">${tagHtml(e.kind)}<span class="lr-flash__src">${esc(e.project_title)} · ${formatTime(e.start)}</span><span class="lr-spacer"></span><a class="lr-link" href="${deep}">去原文</a></div>
         <p class="lr-flash__en">${sentence}</p>
         <div class="lr-flash__term">${esc(e.quote)}</div>
@@ -601,9 +618,115 @@ function masterCard() {
   playCurrentCard();
 }
 
+// ===================================================================
+//  手机（≤820px）：吸顶筛选条、放大镜展开搜索、复习时的筛选面板、点卡片翻面 / 左右滑换卡、返回键
+// ===================================================================
+const phoneMQ = window.matchMedia('(max-width: 820px)');
+function isPhone() { return phoneMQ.matches; }
+
+// 返回键 / 侧滑返回：先关最上面那层（删除确认、筛选面板），再退出复习，最后才离开这页
+let popSkip = 0;
+const Layers = {
+  open: {},
+  push(name, close) {
+    if (!isPhone()) return;
+    const had = !!this.open[name];
+    this.open[name] = close;
+    if (!had) history.pushState({ ...(history.state || {}), layer: name }, '', location.href);
+  },
+  pop(name) {
+    if (!this.open[name]) return;
+    delete this.open[name];
+    const st = history.state;
+    if (st && st.layer && !this.open[st.layer]) { popSkip++; history.back(); }
+  }
+};
+window.addEventListener('popstate', (e) => {
+  if (popSkip > 0) { popSkip--; return; }
+  const keep = e.state && e.state.layer;
+  // 只关新位置上没有的层；「复习」底下压着的是浏览，所以按返回会先关面板、再回到浏览
+  const order = ['confirm', 'filter', 'review'];
+  order.forEach(n => {
+    if (!Layers.open[n] || n === keep) return;
+    if (keep && order.indexOf(n) >= order.indexOf(keep)) return;   // 在 keep 底下（或就是它）的留着
+    const f = Layers.open[n];
+    delete Layers.open[n];
+    f();
+  });
+});
+
+// 键盘弹起时（iOS 可视区域变矮）复习的筛选面板跟着抬到键盘上面
+if (window.visualViewport) {
+  const vv = window.visualViewport;
+  const syncKb = () => {
+    const typing = /^(INPUT|TEXTAREA)$/.test((document.activeElement || {}).tagName || '');
+    const kb = typing ? Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)) : 0;
+    document.documentElement.style.setProperty('--lr-kb', kb + 'px');
+  };
+  vv.addEventListener('resize', syncKb);
+  vv.addEventListener('scroll', syncKb);
+  document.addEventListener('focusin', syncKb);
+  document.addEventListener('focusout', () => setTimeout(syncKb, 50));
+}
+
+function reviewSummaryHtml(total) {
+  const art = state.article === 'all' ? '全部文章' : ((state.raw.articles || []).find(a => a.project_id === state.article) || {}).title || '全部文章';
+  const kind = { all: '全部', note: '笔记', vocab: '生词' }[state.filter] || '全部';
+  const q = state.search.trim() ? ` · 搜「${esc(state.search.trim())}」` : '';
+  return `<div class="lr-review__sum"><span class="lr-review__sumtext">${esc(art)} · ${kind}${q} · ${total} 张</span><button class="ui-btn ui-btn--sm" type="button" onclick="openFilterSheet()">筛选</button></div>`;
+}
+
+function openSearch() {
+  document.getElementById('nbFilters').classList.add('is-searching');
+  document.getElementById('searchInput').focus();
+}
+function closeSearch() {
+  const input = document.getElementById('searchInput');
+  document.getElementById('nbFilters').classList.remove('is-searching');
+  if (input.value) { input.value = ''; onSearch(''); }
+  input.blur();
+}
+
+function openFilterSheet() {
+  document.getElementById('nbFilters').classList.add('is-sheet');
+  document.getElementById('filterScrim').hidden = false;
+  Layers.push('filter', closeFilterSheet);
+}
+function closeFilterSheet() {
+  const f = document.getElementById('nbFilters');
+  if (!f.classList.contains('is-sheet')) return;
+  f.classList.remove('is-sheet');
+  document.getElementById('filterScrim').hidden = true;
+  Layers.pop('filter');
+}
+
+// 手机复习：点卡片空白处翻面，左右滑换上一张 / 下一张
+(function initFlashGestures() {
+  const root = document.getElementById('reviewRoot');
+  let start = null;
+  root.addEventListener('click', (e) => {
+    if (!isPhone() || state.mode !== 'review' || state.revealed || state.done) return;
+    const card = e.target.closest('#flashCard');
+    if (card && !e.target.closest('a, button')) revealCard();
+  });
+  root.addEventListener('touchstart', (e) => {
+    const card = e.target.closest('#flashCard');
+    start = card && e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null;
+  }, { passive: true });
+  root.addEventListener('touchend', (e) => {
+    if (!start || !isPhone() || state.mode !== 'review') return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - start.x, dy = t.clientY - start.y;
+    start = null;
+    if (Math.abs(dx) < 60 || Math.abs(dy) > Math.abs(dx) * 0.7) return;
+    if (dx < 0) nextCard(); else prevCard();
+  }, { passive: true });
+})();
+
 // Keyboard shortcuts for review
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && !document.getElementById('confirmModal').hidden) { closeConfirm(); return; }
+  if (e.key === 'Escape' && document.getElementById('nbFilters').classList.contains('is-sheet')) { closeFilterSheet(); return; }
   if (state.mode !== 'review') return;
   if (!document.getElementById('confirmModal').hidden) return;
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;

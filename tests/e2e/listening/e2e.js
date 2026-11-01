@@ -568,7 +568,8 @@ async function testDetail(browser) {
   await page.waitForSelector('.lr-line.is-active');
   await sleep(800);
   check('deep link opens the sentence', await page.$eval('.lr-line.is-active', e => e.dataset.segId) === '12');
-  check('deep link URL cleaned', page.url() === BASE + '/listening_review');
+  // 2026-11 手机改版起：地址栏留着 ?project=（刷新还在这篇、返回键回列表），只去掉 &seg（刷新不再跳到那句）
+  check('deep link URL keeps the article, drops the sentence', page.url() === `${BASE}/listening_review?project=${HALL}`, page.url());
   await mockBusy(page);
   await page.goto(`${BASE}/listening_review?project=${BUSY}`);
   await page.waitForSelector('.lr-proj');
@@ -759,7 +760,8 @@ async function testPhone(browser) {
     await page.waitForSelector('.lr-proj');
     await sleep(400);
     check(`phone ${theme}: list no horizontal overflow`, await noOverflow());
-    check(`phone ${theme}: 1 card per row`, await page.$$eval('.lr-proj', els => new Set(els.map(e => Math.round(e.getBoundingClientRect().left))).size === 1));
+    // 2026-11 手机改版：列表两列（原来一列）
+    check(`phone ${theme}: 2 cards per row`, await page.$$eval('.lr-proj', els => new Set(els.map(e => Math.round(e.getBoundingClientRect().left))).size === 2));
     await shot(page, `phone-list-${theme}`);
     await page.tap('button:has-text("上传音频")');
     await sleep(200);
@@ -771,15 +773,16 @@ async function testPhone(browser) {
     await page.waitForSelector('.lr-line');
     await sleep(500);
     check(`phone ${theme}: detail no horizontal overflow`, await noOverflow());
-    const tools = await page.$$eval('#detailView .lr-head .ui-head__tools .ui-btn:not([hidden])', els => els.map(e => Math.round(e.getBoundingClientRect().right)));
-    check(`phone ${theme}: 译文 and 本篇笔记 buttons on screen (bug 2)`, tools.length === 2 && tools.every(r => r <= 390), tools);
+    // 2026-11 手机改版：译文开关、本篇（原来的「本篇笔记」）挪到页签条上；星星从左边一列挪到正在播那句的操作行里
+    const tools = await page.$$eval('#ptabTrans, .ptab-btn[data-ptab="side"]', els => els.map(e => { const r = e.getBoundingClientRect(); return r.width > 0 ? Math.round(r.right) : -1; }));
+    check(`phone ${theme}: 译文 and 本篇 on screen in the tab bar (bug 2)`, tools.length === 2 && tools.every(r => r > 0 && r <= 390), tools);
     check(`phone ${theme}: title visible`, await page.$eval('#detailTitle', e => e.getBoundingClientRect().width > 100));
-    check(`phone ${theme}: unstarred stars visible (bug 3)`, await page.$eval('.lr-line[data-seg-id="2"] .star-btn', b => getComputedStyle(b).opacity) === '1');
     check(`phone ${theme}: side panel closed by default`, !(await visible(page, '#notesSide')));
     // tap a line → play
     await page.tap('.lr-line[data-seg-id="4"] .lr-line__zh');
     await sleep(900);
     check(`phone ${theme}: tap line plays`, !(await audioState(page)).paused);
+    check(`phone ${theme}: star visible on the playing line (bug 3)`, await page.$eval('.lr-line.is-active .lr-acts .star-btn', b => b.getBoundingClientRect().width > 0 && getComputedStyle(b).opacity === '1'));
     // touch selection → toolbar (bug 1)
     await page.touchscreen.tap(200, 400);
     await page.evaluate(() => {
@@ -808,16 +811,17 @@ async function testPhone(browser) {
       const a = state.currentData.vocab_annotations.find(x => x.word === 'fourteenth');
       if (a) await API.del(`/api/listening_review/project/${pid}/vocab/${a.id}`);
     }, HALL);
-    await page.tap('#notesBtn');
+    // 2026-11 手机改版：「本篇」是页签（原来是抽屉），倍速是播放条上的一个按钮（原来一排四个）
+    await page.tap('.ptab-btn[data-ptab="side"]');
     await sleep(400);
-    check(`phone ${theme}: drawer opens`, await visible(page, '#notesSide'));
+    check(`phone ${theme}: 本篇 tab opens`, await visible(page, '#notesSide') && await visible(page, '#checkinBtn'));
     await shot(page, `phone-drawer-${theme}`);
-    await page.tap('#sideInfoCard .lr-side__close');
+    await page.tap('.ptab-btn[data-ptab="script"]');
     await sleep(300);
-    check(`phone ${theme}: drawer closes`, !(await visible(page, '#notesSide')));
+    check(`phone ${theme}: back to 原文`, !(await visible(page, '#notesSide')));
     // player
-    const sp = await page.$$eval('.speed-btn', els => els.map(e => Math.round(e.getBoundingClientRect().right)));
-    check(`phone ${theme}: speed buttons on screen`, sp.every(r => r <= 390), sp);
+    const sp = await page.$eval('#speedChip', e => { const r = e.getBoundingClientRect(); return { r: Math.round(r.right), w: Math.round(r.width) }; });
+    check(`phone ${theme}: speed button on screen`, sp.w > 0 && sp.r <= 390, sp);
     await page.goto(`${BASE}/listening_review?project=${HALL}&seg=8`);
     await page.waitForSelector('.lr-line.is-active');
     await sleep(800);
@@ -835,7 +839,7 @@ async function testPhone(browser) {
     await page.tap('#modeReviewBtn');
     await sleep(400);
     check(`phone ${theme}: review no horizontal overflow`, await noOverflow());
-    await page.tap('.lr-flash__flip .ui-btn');
+    await page.tap('.lr-review__flipbtn');   // 2026-11 手机改版：「翻面」在屏幕底部那排按钮中间（原来在卡片里）
     await sleep(200);
     await shot(page, `phone-review-${theme}`);
     await c.close();

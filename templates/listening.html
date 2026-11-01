@@ -31,7 +31,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
   <link rel="stylesheet" href="/static/theme.css?v=20261101m">
   <link rel="stylesheet" href="/static/plain.css?v=20261101m">
-  <link rel="stylesheet" href="/static/listening.css?v=20261101b">
+  <link rel="stylesheet" href="/static/listening.css?v=20261101p">
   <script src="/static/theme.js?v=20261101m" defer></script>
   <script src="/static/api-client.js?v=20260919" defer></script>
   <script src="/static/auth.js?v=20260927" defer></script>
@@ -53,7 +53,7 @@
         <a class="ui-btn ui-btn--md" href="/listening_review/notes">
           <svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 3.5h4A1.5 1.5 0 0 1 8 5v8a1.5 1.5 0 0 0-1.5-1.5h-4zM13.5 3.5h-4A1.5 1.5 0 0 0 8 5v8a1.5 1.5 0 0 1 1.5-1.5h4z"/></svg>听力笔记本<span id="allNotesCount" class="ui-num lr-meta"></span>
         </a>
-        <button class="ui-btn ui-btn--md" type="button" onclick="openUploadModal()">
+        <button class="ui-btn ui-btn--md lr-head__upload" type="button" onclick="openUploadModal()">
           <svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 10.5V3M5 6l3-3 3 3M3 10.5v2.5h10v-2.5"/></svg>上传音频
         </button>
       </div>
@@ -110,8 +110,28 @@
       </div>
     </header>
 
+    <!-- 手机（≤820px）：原文 / 题目 / 本篇 三个页签，加译文开关和「更多」，吸在导航栏下面；宽屏不显示 -->
+    <nav id="ptabs" class="lr-ptabs" aria-label="精听页面">
+      <div class="ui-seg lr-ptabs__seg" role="tablist" aria-label="看哪一页">
+        <button class="ui-seg__btn ptab-btn" type="button" role="tab" data-ptab="script">原文</button>
+        <button id="ptabQ" class="ui-seg__btn ptab-btn" type="button" role="tab" data-ptab="questions" hidden>题目<span id="ptabQCount" class="ui-seg__count"></span></button>
+        <button class="ui-seg__btn ptab-btn" type="button" role="tab" data-ptab="side"><span id="ptabSideName">本篇</span><span id="ptabSideCount" class="ui-seg__count"></span></button>
+      </div>
+      <button id="ptabTrans" class="lr-ptabs__btn is-on" type="button" aria-pressed="true" aria-label="显示译文" title="显示译文" onclick="toggleTranslations()">译</button>
+      <button class="lr-ptabs__btn" type="button" aria-label="更多" title="更多" onclick="openMoreSheet()"><svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="3.5" cy="8" r="1.4"/><circle cx="8" cy="8" r="1.4"/><circle cx="12.5" cy="8" r="1.4"/></svg></button>
+    </nav>
+
     <div class="lr-body lr-detail-body">
       <div id="detailGrid" class="lr-container lr-detail">
+        <!-- 手机「题目」页签顶上：显示答案 / 重做、做题记录（手机上从页头和本篇卡片搬到这里，见 placePhoneBits） -->
+        <div id="pQHead" class="lr-qhead"></div>
+        <!-- 手机「原文」页签：重做时原文藏起来了 -->
+        <section id="scriptHidden" class="ui-card lr-script-off" aria-label="原文已隐藏" hidden>
+          <p class="lr-script-off__text">原文已隐藏：只听音频做题，交卷后再对着原文复盘。</p>
+          <button class="ui-btn ui-btn--md" type="button" onclick="toggleScript(true)">显示原文</button>
+        </section>
+        <!-- 手机：从题目跳到原文看出处时，页签条下面挂着这道题 -->
+        <div id="qChip" class="lr-qchip" role="group" aria-label="正在看的题" hidden></div>
         <!-- 重做、原文隐藏时：题目搬到这里，像一张卷子 -->
         <section id="paperPane" class="lr-paper" aria-label="题目" hidden>
           <div class="lr-paper__bar">
@@ -119,7 +139,8 @@
             <span class="lr-paper__msg">原文已隐藏：只听音频做题，交卷后再对着原文复盘。</span>
             <span id="paperProg" class="lr-paper__prog ui-num"></span>
             <span class="lr-spacer"></span>
-            <button class="lr-linkbtn" type="button" onclick="toggleScript(true)">显示原文</button>
+            <button class="lr-linkbtn lr-paper__script" type="button" onclick="toggleScript(true)">显示原文</button>
+            <button class="ui-btn ui-btn--sm lr-paper__card lr-ponly" type="button" onclick="setPtab('side')">答题卡</button>
             <button class="ui-btn ui-btn--sm ui-btn--primary lr-paper__submit" type="button" onclick="openSubmitDialog()">交卷</button>
           </div>
           <div id="paperQs"></div>
@@ -201,12 +222,19 @@
   <!-- ==================== 底部播放条 ==================== -->
   <footer id="lrPlayer" class="lr-player" aria-label="播放控制" hidden>
     <audio id="audioEl" preload="auto"></audio>
+    <!-- 手机：往回翻过、自动滚动停了的时候，点这里回到正在播的那句 -->
+    <button id="followPill" class="lr-follow" type="button" hidden onclick="resumeFollow()"><span id="followArrow" aria-hidden="true">↓</span>回到当前句</button>
     <div class="lr-player__inner">
+      <button id="speedChip" class="lr-pbtn lr-pbtn--speed lr-ponly" type="button" aria-label="倍速 1.0×，点一下换" onclick="cycleSpeed()">1.0×</button>
+      <button id="prevSegBtn" class="lr-pbtn lr-pbtn--prev lr-ponly" type="button" aria-label="上一句" title="上一句" onclick="stepSentence(-1)"><svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3.5 3v10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M13 3.5v9L5.5 8z"/></svg></button>
       <button id="playBtn" class="lr-play" type="button" aria-label="播放" onclick="togglePlay()"></button>
-      <span class="lr-time"><span id="curTime">0:00</span> / <span id="totTime">0:00</span></span>
+      <button id="nextSegBtn" class="lr-pbtn lr-pbtn--next lr-ponly" type="button" aria-label="下一句" title="下一句" onclick="stepSentence(1)"><svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M12.5 3v10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M3 3.5v9L10.5 8z"/></svg></button>
+      <button id="loopBtn" class="lr-pbtn lr-pbtn--loop lr-ponly" type="button" aria-pressed="false" aria-label="单句循环" title="单句循环" onclick="toggleLoop()"><svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 7V6a2 2 0 0 1 2-2h8.5M11 2l2 2-2 2M13.5 9v1a2 2 0 0 1-2 2H3M5 14l-2-2 2-2"/><path d="M7.4 7.2 8.3 6.6v3" stroke-width="1.3"/></svg></button>
+      <span class="lr-time"><span id="curTime">0:00</span><span class="lr-time__tot"> / <span id="totTime">0:00</span></span></span>
       <div id="progressWrap" class="lr-seek" role="slider" aria-label="播放进度" tabindex="0">
         <div class="lr-seek__track"><div id="progressFill" class="lr-seek__fill"></div><div id="progressThumb" class="lr-seek__thumb"></div></div>
       </div>
+      <span id="totTime2" class="lr-time lr-time--end lr-ponly">0:00</span>
       <div class="ui-seg lr-speed" role="group" aria-label="倍速">
         <button class="ui-seg__btn speed-btn" type="button" data-rate="0.8" onclick="setSpeed(0.8)">0.8×</button>
         <button class="ui-seg__btn speed-btn is-on" type="button" data-rate="1" onclick="setSpeed(1)">1.0×</button>
@@ -223,9 +251,9 @@
       <div class="ui-dialog__head"><h3 class="ui-dialog__title" id="uploadTitle">上传听力音频</h3><button class="ui-dialog__close" type="button" aria-label="关闭" onclick="closeUploadModal()">×</button></div>
       <div class="ui-dialog__body">
         <div class="ui-seg lr-src-tabs" role="tablist" aria-label="音频来源">
-          <button class="ui-seg__btn modal-tab" type="button" role="tab" data-tab="file" onclick="switchTab('file')">本地文件</button>
-          <button class="ui-seg__btn modal-tab" type="button" role="tab" data-tab="url" onclick="switchTab('url')">音频链接</button>
-          <button class="ui-seg__btn modal-tab" type="button" role="tab" data-tab="json" onclick="switchTab('json')">九分学长 JSON</button>
+          <button class="ui-seg__btn modal-tab" type="button" role="tab" data-tab="file" onclick="switchTab('file')"><span class="lr-donly">本地</span>文件</button>
+          <button class="ui-seg__btn modal-tab" type="button" role="tab" data-tab="url" onclick="switchTab('url')"><span class="lr-donly">音频</span>链接</button>
+          <button class="ui-seg__btn modal-tab" type="button" role="tab" data-tab="json" onclick="switchTab('json')">九分学长<span class="lr-donly"> JSON</span></button>
         </div>
         <div id="tabFile" style="display: flex; flex-direction: column; gap: 16px;">
           <label id="fileDropLabel" class="lr-drop">
@@ -237,7 +265,7 @@
           <label class="ui-field"><span class="ui-field__label">标题（可选）</span><input id="fileTitle" class="ui-input" placeholder="不填就用文件名" /><span class="ui-field__hint">支持 MP3、WAV、M4A、FLAC、OGG、MP4、WebM，最大 25 MB。</span></label>
         </div>
         <div id="tabUrl" style="display: flex; flex-direction: column; gap: 16px;" hidden>
-          <label class="ui-field"><span class="ui-field__label">音频链接</span><input id="urlInput" class="ui-input" placeholder="https://example.com/audio.mp3" inputmode="url" /><span class="ui-field__hint">要能直接下载的音频地址，最大 25 MB。</span></label>
+          <label class="ui-field"><span class="ui-field__label">音频链接</span><input id="urlInput" class="ui-input" placeholder="https://example.com/audio.mp3" inputmode="url" enterkeyhint="go" autocapitalize="off" autocorrect="off" spellcheck="false" /><span class="ui-field__hint">要能直接下载的音频地址，最大 25 MB。</span></label>
           <label class="ui-field"><span class="ui-field__label">标题（可选）</span><input id="urlTitle" class="ui-input" placeholder="不填就用链接里的文件名" /></label>
         </div>
         <!-- 九分学长 JSON：粘贴或选文件 → 预解析 → 导入；粘进来的内容不铺在框里（几 MB 会卡），只显示大小 -->
@@ -246,7 +274,7 @@
           <div id="jsonOr" class="lr-or">或者</div>
           <label id="jsonDrop" class="lr-drop lr-drop--sm">
             <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2.5h5l3 3v8H4z"/><path d="M9 2.5v3h3"/></svg>
-            <span class="lr-drop__name">选 .json 文件，或把文件拖进来</span>
+            <span class="lr-drop__name">选 .json 文件<span class="lr-hoveronly">，或把文件拖进来</span></span>
             <input type="file" id="jsonFileInput" accept=".json,.txt,application/json,text/plain" onchange="onJsonFile(this.files[0]); this.value = '';" />
           </label>
           <span id="jsonHint" class="ui-field__hint">九分学长交卷后的整段 JSON，单篇练习和组卷都可以，最大 25 MB。</span>
@@ -316,21 +344,23 @@
 
   <!-- ==================== 选中文字后的小工具条 ==================== -->
   <div id="selectionToolbar" class="lr-pop" role="toolbar" aria-label="给选中的文字" hidden>
+    <span id="selQuote" class="lr-pop__quote lr-ponly"></span>
     <button id="selVocabBtn" class="lr-pop__btn" type="button"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9"/></svg>释义</button>
     <span class="lr-pop__sep"></span>
     <button id="selNoteBtn" class="lr-pop__btn" type="button"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9"/></svg>笔记</button>
+    <button id="selCancelBtn" class="lr-pop__btn lr-pop__x lr-ponly" type="button" aria-label="取消选中">取消</button>
   </div>
 
   <!-- ==================== 生词面板：加释义 / 看释义 / 改释义 ==================== -->
   <div id="vocabPopover" class="lr-panel" role="dialog" aria-label="生词释义" hidden>
     <div id="vpWord" class="lr-panel__quote"></div>
     <div id="vpAddMode" style="display: flex; flex-direction: column; gap: 12px;">
-      <label class="ui-field"><span class="ui-field__label">中文释义</span><input id="vpInput" class="ui-input" placeholder="输入中文释义" /></label>
-      <div class="lr-panel__foot"><span class="lr-meta">回车保存</span><button class="ui-btn ui-btn--sm" type="button" onclick="hideVocabPopover()">取消</button><button class="ui-btn ui-btn--sm ui-btn--primary" type="button" onclick="saveVocab()">保存</button></div>
+      <label class="ui-field"><span class="ui-field__label">中文释义</span><input id="vpInput" class="ui-input" placeholder="输入中文释义" enterkeyhint="done" /></label>
+      <div class="lr-panel__foot"><span class="lr-meta lr-kbdhint">回车保存</span><button class="ui-btn ui-btn--sm" type="button" onclick="hideVocabPopover()">取消</button><button class="ui-btn ui-btn--sm ui-btn--primary" type="button" onclick="saveVocab()">保存</button></div>
     </div>
     <div id="vpViewMode" style="display: flex; flex-direction: column; gap: 12px;" hidden>
       <div id="vpMeaning" class="lr-panel__body"></div>
-      <div class="lr-panel__foot"><button class="ui-btn ui-btn--sm ui-btn--danger" type="button" onclick="deleteVocab()">删除</button><button class="ui-btn ui-btn--sm" type="button" onclick="editVocabMeaning()">改释义</button></div>
+      <div class="lr-panel__foot"><button class="ui-btn ui-btn--sm ui-btn--danger lr-panel__del" type="button" onclick="deleteVocab()">删除</button><button class="ui-btn ui-btn--sm lr-panel__edit" type="button" onclick="editVocabMeaning()">改释义</button></div>
     </div>
   </div>
 
@@ -339,11 +369,49 @@
     <div class="lr-panel__label">笔记 · <span id="npQuote" class="ui-en"></span></div>
     <div id="npEditMode" style="display: flex; flex-direction: column; gap: 12px;">
       <textarea id="npInput" class="ui-textarea" rows="3" placeholder="语法点、搭配、易错、联想……"></textarea>
-      <div class="lr-panel__foot"><span class="lr-meta">⌘ / Ctrl + 回车保存</span><button class="ui-btn ui-btn--sm" type="button" onclick="hideNotePopover()">取消</button><button class="ui-btn ui-btn--sm ui-btn--primary" type="button" onclick="saveNote()">保存</button></div>
+      <div class="lr-panel__foot"><span class="lr-meta lr-kbdhint">⌘ / Ctrl + 回车保存</span><button class="ui-btn ui-btn--sm" type="button" onclick="hideNotePopover()">取消</button><button class="ui-btn ui-btn--sm ui-btn--primary" type="button" onclick="saveNote()">保存</button></div>
     </div>
     <div id="npViewMode" style="display: flex; flex-direction: column; gap: 12px;" hidden>
       <div id="npBody" class="lr-panel__body"></div>
-      <div class="lr-panel__foot"><span id="npDate" class="lr-meta"></span><button class="ui-btn ui-btn--sm ui-btn--danger" type="button" onclick="deleteNote()">删除</button><button class="ui-btn ui-btn--sm" type="button" onclick="editCurrentNote()">编辑</button></div>
+      <div class="lr-panel__foot"><span id="npDate" class="lr-meta"></span><button class="ui-btn ui-btn--sm ui-btn--danger lr-panel__del" type="button" onclick="deleteNote()">删除</button><button class="ui-btn ui-btn--sm lr-panel__edit" type="button" onclick="editCurrentNote()">编辑</button></div>
+    </div>
+  </div>
+
+  <!-- 手机：生词 / 笔记面板从底部升起时，后面盖一层，点一下收起 -->
+  <div id="panelScrim" class="lr-scrim" hidden></div>
+
+  <!-- ==================== 手机：听错原因（A–E，可多选） ==================== -->
+  <div id="whySheet" class="ui-dialog-backdrop lr-sheet" hidden>
+    <div class="ui-dialog" role="dialog" aria-modal="true" aria-labelledby="whyTitle">
+      <div class="ui-dialog__head"><h3 class="ui-dialog__title" id="whyTitle">这句为什么没听出来？</h3><button class="ui-dialog__close" type="button" aria-label="关闭" onclick="closeWhySheet()">×</button></div>
+      <div class="ui-dialog__body">
+        <p id="whyQuote" class="lr-sheet__quote"></p>
+        <div id="whyList" class="lr-whylist" role="group" aria-label="听错原因，可多选"></div>
+      </div>
+      <div class="ui-dialog__foot"><span class="lr-meta lr-sheet__foothint">可多选，再点一次取消</span><button class="ui-btn ui-btn--md ui-btn--primary" type="button" onclick="closeWhySheet()">完成</button></div>
+    </div>
+  </div>
+
+  <!-- ==================== 手机：精听页「更多」 ==================== -->
+  <div id="moreSheet" class="ui-dialog-backdrop lr-sheet" hidden>
+    <div class="ui-dialog" role="dialog" aria-modal="true" aria-labelledby="moreTitle">
+      <div class="ui-dialog__head"><h3 class="ui-dialog__title" id="moreTitle">更多</h3><button class="ui-dialog__close" type="button" aria-label="关闭" onclick="closeMoreSheet()">×</button></div>
+      <div class="ui-dialog__body lr-mlist">
+        <button id="moreFollow" class="lr-mrow" type="button" role="switch" aria-checked="true" onclick="toggleFollowPref()"><span class="lr-mrow__main"><b>跟随播放</b><span>播放时字幕自动滚到正在播的那句</span></span><span class="lr-switch" aria-hidden="true"></span></button>
+        <button id="moreScript" class="lr-mrow" type="button" role="switch" aria-checked="false" onclick="toggleScript()" hidden><span class="lr-mrow__main"><b>显示原文</b><span>重做时边听边对着原文；关掉就只听音频做题</span></span><span class="lr-switch" aria-hidden="true"></span></button>
+        <a class="lr-mrow" href="/listening_review/notes"><span class="lr-mrow__main"><b>听力笔记本</b><span>所有文章的笔记和生词，可以翻卡复习</span></span><span class="lr-mrow__go" aria-hidden="true">›</span></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 手机：列表卡片的「⋯」 ==================== -->
+  <div id="cardSheet" class="ui-dialog-backdrop lr-sheet" hidden>
+    <div class="ui-dialog" role="dialog" aria-modal="true" aria-labelledby="cardSheetTitle">
+      <div class="ui-dialog__head"><h3 class="ui-dialog__title lr-sheet__title" id="cardSheetTitle"></h3><button class="ui-dialog__close" type="button" aria-label="关闭" onclick="closeCardSheet()">×</button></div>
+      <div class="ui-dialog__body lr-mlist">
+        <button id="cardSheetRetry" class="lr-mrow" type="button" hidden><span class="lr-mrow__main"><b>重试</b><span id="cardSheetErr"></span></span></button>
+        <button id="cardSheetDelete" class="lr-mrow lr-mrow--danger" type="button"><span class="lr-mrow__main"><b>删除这篇</b><span>音频、字幕、笔记和生词一起删，删前还会再问一次</span></span></button>
+      </div>
     </div>
   </div>
 
@@ -379,6 +447,12 @@ const state = {
   showScript: false,      // 重做时显示原文；不显示时题目搬到左边像一张卷子
   redo: null,             // 重做中的答卷 { answers: {题号: 填的}, elapsed: 秒 }；多选题一组的选择记在第一个题号上
   playUntil: null,        // 「播放这一段」播到这里自动停
+  loopFrom: null,         // 单句循环（手机）：播到 playUntil 就跳回这里接着播
+  loop: false,            // 手机播放条上的「单句循环」开着没有
+  ptab: 'script',         // 手机页签：script 原文 / questions 题目 / side 本篇（重做时叫答题卡）
+  ptabScroll: {},         // 手机每个页签各自记着滚到哪了
+  follow: true,           // 手机：字幕跟着播放自动滚；用户自己往别处翻了就先停下
+  whySeg: null,           // 手机：听错原因面板正在改哪一句
   json: null,             // 上传弹窗 JSON 页：{ raw, name, size, preview, choices }
   lastPointer: 'mouse',
   vocabAudioPauseActive: false,
@@ -399,6 +473,8 @@ const ICONS = {
   starOn: '<svg class="lr-ico" viewBox="0 0 16 16" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M8 2.2l1.8 3.7 4 .6-2.9 2.8.7 4L8 11.4l-3.6 1.9.7-4L2.2 6.5l4-.6z"/></svg>',
   play: '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M5 3.5v9l7.5-4.5z"/></svg>',
   pause: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5.5 3.5v9M10.5 3.5v9"/></svg>',
+  more: '<svg class="lr-ico" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="3.5" cy="8" r="1.3"/><circle cx="8" cy="8" r="1.3"/><circle cx="12.5" cy="8" r="1.3"/></svg>',
+  replay: '<svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8a5 5 0 1 0 1.5-3.5M3 3v2.5h2.5"/></svg>',
   trash: '<svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 8.5h5.8l.6-8.5"/></svg>',
   edit: '<svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 2.5 13.5 5 5.5 13H3v-2.5z"/></svg>',
   retry: '<svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 8a5 5 0 1 1-1.5-3.5M13 3v2.5h-2.5"/></svg>',
@@ -415,6 +491,10 @@ const GAP_SECONDS = 8;          // 两句之间空这么久就在字幕里画一
 const JSON_MAX = 25 * 1024 * 1024;
 const REDO_PREFIX = 'listening-redo:';       // 重做到一半的答卷，按篇存在这台设备的浏览器里
 const SCRIPT_KEY = 'listening-redo-script';  // 重做时显示原文（1）还是隐藏（0）
+const FOLLOW_KEY = 'listening-follow';       // 手机「更多」里的跟随播放：关掉（0）就不自动滚
+// 手机（≤820px）：页签代替右栏抽屉，播放条多了上一句 / 下一句 / 单句循环；821–1099 还是抽屉，宽屏不变
+const phoneMQ = window.matchMedia('(max-width: 820px)');
+function isPhone() { return phoneMQ.matches; }
 
 function beginVocabAudioPause() {
   if (state.vocabAudioPauseActive) {
@@ -490,9 +570,12 @@ async function maybeDeepLinkFromUrl() {
   const params = new URLSearchParams(location.search);
   const pid = params.get('project');
   if (!pid) return;
-  history.replaceState(null, '', '/listening_review'); // avoid re-triggering on refresh
-  await openProject(pid);
-  if (state.view !== 'detail') return; // openProject bailed (still processing / error)
+  // 地址栏只留 ?project=，刷新还在这篇；pushed 记着这条历史是不是从列表点进来时加的（是的话「‹」就退回那条）
+  const st = history.state;
+  const pushed = !!(st && st.lr === 'detail' && st.pid === pid && st.pushed);
+  history.replaceState({ lr: 'detail', pid, pushed }, '', projectUrl(pid));
+  await openProject(pid, { fromHistory: true });
+  if (state.view !== 'detail') { history.replaceState({ lr: 'list' }, '', '/listening_review'); return; } // openProject bailed (still processing / error)
   const segParam = params.get('seg');
   if (segParam === null) return;
   const segId = parseInt(segParam);
@@ -517,6 +600,8 @@ function switchView(view) {
   document.getElementById('listView').hidden = view !== 'list';
   document.getElementById('detailView').hidden = view !== 'detail';
   document.getElementById('lrPlayer').hidden = view !== 'detail';
+  document.body.classList.toggle('lr-in-detail', view === 'detail');   // 手机上提示条浮在播放条上面
+  document.documentElement.classList.toggle('lr-detail-on', view === 'detail');
   window.scrollTo(0, 0);
 }
 
@@ -604,7 +689,7 @@ function projectCardHtml(p) {
   const date = p.created_at ? formatDate(p.created_at) : '';
   const jiufen = p.source_type === 'jiufen';
   let dur = p.duration ? `<span class="lr-dot">${formatTime(p.duration)}</span>` : '';
-  if (jiufen) dur += '<span class="lr-dot">九分学长</span>' + (p.attempt_count > 1 ? `<span class="lr-dot">做过 ${p.attempt_count} 次</span>` : '');
+  if (jiufen) dur += '<span class="lr-dot lr-proj__src lr-proj__src--first">九分学长</span>' + (p.attempt_count > 1 ? `<span class="lr-dot lr-proj__src">做过 ${p.attempt_count} 次</span>` : '');
   let tag = '', body = '';
   if (p.status === 'downloading') {
     tag = '<span class="ui-tag ui-tag--warn">下载中</span>';
@@ -624,10 +709,10 @@ function projectCardHtml(p) {
     const score = jiufen && p.score && p.score.total ? stat(`${p.score.correct}/${p.score.total}`, '答对') : '';
     body = `<div class="lr-proj__stats${score ? ' lr-proj__stats--4' : ''}">${score}${stat(p.checkin_count || 0, '打卡')}${stat(p.vocab_count || 0, '生词')}${stat(p.note_count || 0, '笔记')}</div>`;
   }
-  const openAttrs = busy ? '' : ` role="link" tabindex="0" aria-label="打开 ${title}" data-act="open" data-id="${esc(p.id)}"`;
+  const openAttrs = busy ? ` data-busy="${esc(p.id)}"` : ` role="link" tabindex="0" aria-label="打开 ${title}" data-act="open" data-id="${esc(p.id)}"`;
   return `
     <div class="lr-proj${busy ? ' is-busy' : ''}"${openAttrs}>
-      <div class="lr-proj__head"><h2 class="lr-proj__title">${title}</h2><button class="lr-icon lr-icon--danger" type="button" data-act="delete" data-id="${esc(p.id)}" aria-label="删除 ${title}">${ICONS.trash}</button></div>
+      <div class="lr-proj__head"><h2 class="lr-proj__title">${title}</h2><button class="lr-icon lr-icon--danger lr-proj__del" type="button" data-act="delete" data-id="${esc(p.id)}" aria-label="删除 ${title}">${ICONS.trash}</button><button class="lr-icon lr-proj__more" type="button" data-act="more" data-id="${esc(p.id)}" aria-label="${title} 的更多操作">${ICONS.more}</button></div>
       <div class="lr-proj__meta"><span>${date}</span>${dur}${tag}</div>
       ${body}
     </div>`;
@@ -643,8 +728,14 @@ document.getElementById('projectGrid').addEventListener('click', (e) => {
   if (!btn) return;
   const id = btn.dataset.id;
   if (btn.dataset.act === 'delete') { e.stopPropagation(); openDeleteDialog(id); }
+  else if (btn.dataset.act === 'more') { e.stopPropagation(); openCardSheet(id); }
   else if (btn.dataset.act === 'retry') { e.stopPropagation(); retryProject(id); }
   else if (btn.dataset.act === 'open') openProject(id);
+});
+// 手机：还在转录 / 翻译的卡片点了说一声，免得以为点不动
+document.getElementById('projectGrid').addEventListener('click', (e) => {
+  const card = e.target.closest('[data-busy]');
+  if (card && isPhone() && !e.target.closest('[data-act]')) openProject(card.dataset.busy);
 });
 document.getElementById('projectGrid').addEventListener('keydown', (e) => {
   if (e.key !== 'Enter' && e.key !== ' ') return;
@@ -669,11 +760,13 @@ function openDeleteDialog(id) {
   document.getElementById('deleteText').textContent = `「${p.title}」的${what}会一起删除，删了不能恢复。`;
   document.getElementById('deleteModal').hidden = false;
   document.getElementById('deleteConfirmBtn').focus();
+  Layers.push('delete', closeDeleteDialog);
 }
 
 function closeDeleteDialog() {
   document.getElementById('deleteModal').hidden = true;
   state.pendingDelete = null;
+  Layers.pop('delete');
 }
 
 async function confirmDelete() {
@@ -748,7 +841,8 @@ async function continueLast() {
 // ===================================================================
 //  Upload Modal
 // ===================================================================
-const FILE_DROP_TEXT = '点这里选音频文件，或把文件拖进来';
+// 手机上没法拖文件，就不提「拖进来」
+const FILE_DROP_TEXT = window.matchMedia('(hover: none)').matches ? '点这里选音频文件' : '点这里选音频文件，或把文件拖进来';
 const FILE_DROP_META = 'MP3、WAV、M4A、FLAC、OGG、MP4、WebM';
 
 function openUploadModal() {
@@ -762,9 +856,10 @@ function openUploadModal() {
   document.getElementById('uploadFileBtn').disabled = true;
   resetJsonTab(false);
   switchTab('file');
+  Layers.push('upload', closeUploadModal);
 }
 
-function closeUploadModal() { document.getElementById('uploadModal').hidden = true; }
+function closeUploadModal() { document.getElementById('uploadModal').hidden = true; Layers.pop('upload'); }
 
 function switchTab(tab) {
   document.querySelectorAll('.modal-tab').forEach(t => {
@@ -898,6 +993,7 @@ function onJsonFile(file) {
 }
 
 const jsonPasteEl = document.getElementById('jsonPaste');
+if (window.matchMedia('(hover: none)').matches) jsonPasteEl.placeholder = '长按这里，粘贴整段 JSON。\n几 MB 也没关系：粘进来只显示大小，不把内容铺在框里，不会卡。';
 jsonPasteEl.addEventListener('paste', (e) => {
   const text = e.clipboardData ? e.clipboardData.getData('text') : '';
   if (!text) return;   // 拿不到剪贴板的浏览器走下面的 input
@@ -974,8 +1070,8 @@ function renderJsonPreview() {
     }
     const disabled = !p.has_audio && !(ex && c.mode === 'update');
     return `<div class="lr-imp__part${off ? ' is-off' : ''}${disabled ? ' is-disabled' : ''}">
-      <input class="lr-imp__check" type="checkbox" data-k="${k}"${c.include ? ' checked' : ''}${disabled ? ' disabled' : ''} aria-label="导入 ${esc(p.label)}" />
-      <span class="lr-imp__label">${esc(p.label)}</span>
+      <input id="impChk${k}" class="lr-imp__check" type="checkbox" data-k="${k}"${c.include ? ' checked' : ''}${disabled ? ' disabled' : ''} aria-label="导入 ${esc(p.label)}" />
+      <label class="lr-imp__label" for="impChk${k}">${esc(p.label)}</label>
       ${name}
       <div class="lr-imp__stats">${stats.join('')}</div>
       ${extra}
@@ -1117,7 +1213,10 @@ async function doImportJson(retried) {
 // ===================================================================
 //  Detail View
 // ===================================================================
-async function openProject(id) {
+function projectUrl(id) { return '/listening_review?project=' + encodeURIComponent(id); }
+
+// fromHistory：返回 / 前进键、深链接打开的，不再加历史
+async function openProject(id, { fromHistory = false } = {}) {
   const proj = state.projects.find(p => p.id === id);
   if (!proj) return;
   if (proj.status === 'downloading') { showToast('还在下载音频，稍等一会儿'); return; }
@@ -1128,12 +1227,23 @@ async function openProject(id) {
   const r = await API.get('/api/listening_review/project/' + id);
   if (r.error) { showToast(r.error, 'error'); return; }
 
+  // 从列表点进来的加一条历史：返回键回列表，刷新还在这篇
+  if (!fromHistory) {
+    const st = history.state;
+    if (!popSkip && st && st.lr === 'detail') history.replaceState({ lr: 'detail', pid: id, pushed: !!st.pushed }, '', projectUrl(id));
+    else pushHistory({ lr: 'detail', pid: id, pushed: true }, projectUrl(id));   // 刚点了「‹」、退回列表那条还没到：等它到了再加
+  }
   state.currentProject = r.project;
   state.currentData = r.data;
   state.exam = r.exam && Array.isArray(r.exam.groups) ? r.exam : null;
   state.attemptIdx = state.exam ? (state.exam.attempts || []).length - 1 : -1;
   state.selQ = null;
   state.playUntil = null;
+  state.loopFrom = null;
+  state.loop = false;
+  state.follow = true;
+  state.ptab = 'script';
+  state.ptabScroll = {};
   state.activeSegmentId = -1;
   state.pickerSeg = null;
   // 上次重做到一半就离开的，回来接着做
@@ -1159,6 +1269,9 @@ async function openProject(id) {
   renderMode();
   renderNotesView();
   updateNotesButton();
+  syncLoopBtn();
+  // 手机：重做到一半回来、原文藏着的，直接打开题目页签
+  if (state.mode === 'redo' && !state.showScript) setPtab('questions');
 }
 
 function renderDetailMeta() {
@@ -1173,7 +1286,9 @@ function renderDetailMeta() {
   document.getElementById('detailMeta').textContent = metaParts.join(' · ');
 }
 
-function backToList() {
+// fromHistory：按了返回键（历史已经退回去了）；否则是点「‹」，从列表点进来的就把那条历史也退掉
+function backToList({ fromHistory = false } = {}) {
+  closeAllLayers();
   hideNotePopover({ resumeAudio: false });
   hideVocabPopover({ resumeAudio: false });
   hideSelectionToolbar({ resumeAudio: false });
@@ -1193,7 +1308,15 @@ function backToList() {
   syncRedoClock();
   state.selQ = null;
   state.playUntil = null;
+  state.loopFrom = null;
+  state.loop = false;
   state.activeSegmentId = -1;
+  updateFollowPill();
+  if (!fromHistory) {
+    const st = history.state;
+    if (st && st.lr === 'detail' && st.pushed && !st.layer) { popSkip++; history.back(); }
+    else history.replaceState({ lr: 'list' }, '', '/listening_review');
+  }
   switchView('list');
   loadProjects();
 }
@@ -1205,6 +1328,9 @@ function toggleTranslations() {
   btn.classList.toggle('ui-btn--soft', state.showTranslations);
   btn.setAttribute('aria-pressed', state.showTranslations ? 'true' : 'false');
   document.getElementById('transCheck').style.display = state.showTranslations ? '' : 'none';
+  const pt = document.getElementById('ptabTrans');
+  pt.classList.toggle('is-on', state.showTranslations);
+  pt.setAttribute('aria-pressed', state.showTranslations ? 'true' : 'false');
 }
 
 // 右侧「本篇」栏：宽屏收起 / 展开，窄屏是抽屉
@@ -1219,7 +1345,8 @@ window.matchMedia('(min-width: 1100px)').addEventListener('change', (e) => {
   if (state.view === 'detail') toggleSide(e.matches);
 });
 
-function isDrawerMode() { return !window.matchMedia('(min-width: 1100px)').matches; }
+// 821–1099px 右栏是抽屉；手机（≤820px）换成页签，不算抽屉
+function isDrawerMode() { return !window.matchMedia('(min-width: 1100px)').matches && !isPhone(); }
 
 // 右栏宽度：按住两栏中间的分隔条左右拖，320–720（字幕至少留 480）；拖过就记在这台设备的浏览器里，
 // 以后每篇都用这个宽度；双击分隔条恢复默认（导入的篇 440，其余 320）。窄屏是抽屉，不能拖
@@ -1345,8 +1472,23 @@ function renderLyrics() {
     prevEnd = Math.max(prevEnd || 0, seg.end);
   });
   if (inBand) html += '</div>';
+  if (!redo) html += endCardHtml();
   container.innerHTML = html;
   renderSideNums();
+  updateFollowPill();
+}
+
+// 手机：字幕最后一张「听完了」卡片，打卡 / 标熟就在手边（宽屏不显示，宽屏在右栏）
+function endCardHtml() {
+  const p = state.currentProject || {};
+  const m = !!p.mastered;
+  return `<div class="lr-endcard" role="group" aria-label="听完了">
+    <div class="lr-endcard__t"><b>听完了</b><span>已打卡 <span class="js-checkin-n">${p.checkin_count || 0}</span> 次 · 听熟了就标熟，列表里归到「已掌握」</span></div>
+    <div class="lr-endcard__btns">
+      <button class="ui-btn ui-btn--md" type="button" data-act="end-checkin">${ICONS.check}打卡</button>
+      <button class="ui-btn ui-btn--md js-mastered${m ? ' is-mastered' : ''}" type="button" data-act="end-mastered" aria-pressed="${m}">${m ? `${ICONS.check}已掌握` : '标熟'}</button>
+    </div>
+  </div>`;
 }
 
 function lineHtml(seg, marks) {
@@ -1369,8 +1511,21 @@ function lineHtml(seg, marks) {
         <div class="lr-line__en"><span class="line-text" data-seg-id="${seg.id}">${renderAnnotatedText(seg.text, segAnnots, segNotes, ans)}</span>${qtags}</div>
         ${translation}
         <div class="lr-why-slot" data-seg-id="${seg.id}">${starred ? whyHtml(seg.id) : ''}</div>
+        ${actsHtml(seg, starred)}
       </div>
     </div>`;
+}
+
+// 手机：正在播的那句下面一行操作。收藏在最前；收藏了才有「原因」（听错原因要先收藏，和宽屏一样）
+function actsHtml(seg, starred) {
+  const n = getSegmentErrorTags(seg.id).length;
+  return `<div class="lr-acts" role="group" aria-label="这一句">
+    <button class="lr-act lr-act--star star-btn${starred ? ' is-on' : ''}" type="button" data-seg-id="${seg.id}" aria-pressed="${starred}" aria-label="${starred ? '取消收藏' : '收藏这句'}">${starred ? ICONS.starOn : ICONS.star}<span class="lr-act__t">收藏</span></button>
+    <button class="lr-act lr-act--why" type="button" data-act="why" data-seg-id="${seg.id}">原因<span class="lr-act__n">${n || ''}</span></button>
+    <button class="lr-act" type="button" data-act="replay" data-seg-id="${seg.id}">${ICONS.replay}重听</button>
+    <button class="lr-act" type="button" data-act="snote" data-seg-id="${seg.id}">${ICONS.edit}笔记</button>
+    <span class="lr-acts__time ui-num">${formatTime(seg.start)}</span>
+  </div>`;
 }
 
 function getSegmentErrorTags(segId) {
@@ -1402,7 +1557,7 @@ function whyHtml(segId) {
     </div>`;
   }
   const btnText = selected.length ? '改' : '选原因';
-  return `<div class="lr-why"><span class="lr-why__label">听错原因</span>${renderRestChips(selected)}<button class="lr-why__add" type="button" data-act="open-picker" data-seg-id="${segId}">${btnText}</button></div>`;
+  return `<div class="lr-why${selected.length ? '' : ' is-empty'}"><span class="lr-why__label">听错原因</span>${renderRestChips(selected)}<button class="lr-why__add" type="button" data-act="open-picker" data-seg-id="${segId}">${btnText}</button></div>`;
 }
 
 function syncErrorTagUi(segId) {
@@ -1410,6 +1565,8 @@ function syncErrorTagUi(segId) {
   if (!slot) return;
   const starred = (state.currentData?.starred_segments || []).includes(segId);
   slot.innerHTML = starred ? whyHtml(segId) : '';
+  const n = slot.closest('.lr-line')?.querySelector('.lr-act__n');
+  if (n) n.textContent = getSegmentErrorTags(segId).length || '';
 }
 
 function openErrorPicker(segId) {
@@ -1489,6 +1646,9 @@ function hasTextSelection() {
 
 // Click: seek / star / error reasons / view annotation
 lyricsContainer.addEventListener('click', (e) => {
+  const lineAct = e.target.closest('.lr-acts [data-act], .lr-endcard [data-act]');
+  if (lineAct) { e.stopPropagation(); onLineAct(lineAct); return; }
+  if (e.target.closest('.lr-acts, .lr-endcard') && !e.target.closest('.star-btn')) return;
   const starBtn = e.target.closest('.star-btn');
   if (starBtn) { e.stopPropagation(); toggleStar(parseInt(starBtn.dataset.segId)); return; }
 
@@ -1526,7 +1686,7 @@ lyricsContainer.addEventListener('click', (e) => {
   if (hasTextSelection()) return;
 
   const line = e.target.closest('.lr-line');
-  if (line) seekToSegment(parseInt(line.dataset.segId));
+  if (line) { state.follow = true; seekToSegment(parseInt(line.dataset.segId)); }
 });
 
 document.addEventListener('pointerdown', (e) => { state.lastPointer = e.pointerType || 'mouse'; }, true);
@@ -1614,7 +1774,9 @@ function navHeight() {
 function showSelectionToolbar(rect) {
   hideSelectionToolbar({ resumeAudio: false }); // clear any previous toolbar
   const tb = document.getElementById('selectionToolbar');
+  document.getElementById('selQuote').textContent = state.pendingVocab ? state.pendingVocab.word : '';
   tb.hidden = false;
+  updateFollowPill();
   const cx = rect.left + window.scrollX + rect.width / 2;
   const w = tb.offsetWidth;
   let left = cx - w / 2;
@@ -1631,7 +1793,16 @@ function showSelectionToolbar(rect) {
 function hideSelectionToolbar({ resumeAudio = true } = {}) {
   document.getElementById('selectionToolbar').hidden = true;
   if (resumeAudio) endVocabAudioPause();
+  updateFollowPill();
 }
+
+document.getElementById('selCancelBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  hideSelectionToolbar();
+  state.pendingVocab = null;
+  const sel = window.getSelection();
+  if (sel) sel.removeAllRanges();
+});
 
 // 工具条按钮不要抢走选区（手机上一碰就会清掉选中）
 document.getElementById('selectionToolbar').addEventListener('mousedown', (e) => e.preventDefault());
@@ -1670,7 +1841,9 @@ function showAddPopover(word, rect) {
 
   pop.hidden = false;
   positionPopover(pop, rect);
-  setTimeout(() => document.getElementById('vpInput').focus(), 30);
+  openPanelLayer('vocab');
+  if (isPhone()) document.getElementById('vpInput').focus();
+  else setTimeout(() => document.getElementById('vpInput').focus(), 30);
 }
 
 function showViewPopover(annotEl) {
@@ -1692,6 +1865,7 @@ function showViewPopover(annotEl) {
 
   pop.hidden = false;
   positionPopover(pop, annotEl.getBoundingClientRect());
+  openPanelLayer('vocab');
 }
 
 // 看释义 → 改释义（后端按 id 更新 meaning）
@@ -1702,7 +1876,8 @@ function editVocabMeaning() {
   state.editingAnnot = annot;
   document.getElementById('vpInput').value = annot.meaning;
   setVocabMode('edit');
-  setTimeout(() => { const i = document.getElementById('vpInput'); i.focus(); i.select(); }, 30);
+  if (isPhone()) document.getElementById('vpInput').focus();
+  else setTimeout(() => { const i = document.getElementById('vpInput'); i.focus(); i.select(); }, 30);
 }
 
 function positionPopover(pop, rect) {
@@ -1726,6 +1901,7 @@ function hideVocabPopover({ resumeAudio = true } = {}) {
   state.pendingVocab = null;
   state.viewingAnnot = null;
   state.editingAnnot = null;
+  closePanelLayer('vocab');
   if (resumeAudio) endVocabAudioPause();
 }
 
@@ -1813,7 +1989,9 @@ function openNoteAdd(pending, rect) {
 
   pop.hidden = false;
   positionPopover(pop, rect);
-  setTimeout(() => document.getElementById('npInput').focus(), 30);
+  openPanelLayer('note');
+  if (isPhone()) document.getElementById('npInput').focus();
+  else setTimeout(() => document.getElementById('npInput').focus(), 30);
 }
 
 // Open an existing note in read mode (anchored to its highlight element).
@@ -1837,6 +2015,7 @@ function openNoteView(noteEl) {
 
   pop.hidden = false;
   positionPopover(pop, noteEl.getBoundingClientRect());
+  openPanelLayer('note');
 }
 
 // View mode → edit mode for the current note.
@@ -1845,7 +2024,8 @@ function editCurrentNote() {
   state.editingNote = state.viewingNote;
   document.getElementById('npInput').value = state.viewingNote.note;
   setNoteMode('edit');
-  setTimeout(() => document.getElementById('npInput').focus(), 30);
+  if (isPhone()) document.getElementById('npInput').focus();
+  else setTimeout(() => document.getElementById('npInput').focus(), 30);
 }
 
 async function saveNote() {
@@ -1894,6 +2074,7 @@ function hideNotePopover({ resumeAudio = true } = {}) {
   state.notePending = null;
   state.viewingNote = null;
   state.editingNote = null;
+  closePanelLayer('note');
   if (resumeAudio) endVocabAudioPause();
 }
 
@@ -1925,6 +2106,7 @@ function renderSideNums() {
   document.getElementById('sideStarNum').textContent = (d.starred_segments || []).length;
   document.getElementById('sideNotesNum').textContent = (d.notes || []).length + (d.vocab_annotations || []).length;
   document.getElementById('sideCheckinNum').textContent = state.currentProject?.checkin_count || 0;
+  renderPtabLabels();
 }
 
 function refreshNotesView() {
@@ -2016,13 +2198,16 @@ function jumpToNote(segId) {
   if (isDrawerMode()) toggleSide(false);
   const seg = state.currentData?.segments.find(s => s.id === segId);
   if (!seg) return;
+  if (isPhone()) { setPtab('script'); state.follow = true; }
   audioEl.currentTime = seg.start;
+  retargetLoop(seg.start);
   state.activeSegmentId = segId;
   highlightSegment(segId);
 }
 
 function scrollThen(el, fn) {
   if (isDrawerMode()) toggleSide(false);
+  if (isPhone()) { setPtab('script'); state.follow = false; }
   el.scrollIntoView({ block: 'center', behavior: 'smooth' });
   setTimeout(fn, 360);
 }
@@ -2137,7 +2322,8 @@ function questionMarks() {
 function renderExamSide() {
   const exam = state.exam;
   document.getElementById('sideTabs').hidden = !exam;
-  document.getElementById('notesHeadRow').hidden = !!exam;
+  // 手机上「本篇笔记」单独在本篇页签里，标题留着
+  document.getElementById('notesHeadRow').hidden = !!exam && !isPhone();
   const att = currentAttempt();
   const src = document.getElementById('sideSrc');
   src.hidden = !att;
@@ -2383,7 +2569,7 @@ function qxHtml(q, labels, multi) {
     if (!ok) ans.push(`<span>正确答案<b class="is-ok">${esc(displayAnswer(q.answer))}</b></span>`);
   }
   const play = evidenceSegs(q).length
-    ? `<button class="ui-btn ui-btn--sm" type="button" data-act="q-play" data-q="${esc(q.num)}">${ICONS.play}播放出处</button>` : '';
+    ? `<button class="ui-btn ui-btn--sm lr-ponly" type="button" data-act="q-script" data-q="${esc(q.num)}">看原文出处</button><button class="ui-btn ui-btn--sm" type="button" data-act="q-play" data-q="${esc(q.num)}">${ICONS.play}播放出处</button>` : '';
   const head = labels && labels.length
     ? `<div class="lr-qx__head">第 ${esc(q.num)} 题${labels.map(l => ` · <span>${esc(l)}</span>`).join('')}</div>` : '';
   return `<div class="lr-qx">${head}
@@ -2688,6 +2874,7 @@ function renderQuestions() {
 }
 
 function scrollSideTo(el) {
+  if (isPhone()) { scrollPageTo(el, 12); return; }
   const side = document.getElementById('notesSide');
   const sr = side.getBoundingClientRect(), r = el.getBoundingClientRect();
   if (r.top >= sr.top + 12 && r.bottom <= sr.bottom - 12) return;
@@ -2695,6 +2882,14 @@ function scrollSideTo(el) {
 }
 
 function scrollScriptTo(el) {
+  if (isPhone()) {
+    if (state.ptab !== 'script') return;   // 字幕在别的页签后面藏着，量不出位置
+    const topH = stickyTop(), bottomH = playerHeight();
+    const r = el.getBoundingClientRect();
+    const y = r.top + window.scrollY - topH - Math.max(12, (window.innerHeight - topH - bottomH - r.height) / 2);
+    window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+    return;
+  }
   const topH = navHeight();
   const bottomH = document.getElementById('lrPlayer').offsetHeight;
   const visibleH = window.innerHeight - topH - bottomH;
@@ -2709,8 +2904,10 @@ function selectQuestion(num, { fromScript = false } = {}) {
   state.selQ = num;
   renderQuestions();
   renderLyrics();
+  syncQChip();
   if (num === null) return;
-  if (fromScript) {
+  if (fromScript && isPhone()) setPtab('questions');
+  else if (fromScript) {
     setSideTab('questions');
     if (!state.sideOpen) toggleSide(true);
   }
@@ -2727,9 +2924,22 @@ function playEvidence(num) {
   if (!segs.length) return;
   if (isDrawerMode()) toggleSide(false);
   markVocabAudioManualOverride();
-  audioEl.currentTime = Math.min(...segs.map(s => s.start));
+  const from = Math.min(...segs.map(s => s.start));
+  audioEl.currentTime = from;
   state.playUntil = Math.max(...segs.map(s => s.end));
+  state.loopFrom = state.loop ? from : null;   // 手机开着单句循环：出处这一段反复播
+  state.follow = true;
   audioEl.play().catch(() => {});
+}
+
+// 手机：题目里点「看原文出处」，切到原文页签、滚到出处，页签条下面挂着这道题
+function goToEvidence(num) {
+  if (state.selQ !== num) { state.selQ = num; renderQuestions(); renderLyrics(); }
+  setPtab('script');
+  state.follow = false;
+  syncQChip();
+  const band = document.querySelector('#lyricsContainer .lr-evi');
+  if (band) scrollScriptTo(band);
 }
 
 const questionsPaneEl = document.getElementById('questionsPane');
@@ -2737,6 +2947,7 @@ questionsPaneEl.addEventListener('click', (e) => {
   if (state.mode === 'redo') return;   // 重做时的点击由 onRedoClick 管
   const act = e.target.closest('[data-act]');
   if (act && act.dataset.act === 'q-play') { playEvidence(act.dataset.q); return; }
+  if (act && act.dataset.act === 'q-script') { goToEvidence(act.dataset.q); return; }
   if (act && act.dataset.act === 'q-close') { selectQuestion(null); return; }
   if (e.target.closest('.lr-qx')) return;
   const hit = e.target.closest('[data-q]');
@@ -2792,10 +3003,14 @@ function setMode(mode) {
   state.mode = mode;
   state.selQ = null;
   state.playUntil = null;
+  state.loopFrom = null;
   if (mode === 'redo' && !state.redo) state.redo = { answers: {}, elapsed: 0 };
   saveDraft();
   renderMode();
-  if (mode === 'redo' && !state.showScript) window.scrollTo({ top: 0 });
+  if (mode === 'redo' && !state.showScript) {
+    if (isPhone()) setPtab('questions', { top: true });
+    else window.scrollTo({ top: 0 });
+  }
 }
 document.querySelectorAll('.mode-btn').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
 
@@ -2803,6 +3018,7 @@ function toggleScript(force) {
   state.showScript = typeof force === 'boolean' ? force : !state.showScript;
   try { localStorage.setItem(SCRIPT_KEY, state.showScript ? '1' : '0'); } catch {}
   renderMode();
+  renderMoreSheet();
 }
 
 // 两档切换时整页跟着变：页头按钮、左边是字幕还是卷子、右栏顶上是「本篇」还是答题卡
@@ -2825,6 +3041,7 @@ function renderMode() {
   grid.classList.toggle('is-redo', redo);
   grid.classList.toggle('is-paper', paper);
   document.getElementById('lyricsContainer').hidden = paper;
+  document.getElementById('scriptHidden').hidden = !paper;
   document.getElementById('paperPane').hidden = !paper;
   document.getElementById('redoCard').hidden = !redo;
   document.getElementById('sideInfoCard').hidden = redo;
@@ -2834,6 +3051,8 @@ function renderMode() {
   renderRedoCard();
   syncRedoClock();
   applySideWidth();
+  renderPtabLabels();
+  applyPtab();
   requestAnimationFrame(updateTableHints);
 }
 
@@ -2934,7 +3153,7 @@ function numTagHtml(num, done) {
 function redoInputHtml(q, { wide = false, nonum = false, block = false } = {}) {
   const v = redoValue(q.num);
   const cls = 'lq-gap' + (String(v).trim() ? ' is-filled' : '') + (wide ? ' lq-gap--wide' : '') + (nonum ? ' lq-gap--nonum' : '') + (block ? ' lq-gap--block' : '');
-  return `<label class="${cls}" data-nums="${esc(q.num)}">${nonum ? '' : `<span class="lq-n">${esc(q.num)}</span>`}<input class="lq-gap__in" type="text" data-q="${esc(q.num)}" value="${esc(v)}"${block ? ' placeholder="写在这里"' : ''} autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="第 ${esc(q.num)} 题"></label>`;
+  return `<label class="${cls}" data-nums="${esc(q.num)}">${nonum ? '' : `<span class="lq-n">${esc(q.num)}</span>`}<input class="lq-gap__in" type="text" data-q="${esc(q.num)}" value="${esc(v)}"${block ? ' placeholder="写在这里"' : ''} autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next" aria-label="第 ${esc(q.num)} 题"></label>`;
 }
 
 function letterOptions(g, q) {
@@ -3084,6 +3303,8 @@ function renderRedoQuestions() {
   host.innerHTML = `${qmap}<div class="lr-qs lr-qs--redo">${state.exam.groups.map((g, gi) => redoGroupHtml(g, gi, done)).join('')}</div>`;
   host.querySelectorAll('.lr-qs__content').forEach(box => fillRedoContent(box, state.exam.groups[+box.dataset.g], +box.dataset.g, done));
   host.querySelectorAll('.lq-gap__in').forEach(sizeInput);
+  const gaps = host.querySelectorAll('.lq-gap__in');
+  if (gaps.length) gaps[gaps.length - 1].setAttribute('enterkeyhint', 'done');   // 手机键盘：最后一个空是「完成」
   requestAnimationFrame(updateTableHints);
 }
 
@@ -3217,6 +3438,7 @@ function openSlotMenu(slot) {
   slot.classList.add('is-open');
   slot.setAttribute('aria-expanded', 'true');
   slotMenu = { el, scrim, slot };
+  if (sheet) Layers.push('slot', () => closeSlotMenu(false));
   el.addEventListener('click', (e) => {
     const opt = e.target.closest('.lq-menu__opt');
     if (opt) { pickFromMenu(opt.dataset.k); return; }
@@ -3232,6 +3454,7 @@ function closeSlotMenu(refocus = true) {
   slotMenu = null;
   el.remove();
   if (scrim) scrim.remove();
+  Layers.pop('slot');
   if (slot.isConnected) {
     slot.classList.remove('is-open');
     slot.setAttribute('aria-expanded', 'false');
@@ -3278,6 +3501,7 @@ function focusRedoQuestion(num) {
   const el = [...host.querySelectorAll('[data-nums]')].find(x => x.dataset.nums.split(' ').includes(num));
   if (!el) return;
   if (paper && isDrawerMode() && state.sideOpen) toggleSide(false);
+  if (isPhone()) setPtab('questions');
   if (paper) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   else scrollSideTo(el);
   const f = el.matches('.lq-slot, .lq-gap') ? el : el.querySelector('input, .lq-slot, .lq-cell.is-on, .lq-opt.is-on, .lq-cell, .lq-opt');
@@ -3400,9 +3624,10 @@ function openSubmitDialog() {
   document.getElementById('submitNth').textContent = `第 ${(state.exam.attempts || []).length + 1} 次`;
   document.getElementById('submitModal').hidden = false;
   document.getElementById('submitConfirmBtn').focus();
+  Layers.push('submit', closeSubmitDialog);
 }
 
-function closeSubmitDialog() { document.getElementById('submitModal').hidden = true; }
+function closeSubmitDialog() { document.getElementById('submitModal').hidden = true; Layers.pop('submit'); }
 
 function syncProjectScore(score, count) {
   if (!state.currentProject) return;
@@ -3440,7 +3665,8 @@ async function confirmSubmit() {
   renderExamSide();
   renderMode();
   renderDetailMeta();
-  window.scrollTo({ top: 0 });
+  if (isPhone()) setPtab('questions', { top: true });
+  else window.scrollTo({ top: 0 });
   const a = r.attempt;
   let diff = '';
   if (prev) {
@@ -3461,11 +3687,13 @@ function askConfirm({ title, text, ok = '确定', danger = false }) {
   btn.className = `ui-btn ui-btn--md ${danger ? 'lr-btn-danger' : 'ui-btn--primary'}`;
   document.getElementById('confirmModal').hidden = false;
   btn.focus();
+  Layers.push('confirm', () => closeConfirm(false));
   return new Promise(resolve => { confirmResolve = resolve; });
 }
 
 function closeConfirm(result) {
   document.getElementById('confirmModal').hidden = true;
+  Layers.pop('confirm');
   const r = confirmResolve;
   confirmResolve = null;
   if (r) r(!!result);
@@ -3495,10 +3723,7 @@ audioEl.addEventListener('timeupdate', () => {
     state.activeSegmentId = newActive;
     highlightSegment(newActive);
   }
-  if (state.playUntil !== null && t >= state.playUntil) {
-    state.playUntil = null;
-    audioEl.pause();
-  }
+  checkPlayRange(t);
   // 只在真正播放时记「上次听到哪」，光打开看一眼不算
   if (!audioEl.paused && Date.now() - lastSavedAt > 3000) {
     lastSavedAt = Date.now();
@@ -3512,15 +3737,17 @@ function setPlayIcon(playing) {
   btn.setAttribute('aria-label', playing ? '暂停' : '播放');
 }
 
-audioEl.addEventListener('play',  () => setPlayIcon(true));
-audioEl.addEventListener('pause', () => { setPlayIcon(false); saveLastPosition(); });
+audioEl.addEventListener('play',  () => { setPlayIcon(true); watchPlayRange(); updateFollowPill(); });
+audioEl.addEventListener('pause', () => { setPlayIcon(false); saveLastPosition(); updateFollowPill(); });
 audioEl.addEventListener('loadedmetadata', () => {
   document.getElementById('totTime').textContent = formatTime(audioEl.duration);
+  document.getElementById('totTime2').textContent = formatTime(audioEl.duration);
   audioEl.playbackRate = state.playbackRate;
 });
 
 function togglePlay() {
   markVocabAudioManualOverride();
+  if (audioEl.paused && isPhone() && !state.follow) resumeFollow();   // 手机：按播放就回到正在播的那句
   audioEl.paused ? audioEl.play().catch(() => {}) : audioEl.pause();
 }
 
@@ -3544,6 +3771,15 @@ function highlightSegment(segId) {
 
   lineEl.classList.add('is-active');
   if (container.hidden) return;   // 重做时原文藏起来了，别把页面滚走
+  if (isPhone()) {
+    // 手机：在别的页签、或者用户自己翻到别处了，不把页面拽回来，改成显示「回到当前句」
+    if (state.ptab !== 'script' || !state.follow || !followPref()) { updateFollowPill(); return; }
+    const topH = stickyTop(), bottomH = playerHeight();
+    const y = lineEl.getBoundingClientRect().top + window.scrollY - topH - (window.innerHeight - topH - bottomH) / 2 + lineEl.offsetHeight / 2;
+    window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+    updateFollowPill();
+    return;
+  }
 
   // 滚到导航栏和播放条之间的正中间
   const topH = navHeight();
@@ -3556,7 +3792,7 @@ function highlightSegment(segId) {
 function seekToSegment(segId) {
   const seg = state.currentData.segments.find(s => s.id === segId);
   if (!seg) return;
-  state.playUntil = null;
+  setPlayRange(seg);
   audioEl.currentTime = seg.start;
   if (audioEl.paused) audioEl.play().catch(() => {});
   state.activeSegmentId = segId;
@@ -3569,10 +3805,10 @@ function seekToSegment(segId) {
   let dragging = false;
 
   function seekFromEvent(e) {
-    state.playUntil = null;
     const rect = wrap.getBoundingClientRect();
     const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
     if (audioEl.duration) audioEl.currentTime = ratio * audioEl.duration;
+    retargetLoop(audioEl.currentTime);
   }
 
   wrap.addEventListener('pointerdown', (e) => { dragging = true; wrap.setPointerCapture(e.pointerId); seekFromEvent(e); });
@@ -3595,6 +3831,16 @@ function setSpeed(rate) {
     b.classList.toggle('is-on', on);
     b.setAttribute('aria-pressed', on ? 'true' : 'false');
   });
+  const chip = document.getElementById('speedChip');
+  chip.textContent = rate.toFixed(1) + '×';
+  chip.setAttribute('aria-label', `倍速 ${rate.toFixed(1)}×，点一下换`);
+  chip.classList.toggle('is-on', rate !== 1);
+}
+
+// 手机播放条的倍速：点一下换下一档（0.8 → 1.0 → 1.2 → 1.5 → 0.8）
+function cycleSpeed() {
+  const rates = [0.8, 1, 1.2, 1.5];
+  setSpeed(rates[(rates.indexOf(state.playbackRate) + 1) % rates.length]);
 }
 
 // ===================================================================
@@ -3612,13 +3858,14 @@ async function toggleStar(segId) {
   const isStarred = r.starred_segments.includes(segId);
   if (!isStarred && state.pickerSeg === segId) closeErrorPicker();
   lineEl.classList.toggle('is-starred', isStarred);
-  const btn = lineEl.querySelector('.star-btn');
-  if (btn) {
-    btn.innerHTML = isStarred ? ICONS.starOn : ICONS.star;
+  // 左边那颗星（宽屏）和手机那一行操作里的「收藏」一起变
+  lineEl.querySelectorAll('.star-btn').forEach(btn => {
+    const act = btn.classList.contains('lr-act');
+    btn.innerHTML = (isStarred ? ICONS.starOn : ICONS.star) + (act ? '<span class="lr-act__t">收藏</span>' : '');
     btn.classList.toggle('is-on', isStarred);
     btn.setAttribute('aria-pressed', isStarred ? 'true' : 'false');
     btn.setAttribute('aria-label', isStarred ? '取消收藏' : '收藏这句');
-  }
+  });
   syncErrorTagUi(segId);
   renderSideNums();
 }
@@ -3632,6 +3879,7 @@ async function toggleErrorTag(segId, tag) {
   if (!r.success) { showToast(r.error || '分类失败', 'error'); return; }
   state.currentData.error_tags = r.error_tags || {};
   syncErrorTagUi(segId);
+  if (state.whySeg === segId) renderWhySheet();
 }
 
 // ===================================================================
@@ -3654,6 +3902,11 @@ function updateMasteredBtn(mastered) {
   btn.setAttribute('aria-pressed', mastered ? 'true' : 'false');
   btn.innerHTML = mastered ? `${ICONS.check}已掌握` : '标熟';
   btn.title = mastered ? '再点一次取消标熟' : '标记为已掌握';
+  document.querySelectorAll('.js-mastered').forEach(b => {
+    b.classList.toggle('is-mastered', !!mastered);
+    b.setAttribute('aria-pressed', mastered ? 'true' : 'false');
+    b.innerHTML = mastered ? `${ICONS.check}已掌握` : '标熟';
+  });
 }
 
 async function doCheckin() {
@@ -3669,6 +3922,448 @@ async function doCheckin() {
 
 function updateCheckinBtn(count) {
   document.getElementById('sideCheckinNum').textContent = count || 0;
+  document.querySelectorAll('.js-checkin-n').forEach(el => { el.textContent = count || 0; });
+}
+
+// ===================================================================
+//  手机（≤820px）：页签、跟随播放、上一句 / 下一句 / 单句循环、底部面板、返回键
+//  宽屏不走这里（按钮和页签条在宽屏上不显示，Layers 在宽屏上不加历史）
+// ===================================================================
+
+// --- 返回键 / 侧滑返回：先关最上面那层（底部面板、弹窗），再从这篇回到列表，最后才离开 ---
+let popSkip = 0;          // 界面上关掉一层时自己调了 history.back()，对应的那次 popstate 不用管
+let popSkipTimer = null;
+const pendingPush = [];   // 等着的 history.back() 还没回来时先不加历史，回来了再加（不然会加错位置）
+function pushHistory(st, url) {
+  if (popSkip > 0) pendingPush.push([st, url]);
+  else history.pushState(st, '', url);
+}
+function skipNextPop() {
+  popSkip++;
+  clearTimeout(popSkipTimer);
+  popSkipTimer = setTimeout(() => { popSkip = 0; flushPendingPush(); }, 1500);   // 万一 popstate 没来
+}
+function flushPendingPush() {
+  while (pendingPush.length) {
+    const [st, url] = pendingPush.shift();
+    if (st.layer && !Layers.open[st.layer]) continue;   // 这层已经又关了
+    history.pushState({ ...(history.state || {}), ...st }, '', url);
+  }
+}
+const Layers = {
+  open: {},   // 名字 → 关掉它的函数
+  push(name, close) {
+    if (!isPhone()) return;
+    const had = !!this.open[name];
+    this.open[name] = close;
+    if (!had) pushHistory({ ...(history.state || {}), layer: name }, location.href);
+  },
+  // 界面上关掉的（×、遮罩、保存）：把它那条历史也退掉
+  pop(name) {
+    if (!this.open[name]) return;
+    delete this.open[name];
+    const st = history.state;
+    if (st && st.layer && !this.open[st.layer]) { skipNextPop(); history.back(); }
+  },
+  // 返回键：新的历史位置上没有的层都关掉
+  closeAbove(keep) {
+    Object.keys(this.open).forEach(n => {
+      if (n === keep) return;
+      const f = this.open[n];
+      delete this.open[n];
+      f();
+    });
+  }
+};
+function closeAllLayers() {
+  const fns = Object.values(Layers.open);
+  Layers.open = {};
+  fns.forEach(f => f());
+}
+window.addEventListener('popstate', (e) => {
+  if (popSkip > 0) {
+    popSkip--;
+    if (!popSkip) { clearTimeout(popSkipTimer); flushPendingPush(); }
+    return;
+  }
+  const st = e.state || {};
+  Layers.closeAbove(st.layer);
+  if (st.lr === 'detail' && st.pid) {
+    if (state.view !== 'detail' || !state.currentProject || state.currentProject.id !== st.pid) openProject(st.pid, { fromHistory: true });
+  } else if (state.view === 'detail') {
+    backToList({ fromHistory: true });
+  }
+});
+
+// 我们自己的底部面板：点遮罩关掉
+[['whySheet', () => closeWhySheet()], ['moreSheet', () => closeMoreSheet()], ['cardSheet', () => closeCardSheet()]].forEach(([id, close]) => {
+  document.getElementById(id).addEventListener('click', (e) => { if (e.target.id === id) close(); });
+});
+
+// --- 生词 / 笔记面板：手机上从底部升起，后面一层遮罩 ---
+function openPanelLayer(name) {
+  syncPanelScrim();
+  Layers.push(name, name === 'vocab' ? () => hideVocabPopover() : () => hideNotePopover());
+}
+function closePanelLayer(name) {
+  syncPanelScrim();
+  Layers.pop(name);
+}
+function syncPanelScrim() {
+  const open = !document.getElementById('vocabPopover').hidden || !document.getElementById('notePopover').hidden;
+  document.getElementById('panelScrim').hidden = !(open && isPhone());
+}
+document.getElementById('panelScrim').addEventListener('click', () => {
+  if (!document.getElementById('vocabPopover').hidden) hideVocabPopover();
+  if (!document.getElementById('notePopover').hidden) hideNotePopover();
+});
+// 键盘弹起时（iOS 的可视区域变矮）底部面板跟着抬到键盘上面，保存按钮不被挡
+if (window.visualViewport) {
+  const vv = window.visualViewport;
+  const syncKb = () => {
+    const typing = /^(INPUT|TEXTAREA)$/.test((document.activeElement || {}).tagName || '');
+    const kb = typing ? Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)) : 0;
+    document.documentElement.style.setProperty('--lr-kb', kb + 'px');
+  };
+  vv.addEventListener('resize', syncKb);
+  vv.addEventListener('scroll', syncKb);
+  document.addEventListener('focusin', syncKb);
+  document.addEventListener('focusout', () => setTimeout(syncKb, 50));
+}
+
+// 手机：在题目里打字时收起播放条（键盘已经占了半屏）
+document.addEventListener('focusin', (e) => {
+  if (isPhone() && e.target.matches && e.target.matches('#paperQs input, #questionsPane input')) document.body.classList.add('lr-typing');
+});
+document.addEventListener('focusout', () => setTimeout(() => {
+  const a = document.activeElement;
+  if (!(a && a.matches && a.matches('#paperQs input, #questionsPane input'))) document.body.classList.remove('lr-typing');
+}, 60));
+
+// --- 页签 ---
+function navBarHeight() { const b = document.getElementById('ptabs'); return b ? b.offsetHeight : 0; }
+function stickyTop() {   // 手机上顶部被导航栏、页签条（和挂着的题）占掉的高度
+  const chip = document.getElementById('qChip');
+  return navHeight() + navBarHeight() + (chip && !chip.hidden && state.ptab === 'script' ? chip.offsetHeight : 0);
+}
+function playerHeight() { const p = document.getElementById('lrPlayer'); return p && !p.hidden ? p.offsetHeight : 0; }
+function scrollPageTo(el, gap) {
+  const r = el.getBoundingClientRect();
+  window.scrollTo({ top: Math.max(0, window.scrollY + r.top - stickyTop() - gap), behavior: 'smooth' });
+}
+function availablePtabs() { return state.exam ? ['script', 'questions', 'side'] : ['script', 'side']; }
+// 页面正文从哪开始：页头滚走以后，切页签就从这里显示新页签的开头
+function ptabContentY() {
+  const body = document.querySelector('.lr-detail-body');
+  return Math.max(0, body.getBoundingClientRect().top + window.scrollY - navHeight() - navBarHeight());
+}
+function setPtab(tab, { top = false } = {}) {
+  if (!availablePtabs().includes(tab)) tab = 'script';
+  const prev = state.ptab;
+  const changed = prev !== tab;
+  if (changed && state.view === 'detail' && isPhone()) state.ptabScroll[prev] = window.scrollY;
+  state.ptab = tab;
+  applyPtab();
+  if (!isPhone() || state.view !== 'detail' || (!changed && !top)) return;
+  const head = ptabContentY();
+  const saved = state.ptabScroll[tab];
+  // 回到原文、又在跟着播放：直接对准正在播的那句；不然回到这个页签上次看到的地方，第一次来就从开头看
+  if (tab === 'script' && state.follow && followPref() && state.activeSegmentId >= 0 && !audioEl.paused) {
+    window.scrollTo(0, Math.min(window.scrollY, head));
+    highlightSegment(state.activeSegmentId);
+  } else if (!top && saved != null) window.scrollTo(0, saved);
+  else window.scrollTo(0, Math.min(window.scrollY, head));
+  updateFollowPill();
+}
+function applyPtab() {
+  if (!availablePtabs().includes(state.ptab)) state.ptab = 'script';
+  const grid = document.getElementById('detailGrid');
+  grid.dataset.ptab = state.ptab;
+  document.getElementById('ptabQ').hidden = !state.exam;
+  document.querySelectorAll('.ptab-btn').forEach(b => {
+    const on = b.dataset.ptab === state.ptab;
+    b.classList.toggle('is-on', on);
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  // 题目、本篇两个页签用的是右栏里的两页：题目 / 本篇笔记
+  if (isPhone() && state.exam) {
+    if (state.ptab === 'questions' && state.sideTab !== 'questions') setSideTab('questions');
+    if (state.ptab === 'side' && state.sideTab !== 'notes') setSideTab('notes');
+  }
+  syncQChip();
+  updateFollowPill();
+}
+function renderPtabLabels() {
+  if (!state.currentData) return;
+  const d = state.currentData;
+  const redo = state.mode === 'redo' && !!state.exam;
+  document.getElementById('ptabQCount').textContent = state.exam ? (examQuestions().length || '') : '';
+  document.getElementById('ptabSideName').textContent = redo ? '答题卡' : '本篇';
+  const n = (d.notes || []).length + (d.vocab_annotations || []).length;
+  document.getElementById('ptabSideCount').textContent = redo ? '' : (n || '');
+}
+document.querySelectorAll('.ptab-btn').forEach(b => b.addEventListener('click', () => setPtab(b.dataset.ptab)));
+
+// 手机上「显示答案 / 重做」和「做题记录」搬到题目页签顶上；回到宽屏放回原处
+const phoneHomes = {};
+function placePhoneBits() {
+  const head = document.getElementById('pQHead');
+  ['modeSeg', 'attemptBox'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!phoneHomes[id]) { phoneHomes[id] = document.createComment(id); el.before(phoneHomes[id]); }
+    if (isPhone()) { if (el.parentElement !== head) head.appendChild(el); }
+    else if (phoneHomes[id].nextSibling !== el) phoneHomes[id].after(el);
+  });
+}
+placePhoneBits();
+phoneMQ.addEventListener('change', () => {
+  placePhoneBits();
+  syncPanelScrim();
+  if (state.view !== 'detail') return;
+  if (!isPhone()) { state.follow = true; toggleSide(window.matchMedia('(min-width: 1100px)').matches); }
+  renderExamSide();
+  applyPtab();
+});
+
+// --- 从题目跳到原文时挂在页签条下面的那道题 ---
+function syncQChip() {
+  const chip = document.getElementById('qChip');
+  const item = state.selQ !== null && state.exam && state.mode !== 'redo' ? examQuestions().find(x => x.q.num === state.selQ) : null;
+  const show = isPhone() && !!item && state.ptab === 'script' && evidenceSegs(item.q).length > 0;
+  chip.hidden = !show;
+  if (!show) { chip.innerHTML = ''; return; }
+  const a = answerOf(item.q.num);
+  const user = String(a.user || '').trim();
+  const right = displayAnswer(item.q.answer);
+  const ans = a.state === 'right'
+    ? `你答 <b class="is-ok">${esc(user)}</b> ✓`
+    : `你答 ${user ? `<s>${esc(user)}</s>` : '<span class="lr-qchip__none">没答</span>'} → <b class="is-ok">${esc(right)}</b>`;
+  chip.innerHTML = `<span class="lq-n${a.state === 'right' ? ' is-ok' : a.state === 'wrong' ? ' is-err' : ' is-blank'}">${esc(item.q.num)}</span>
+    <span class="lr-qchip__ans">${ans}</span>
+    <button class="lr-qchip__btn" type="button" data-act="chip-play">${ICONS.play}出处</button>
+    <button class="lr-qchip__btn" type="button" data-act="chip-back">‹ 题目</button>
+    <button class="lr-qchip__btn lr-qchip__x" type="button" data-act="chip-close" aria-label="不看这道题了">×</button>`;
+}
+document.getElementById('qChip').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-act]');
+  if (!b || state.selQ === null) return;
+  const num = state.selQ;
+  if (b.dataset.act === 'chip-play') playEvidence(num);
+  else if (b.dataset.act === 'chip-back') {
+    setPtab('questions');
+    const el = document.querySelector('#questionsPane .lr-qx');
+    if (el) scrollPageTo(el, 60);
+  } else if (b.dataset.act === 'chip-close') { state.selQ = null; renderQuestions(); renderLyrics(); syncQChip(); }
+});
+
+// --- 跟随播放：自己往别处翻了就不拽回来，显示「回到当前句」 ---
+let userScrollAt = 0;
+['touchmove', 'wheel'].forEach(ev => window.addEventListener(ev, () => { userScrollAt = Date.now(); }, { passive: true }));
+window.addEventListener('scroll', () => {
+  if (!isPhone() || state.view !== 'detail' || state.ptab !== 'script') return;
+  if (Date.now() - userScrollAt < 900) {
+    const el = activeLineEl();
+    if (el) state.follow = lineVisibility(el) === 'in';   // 当前句还在屏幕上就接着跟，翻走了就停
+  }
+  updateFollowPill();
+}, { passive: true });
+function followPref() { try { return localStorage.getItem(FOLLOW_KEY) !== '0'; } catch { return true; } }
+function toggleFollowPref() {
+  const on = !followPref();
+  try { localStorage.setItem(FOLLOW_KEY, on ? '1' : '0'); } catch {}
+  if (on) resumeFollow();
+  renderMoreSheet();
+  updateFollowPill();
+}
+function activeLineEl() {
+  return state.activeSegmentId >= 0 ? document.querySelector(`#lyricsContainer .lr-line[data-seg-id="${state.activeSegmentId}"]`) : null;
+}
+function lineVisibility(el) {
+  const r = el.getBoundingClientRect();
+  if (r.bottom < stickyTop() + 8) return 'above';
+  if (r.top > window.innerHeight - playerHeight() - 8) return 'below';
+  return 'in';
+}
+function resumeFollow() {
+  state.follow = true;
+  if (state.ptab !== 'script') setPtab('script');
+  if (state.activeSegmentId >= 0) {
+    const el = activeLineEl();
+    if (el) {
+      const topH = stickyTop(), bottomH = playerHeight();
+      const y = el.getBoundingClientRect().top + window.scrollY - topH - (window.innerHeight - topH - bottomH) / 2 + el.offsetHeight / 2;
+      window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+    }
+  }
+  document.getElementById('followPill').hidden = true;
+}
+function updateFollowPill() {
+  const pill = document.getElementById('followPill');
+  let show = false, up = false;
+  // 只在播放时出现：停着的时候页面不会自己动，不用提醒
+  if (isPhone() && state.view === 'detail' && state.ptab === 'script' && !document.getElementById('lyricsContainer').hidden && !audioEl.paused
+      && (!state.follow || !followPref()) && document.getElementById('selectionToolbar').hidden) {
+    const el = activeLineEl();
+    if (el) { const v = lineVisibility(el); show = v !== 'in'; up = v === 'above'; }
+  }
+  pill.hidden = !show;
+  document.getElementById('followArrow').textContent = up ? '↑' : '↓';
+}
+
+// --- 上一句 / 下一句 / 单句循环 / 重听这句：都用 playUntil 播到句尾停（循环就跳回 loopFrom） ---
+function segAt(t) {   // t 落在哪一句（两句之间的空白算前一句）；第一句之前返回 null
+  let cur = null;
+  for (const s of (state.currentData?.segments || [])) { if (t >= s.start - 0.05) cur = s; else break; }
+  return cur;
+}
+function setPlayRange(seg, { once = false } = {}) {
+  if (seg && (state.loop || once)) {
+    state.playUntil = seg.end;
+    state.loopFrom = state.loop ? seg.start : null;
+  } else {
+    state.playUntil = null;
+    state.loopFrom = null;
+  }
+}
+// 拖进度条、跳到某句以后：开着循环就改成循环新的这句，没开就不再在哪停
+function retargetLoop(t) {
+  setPlayRange(state.loop ? (segAt(t) || (state.currentData?.segments || [])[0]) : null);
+}
+function checkPlayRange(t) {
+  if (state.playUntil === null || t < state.playUntil) return;
+  if (state.loopFrom !== null) audioEl.currentTime = state.loopFrom;
+  else { state.playUntil = null; audioEl.pause(); }
+}
+// timeupdate 一秒才四次，循环时会多播出下一句的头；手机上播放期间每一帧查一次
+function watchPlayRange() {
+  if (!isPhone()) return;
+  const tick = () => {
+    if (audioEl.paused || state.playUntil === null) return;
+    checkPlayRange(audioEl.currentTime);
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+function playSegment(seg, { once = false } = {}) {
+  if (!seg) return;
+  markVocabAudioManualOverride();
+  audioEl.currentTime = seg.start;
+  setPlayRange(seg, { once });
+  state.activeSegmentId = seg.id;
+  state.follow = true;
+  highlightSegment(seg.id);
+  if (audioEl.paused) audioEl.play().catch(() => {});
+  else watchPlayRange();
+}
+// 上一句：这句已经播了 1 秒以上就从这句开头重听，否则回到上一句；下一句：跳到下一句开头
+function stepSentence(dir) {
+  const segs = state.currentData?.segments || [];
+  if (!segs.length) return;
+  const t = audioEl.currentTime;
+  const cur = segAt(t);
+  let i = cur ? segs.indexOf(cur) : -1;
+  if (dir < 0) {
+    if (i < 0) i = 0;
+    else if (t - cur.start <= 1 && i > 0) i--;
+  } else i = Math.min(segs.length - 1, i + 1);
+  playSegment(segs[i]);
+}
+function toggleLoop() {
+  state.loop = !state.loop;
+  retargetLoop(audioEl.currentTime);
+  if (state.loop && !audioEl.paused) watchPlayRange();
+  syncLoopBtn();
+  showToast(state.loop ? '单句循环：一直重复这一句，点句子换一句' : '单句循环已关');
+}
+function syncLoopBtn() {
+  const b = document.getElementById('loopBtn');
+  b.classList.toggle('is-on', state.loop);
+  b.setAttribute('aria-pressed', state.loop ? 'true' : 'false');
+}
+
+// --- 正在播的那句下面那一行（收藏、原因、重听、笔记）和末尾卡片 ---
+function onLineAct(btn) {
+  const act = btn.dataset.act;
+  const segId = parseInt(btn.dataset.segId);
+  const seg = state.currentData?.segments.find(s => s.id === segId);
+  if (act === 'why') openWhySheet(segId);
+  else if (act === 'replay') playSegment(seg, { once: true });
+  else if (act === 'snote' && seg) {
+    // 整句写一条笔记：和选中整句再点「笔记」一样
+    state.pendingVocab = null;
+    openNoteAdd({ segmentId: seg.id, word: seg.text, startOffset: 0, endOffset: seg.text.length }, btn.getBoundingClientRect());
+  } else if (act === 'end-checkin') doCheckin();
+  else if (act === 'end-mastered') toggleMastered();
+}
+
+// --- 听错原因（手机）：底部面板，A–E 五行，可多选；和宽屏一样要先收藏这句 ---
+function openWhySheet(segId) {
+  const seg = state.currentData?.segments.find(s => s.id === segId);
+  if (!seg) return;
+  state.whySeg = segId;
+  document.getElementById('whyQuote').textContent = seg.text;
+  renderWhySheet();
+  document.getElementById('whySheet').hidden = false;
+  beginErrorTagAudioPause();
+  Layers.push('why', closeWhySheet);
+}
+function renderWhySheet() {
+  const segId = state.whySeg;
+  if (segId === null) return;
+  const selected = getSegmentErrorTags(segId);
+  document.getElementById('whyList').innerHTML = ERROR_TAGS.map(tag => {
+    const on = selected.includes(tag.id);
+    return `<button class="lr-whyrow${on ? ' is-on' : ''}" type="button" data-tag="${tag.id}" aria-pressed="${on}"><span class="lr-whyrow__box" aria-hidden="true">${on ? ICONS.check : ''}</span><span class="lr-whyrow__t"><b>${esc(tag.label)}</b><span>${esc(tag.hint)}</span></span></button>`;
+  }).join('');
+}
+function closeWhySheet() {
+  if (state.whySeg === null) return;
+  state.whySeg = null;
+  document.getElementById('whySheet').hidden = true;
+  Layers.pop('why');
+  endErrorTagAudioPause();
+}
+document.getElementById('whyList').addEventListener('click', (e) => {
+  const row = e.target.closest('[data-tag]');
+  if (row && state.whySeg !== null) toggleErrorTag(state.whySeg, row.dataset.tag);
+});
+
+// --- 「更多」：跟随播放开关、重做时显示原文、去笔记本 ---
+function openMoreSheet() {
+  renderMoreSheet();
+  document.getElementById('moreSheet').hidden = false;
+  Layers.push('more', closeMoreSheet);
+}
+function closeMoreSheet() {
+  if (document.getElementById('moreSheet').hidden) return;
+  document.getElementById('moreSheet').hidden = true;
+  Layers.pop('more');
+}
+function renderMoreSheet() {
+  const f = document.getElementById('moreFollow');
+  f.setAttribute('aria-checked', followPref() ? 'true' : 'false');
+  const sc = document.getElementById('moreScript');
+  sc.hidden = !(state.mode === 'redo' && state.exam);
+  sc.setAttribute('aria-checked', state.showScript ? 'true' : 'false');
+}
+
+// --- 列表卡片的「⋯」：重试（失败的）、删除 ---
+function openCardSheet(id) {
+  const p = state.projects.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('cardSheetTitle').textContent = p.title;
+  const retry = document.getElementById('cardSheetRetry');
+  retry.hidden = p.status !== 'error';
+  document.getElementById('cardSheetErr').textContent = p.status === 'error' ? errorPhaseText(p) : '';
+  retry.onclick = () => { closeCardSheet(); retryProject(id); };
+  document.getElementById('cardSheetDelete').onclick = () => { closeCardSheet(); openDeleteDialog(id); };
+  document.getElementById('cardSheet').hidden = false;
+  Layers.push('card', closeCardSheet);
+}
+function closeCardSheet() {
+  if (document.getElementById('cardSheet').hidden) return;
+  document.getElementById('cardSheet').hidden = true;
+  Layers.pop('card');
 }
 
 // ===================================================================
@@ -3677,6 +4372,9 @@ function updateCheckinBtn(count) {
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     if (!document.getElementById('confirmModal').hidden) { closeConfirm(false); return; }
+    if (state.whySeg !== null) { closeWhySheet(); return; }
+    if (!document.getElementById('moreSheet').hidden) { closeMoreSheet(); return; }
+    if (!document.getElementById('cardSheet').hidden) { closeCardSheet(); return; }
     if (!document.getElementById('submitModal').hidden) { closeSubmitDialog(); return; }
     if (!document.getElementById('uploadModal').hidden) { closeUploadModal(); return; }
     if (!document.getElementById('attemptMenu').hidden) { toggleAttemptMenu(false); return; }
@@ -3693,8 +4391,8 @@ document.addEventListener('keydown', (e) => {
   if (!document.getElementById('submitModal').hidden || !document.getElementById('confirmModal').hidden) return;
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   if (e.code === 'Space')      { e.preventDefault(); togglePlay(); }
-  else if (e.code === 'ArrowLeft')  { e.preventDefault(); state.playUntil = null; audioEl.currentTime = Math.max(0, audioEl.currentTime - 3); }
-  else if (e.code === 'ArrowRight') { e.preventDefault(); state.playUntil = null; audioEl.currentTime = Math.min(audioEl.duration || 0, audioEl.currentTime + 3); }
+  else if (e.code === 'ArrowLeft')  { e.preventDefault(); audioEl.currentTime = Math.max(0, audioEl.currentTime - 3); retargetLoop(audioEl.currentTime); }
+  else if (e.code === 'ArrowRight') { e.preventDefault(); audioEl.currentTime = Math.min(audioEl.duration || 0, audioEl.currentTime + 3); retargetLoop(audioEl.currentTime); }
 });
 
 // ===================================================================
