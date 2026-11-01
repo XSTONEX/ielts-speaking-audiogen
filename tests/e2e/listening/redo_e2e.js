@@ -1,6 +1,7 @@
 // 「显示答案 / 重做」的浏览器检查（沙盒、编造数据）：
-// 导入三份 JSON（填空 + 单选；地图 + 多选；版式里选字母的配对）→ 切到重做 → 各题型作答 → 刷新后接着做 →
-// 显示 / 隐藏原文 → 交卷判分 → 做题记录（本站 / 九分、删本站的）→ 暗色、390 宽截图。
+// 导入三份 JSON（填空 + 单选；地图 + 多选；版式里选字母的配对）→ 切到重做 → 各题型作答（横线、选项卡片、
+// 答题纸表格、字母槽 + 菜单、按字母键）→ 刷新后接着做 → 显示 / 隐藏原文 → 交卷判分 → 显示答案的新样式 →
+// 做题记录（本站 / 九分、删本站的）→ 暗色、390 宽（字母菜单从底部弹出）。
 // 用法见 README；每跑一次前先重灌 seed.py 和 jiufen_data.py。
 const path = require('path');
 const fs = require('fs');
@@ -75,22 +76,24 @@ async function openByTitle(page, re) {
     main: document.getElementById('sideMainCard').hidden,
     trans: document.getElementById('toggleTransBtn').hidden,
     scriptPressed: document.getElementById('scriptBtn').getAttribute('aria-pressed'),
-    leaks: document.querySelectorAll('.lr-qtag, .lr-ans, .lr-evi, .lr-hl, .lr-qx, .lr-blank, .lr-qs__legend').length,
-    inputs: [...document.querySelectorAll('#paperQs .lr-inp__box')].map(i => i.dataset.q + '=' + i.value).join(','),
-    spell: [...document.querySelectorAll('#paperQs .lr-inp__box')].every(i => i.getAttribute('spellcheck') === 'false' && i.getAttribute('autocorrect') === 'off'),
-    picks: document.querySelectorAll('#paperQs .lr-pick__opt').length,
-    picked: document.querySelectorAll('#paperQs .lr-pick__opt.is-on').length,
+    leaks: document.querySelectorAll('.lr-qtag, .lr-ans, .lr-evi, .lr-hl, .lr-qx, .lr-qs__legend, .is-review, .lq-gap.is-ok, .lq-gap.is-err, .lq-gap.is-none, .lq-opt.is-right, .lq-opt.is-wrong').length,
+    inputs: [...document.querySelectorAll('#paperQs .lq-gap__in')].map(i => i.dataset.q + '=' + i.value).join(','),
+    spell: [...document.querySelectorAll('#paperQs .lq-gap__in')].every(i => i.getAttribute('spellcheck') === 'false' && i.getAttribute('autocorrect') === 'off'),
+    chips: [...document.querySelectorAll('#paperQs .lq-gap .lq-n')].map(n => n.textContent).join(','),
+    picks: document.querySelectorAll('#paperQs .lq-opt').length,
+    picked: document.querySelectorAll('#paperQs .lq-opt.is-on').length,
+    card: (() => { const o = document.querySelector('#paperQs .lq-opt'); const cs = getComputedStyle(o); return { border: cs.borderTopStyle + ' ' + cs.borderTopWidth, w: Math.round(o.getBoundingClientRect().width) }; })(),
     nth: document.getElementById('redoNth').textContent,
     last: document.getElementById('redoLast').textContent,
     map: [...document.querySelectorAll('#redoMap .lr-qnum')].map(b => b.className.includes('is-todo') ? 'o' : 'x').join(''),
   }));
   check('redo hides the transcript and shows the paper + answer card', r0.lyrics && r0.paper && r0.card && r0.info && r0.main && r0.trans && r0.scriptPressed === 'false', r0);
   check('no answers leak in redo (tags, underline, highlights, chips, legend)', r0.leaks === 0, r0.leaks);
-  check('blanks are empty inputs, spellcheck off', r0.inputs === '1=,2=,3=,4=' && r0.spell, r0);
-  check('choice options unselected', r0.picks === 3 && r0.picked === 0, r0);
+  check('blanks are empty writing lines with the number inside, spellcheck off', r0.inputs === '1=,2=,3=,4=' && r0.spell && r0.chips === '1,2,3,4', r0);
+  check('choice options are bordered cards, capped at 620px, unselected', r0.picks === 3 && r0.picked === 0 && r0.card.border === 'solid 1px' && r0.card.w <= 620, r0);
   check('answer card numbers', r0.nth === '第 2 次' && r0.last === '3/5' && r0.map === 'ooooo', r0);
 
-  await page.click('#paperQs .lr-inp__box[data-q="1"]');
+  await page.click('#paperQs .lq-gap__in[data-q="1"]');
   await page.keyboard.type('Twelve');
   await page.keyboard.press('Enter');
   const focus2 = await page.evaluate(() => document.activeElement.dataset.q);
@@ -99,19 +102,27 @@ async function openByTitle(page, re) {
   await page.keyboard.type('mill');
   await page.keyboard.press('Enter');
   await page.keyboard.type(' ');   // 空格在输入框里只是空格，不会开始播放
-  const space = await page.evaluate(() => ({ paused: audioEl.paused, v: document.querySelector('#paperQs .lr-inp__box[data-q="4"]').value }));
+  const space = await page.evaluate(() => ({ paused: audioEl.paused, v: document.querySelector('#paperQs .lq-gap__in[data-q="4"]').value }));
   await page.keyboard.press('Backspace');
   check('Enter jumps to the next blank', focus2 === '2', focus2);
   check('space typed in a blank does not play audio', space.paused && space.v === ' ', space);
-  await page.click('#paperQs .lr-pick__opt[data-k="B"]');
+  await page.click('#paperQs .lq-opt[data-k="A"]');
+  await page.keyboard.press('c');   // 选项上按字母键直接改选
+  const byKey = await page.evaluate(() => [...document.querySelectorAll('#paperQs .lq-opt.is-on')].map(b => b.dataset.k).join(''));
+  await page.keyboard.press('b');
+  await page.keyboard.press(' ');   // 选项上按空格：点这个选项（已选的就取消），不开始播放
+  const spaceOpt = await page.evaluate(() => ({ paused: audioEl.paused, on: [...document.querySelectorAll('#paperQs .lq-opt.is-on')].map(b => b.dataset.k).join('') }));
+  await page.keyboard.press('b');
+  check('letter keys on a choice pick that option', byKey === 'C', byKey);
+  check('space on an option toggles it, audio stays paused', spaceOpt.paused && spaceOpt.on === '', spaceOpt);
   await page.waitForTimeout(2300);
   const r1 = await page.evaluate(() => ({
     done: document.getElementById('redoDone').textContent,
     prog: document.getElementById('paperProg').textContent,
     map: [...document.querySelectorAll('#redoMap .lr-qnum')].map(b => b.className.includes('is-done') ? 'x' : 'o').join(''),
     time: document.getElementById('redoTime').textContent,
-    picked: [...document.querySelectorAll('#paperQs .lr-pick__opt.is-on')].map(b => b.dataset.k).join(''),
-    filled: document.querySelectorAll('#paperQs .lr-inp.is-filled').length,
+    picked: [...document.querySelectorAll('#paperQs .lq-opt.is-on')].map(b => b.dataset.k).join(''),
+    filled: document.querySelectorAll('#paperQs .lq-gap.is-filled').length,
   }));
   check('progress counts answered questions', r1.done === '4' && /^已答 4\/5 · 00:0\d$/.test(r1.prog) && r1.map === 'xxxox' && r1.filled === 3, r1);
   check('clock runs', r1.time !== '00:00', r1.time);
@@ -125,8 +136,8 @@ async function openByTitle(page, re) {
   await openByTitle(page, /Riverside Bike Hire/);
   const r2 = await page.evaluate(() => ({
     mode: state.mode,
-    v1: (document.querySelector('#paperQs .lr-inp__box[data-q="1"]') || {}).value,
-    picked: [...document.querySelectorAll('#paperQs .lr-pick__opt.is-on')].map(b => b.dataset.k).join(''),
+    v1: (document.querySelector('#paperQs .lq-gap__in[data-q="1"]') || {}).value,
+    picked: [...document.querySelectorAll('#paperQs .lq-opt.is-on')].map(b => b.dataset.k).join(''),
     time: document.getElementById('redoTime').textContent,
   }));
   check('draft survives a reload', r2.mode === 'redo' && r2.v1 === 'Twelve' && r2.picked === 'B' && r2.time !== '00:00', r2);
@@ -138,7 +149,7 @@ async function openByTitle(page, re) {
     paper: document.getElementById('paperPane').hidden,
     lines: document.querySelectorAll('#lyricsContainer .lr-line').length,
     leaks: document.querySelectorAll('.lr-qtag, .lr-ans, .lr-evi').length,
-    paneInputs: [...document.querySelectorAll('#questionsPane .lr-inp__box')].map(i => i.value).join('|'),
+    paneInputs: [...document.querySelectorAll('#questionsPane .lq-gap__in')].map(i => i.value).join('|'),
     paneMap: document.querySelectorAll('#questionsPane .lr-qmap .lr-qnum').length,
     trans: !document.getElementById('toggleTransBtn').hidden,
     saved: localStorage.getItem('listening-redo-script'),
@@ -153,7 +164,7 @@ async function openByTitle(page, re) {
   await page.click('.mode-btn[data-mode="answers"]');
   const r4 = await page.evaluate(() => ({ tags: document.querySelectorAll('.lr-qtag').length, info: !document.getElementById('sideInfoCard').hidden, card: document.getElementById('redoCard').hidden }));
   await page.click('.mode-btn[data-mode="redo"]');
-  const r5 = await page.evaluate(() => [...document.querySelectorAll('#questionsPane .lr-inp__box')].map(i => i.value).join('|'));
+  const r5 = await page.evaluate(() => [...document.querySelectorAll('#questionsPane .lq-gap__in')].map(i => i.value).join('|'));
   check('answers mode is back to normal', r4.tags === 5 && r4.info && r4.card, r4);
   check('switching back keeps the unfinished paper', r5 === 'Twelve|passport|mill|', r5);
 
@@ -179,6 +190,13 @@ async function openByTitle(page, re) {
   check('transcript tags follow the new attempt', s1.tags === 'Q1 Q2 Q3 Q4- Q5', s1.tags);
   check('meta + toast + list score', /做过 2 次/.test(s1.meta) && /第 2 次交卷：答对 4\/5，比上次多对 1 题/.test(s1.toast) && s1.card && s1.card.correct === 4, s1);
   check('draft cleared after submit', s1.draft === null, s1.draft);
+  const v0 = await page.evaluate(() => ({
+    gaps: [...document.querySelectorAll('#questionsPane .lq-gap')].map(b => b.dataset.q + (b.classList.contains('is-ok') ? 'ok' : b.classList.contains('is-err') ? 'err' : b.classList.contains('is-none') ? 'none' : '?')).join(' '),
+    none: (document.querySelector('#questionsPane .lq-gap.is-none') || {}).innerText,
+    opts: [...document.querySelectorAll('#questionsPane .lq-opts.is-review .lq-opt')].map(o => o.className.replace(/lq-opt\s?/, '') + ':' + o.querySelector('.lq-opt__tag').textContent).join(' | '),
+  }));
+  check('answers view: blanks as green / dashed lines', v0.gaps === '1ok 2ok 3ok 4none' && /没答\s*seven/.test(v0.none || ''), v0);
+  check('answers view: choice cards in the same shape', v0.opts === ': | is-right:你选 · 对 | :', v0.opts);
   const saved = await page.evaluate(async () => (await API.get('/api/listening_review/project/' + state.currentProject.id)).exam.attempts.length);
   check('server kept both attempts', saved === 2, saved);
   await shot(page, 'after-submit');
@@ -199,16 +217,21 @@ async function openByTitle(page, re) {
   await openByTitle(page, /Greenfield Library Tour/);
   const g0 = await page.evaluate(() => ({
     kinds: state.exam.groups.map(g => g.kind).join(','),
-    img: !!document.querySelector('#questionsPane .lr-qs__imglink img'),
-    rows: [...document.querySelectorAll('#questionsPane .lr-qs__match')].map(r => r.innerText.replace(/\s+/g, ' ')).join(' | '),
-    emptyOpts: [...document.querySelectorAll('#questionsPane .lr-opt')].filter(o => !o.children[1].textContent.trim()).length,
-    nums: [...document.querySelectorAll('#questionsPane .lr-qnums .lr-qnum')].map(n => n.textContent + (n.classList.contains('is-err') ? '!' : '')).join(' '),
-    marks: [...document.querySelectorAll('#questionsPane .lr-opt')].map(o => o.querySelector('.lr-opt__mark').textContent).filter(Boolean).join(','),
+    img: !!document.querySelector('#questionsPane .lq-map .lr-qs__imglink img'),
+    cols: [...document.querySelectorAll('#questionsPane .lq-grid th')].map(t => t.textContent).join(''),
+    rows: [...document.querySelectorAll('#questionsPane .lq-grid tr[data-q]')].map(r => r.dataset.q + ':' + [...r.querySelectorAll('.lq-cell')].map(c => c.classList.contains('is-right') ? c.textContent + '+' : c.classList.contains('is-wrong') ? c.textContent + 'x' : c.classList.contains('is-miss') ? c.textContent + '?' : '').join('')).join(' '),
+    emptyOpts: [...document.querySelectorAll('#questionsPane .lq-opt')].filter(o => !o.querySelector('.lq-opt__t').textContent.trim()).length,
+    nums: [...document.querySelectorAll('#questionsPane .lq-nums .lq-n')].map(n => n.textContent + (n.classList.contains('is-err') ? '!' : '')).join(' '),
+    marks: [...document.querySelectorAll('#questionsPane .lq-opts--multi .lq-opt')].map(o => o.querySelector('.lq-opt__tag').textContent).filter(Boolean).join(','),
+    tray: (document.querySelector('#questionsPane .lq-tray') || {}).innerText,
   }));
   check('map + multi recognised', g0.kinds === 'map,multi,choice', g0.kinds);
-  check('map shows the plan and one row per question (no blank options)', g0.img && g0.emptyOpts === 0 && /Children's corner 1 ?C/.test(g0.rows) && /Study rooms 2 ?B ?E/.test(g0.rows), g0);
-  check('multi shows both numbers and shared options', g0.nums === '4 5!' && g0.marks.startsWith('你选 · 对,你选,答案'), g0);
-  await page.click('#questionsPane .lr-qs__stem[data-q="4"]');
+  check('map: plan + answer-sheet grid, one row per question', g0.img && g0.emptyOpts === 0 && g0.cols.startsWith('位置ABCDE') && g0.rows === '1:C+ 2:BxE+ 3:A?', g0);
+  check('multi: both numbers, tray, shared options with 漏选', g0.nums === '4 5!' && g0.marks === '你选 · 对,你选,漏选' && /对 1 题/.test(g0.tray || '') && /5\s*C\s*D/.test(g0.tray || ''), g0);
+  await page.click('#questionsPane .lq-grid tr[data-q="2"]');
+  const gq = await page.evaluate(() => ({ sel: !!document.querySelector('#questionsPane .lq-grid tr.is-sel[data-q="2"]'), qx: (document.querySelector('#questionsPane .lq-grid__qx .lr-qx') || {}).innerText || '' }));
+  check('clicking a grid row opens its explanation under the row', gq.sel && /你的答案\s*B/.test(gq.qx), gq);
+  await page.click('#questionsPane .lq-q__stem[data-q="4"]');
   const qx = await page.evaluate(() => (document.querySelector('#questionsPane .lr-qx') || {}).innerText || '');
   check('multi explanation lists both letters', /你选\s*B、C/.test(qx) && /正确答案\s*B、D（不分先后）/.test(qx), qx);
 
@@ -216,27 +239,33 @@ async function openByTitle(page, re) {
   await page.click('#scriptBtn');   // 上一篇选了显示原文，这里关掉，看卷子
   const g1 = await page.evaluate(() => ({
     paper: !document.getElementById('paperPane').hidden,
-    rows: document.querySelectorAll('#paperQs .lr-letrow').length,
-    letters: [...document.querySelectorAll('#paperQs .lr-letrow')].map(r => r.querySelectorAll('.lr-letter').length).join(','),
-    multi: document.querySelectorAll('#paperQs .lr-pick--multi .lr-pick__opt').length,
-    hint: (document.querySelector('#paperQs .lr-pick__hint') || {}).textContent,
+    rows: document.querySelectorAll('#paperQs .lq-grid tr[data-nums]').length,
+    letters: [...document.querySelectorAll('#paperQs .lq-grid tr[data-nums]')].map(r => r.querySelectorAll('.lq-cell').length).join(','),
+    side: getComputedStyle(document.querySelector('#paperQs .lq-map')).gridTemplateColumns.split(' ').length,
+    multi: document.querySelectorAll('#paperQs .lq-opts--multi .lq-opt').length,
+    tray: (document.querySelector('#paperQs .lq-tray') || {}).innerText,
   }));
-  check('redo: map letters per question, multi is checkboxes', g1.paper && g1.rows === 3 && g1.letters === '5,5,5' && g1.multi === 5 && g1.hint === '选 2 个 · 已选 0', g1);
-  const letter = (q, k) => page.click(`#paperQs .lr-letter[data-q="${q}"][data-k="${k}"]`);
-  await letter('1', 'C'); await letter('2', 'E'); await letter('2', 'E'); await letter('2', 'B');
-  const multiOpt = (k, force) => page.click(`#paperQs .lr-pick--multi .lr-pick__opt[data-k="${k}"]`, { force: !!force });
+  check('redo: map is an answer-sheet grid beside the plan, multi is checkbox cards', g1.paper && g1.rows === 3 && g1.letters === '5,5,5' && g1.side === 2 && g1.multi === 5 && /选 2 个 · 已选 0/.test(g1.tray || ''), g1);
+  const cell = (q, k) => page.click(`#paperQs .lq-cell[data-q="${q}"][data-k="${k}"]`);
+  await cell('1', 'C'); await cell('2', 'E'); await cell('2', 'E'); await cell('2', 'A');
+  await page.keyboard.press('ArrowRight');   // 方向键在圈之间挪，按字母键选
+  await page.keyboard.press('b');
+  const gk = await page.evaluate(() => ({ focus: document.activeElement.dataset.q + document.activeElement.dataset.k, paused: audioEl.paused }));
+  check('grid: arrow keys move between circles, letter key picks, audio not touched', gk.focus === '2B' && gk.paused, gk);
+  const multiOpt = (k, force) => page.click(`#paperQs .lq-opts--multi .lq-opt[data-k="${k}"]`, { force: !!force });
   await multiOpt('B'); await multiOpt('D'); await multiOpt('E', true);   // 选够了，第三个点了也没用
   const g2 = await page.evaluate(() => ({
-    on: [...document.querySelectorAll('#paperQs .lr-pick--multi .lr-pick__opt.is-on')].map(b => b.dataset.k).join(''),
-    dimE: document.querySelector('#paperQs .lr-pick--multi .lr-pick__opt[data-k="E"]').getAttribute('aria-disabled'),
-    hint: document.querySelector('#paperQs .lr-pick__hint').textContent,
-    letters: [...document.querySelectorAll('#paperQs .lr-letter.is-on')].map(b => b.dataset.q + b.dataset.k).join(','),
-    nums: [...document.querySelectorAll('#paperQs .lr-unit[data-unit="4"] .lr-qnum')].map(n => n.className.includes('is-done') ? 'x' : 'o').join(''),
+    on: [...document.querySelectorAll('#paperQs .lq-opts--multi .lq-opt.is-on')].map(b => b.dataset.k + b.querySelector('.lq-opt__tag').textContent).join(','),
+    dimE: document.querySelector('#paperQs .lq-opts--multi .lq-opt[data-k="E"]').getAttribute('aria-disabled'),
+    tray: document.querySelector('#paperQs .lq-tray').innerText.replace(/\s+/g, ' '),
+    hint: (document.querySelector('#paperQs .lr-unit[data-unit="4"] .lq-hint') || {}).textContent,
+    cells: [...document.querySelectorAll('#paperQs .lq-cell.is-on')].map(b => b.dataset.q + b.dataset.k).join(','),
+    nums: [...document.querySelectorAll('#paperQs .lr-unit[data-unit="4"] [data-numtag]')].map(n => n.className.includes('is-done') ? 'x' : 'o').join(''),
   }));
-  check('multi stops at two letters and greys the rest', g2.on === 'BD' && g2.dimE === 'true' && /已选 2，选够了/.test(g2.hint) && g2.nums === 'xx', g2);
-  check('letter buttons toggle', g2.letters === '1C,2B', g2.letters);
+  check('multi stops at two, tray shows 4 B / 5 D, rest dashed', g2.on === 'B4,D5' && g2.dimE === 'true' && /已选 2 4 B 5 D/.test(g2.tray) && /选够了/.test(g2.hint || '') && g2.nums === 'xx', g2);
+  check('grid circles toggle', g2.cells === '1C,2B', g2.cells);
   await multiOpt('D'); await multiOpt('E'); await multiOpt('E'); await multiOpt('D');
-  await page.click('#paperQs .lr-pick:not(.lr-pick--multi) .lr-pick__opt[data-k="B"]');
+  await page.click('#paperQs .lq-opts:not(.lq-opts--multi) .lq-opt[data-k="B"]');
   await page.click('#redoMap .lr-qnum[data-q="3"]');
   await page.waitForTimeout(400);
   const g3 = await page.evaluate(() => ({ focus: document.activeElement.closest('[data-nums]') && document.activeElement.closest('[data-nums]').dataset.nums, done: document.getElementById('redoDone').textContent }));
@@ -248,29 +277,50 @@ async function openByTitle(page, re) {
   const g4 = await page.evaluate(() => {
     const a = state.exam.attempts[state.attemptIdx];
     return { score: `${a.correct}/${a.total}`, ans: Object.entries(a.answers).map(([n, x]) => `${n}${x.user || '-'}${x.state[0]}`).join(' '),
-      row2: [...document.querySelectorAll('#questionsPane .lr-qs__match')][1].innerText.replace(/\s+/g, ' ') };
+      row2: [...document.querySelectorAll('#questionsPane .lq-grid tr[data-q="2"] .lq-cell')].map(c => c.textContent + (c.classList.contains('is-right') ? '+' : c.classList.contains('is-wrong') ? 'x' : '')).join('') };
   });
   check('map + multi graded (multi in either order)', g4.score === '4/6' && g4.ans === '1Cr 2Bw 3-b 4Br 5Dr 6Br', g4);
-  check('map row shows your wrong letter and the right one', /2 ?B ?E/.test(g4.row2), g4.row2);
+  check('map row shows your wrong letter and the right one', g4.row2 === 'ABxCDE+', g4.row2);
 
-  // ---------- 3. 版式里选字母的配对（小下拉） ----------
+  // ---------- 3. 版式里选字母的配对（字母槽 + 菜单） ----------
   await openByTitle(page, /^Part 2$/);
   await page.click('.mode-btn[data-mode="redo"]');
-  const x0 = await page.evaluate(() => ({ sels: [...document.querySelectorAll('#paperQs .lr-pickchip__sel')].map(s => s.dataset.q).join(','), first: document.querySelector('#paperQs .lr-pickchip__sel').options[0].textContent }));
-  check('blanks in a matching layout become dropdowns', x0.sels === '12,13,14' && x0.first === '选', x0);
-  await page.selectOption('#paperQs .lr-pickchip__sel[data-q="12"]', 'A');
-  const used = await page.evaluate(() => [...document.querySelector('#paperQs .lr-pickchip__sel[data-q="13"]').options].map(o => o.textContent).join(' | '));
-  check('a letter used elsewhere says where', /A.*（已填在 12）/.test(used), used);
-  await page.selectOption('#paperQs .lr-pickchip__sel[data-q="13"]', 'B');
-  await page.selectOption('#paperQs .lr-pickchip__sel[data-q="14"]', 'C');
-  await page.click('#paperQs .lr-pick__opt[data-k="C"]');
+  const x0 = await page.evaluate(() => ({
+    slots: [...document.querySelectorAll('#paperQs .lq-slot')].map(s => s.dataset.slot).join(','),
+    ph: document.querySelector('#paperQs .lq-slot').innerText.trim(),
+    nonum: [...document.querySelectorAll('#paperQs .lq-slot')].every(s => s.classList.contains('lq-slot--nonum') && !s.querySelector('.lq-n')),
+    selects: document.querySelectorAll('#paperQs select').length,
+    bank: document.querySelectorAll('#paperQs .lq-bank .lq-bank__item').length,
+  }));
+  check('blanks in a matching layout become letter slots (no native dropdown)', x0.slots === '12,13,14' && x0.ph === '选字母' && x0.selects === 0 && x0.bank > 0, x0);
+  check('layout already says "12." so the slot does not repeat the number', x0.nonum, x0);
+  await page.click('#paperQs .lq-slot[data-slot="12"]');
+  const mn = await page.evaluate(() => { const m = document.querySelector('.lq-menu'); return m && { opts: m.querySelectorAll('.lq-menu__opt').length, focus: document.activeElement.classList.contains('lq-menu__opt'), expanded: document.querySelector('#paperQs .lq-slot[data-slot="12"]').getAttribute('aria-expanded'), sheet: m.classList.contains('is-sheet') }; });
+  check('clicking a slot opens the option menu under it', mn && mn.opts > 2 && mn.focus && mn.expanded === 'true' && !mn.sheet, mn);
+  await page.click('.lq-menu .lq-menu__opt[data-k="A"]');
+  const s12 = await page.evaluate(() => ({ menu: !!document.querySelector('.lq-menu'), text: document.querySelector('#paperQs .lq-slot[data-slot="12"]').innerText.replace(/\s+/g, ' ').trim(), focus: document.activeElement.dataset.slot, used: [...document.querySelectorAll('#paperQs .lq-bank__item.is-used')].map(i => i.innerText.replace(/\s+/g, ' ')).join(' | ') }));
+  check('picking from the menu fills letter + option text, focus stays on the slot', !s12.menu && /^A \S/.test(s12.text) && s12.focus === '12', s12);
+  check('the box marks which question used a letter', /^A .* 12$/.test(s12.used), s12.used);
+  await page.click('#paperQs .lq-slot[data-slot="13"]');
+  const used = await page.evaluate(() => (document.querySelector('.lq-menu .lq-menu__opt[data-k="A"]') || {}).innerText);
+  check('a letter used elsewhere says where', /已填在 12/.test(used || ''), used);
+  await page.keyboard.press('Escape');
+  const esc = await page.evaluate(() => ({ menu: !!document.querySelector('.lq-menu'), focus: document.activeElement.dataset.slot }));
+  check('Escape closes the menu back to the slot', !esc.menu && esc.focus === '13', esc);
+  await page.keyboard.press('b');   // 槽上直接按字母键
+  await page.focus('#paperQs .lq-slot[data-slot="14"]');
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('c');
+  const kb = await page.evaluate(() => ({ v13: state.redo.answers['13'], v14: state.redo.answers['14'], menu: !!document.querySelector('.lq-menu'), paused: audioEl.paused }));
+  check('letter keys fill a slot; ArrowDown opens the menu, letter picks', kb.v13 === 'B' && kb.v14 === 'C' && !kb.menu && kb.paused, kb);
+  await page.click('#paperQs .lq-opt[data-k="C"]');
   await page.click('#redoCard .ui-btn--primary');
   const x1 = await page.evaluate(() => document.getElementById('submitText').textContent);
   check('all answered message', x1 === '都答完了，交卷后马上判分。', x1);
   await page.click('#submitConfirmBtn');
   await page.waitForFunction(() => state.mode === 'answers', null, { timeout: 5000 });
-  const x2 = await page.evaluate(() => { const a = state.exam.attempts[state.attemptIdx]; return `${a.correct}/${a.total}`; });
-  check('matching graded', x2 === '4/4', x2);
+  const x2 = await page.evaluate(() => { const a = state.exam.attempts[state.attemptIdx]; return { score: `${a.correct}/${a.total}`, slots: [...document.querySelectorAll('#questionsPane .lq-slot.is-ok')].map(s => s.innerText.replace(/\s+/g, ' ').trim()).join(' | ') }; });
+  check('matching graded, answers view shows green letter slots', x2.score === '4/4' && /^A \S.* \| B \S.* \| C \S/.test(x2.slots), x2);
 
   // ---------- 暗色 + 手机 ----------
   await page.evaluate(() => localStorage.setItem('ui-theme', 'dark'));
@@ -278,8 +328,8 @@ async function openByTitle(page, re) {
   await page.waitForFunction(() => typeof state !== 'undefined' && state.projects.length > 0);
   await openByTitle(page, /Greenfield Library Tour/);
   await page.click('.mode-btn[data-mode="redo"]');
-  await page.click('#paperQs .lr-letter[data-q="1"][data-k="C"]');
-  await page.click('#paperQs .lr-pick--multi .lr-pick__opt[data-k="B"]');
+  await page.click('#paperQs .lq-cell[data-q="1"][data-k="C"]');
+  await page.click('#paperQs .lq-opts--multi .lq-opt[data-k="B"]');
   await page.waitForTimeout(400);   // 等按钮颜色的过渡动画走完再截图
   await shot(page, 'map-paper-dark');
   const dark = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
@@ -309,6 +359,16 @@ async function openByTitle(page, re) {
   await pp.click('.lr-paper__submit');
   const ph2 = await pp.evaluate(() => !document.getElementById('submitModal').hidden);
   check('phone: submit opens the dialog', ph2, ph2);
+  await pp.evaluate(() => closeSubmitDialog());
+  await openByTitle(pp, /^Part 2$/);
+  await pp.evaluate(() => setMode('redo'));
+  await pp.click('#paperQs .lq-slot[data-slot="12"]');
+  const sh = await pp.evaluate(() => { const m = document.querySelector('.lq-menu'); const r = m && m.getBoundingClientRect(); return m && { sheet: m.classList.contains('is-sheet'), bottom: Math.round(r.bottom), h: window.innerHeight, w: Math.round(r.width), scrim: !!document.querySelector('.lq-scrim') }; });
+  check('phone: letter menu slides up from the bottom with a scrim', sh && sh.sheet && Math.abs(sh.bottom - sh.h) <= 1 && sh.w >= 380 && sh.scrim, sh);
+  await shot(pp, 'phone-sheet');
+  await pp.click('.lq-menu .lq-menu__opt[data-k="B"]');
+  const sh2 = await pp.evaluate(() => ({ menu: !!document.querySelector('.lq-menu'), scrim: !!document.querySelector('.lq-scrim'), v: state.redo.answers['12'], overflow: document.documentElement.scrollWidth - window.innerWidth }));
+  check('phone: picking closes the sheet, page still fits', !sh2.menu && !sh2.scrim && sh2.v === 'B' && sh2.overflow <= 0, sh2);
   check('no page errors (phone)', errors.length === 0, errors);
 
   console.log(`${engine}: ${pass}/${pass + fail} passed`);
