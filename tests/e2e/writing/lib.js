@@ -78,6 +78,7 @@ async function open(browser, opts = {}) {
     localStorage.setItem('ui-theme', theme);
   }, [TOKEN, opts.dark ? 'dark' : 'light']);
   const page = await ctx.newPage();
+  page.setDefaultTimeout(8000);   // 找不到的东西别干等 30 秒，记一条 FAIL 接着往下
   page.on('pageerror', e => report(`pageerror: ${e.message}`));
   page.on('console', m => { if (m.type() === 'error' && !/404|Failed to load resource/.test(m.text())) report(`console.error: ${m.text()}`); });
   // 删除确认之类的原生对话框一律点「确定」

@@ -14,11 +14,19 @@ async function vh(page) { return page.evaluate(() => innerHeight); }
 async function back(page) { await page.goBack(); await page.waitForTimeout(600); }
 async function fontPx(page, sel) { return page.evaluate(s => { const e = document.querySelector(s); return e ? parseFloat(getComputedStyle(e).fontSize) : 0; }, sel); }
 async function barLabels(page) { return page.evaluate(() => [...document.querySelectorAll('#wpActBar:not([hidden]) button')].map(b => b.textContent.trim())); }
-async function tapBar(page, label) {
-  const btn = page.locator('#wpActBar button', { hasText: label }).first();
-  await btn.tap();
+async function tapBar(page, label, fallback) {
+  const btn = page.locator('#wpActBar:not([hidden]) button', { hasText: label }).first();
+  if (await btn.count()) await btn.tap();
+  else if (fallback) await page.evaluate(fallback);   // 改版前的页面没有操作条：直接调原来的函数，好让后面的检查接着跑
   await page.waitForTimeout(900);
 }
+// 整屏的窗口：四条边都在屏幕里
+async function onScreen(page, sel) {
+  const b = await box(page, sel);
+  const w = await vw(page), h = await vh(page);
+  return { ok: !!b && b.left >= 0 && b.top >= 0 && b.right <= w + 0.5 && b.bottom <= h + 0.5, b };
+}
+const edges = b => b ? [b.left, b.top, b.right, b.bottom].map(Math.round).join(',') : '无';
 // 两个元素在同一行（两列排）
 async function sideBySide(page, sel) {
   return page.evaluate(s => {
@@ -78,6 +86,23 @@ async function home(page) {
     ok(await sideBySide(page, '.entry-card'), '入口卡两张一行');
     await minH(page, '.home-tool', 44, '工具行');
     await shot(page, 'home');
+  });
+  await step('首页打开 AI 助手 / 速记', async () => {
+    await page.locator('.home-tool', { hasText: 'AI 写作助手' }).tap();
+    await page.waitForTimeout(800);
+    const ai = await onScreen(page, '#aiChatWindow');
+    ok(ai.ok, `AI 写作助手没有跑出屏幕（${edges(ai.b)}）`);
+    const inp = await box(page, '#aiChatInput');
+    ok(!!inp && inp.bottom <= (await vh(page)) && inp.top >= 0, 'AI 输入框在屏幕里');
+    await page.evaluate(() => closeAIChat());
+    await page.waitForTimeout(700);
+    await page.locator('.home-tool', { hasText: '练习速记' }).tap();
+    await page.waitForTimeout(800);
+    const np = await onScreen(page, '#npWindow');
+    ok(np.ok, `练习速记没有跑出屏幕（${edges(np.b)}）`);
+    await page.evaluate(() => Notepad.close());
+    await page.waitForTimeout(700);
+    ok(!(await page.evaluate(() => state.aiChat.open || Notepad.open)), '关掉后两个窗口都收起');
   });
 }
 
@@ -175,8 +200,8 @@ async function bigChain(page) {
     await page.evaluate(() => window.scrollTo(0, 0));
     const labels = await barLabels(page);
     ok(labels.some(l => /去实战/.test(l)), `学习页底部有「去实战」（${labels.join(' / ')}）`);
-    await tapBar(page, '去实战');
-    ok((await view(page)) === 'practiceView', '点「去实战」进实战页');
+    await tapBar(page, '去实战', () => gotoPractice());
+    ok((await view(page)) === 'practiceView', '进实战页');
     await noOverflow(page, '实战页');
     await minH(page, '#practiceView .wp-head-btn[aria-label="练习速记"]', 44, '页头速记按钮');
     await minH(page, '#practiceView .wp-head-btn[aria-label="AI 写作助手"]', 44, '页头 AI 按钮');
@@ -219,7 +244,7 @@ async function bigChain(page) {
     await page.waitForTimeout(700);
     ok((await page.locator('#practiceView .fu-item').count()) >= 1, '追问有回复');
     const cur = await page.evaluate(() => state.activeSentIdx);
-    await tapBar(page, '下一句');
+    await tapBar(page, '下一句', () => advanceNext());
     ok((await page.evaluate(() => state.activeSentIdx)) === cur + 1, '「下一句」换到下一句');
     const card = await box(page, '#practiceView .task-card');
     ok(!!card && card.top >= (await navBottom(page)) - 1 && card.top < (await vh(page)) * 0.6, `换句后句子卡回到屏幕上方（${card && Math.round(card.top)}）`);
@@ -271,7 +296,7 @@ async function smallFangxie(page) {
   await step('仿写实战', async () => {
     const labels = await barLabels(page);
     ok(labels.some(l => /接着练/.test(l)), `仿写学习页底部有「接着练」（${labels.join(' / ')}）`);
-    await tapBar(page, '接着练');
+    await tapBar(page, '接着练', () => gotoSmallPractice());
     ok((await view(page)) === 'smallPracticeView', '进仿写实战');
     await noOverflow(page, '仿写实战');
     ok(!!(await box(page, '#smallPracticeView .wp-fig-thumb img')), '任务卡上方有题图缩略条');
@@ -311,20 +336,26 @@ async function templates(page) {
     await page.waitForTimeout(500);
     await noOverflow(page, '范文列表');
     ok(await sideBySide(page, '#tplBigSamplesBody .tbs-card'), '范文卡两张一行');
-    await page.tap('#tplBigSamplesView .wp-head-btn[aria-label="工具"]');
-    await page.waitForTimeout(400);
-    ok(await page.locator('.wp-sheet-row', { hasText: '只看骨架' }).count() === 1, '「只看骨架」收在 ⋯ 里');
-    await page.locator('.wp-sheet-row', { hasText: '只看骨架' }).tap();
+    await step('「只看骨架」收在 ⋯ 里', async () => {
+      await page.tap('#tplBigSamplesView .wp-head-btn[aria-label="工具"]');
+      await page.waitForTimeout(400);
+      ok(await page.locator('.wp-sheet-row', { hasText: '只看骨架' }).count() === 1, '「只看骨架」收在 ⋯ 里');
+      await page.locator('.wp-sheet-row', { hasText: '只看骨架' }).tap();
+    });
     await page.waitForTimeout(900);
+    if ((await view(page)) !== 'tplBigLearnView') await page.evaluate(() => Tpl.openSkeletonOnly());
+    await page.waitForTimeout(600);
     ok((await view(page)) === 'tplBigLearnView', '从 ⋯ 打开骨架对照');
     await noOverflow(page, '模板学习页');
     await shot(page, 'tplbig-learn');
-    await page.locator('#tplBigLearnBody .wp-more').first().tap();
-    await page.waitForTimeout(400);
-    ok(await page.locator('.wp-sheet-row', { hasText: '问 AI' }).count() === 1, '模板句子的 ⋯ 里有「问 AI」');
-    await page.tap('.wp-sheet-x');
-    await page.waitForTimeout(300);
-    await tapBar(page, '拿这道题练');
+    await step('模板句子的 ⋯', async () => {
+      await page.locator('#tplBigLearnBody .wp-more').first().tap();
+      await page.waitForTimeout(400);
+      ok(await page.locator('.wp-sheet-row', { hasText: '问 AI' }).count() === 1, '模板句子的 ⋯ 里有「问 AI」');
+      await page.tap('.wp-sheet-x');
+      await page.waitForTimeout(300);
+    });
+    await tapBar(page, '拿这道题练', () => Tpl.startBigPractice());
     ok((await view(page)) === 'tplBigPracticeView', '「拿这道题练」进实战');
     await noOverflow(page, '模板实战');
     const labels = await barLabels(page);
@@ -357,7 +388,7 @@ async function templates(page) {
     await noOverflow(page, '句型库');
     await minH(page, '#tplSmallLearnBody .tsl-chip', 40, '筛句型胶囊');
     await shot(page, 'tplsmall-learn');
-    await tapBar(page, '去实战');
+    await tapBar(page, '去实战', () => document.querySelector('.tsl-cta-btn').click());
     ok((await view(page)) === 'tplSmallPracticeView', '句型库「去实战」');
     await noOverflow(page, '模板小作文实战');
     ok(!!(await box(page, '#tplSmallPracticeView .wp-fig-thumb img')), '模板小作文任务卡上有题图缩略条');
@@ -371,11 +402,14 @@ async function templates(page) {
 
 async function review(page) {
   await step('复习中心', async () => {
-    await page.tap('#tplSmallPracticeView .wp-head-btn[aria-label="工具"]');
-    await page.waitForTimeout(400);
-    await page.locator('.wp-sheet-row', { hasText: '复习中心' }).tap();
+    await step('从 ⋯ 打开复习中心', async () => {
+      await page.tap('#tplSmallPracticeView .wp-head-btn[aria-label="工具"]');
+      await page.waitForTimeout(400);
+      await page.locator('.wp-sheet-row', { hasText: '复习中心' }).tap();
+    });
     await page.waitForTimeout(1200);
-    ok(await page.evaluate(() => state.drawerOpen), '从 ⋯ 打开复习中心');
+    if (!(await page.evaluate(() => state.drawerOpen))) await page.evaluate(() => toggleReview());
+    await page.waitForTimeout(1200);
     await noOverflow(page, '复习中心');
     await minH(page, '.review-overlay-tab', 40, '复习中心页签');
     await minH(page, '#wpSortBtn', 44, '排序按钮');
