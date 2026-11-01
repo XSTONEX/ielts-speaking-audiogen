@@ -83,5 +83,21 @@ att = again['data']['attempt']; att['id'] = '9100000000000000599'; att['submitte
 q3 = att['parts'][0]['groups'][0]['questions'][2]; q3['userAnswer'], q3['state'] = 'mill', '1'
 again['data']['annotationSnapshot']['annotations'] = again['data']['annotationSnapshot']['annotations'][:1]
 json.dump(again, open(f'{OUT}/e2e_single_again.json', 'w'), ensure_ascii=False, indent=1)
-for n in ('riverside.mp3', 'ferry.mp3', 'beekeeping.mp3'):
+# 地图题 + 多选题（重做的检查用）：平面图换成沙盒里画的一张 SVG
+with open(f'{OUT}/greenfield-plan.svg', 'w') as f:
+    f.write('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 300" width="520" height="300">'
+            '<rect x="10" y="10" width="500" height="280" rx="6" fill="#fff" stroke="#555" stroke-width="2"/>'
+            '<rect x="200" y="150" width="120" height="70" fill="#f3f3f1" stroke="#8a8a85"/>'
+            '<text x="260" y="190" text-anchor="middle" font-family="sans-serif" font-size="13">Reception</text>'
+            + ''.join(f'<circle cx="{x}" cy="{y}" r="14" fill="#fff" stroke="#1f1f1f"/><text x="{x}" y="{y + 5}" text-anchor="middle" '
+                      f'font-family="sans-serif" font-weight="700" font-size="13">{k}</text>'
+                      for k, x, y in [('A', 95, 62), ('B', 260, 62), ('C', 425, 62), ('D', 75, 160), ('E', 445, 160)])
+            + '</svg>')
+plan = json.load(open(f'{REPO}/tests/fixtures/jiufen_listening_map.json'))
+retime(plan['data']['attempt']['parts'][0], 'greenfield.mp3')
+for g in plan['data']['attempt']['parts'][0]['groups']:
+    if g.get('imageUrl'):
+        g['imageUrl'] = g['image'] = f'{BASE}/greenfield-plan.svg'
+json.dump(plan, open(f'{OUT}/e2e_map.json', 'w'), ensure_ascii=False, indent=1)
+for n in ('riverside.mp3', 'ferry.mp3', 'beekeeping.mp3', 'greenfield.mp3'):
     print(n, round(dur(f'{OUT}/{n}'), 2))

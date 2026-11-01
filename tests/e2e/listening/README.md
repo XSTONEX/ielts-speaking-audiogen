@@ -13,6 +13,7 @@
 | `jiufen_data.py` | 九分学长 JSON 导入用：把 `tests/fixtures/jiufen_listening_*.json`（编造的）配上 `say` 合成的音频，写进 `<沙盒>/static/e2e/` |
 | `jiufen_fake_translate.py` | 沙盒里没有翻译接口，导入的篇会停在「润色翻译失败」；这个脚本补上编的译文，把它改成完成 |
 | `jiufen_e2e.js` | 九分学长 JSON 导入的检查：粘贴 → 预解析 → 导入 → 字幕上的题号和出处 → 题目栏 → 再导入第二次做题 |
+| `redo_e2e.js` | 「显示答案 / 重做」的检查：导入填空 + 单选、地图 + 多选、版式里选字母的配对三份 → 重做时各题型作答 → 刷新后接着做 → 显示 / 隐藏原文 → 交卷判分 → 做题记录（本站 / 九分、删本站的）→ 暗色、390 宽 |
 
 ## 准备
 
@@ -63,3 +64,13 @@ python3 tests/e2e/listening/seed.py "$SB" && python3 tests/e2e/listening/jiufen_
 ```
 
 2026-10-31 两个内核都是 23 项全过（含题目栏放宽：4 列表格不挤、解析在表格下面、分隔条拖动 / 记住 / 双击恢复）。
+
+## 5. 显示答案 / 重做
+
+数据和第 4 步一样（`jiufen_data.py` 另外造了一份地图题 + 多选题的 JSON，平面图是沙盒里画的 SVG）。同样每跑一次前先重灌：
+
+```bash
+python3 tests/e2e/listening/seed.py "$SB" && python3 tests/e2e/listening/jiufen_data.py "$SB" && LR_SANDBOX="$SB" PLAYWRIGHT_CORE=/path/to/node_modules/playwright-core node tests/e2e/listening/redo_e2e.js webkit
+```
+
+2026-11-01 两个内核都是 47 项全过；同一天 `e2e.js` 217 项、`jiufen_e2e.js` 23 项也都重跑全过。

@@ -31,7 +31,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
   <link rel="stylesheet" href="/static/theme.css?v=20261031">
   <link rel="stylesheet" href="/static/plain.css">
-  <link rel="stylesheet" href="/static/listening.css?v=20261031c">
+  <link rel="stylesheet" href="/static/listening.css?v=20261101">
   <script src="/static/theme.js?v=20260919" defer></script>
   <script src="/static/api-client.js?v=20260919" defer></script>
   <script src="/static/auth.js?v=20260927" defer></script>
@@ -94,6 +94,13 @@
         </div>
       </div>
       <div class="ui-head__tools">
+        <div id="modeSeg" class="ui-seg lr-mode" role="group" aria-label="答案" hidden>
+          <button class="ui-seg__btn mode-btn is-on" type="button" data-mode="answers" aria-pressed="true">显示答案</button>
+          <button class="ui-seg__btn mode-btn" type="button" data-mode="redo" aria-pressed="false" title="隐藏答案，空格留空，可以重新做一遍">重做</button>
+        </div>
+        <button id="scriptBtn" class="ui-btn ui-btn--md" type="button" aria-pressed="false" onclick="toggleScript()" hidden>
+          <svg id="scriptCheck" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8.5 6.5 11.5 12.5 4.5"/></svg>显示原文
+        </button>
         <button id="toggleTransBtn" class="ui-btn ui-btn--md ui-btn--soft" type="button" aria-pressed="true" onclick="toggleTranslations()">
           <svg id="transCheck" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8.5 6.5 11.5 12.5 4.5"/></svg>显示译文
         </button>
@@ -105,6 +112,18 @@
 
     <div class="lr-body lr-detail-body">
       <div id="detailGrid" class="lr-container lr-detail">
+        <!-- 重做、原文隐藏时：题目搬到这里，像一张卷子 -->
+        <section id="paperPane" class="lr-paper" aria-label="题目" hidden>
+          <div class="lr-paper__bar">
+            <svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8s2.2-4.5 6-4.5S14 8 14 8s-2.2 4.5-6 4.5S2 8 2 8z"/><circle cx="8" cy="8" r="1.8"/><path d="M2.5 13.5 13.5 2.5"/></svg>
+            <span class="lr-paper__msg">原文已隐藏：只听音频做题，交卷后再对着原文复盘。</span>
+            <span id="paperProg" class="lr-paper__prog ui-num"></span>
+            <span class="lr-spacer"></span>
+            <button class="lr-linkbtn" type="button" onclick="toggleScript(true)">显示原文</button>
+            <button class="ui-btn ui-btn--sm ui-btn--primary lr-paper__submit" type="button" onclick="openSubmitDialog()">交卷</button>
+          </div>
+          <div id="paperQs"></div>
+        </section>
         <section id="lyricsContainer" class="lr-script" aria-label="逐句字幕"></section>
 
         <div id="sideSplit" class="lr-split" role="separator" aria-orientation="vertical" aria-controls="notesSide" aria-label="拖动调整右栏宽度，双击恢复" tabindex="0" title="按住左右拖，调右栏宽度；双击恢复">
@@ -113,7 +132,24 @@
 
         <div class="lr-side-mask" onclick="toggleSide(false)"></div>
         <aside id="notesSide" class="lr-side" aria-label="本篇">
-          <section class="lr-side__card">
+          <!-- 重做时顶上换成答题卡 -->
+          <section id="redoCard" class="lr-side__card" aria-label="答题卡" hidden>
+            <div class="lr-row"><h2 class="lr-side__title">重做</h2><span id="redoNth" class="ui-tag ui-tag--accent"></span><span class="lr-spacer"></span><span class="lr-meta">答案先存在这台设备上</span>
+              <button class="lr-icon lr-side__close" type="button" aria-label="收起答题卡" onclick="toggleSide(false)"><svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+            </div>
+            <div class="lr-sheet__nums">
+              <div><div class="lr-side__num ui-num"><span id="redoDone">0</span><span class="lr-sheet__of"> / <span id="redoTotal">0</span></span></div><div class="lr-side__numlabel">已答</div></div>
+              <div><div id="redoTime" class="lr-side__num ui-num">00:00</div><div class="lr-side__numlabel">用时</div></div>
+              <div><div id="redoLast" class="lr-side__num ui-num">—</div><div class="lr-side__numlabel">上次答对</div></div>
+            </div>
+            <div id="redoMap" class="lr-qmap lr-sheet__map" role="group" aria-label="题号，点一题跳到那道题" hidden></div>
+            <div class="lr-side__btns">
+              <button class="ui-btn ui-btn--md" type="button" onclick="clearRedo()">清空重来</button>
+              <button class="ui-btn ui-btn--md ui-btn--primary" type="button" onclick="openSubmitDialog()">交卷</button>
+            </div>
+            <p class="lr-sheet__note">交卷后才判分。你当时在九分学长上划的黄色关键词，重做时不显示。</p>
+          </section>
+          <section id="sideInfoCard" class="lr-side__card">
             <div class="lr-row"><h2 class="lr-side__title">本篇</h2><span class="lr-spacer"></span><span id="sideUploaded" class="lr-meta"></span>
               <button class="lr-icon lr-side__close" type="button" aria-label="收起本篇栏" onclick="toggleSide(false)"><svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
             </div>
@@ -130,7 +166,7 @@
                 <button id="attemptBtn" class="lr-att__btn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="attemptMenu" onclick="toggleAttemptMenu()"><span id="attemptBtnText"></span><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 6 8 10.5 12.5 6"/></svg></button>
               </div>
               <div id="attemptMenu" class="lr-att__menu" role="listbox" aria-label="做题记录" hidden></div>
-              <p id="attemptHint" class="lr-att__hint" hidden>换一次记录，题目栏就显示那一次的答案和划线。笔记、生词、收藏句和听错原因不分次，一直都在。</p>
+              <p id="attemptHint" class="lr-att__hint" hidden>换一次记录，题目栏就显示那一次的答案和划线。本站做的可以删；九分学长导入的不能在这里删（再导入同一个 Part 还会回来）。笔记、生词、收藏句和听错原因不分次，一直都在。</p>
             </div>
             <div class="lr-side__btns">
               <button id="checkinBtn" class="ui-btn ui-btn--md" type="button" onclick="doCheckin()">
@@ -140,7 +176,7 @@
             </div>
           </section>
 
-          <section class="lr-side__card" style="padding-bottom: 8px;">
+          <section id="sideMainCard" class="lr-side__card" style="padding-bottom: 8px;">
             <div id="sideTabs" class="ui-seg lr-side__tabs" role="tablist" aria-label="右栏内容" hidden>
               <button class="ui-seg__btn side-tab" type="button" role="tab" data-tab="questions" aria-controls="questionsPane">题目<span id="sideTabQCount" class="ui-seg__count"></span></button>
               <button class="ui-seg__btn side-tab" type="button" role="tab" data-tab="notes" aria-controls="notesPane">本篇笔记<span id="sideTabNCount" class="ui-seg__count"></span></button>
@@ -246,6 +282,38 @@
     </div>
   </div>
 
+  <!-- ==================== 交卷确认 ==================== -->
+  <div id="submitModal" class="ui-dialog-backdrop" hidden>
+    <div class="ui-dialog" role="dialog" aria-modal="true" aria-labelledby="submitTitle" aria-describedby="submitText" style="width: min(480px, 100%);">
+      <div class="ui-dialog__head"><h3 class="ui-dialog__title" id="submitTitle">交卷？</h3><button class="ui-dialog__close" type="button" aria-label="关闭" onclick="closeSubmitDialog()">×</button></div>
+      <div class="ui-dialog__body">
+        <p id="submitText" class="lr-submit__text"></p>
+        <div class="lr-submit__nums">
+          <div><div id="submitDone" class="lr-side__num ui-num"></div><div class="lr-side__numlabel">已答</div></div>
+          <div><div id="submitTime" class="lr-side__num ui-num"></div><div class="lr-side__numlabel">用时</div></div>
+          <div><div id="submitNth" class="lr-side__num ui-num"></div><div class="lr-side__numlabel">记成</div></div>
+        </div>
+        <p class="lr-submit__note">交卷后马上判分，切回「显示答案」看这一次；以前的记录都还在，可以在「做题记录」里切换。</p>
+      </div>
+      <div class="ui-dialog__foot">
+        <button class="ui-btn ui-btn--md" type="button" onclick="closeSubmitDialog()">继续做</button>
+        <button id="submitConfirmBtn" class="ui-btn ui-btn--md ui-btn--primary" type="button" onclick="confirmSubmit()">交卷</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 通用确认（清空重来、删一次记录） ==================== -->
+  <div id="confirmModal" class="ui-dialog-backdrop" hidden>
+    <div class="ui-dialog" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmText" style="width: min(440px, 100%);">
+      <div class="ui-dialog__head"><h3 class="ui-dialog__title" id="confirmTitle"></h3><button class="ui-dialog__close" type="button" aria-label="关闭" onclick="closeConfirm(false)">×</button></div>
+      <div class="ui-dialog__body"><p id="confirmText" style="margin: 0; line-height: 1.65; color: var(--w-ink2);"></p></div>
+      <div class="ui-dialog__foot">
+        <button class="ui-btn ui-btn--md" type="button" onclick="closeConfirm(false)">取消</button>
+        <button id="confirmOkBtn" class="ui-btn ui-btn--md ui-btn--primary" type="button" onclick="closeConfirm(true)">确定</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ==================== 选中文字后的小工具条 ==================== -->
   <div id="selectionToolbar" class="lr-pop" role="toolbar" aria-label="给选中的文字" hidden>
     <button id="selVocabBtn" class="lr-pop__btn" type="button"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9"/></svg>释义</button>
@@ -307,6 +375,9 @@ const state = {
   attemptIdx: -1,         // 正在看第几次做题记录
   selQ: null,             // 题目栏里选中的题号
   sideTab: 'questions',   // 导入的篇右栏：题目 / 本篇笔记
+  mode: 'answers',        // 导入的篇：answers 显示答案 / redo 重做（不显示答案）
+  showScript: false,      // 重做时显示原文；不显示时题目搬到左边像一张卷子
+  redo: null,             // 重做中的答卷 { answers: {题号: 填的}, elapsed: 秒 }；多选题一组的选择记在第一个题号上
   playUntil: null,        // 「播放这一段」播到这里自动停
   json: null,             // 上传弹窗 JSON 页：{ raw, name, size, preview, choices }
   lastPointer: 'mouse',
@@ -340,6 +411,8 @@ const LAST_KEY = 'listening-last-position';
 const BUSY = ['downloading', 'processing', 'translating'];
 const GAP_SECONDS = 8;          // 两句之间空这么久就在字幕里画一条「没有声音」的分隔线
 const JSON_MAX = 25 * 1024 * 1024;
+const REDO_PREFIX = 'listening-redo:';       // 重做到一半的答卷，按篇存在这台设备的浏览器里
+const SCRIPT_KEY = 'listening-redo-script';  // 重做时显示原文（1）还是隐藏（0）
 
 function beginVocabAudioPause() {
   if (state.vocabAudioPauseActive) {
@@ -1061,15 +1134,15 @@ async function openProject(id) {
   state.playUntil = null;
   state.activeSegmentId = -1;
   state.pickerSeg = null;
+  // 上次重做到一半就离开的，回来接着做
+  const draft = state.exam ? readDraft(id) : null;
+  state.mode = draft && draft.active ? 'redo' : 'answers';
+  state.redo = draft ? { answers: draft.answers, elapsed: draft.elapsed } : null;
+  state.showScript = readShowScript();
 
   switchView('detail');
   document.getElementById('detailTitle').textContent = r.project.title;
-  const segCount = (r.data?.segments || []).length;
-  const metaParts = [];
-  if (r.project.duration) metaParts.push(formatTime(r.project.duration));
-  if (segCount) metaParts.push(`${segCount} 句`);
-  if (state.exam) metaParts.push('九分学长');
-  document.getElementById('detailMeta').textContent = metaParts.join(' · ');
+  renderDetailMeta();
   document.getElementById('sideUploaded').textContent = r.project.created_at ? `${formatDate(r.project.created_at)}${state.exam ? '导入' : '上传'}` : '';
   updateMasteredBtn(!!r.project.mastered);
   updateCheckinBtn(r.project.checkin_count || 0);
@@ -1081,9 +1154,21 @@ async function openProject(id) {
   audioEl.load();
   updateProgressBar(0);
   renderExamSide();
-  renderLyrics();
+  renderMode();
   renderNotesView();
   updateNotesButton();
+}
+
+function renderDetailMeta() {
+  const p = state.currentProject;
+  const segCount = (state.currentData?.segments || []).length;
+  const attempts = (state.exam && state.exam.attempts) || [];
+  const metaParts = [];
+  if (p.duration) metaParts.push(formatTime(p.duration));
+  if (segCount) metaParts.push(`${segCount} 句`);
+  if (state.exam) metaParts.push('九分学长');
+  if (attempts.length > 1) metaParts.push(`做过 ${attempts.length} 次`);
+  document.getElementById('detailMeta').textContent = metaParts.join(' · ');
 }
 
 function backToList() {
@@ -1092,13 +1177,18 @@ function backToList() {
   hideSelectionToolbar({ resumeAudio: false });
   closeErrorPicker({ resumeAudio: false });
   saveLastPosition();
+  saveDraft();
   audioEl.pause();
   audioEl.removeAttribute('src');
   audioEl.load();
   toggleAttemptMenu(false);
+  closeSubmitDialog();
   state.currentProject = null;
   state.currentData = null;
   state.exam = null;
+  state.mode = 'answers';
+  state.redo = null;
+  syncRedoClock();
   state.selQ = null;
   state.playUntil = null;
   state.activeSegmentId = -1;
@@ -1231,8 +1321,10 @@ function renderLyrics() {
     return;
   }
   const segs = state.currentData.segments;
-  const marks = questionMarks();
-  const ev = selectedEvidence();
+  // 重做时字幕上不标题号、答案词和出处，不然一眼就看到答案
+  const redo = state.mode === 'redo';
+  const marks = redo ? null : questionMarks();
+  const ev = redo ? null : selectedEvidence();
   let html = '', prevEnd = null, inBand = false;
   segs.forEach(seg => {
     if (prevEnd !== null && seg.start - prevEnd >= GAP_SECONDS) {
@@ -1967,6 +2059,8 @@ function currentAttempt() {
   return list[state.attemptIdx] || list[list.length - 1] || null;
 }
 
+function isSelfAttempt(a) { return !!a && a.source === 'self'; }
+
 function examQuestions() {
   const out = [];
   ((state.exam && state.exam.groups) || []).forEach((g, gi) => (g.questions || []).forEach(q => out.push({ g, gi, q })));
@@ -2046,7 +2140,7 @@ function renderExamSide() {
   const src = document.getElementById('sideSrc');
   src.hidden = !att;
   if (att) {
-    const bits = ['九分学长'];
+    const bits = [isSelfAttempt(att) ? '本站重做' : '九分学长'];
     if (att.submitted_at) bits.push(`${formatDate(att.submitted_at)}交卷`);
     if (att.elapsed_seconds) bits.push(`用时 ${formatTime(att.elapsed_seconds)}`);
     src.textContent = bits.join(' · ');
@@ -2055,9 +2149,14 @@ function renderExamSide() {
   document.getElementById('attemptBox').hidden = attempts.length < 2;
   if (attempts.length >= 2) {
     const i = attempts.indexOf(att);
-    document.getElementById('attemptBtnText').textContent = `第 ${i + 1} 次 · ${formatDate(att.submitted_at)}交卷`;
+    const tag = a => isSelfAttempt(a) ? '<span class="lr-srctag lr-srctag--self">本站</span>' : '<span class="lr-srctag">九分</span>';
+    document.getElementById('attemptBtnText').innerHTML = `第 ${i + 1} 次 · ${esc(formatDate(att.submitted_at))}${tag(att)}`;
+    // 本站做的可以删、右边写用时；九分学长导入的不能删（再导入还会回来），右边写划了几处
     document.getElementById('attemptMenu').innerHTML = attempts.map((a, k) => `
-      <button class="lr-att__opt${k === i ? ' is-on' : ''}" type="button" role="option" aria-selected="${k === i}" data-i="${k}"><span>第 ${k + 1} 次 · ${formatDate(a.submitted_at)}</span><span>${a.correct}/${a.total}</span><span>划线 ${(a.marks || []).length}</span></button>`).join('');
+      <div class="lr-att__item" role="none">
+        <button class="lr-att__opt${k === i ? ' is-on' : ''}" type="button" role="option" aria-selected="${k === i}" data-i="${k}"><span>第 ${k + 1} 次 · ${esc(formatDate(a.submitted_at))}${tag(a)}</span><span>${a.correct}/${a.total}</span><span>${isSelfAttempt(a) ? (a.elapsed_seconds ? formatTime(a.elapsed_seconds) : '') : `划线 ${(a.marks || []).length}`}</span></button>
+        ${isSelfAttempt(a) ? `<button class="lr-att__del" type="button" data-del="${k}" aria-label="删除第 ${k + 1} 次">${ICONS.trash}</button>` : '<span class="lr-att__gap"></span>'}
+      </div>`).join('');
   }
   document.getElementById('sideTabQCount').textContent = examQuestions().length || '';
   setSideTab(state.sideTab);
@@ -2087,6 +2186,8 @@ function toggleAttemptMenu(force) {
   document.getElementById('attemptBtn').setAttribute('aria-expanded', open ? 'true' : 'false');
 }
 document.getElementById('attemptMenu').addEventListener('click', (e) => {
+  const del = e.target.closest('[data-del]');
+  if (del) { deleteAttempt(+del.dataset.del); return; }
   const opt = e.target.closest('[data-i]');
   if (!opt) return;
   state.attemptIdx = +opt.dataset.i;
@@ -2094,6 +2195,24 @@ document.getElementById('attemptMenu').addEventListener('click', (e) => {
   renderExamSide();
   renderLyrics();
 });
+
+async function deleteAttempt(k) {
+  const a = ((state.exam && state.exam.attempts) || [])[k];
+  if (!isSelfAttempt(a)) return;
+  const ok = await askConfirm({ title: `删除第 ${k + 1} 次记录？`, text: `${formatDate(a.submitted_at)}本站重做的这次（答对 ${a.correct}/${a.total}）会删掉，不能恢复。别的记录、笔记和生词不受影响。`, ok: '删除', danger: true });
+  if (!ok || !state.exam) return;
+  const r = await API.del(`/api/listening_review/project/${state.currentProject.id}/attempts/${encodeURIComponent(a.id)}`);
+  if (!r.success) { showToast(r.error || '删除失败', 'error'); return; }
+  const cur = state.attemptIdx;
+  state.exam.attempts = r.attempts;
+  state.attemptIdx = cur === k ? r.attempts.length - 1 : cur > k ? cur - 1 : cur;
+  syncProjectScore(r.score, r.attempt_count);
+  toggleAttemptMenu(false);
+  renderExamSide();
+  renderLyrics();
+  renderDetailMeta();
+  showToast(`已删除第 ${k + 1} 次`, 'success');
+}
 document.addEventListener('mousedown', (e) => {
   if (!document.getElementById('attemptMenu').hidden && !e.target.closest('#attemptBox')) toggleAttemptMenu(false);
 });
@@ -2194,15 +2313,21 @@ function blankChipHtml(q) {
   return `<button class="${cls}" type="button" data-q="${esc(q.num)}" aria-expanded="${sel}" aria-label="第 ${esc(q.num)} 题：${esc(label)}">${inner}</button>`;
 }
 
-function qxHtml(q, labels) {
+// multi：多选题一组题号合在一起写「你选 B、C / 正确答案 B、D（不分先后）」
+function qxHtml(q, labels, multi) {
   const a = answerOf(q.num);
   const user = String(a.user || '').trim();
   const ok = a.state === 'right';
   const an = q.analysis || {};
   const para = (label, text) => text ? `<div><span class="lr-qx__label">${esc(label)}</span><p class="lr-qx__text">${esc(text)}</p></div>` : '';
   const ans = [];
-  if (a.state) ans.push(`<span>你的答案${user ? `<b class="${ok ? 'is-ok' : 'is-err'}">${esc(user)}</b>` : '<b>没答</b>'}</span>`);
-  if (!ok) ans.push(`<span>正确答案<b class="is-ok">${esc(displayAnswer(q.answer))}</b></span>`);
+  if (multi) {
+    if (multi.answered) ans.push(`<span>你选${multi.mine.length ? `<b class="${multi.allRight ? 'is-ok' : 'is-err'}">${esc(multi.mine.join('、'))}</b>` : '<b>没答</b>'}</span>`);
+    if (!multi.allRight) ans.push(`<span>正确答案<b class="is-ok">${esc(multi.right.join('、'))}</b>（不分先后）</span>`);
+  } else {
+    if (a.state) ans.push(`<span>你的答案${user ? `<b class="${ok ? 'is-ok' : 'is-err'}">${esc(user)}</b>` : '<b>没答</b>'}</span>`);
+    if (!ok) ans.push(`<span>正确答案<b class="is-ok">${esc(displayAnswer(q.answer))}</b></span>`);
+  }
   const play = evidenceSegs(q).length
     ? `<button class="ui-btn ui-btn--sm" type="button" data-act="q-play" data-q="${esc(q.num)}">${ICONS.play}播放出处</button>` : '';
   const head = labels && labels.length
@@ -2237,18 +2362,75 @@ function rowHtml(q, gmarks) {
   return `<div class="lr-qs__match" role="button" tabindex="0" data-q="${esc(q.num)}" aria-expanded="${sel}"><span>${hlText(q.text, stemMarks)}</span>${blankChipHtml(q)}</div>${sel ? qxHtml(q) : ''}`;
 }
 
+// 多选题（Choose TWO letters）：几个题号共用一份选项，按组显示；字母不分先后
+function multiUnits(g) {
+  const byNum = {};
+  g.questions.forEach(q => { byNum[q.num] = q; });
+  const units = Array.isArray(g.units) && g.units.length ? g.units : g.questions.map(q => [q.num]);
+  return units.map(nums => ({ nums, qs: nums.map(n => byNum[n]).filter(Boolean) })).filter(u => u.qs.length);
+}
+
+function multiHtml(g, unit, gmarks) {
+  const qs = unit.qs, opts = qs[0].options || [];
+  const right = new Set(), mine = new Set();
+  qs.forEach(q => {
+    keysOf(q.answer, opts).forEach(k => right.add(k));
+    keysOf(answerOf(q.num).user, opts).forEach(k => mine.add(k));
+  });
+  const selQ = qs.find(q => q.num === state.selQ);
+  const items = opts.map(o => {
+    const k = String(o.key).toUpperCase();
+    const isR = right.has(k), isM = mine.has(k);
+    const cls = isM ? (isR ? ' is-right' : ' is-wrong') : isR ? ' is-right' : '';
+    const mark = isM ? (isR ? '你选 · 对' : '你选') : isR ? '答案' : '';
+    const om = gmarks.filter(m => unit.nums.includes(m.q) && m.o === o.key);
+    return `<li class="lr-opt${cls}"><span class="lr-opt__k">${esc(o.key)}</span><span>${hlText(o.text, om)}</span><span class="lr-opt__mark">${mark}</span></li>`;
+  }).join('');
+  const stemQ = qs.find(q => String(q.text || '').trim()) || qs[0];
+  const stemMarks = gmarks.filter(m => m.q === stemQ.num && !m.o);
+  const nums = qs.map(q => `<span class="lr-qnum${stateCls(answerOf(q.num).state)}">${esc(q.num)}</span>`).join('');
+  const answered = qs.some(q => answerOf(q.num).state);
+  const multi = { answered, mine: [...mine].sort(), right: [...right].sort(), allRight: qs.every(q => answerOf(q.num).state === 'right') };
+  return `<div class="lr-qs__stem${selQ ? ' is-sel' : ''}" role="button" tabindex="0" data-q="${esc(qs[0].num)}" aria-expanded="${!!selQ}"><span class="lr-qnums">${nums}</span><span>${hlText(stemQ.text, stemMarks)}</span></div>
+    <ul class="lr-qs__opts">${items}</ul>${selQ ? qxHtml(selQ, null, multi) : ''}`;
+}
+
+function groupBank(g) {
+  if (g.options && g.options.length) return g.options;
+  return (g.kind === 'match' || g.kind === 'map') && g.questions[0] ? (g.questions[0].options || []) : [];
+}
+
+// 地图 / 平面图点开看大图
+function groupImageHtml(g) {
+  return `<a class="lr-qs__imglink" href="${esc(g.image)}" target="_blank" rel="noopener noreferrer" title="点开看大图"><img class="lr-qs__img" src="${esc(g.image)}" alt="${esc(g.range || '题目')}的配图" loading="lazy" referrerpolicy="no-referrer" /></a>`;
+}
+
 function groupHtml(g, gi, gmarks) {
   let html = '<div class="lr-qs__group">';
   if (g.range) html += `<div class="lr-qs__range">${esc(g.range)}</div>`;
   if (g.instruction_html) html += `<div class="lr-qs__inst">${g.instruction_html}</div>`;
-  if (g.image) html += `<img class="lr-qs__img" src="${esc(g.image)}" alt="${esc(g.range || '题目')}的配图" loading="lazy" referrerpolicy="no-referrer" />`;
+  if (g.image) html += groupImageHtml(g);
   if (g.title) html += `<p class="lr-qs__title">${esc(g.title)}</p>`;
-  const bank = (g.options && g.options.length) ? g.options : (g.kind === 'match' && g.questions[0] ? g.questions[0].options : []);
+  const bank = groupBank(g);
   if (g.kind === 'match' && bank.length) html += `<div class="lr-qs__bank">${bank.map(o => `<b>${esc(o.key)}</b><span>${esc(o.text)}</span>`).join('')}</div>`;
   if (g.content_html) html += `<div class="lr-qs__content" data-g="${gi}">${g.content_html}</div>`;
+  else if (g.kind === 'multi') html += multiUnits(g).map(u => multiHtml(g, u, gmarks)).join('');
   else if (g.kind === 'choice' || g.kind === 'judge') html += g.questions.map(q => choiceHtml(q, gmarks)).join('');
-  else html += g.questions.map(q => rowHtml(q, gmarks)).join('');
+  else html += g.questions.map(q => rowHtml(q, gmarks)).join('');   // 填空、配对、地图：一题一行
   return html + '</div>';
+}
+
+// 多列的表格包一层：按词换行，太窄时只让表格自己横着滑；单列的表格其实是一列笔记，照原样排
+function wrapTables(box) {
+  box.querySelectorAll('table').forEach(table => {
+    if (Math.max(0, ...[...table.rows].map(r => r.cells.length)) < 2) return;
+    table.classList.add('lr-tbl');
+    const wrap = document.createElement('div');
+    wrap.className = 'lr-tblwrap';
+    table.before(wrap);
+    wrap.appendChild(table);
+    wrap.insertAdjacentHTML('afterend', `<div class="lr-tblhint" hidden>${ICONS.swipe}表格比较宽，左右滑动看全</div>`);
+  });
 }
 
 // 题目版式（HTML）里的空格框换成填着答案的小框，选中的题在那一行下面展开解析
@@ -2268,16 +2450,7 @@ function fillContent(box, g, gmarks) {
   // 版式里没有空格框的题，列在版式下面
   const rest = g.questions.filter(q => !placed.has(q.num));
   if (rest.length) box.insertAdjacentHTML('beforeend', rest.map(q => rowHtml(q, gmarks)).join(''));
-  // 多列的表格包一层：按词换行，太窄时只让表格自己横着滑；单列的表格其实是一列笔记，照原样排
-  box.querySelectorAll('table').forEach(table => {
-    if (Math.max(0, ...[...table.rows].map(r => r.cells.length)) < 2) return;
-    table.classList.add('lr-tbl');
-    const wrap = document.createElement('div');
-    wrap.className = 'lr-tblwrap';
-    table.before(wrap);
-    wrap.appendChild(table);
-    wrap.insertAdjacentHTML('afterend', `<div class="lr-tblhint" hidden>${ICONS.swipe}表格比较宽，左右滑动看全</div>`);
-  });
+  wrapTables(box);
   if (state.selQ === null || !placed.has(state.selQ)) return;
   const chip = box.querySelector(`.lr-blank[data-q="${CSS.escape(state.selQ)}"]`);
   const t = document.createElement('template');
@@ -2335,7 +2508,9 @@ function updateTableHints() {
 
 function renderQuestions() {
   const pane = document.getElementById('questionsPane');
-  if (!state.exam) { pane.innerHTML = ''; return; }
+  if (!state.exam) { pane.innerHTML = ''; document.getElementById('paperQs').innerHTML = ''; return; }
+  if (state.mode === 'redo') { renderRedoQuestions(); return; }
+  document.getElementById('paperQs').innerHTML = '';
   const att = currentAttempt();
   const marks = (att && att.marks) || [];
   const qmap = examQuestions().map(({ q }) => {
@@ -2401,6 +2576,7 @@ function playEvidence(num) {
 
 const questionsPaneEl = document.getElementById('questionsPane');
 questionsPaneEl.addEventListener('click', (e) => {
+  if (state.mode === 'redo') return;   // 重做时的点击由 onRedoClick 管
   const act = e.target.closest('[data-act]');
   if (act && act.dataset.act === 'q-play') { playEvidence(act.dataset.q); return; }
   if (act && act.dataset.act === 'q-close') { selectQuestion(null); return; }
@@ -2409,6 +2585,7 @@ questionsPaneEl.addEventListener('click', (e) => {
   if (hit) selectQuestion(hit.dataset.q);
 });
 questionsPaneEl.addEventListener('keydown', (e) => {
+  if (state.mode === 'redo') return;
   if (e.key !== 'Enter' && e.key !== ' ') return;
   const hit = e.target.closest('[role="button"][data-q]');
   if (!hit || hit !== e.target) return;
@@ -2416,6 +2593,541 @@ questionsPaneEl.addEventListener('keydown', (e) => {
   e.stopPropagation();
   selectQuestion(hit.dataset.q);
 });
+
+// ===================================================================
+//  显示答案 / 重做：重做时空格留空自己再做一遍，交卷后判分存成新的一次（本站）
+// ===================================================================
+function readDraft(id) {
+  try {
+    const d = JSON.parse(localStorage.getItem(REDO_PREFIX + id) || 'null');
+    if (!d || typeof d !== 'object' || !d.answers || typeof d.answers !== 'object') return null;
+    return { answers: d.answers, elapsed: Math.max(0, +d.elapsed || 0), active: !!d.active };
+  } catch { return null; }
+}
+
+// 一题没填、也没花时间的就不留；active 记着离开时是不是在重做，回来就接着做
+function saveDraft() {
+  if (!state.currentProject || !state.exam) return;
+  const key = REDO_PREFIX + state.currentProject.id;
+  const r = state.redo;
+  try {
+    if (!r || (!Object.keys(r.answers).length && r.elapsed < 1)) { localStorage.removeItem(key); return; }
+    localStorage.setItem(key, JSON.stringify({ answers: r.answers, elapsed: Math.round(r.elapsed), active: state.mode === 'redo', at: Date.now() }));
+  } catch {}
+}
+
+let draftTimer = null;
+function saveDraftSoon() {
+  clearTimeout(draftTimer);
+  draftTimer = setTimeout(saveDraft, 400);
+}
+
+function readShowScript() {
+  try { return localStorage.getItem(SCRIPT_KEY) === '1'; } catch { return false; }
+}
+
+function setMode(mode) {
+  if (!state.exam) mode = 'answers';
+  if (mode === state.mode) return;
+  closeSubmitDialog();
+  toggleAttemptMenu(false);
+  state.mode = mode;
+  state.selQ = null;
+  state.playUntil = null;
+  if (mode === 'redo' && !state.redo) state.redo = { answers: {}, elapsed: 0 };
+  saveDraft();
+  renderMode();
+  if (mode === 'redo' && !state.showScript) window.scrollTo({ top: 0 });
+}
+document.querySelectorAll('.mode-btn').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+
+function toggleScript(force) {
+  state.showScript = typeof force === 'boolean' ? force : !state.showScript;
+  try { localStorage.setItem(SCRIPT_KEY, state.showScript ? '1' : '0'); } catch {}
+  renderMode();
+}
+
+// 两档切换时整页跟着变：页头按钮、左边是字幕还是卷子、右栏顶上是「本篇」还是答题卡
+function renderMode() {
+  const redo = state.mode === 'redo' && !!state.exam;
+  const paper = redo && !state.showScript;
+  document.getElementById('modeSeg').hidden = !state.exam;
+  document.querySelectorAll('.mode-btn').forEach(b => {
+    const on = b.dataset.mode === state.mode;
+    b.classList.toggle('is-on', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  const sb = document.getElementById('scriptBtn');
+  sb.hidden = !redo;
+  sb.classList.toggle('ui-btn--soft', state.showScript);
+  sb.setAttribute('aria-pressed', state.showScript ? 'true' : 'false');
+  document.getElementById('scriptCheck').style.display = state.showScript ? '' : 'none';
+  document.getElementById('toggleTransBtn').hidden = paper;
+  const grid = document.getElementById('detailGrid');
+  grid.classList.toggle('is-redo', redo);
+  grid.classList.toggle('is-paper', paper);
+  document.getElementById('lyricsContainer').hidden = paper;
+  document.getElementById('paperPane').hidden = !paper;
+  document.getElementById('redoCard').hidden = !redo;
+  document.getElementById('sideInfoCard').hidden = redo;
+  document.getElementById('sideMainCard').hidden = paper;
+  renderQuestions();
+  renderLyrics();
+  renderRedoCard();
+  syncRedoClock();
+  applySideWidth();
+  requestAnimationFrame(updateTableHints);
+}
+
+function redoValue(num) { return (state.redo && state.redo.answers[num]) || ''; }
+function splitKeys(v) { return String(v || '').toUpperCase().split(/[\s,，、/&|]+/).filter(Boolean); }
+
+// 哪些题算「填了」；多选题一组选了几个字母，就算前几个题号填了
+function answeredNums() {
+  const done = new Set();
+  if (!state.exam || !state.redo) return done;
+  state.exam.groups.forEach(g => {
+    if (g.kind === 'multi') {
+      multiUnits(g).forEach(u => {
+        const n = splitKeys(redoValue(u.nums[0])).length;
+        u.nums.slice(0, u.nums.length === 1 ? Math.min(n, 1) : n).forEach(x => done.add(x));
+      });
+    } else {
+      g.questions.forEach(q => { if (String(redoValue(q.num)).trim()) done.add(q.num); });
+    }
+  });
+  return done;
+}
+
+function formatClock(sec) {
+  sec = Math.max(0, Math.floor(sec || 0));
+  const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
+  const mm = String(m).padStart(2, '0'), ss = String(s).padStart(2, '0');
+  return h ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+}
+
+function redoQmapHtml(done) {
+  return examQuestions().map(({ q }) => {
+    const on = done.has(q.num);
+    return `<button class="lr-qnum ${on ? 'is-done' : 'is-todo'}" type="button" data-q="${esc(q.num)}" aria-label="第 ${esc(q.num)} 题，${on ? '已填' : '没填'}">${esc(q.num)}</button>`;
+  }).join('');
+}
+
+function renderRedoCard() {
+  if (state.mode !== 'redo' || !state.exam) return;
+  const attempts = state.exam.attempts || [];
+  const last = attempts[attempts.length - 1];
+  document.getElementById('redoNth').textContent = `第 ${attempts.length + 1} 次`;
+  document.getElementById('redoLast').textContent = last ? `${last.correct}/${last.total}` : '—';
+  refreshRedoProgress();
+}
+
+// 已答几题、题号总览、题干前的题号：填一个空就跟着变
+function refreshRedoProgress() {
+  if (state.mode !== 'redo' || !state.exam) return;
+  const done = answeredNums();
+  document.getElementById('redoDone').textContent = done.size;
+  document.getElementById('redoTotal').textContent = examQuestions().length;
+  const paper = !state.showScript;
+  const map = document.getElementById('redoMap');
+  map.hidden = !paper;
+  map.innerHTML = paper ? redoQmapHtml(done) : '';
+  const paneMap = document.querySelector('#questionsPane .lr-qmap');
+  if (paneMap) paneMap.innerHTML = redoQmapHtml(done);
+  document.querySelectorAll('.lr-qs--redo [data-numtag]').forEach(el => {
+    const on = done.has(el.dataset.numtag);
+    el.classList.toggle('is-done', on);
+    el.classList.toggle('is-todo', !on);
+  });
+  renderRedoTime();
+}
+
+function renderRedoTime() {
+  if (!state.redo) return;
+  const t = formatClock(state.redo.elapsed);
+  document.getElementById('redoTime').textContent = t;
+  document.getElementById('paperProg').textContent = `已答 ${document.getElementById('redoDone').textContent}/${document.getElementById('redoTotal').textContent} · ${t}`;
+}
+
+// 用时只在重做页开着、看得见的时候走；电脑睡着回来不会一下多出几小时
+let redoClock = null;
+function syncRedoClock() {
+  const run = state.view === 'detail' && state.mode === 'redo' && !!state.redo && !document.hidden;
+  if (run && !redoClock) {
+    let last = Date.now(), ticks = 0;
+    redoClock = setInterval(() => {
+      const now = Date.now();
+      if (state.redo) state.redo.elapsed += Math.min(5, (now - last) / 1000);
+      last = now;
+      renderRedoTime();
+      if (++ticks % 10 === 0) saveDraft();
+    }, 1000);
+  } else if (!run && redoClock) {
+    clearInterval(redoClock);
+    redoClock = null;
+    saveDraft();
+  }
+}
+document.addEventListener('visibilitychange', syncRedoClock);
+window.addEventListener('pagehide', saveDraft);
+
+// --- 重做时的题目：空格是输入框，选择题点选项，配对 / 地图每题一排字母 ---
+function numTagHtml(num, done) {
+  const on = done.has(num);
+  return `<span class="lr-qnum ${on ? 'is-done' : 'is-todo'}" data-numtag="${esc(num)}">${esc(num)}</span>`;
+}
+
+// 不开拼写检查和自动更正：浏览器给的红线 / 改词等于提示答案
+function redoInputHtml(q, wide) {
+  const v = redoValue(q.num);
+  return `<label class="lr-inp${String(v).trim() ? ' is-filled' : ''}${wide ? ' lr-inp--wide' : ''}" data-nums="${esc(q.num)}"><span class="lr-inp__n">${esc(q.num)}</span><input class="lr-inp__box" type="text" data-q="${esc(q.num)}" value="${esc(v)}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="第 ${esc(q.num)} 题"></label>`;
+}
+
+function letterOptions(g, q) {
+  const opts = (q.options && q.options.length) ? q.options : groupBank(g);
+  return opts.filter(o => String(o.key || '').trim());
+}
+
+// 版式里要填字母的空（带选项框的流程图 / 摘要 / 配对）：小下拉；已经用在别的题上的字母写着题号
+function selectOptionsHtml(g, q, letters, v) {
+  const used = {};
+  g.questions.forEach(o => {
+    if (o.num === q.num) return;
+    const k = String(redoValue(o.num)).toUpperCase();
+    if (k) (used[k] = used[k] || []).push(o.num);
+  });
+  return '<option value="">选</option>' + letters.map(o => {
+    const k = String(o.key).toUpperCase();
+    const text = String(o.text || '').trim();
+    const note = used[k] ? `（已填在 ${used[k].join('、')}）` : '';
+    return `<option value="${esc(k)}"${k === v ? ' selected' : ''}>${esc(o.key)}${text ? ' · ' + esc(text) : ''}${esc(note)}</option>`;
+  }).join('');
+}
+
+function redoSelectHtml(g, q, letters) {
+  const v = String(redoValue(q.num)).toUpperCase();
+  return `<label class="lr-pickchip${v ? ' is-filled' : ''}" data-nums="${esc(q.num)}"><span class="lr-inp__n">${esc(q.num)}</span><select class="lr-pickchip__sel" data-q="${esc(q.num)}" aria-label="第 ${esc(q.num)} 题">${selectOptionsHtml(g, q, letters, v)}</select></label>`;
+}
+
+function refreshSelects(groupEl, g) {
+  groupEl.querySelectorAll('.lr-pickchip__sel').forEach(sel => {
+    const q = g.questions.find(x => x.num === sel.dataset.q);
+    if (q) sel.innerHTML = selectOptionsHtml(g, q, letterOptions(g, q), String(redoValue(q.num)).toUpperCase());
+  });
+}
+
+// 单选点一个；多选（Choose TWO letters，或答案本身有几个字母的题）点够个数后其余变灰
+function redoPickHtml(u, done) {
+  const mine = splitKeys(redoValue(u.key));
+  const multi = u.pick > 1;
+  const full = multi && mine.length >= u.pick;
+  const items = u.opts.map(o => {
+    const k = String(o.key).toUpperCase();
+    const on = mine.includes(k);
+    const dim = full && !on;
+    return `<li><button class="lr-pick__opt${on ? ' is-on' : ''}${dim ? ' is-dim' : ''}" type="button" role="${multi ? 'checkbox' : 'radio'}" aria-checked="${on}"${dim ? ' aria-disabled="true"' : ''} data-unit="${esc(u.key)}" data-k="${esc(k)}" data-pick="${u.pick}"><span class="lr-pick__k">${esc(o.key)}</span><span>${esc(o.text)}</span></button></li>`;
+  }).join('');
+  const hint = multi ? `<p class="lr-pick__hint">选 ${u.pick} 个 · 已选 <b>${mine.length}</b>${full ? '，选够了，要换先取消一个' : ''}</p>` : '';
+  return `<div class="lr-unit" data-unit="${esc(u.key)}" data-nums="${esc(u.nums.join(' '))}">
+    <div class="lr-qs__stem"><span class="lr-qnums">${u.nums.map(n => numTagHtml(n, done)).join('')}</span><span>${esc(u.text)}</span></div>
+    <ul class="lr-pick${multi ? ' lr-pick--multi' : ''}" role="${multi ? 'group' : 'radiogroup'}" aria-label="第 ${esc(u.nums.join('、'))} 题${multi ? `，选 ${u.pick} 个` : ''}">${items}</ul>${hint}</div>`;
+}
+
+function redoChoiceHtml(q, done) {
+  const opts = q.options || [];
+  return redoPickHtml({ key: q.num, nums: [q.num], text: q.text, opts, pick: Math.max(1, keysOf(q.answer, opts).size) }, done);
+}
+
+function redoMultiHtml(g, unit, done) {
+  const stemQ = unit.qs.find(q => String(q.text || '').trim()) || unit.qs[0];
+  const opts = unit.qs[0].options || [];
+  const pick = unit.qs.length > 1 ? unit.qs.length : Math.max(2, g.pick || 0, keysOf(unit.qs[0].answer, opts).size);
+  return redoPickHtml({ key: unit.nums[0], nums: unit.nums, text: stemQ.text, opts, pick }, done);
+}
+
+function redoLetterRowHtml(g, q, done) {
+  const letters = letterOptions(g, q);
+  if (!letters.length) return redoTextRowHtml(q);
+  const v = String(redoValue(q.num)).toUpperCase();
+  const btns = letters.map(o => {
+    const k = String(o.key).toUpperCase();
+    return `<button class="lr-letter${k === v ? ' is-on' : ''}" type="button" data-q="${esc(q.num)}" data-k="${esc(k)}" aria-pressed="${k === v}"${o.text ? ` title="${esc(o.text)}"` : ''}>${esc(o.key)}</button>`;
+  }).join('');
+  return `<div class="lr-letrow" data-nums="${esc(q.num)}">${numTagHtml(q.num, done)}<span class="lr-letrow__text">${esc(q.text)}</span><div class="lr-letters" role="group" aria-label="第 ${esc(q.num)} 题选字母">${btns}</div></div>`;
+}
+
+// 句子填空：题干里的 ____ 换成输入框；简答题（问句）框放在后面、宽一点
+function redoTextRowHtml(q) {
+  const text = String(q.text || '');
+  const m = /_{2,}/.exec(text);
+  const body = m
+    ? `${esc(text.slice(0, m.index))}${redoInputHtml(q)}${esc(text.slice(m.index + m[0].length))}`
+    : `${esc(text)} ${redoInputHtml(q, /\?\s*$/.test(text))}`;
+  return `<div class="lr-qs__row lr-redo-row" data-nums="${esc(q.num)}">${body}</div>`;
+}
+
+function redoGroupHtml(g, gi, done) {
+  let html = `<div class="lr-qs__group" data-g="${gi}">`;
+  if (g.range) html += `<div class="lr-qs__range">${esc(g.range)}</div>`;
+  if (g.instruction_html) html += `<div class="lr-qs__inst">${g.instruction_html}</div>`;
+  if (g.image) html += groupImageHtml(g);
+  if (g.title) html += `<p class="lr-qs__title">${esc(g.title)}</p>`;
+  const bank = groupBank(g);
+  if (g.kind === 'match' && bank.length) html += `<div class="lr-qs__bank">${bank.map(o => `<b>${esc(o.key)}</b><span>${esc(o.text)}</span>`).join('')}</div>`;
+  if (g.content_html) html += `<div class="lr-qs__content" data-g="${gi}">${g.content_html}</div>`;
+  else if (g.kind === 'multi') html += multiUnits(g).map(u => redoMultiHtml(g, u, done)).join('');
+  else if (g.kind === 'choice' || g.kind === 'judge') html += g.questions.map(q => redoChoiceHtml(q, done)).join('');
+  else if (g.kind === 'match' || g.kind === 'map') html += g.questions.map(q => redoLetterRowHtml(g, q, done)).join('');
+  else html += g.questions.map(q => redoTextRowHtml(q)).join('');
+  return html + '</div>';
+}
+
+// 题目版式里的空格框：要写词的换成输入框，要选字母的换成小下拉
+function fillRedoContent(box, g, done) {
+  const byNum = {};
+  g.questions.forEach(q => { byNum[q.num] = q; });
+  const letterKind = ['match', 'map', 'choice', 'multi'].includes(g.kind);
+  const placed = new Set();
+  box.querySelectorAll('.ir-blank').forEach(span => {
+    const q = byNum[span.dataset.q];
+    if (!q) return;
+    const letters = letterKind ? letterOptions(g, q) : [];
+    const t = document.createElement('template');
+    t.innerHTML = letters.length ? redoSelectHtml(g, q, letters) : redoInputHtml(q);
+    span.replaceWith(t.content.firstElementChild);
+    placed.add(q.num);
+  });
+  const rest = g.questions.filter(q => !placed.has(q.num));
+  if (rest.length) box.insertAdjacentHTML('beforeend', rest.map(q => letterKind ? redoLetterRowHtml(g, q, done) : redoTextRowHtml(q)).join(''));
+  wrapTables(box);
+}
+
+function sizeInput(box) {
+  const min = box.closest('.lr-tbl') ? 6 : 9;
+  box.style.width = Math.min(36, Math.max(min, box.value.length + 2)) + 'ch';
+}
+
+// 原文显示时题目在右栏（顶上有题号总览）；原文隐藏时在左边的卷子里（题号总览在答题卡上）
+function renderRedoQuestions() {
+  const paper = !state.showScript;
+  const pane = document.getElementById('questionsPane'), paperQs = document.getElementById('paperQs');
+  const host = paper ? paperQs : pane;
+  (paper ? pane : paperQs).innerHTML = '';
+  const done = answeredNums();
+  const qmap = paper ? '' : `<div class="lr-qmap" role="group" aria-label="题号，点一题跳到那道题">${redoQmapHtml(done)}</div>`;
+  host.innerHTML = `${qmap}<div class="lr-qs lr-qs--redo">${state.exam.groups.map((g, gi) => redoGroupHtml(g, gi, done)).join('')}</div>`;
+  host.querySelectorAll('.lr-qs__content').forEach(box => fillRedoContent(box, state.exam.groups[+box.dataset.g], done));
+  host.querySelectorAll('.lr-inp__box').forEach(sizeInput);
+  requestAnimationFrame(updateTableHints);
+}
+
+function setRedoAnswer(num, value) {
+  if (!state.redo) return;
+  const v = String(value || '');
+  if (v.trim()) state.redo.answers[num] = v;
+  else delete state.redo.answers[num];
+  refreshRedoProgress();
+  saveDraftSoon();
+}
+
+function redoUnitHtml(key) {
+  const g = state.exam.groups.find(x => x.questions.some(q => q.num === key));
+  if (!g) return '';
+  const done = answeredNums();
+  if (g.kind === 'multi') {
+    const u = multiUnits(g).find(x => x.nums[0] === key);
+    return u ? redoMultiHtml(g, u, done) : '';
+  }
+  return redoChoiceHtml(g.questions.find(q => q.num === key), done);
+}
+
+function clickPick(opt) {
+  if (opt.getAttribute('aria-disabled') === 'true') return;
+  const key = opt.dataset.unit, k = opt.dataset.k, pick = +opt.dataset.pick || 1;
+  let mine = splitKeys(redoValue(key));
+  if (pick === 1) mine = mine[0] === k ? [] : [k];
+  else if (mine.includes(k)) mine = mine.filter(x => x !== k);
+  else if (mine.length < pick) mine.push(k);
+  setRedoAnswer(key, mine.join(','));
+  const unitEl = opt.closest('.lr-unit');
+  const html = redoUnitHtml(key);
+  if (!unitEl || !html) return;
+  const t = document.createElement('template');
+  t.innerHTML = html.trim();
+  const fresh = t.content.firstElementChild;
+  unitEl.replaceWith(fresh);
+  const again = fresh.querySelector(`.lr-pick__opt[data-k="${CSS.escape(k)}"]`);
+  if (again) again.focus({ preventScroll: true });
+}
+
+function clickLetter(btn) {
+  const num = btn.dataset.q, k = btn.dataset.k;
+  const next = String(redoValue(num)).toUpperCase() === k ? '' : k;
+  setRedoAnswer(num, next);
+  btn.closest('.lr-letters').querySelectorAll('.lr-letter').forEach(b => {
+    const on = b.dataset.k === next;
+    b.classList.toggle('is-on', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+}
+
+function focusRedoQuestion(num) {
+  const paper = !state.showScript;
+  const host = document.getElementById(paper ? 'paperQs' : 'questionsPane');
+  const el = [...host.querySelectorAll('[data-nums]')].find(x => x.dataset.nums.split(' ').includes(num));
+  if (!el) return;
+  if (paper && isDrawerMode() && state.sideOpen) toggleSide(false);
+  if (paper) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  else scrollSideTo(el);
+  const f = el.querySelector('input, select, .lr-letter.is-on, .lr-pick__opt.is-on, .lr-letter, .lr-pick__opt');
+  if (f) f.focus({ preventScroll: true });
+}
+
+function onRedoClick(e) {
+  if (state.mode !== 'redo') return;
+  const opt = e.target.closest('.lr-pick__opt');
+  if (opt) { clickPick(opt); return; }
+  const letter = e.target.closest('.lr-letter');
+  if (letter) { clickLetter(letter); return; }
+  const num = e.target.closest('.lr-qmap [data-q]');
+  if (num) focusRedoQuestion(num.dataset.q);
+}
+
+function onRedoInput(e) {
+  if (state.mode !== 'redo') return;
+  const box = e.target.closest('.lr-inp__box');
+  if (!box) return;
+  setRedoAnswer(box.dataset.q, box.value);
+  box.closest('.lr-inp').classList.toggle('is-filled', !!box.value.trim());
+  sizeInput(box);
+}
+
+function onRedoChange(e) {
+  if (state.mode !== 'redo') return;
+  const sel = e.target.closest('.lr-pickchip__sel');
+  if (!sel) return;
+  setRedoAnswer(sel.dataset.q, sel.value);
+  sel.closest('.lr-pickchip').classList.toggle('is-filled', !!sel.value);
+  const groupEl = sel.closest('.lr-qs__group');
+  const g = groupEl && state.exam.groups[+groupEl.dataset.g];
+  if (g) refreshSelects(groupEl, g);
+}
+
+// Enter 跳到下一个空
+function onRedoKeydown(e) {
+  if (state.mode !== 'redo' || e.key !== 'Enter' || e.isComposing) return;
+  if (!e.target.matches('.lr-inp__box, .lr-pickchip__sel')) return;
+  e.preventDefault();
+  const all = [...e.currentTarget.querySelectorAll('.lr-inp__box, .lr-pickchip__sel')];
+  const next = all[all.indexOf(e.target) + 1];
+  if (next) { next.focus({ preventScroll: true }); next.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+}
+
+[questionsPaneEl, document.getElementById('paperQs')].forEach(el => {
+  el.addEventListener('click', onRedoClick);
+  el.addEventListener('input', onRedoInput);
+  el.addEventListener('change', onRedoChange);
+  el.addEventListener('keydown', onRedoKeydown);
+});
+document.getElementById('redoMap').addEventListener('click', onRedoClick);
+
+async function clearRedo() {
+  if (!state.redo) return;
+  const n = answeredNums().size;
+  if (n || state.redo.elapsed >= 5) {
+    const ok = await askConfirm({ title: '清空重来？', text: `已经填的 ${n} 题和用时 ${formatClock(state.redo.elapsed)} 都会清掉，从头再做一遍。`, ok: '清空', danger: true });
+    if (!ok || !state.redo) return;
+  }
+  state.redo = { answers: {}, elapsed: 0 };
+  saveDraft();
+  renderQuestions();
+  renderRedoCard();
+}
+
+function openSubmitDialog() {
+  if (state.mode !== 'redo' || !state.redo || !state.exam) return;
+  const nums = examQuestions().map(x => x.q.num);
+  const done = answeredNums();
+  const missing = nums.filter(n => !done.has(n));
+  const list = missing.length > 8 ? missing.slice(0, 8).join('、') + ' 等' : missing.join('、');
+  document.getElementById('submitText').innerHTML = !done.size ? '一题都还没答，交卷后都算没答。'
+    : missing.length ? `还有 <b>${missing.length}</b> 题没答：<b>第 ${esc(list)} 题</b>。交卷后没答的算错。`
+    : '都答完了，交卷后马上判分。';
+  document.getElementById('submitDone').textContent = `${done.size} / ${nums.length}`;
+  document.getElementById('submitTime').textContent = formatClock(state.redo.elapsed);
+  document.getElementById('submitNth').textContent = `第 ${(state.exam.attempts || []).length + 1} 次`;
+  document.getElementById('submitModal').hidden = false;
+  document.getElementById('submitConfirmBtn').focus();
+}
+
+function closeSubmitDialog() { document.getElementById('submitModal').hidden = true; }
+
+function syncProjectScore(score, count) {
+  if (!state.currentProject) return;
+  state.currentProject.score = score;
+  state.currentProject.attempt_count = count;
+  const proj = state.projects.find(p => p.id === state.currentProject.id);
+  if (proj) { proj.score = score; proj.attempt_count = count; }
+}
+
+async function confirmSubmit() {
+  if (!state.redo || !state.currentProject) return;
+  const btn = document.getElementById('submitConfirmBtn');
+  if (btn.disabled) return;
+  btn.disabled = true;
+  btn.textContent = '判分中…';
+  const projectId = state.currentProject.id;
+  let r = null;
+  try {
+    r = await API.post(`/api/listening_review/project/${projectId}/attempts`, { answers: state.redo.answers, elapsed_seconds: Math.round(state.redo.elapsed) });
+  } catch { r = null; }
+  btn.disabled = false;
+  btn.textContent = '交卷';
+  if (!r || !r.success) { showToast((r && r.error) || '交卷没成功，答案还在，过一会儿再交', 'error'); return; }
+  if (!state.currentProject || state.currentProject.id !== projectId || !state.exam) return;
+  const before = state.exam.attempts || [];
+  const prev = before[before.length - 1];
+  state.exam.attempts = r.attempts;
+  state.attemptIdx = r.index;
+  syncProjectScore(r.score, r.attempt_count);
+  state.redo = null;
+  try { localStorage.removeItem(REDO_PREFIX + projectId); } catch {}
+  closeSubmitDialog();
+  state.mode = 'answers';
+  state.selQ = null;
+  renderExamSide();
+  renderMode();
+  renderDetailMeta();
+  window.scrollTo({ top: 0 });
+  const a = r.attempt;
+  let diff = '';
+  if (prev) {
+    const d = a.correct - prev.correct;
+    diff = d > 0 ? `，比上次多对 ${d} 题` : d < 0 ? `，比上次少对 ${-d} 题` : '，和上次一样';
+  }
+  showToast(`第 ${r.index + 1} 次交卷：答对 ${a.correct}/${a.total}${diff}${a.elapsed_seconds ? ' · 用时 ' + formatClock(a.elapsed_seconds) : ''}`, 'success');
+}
+
+// 清空、删记录用的确认框，返回 true / false
+let confirmResolve = null;
+function askConfirm({ title, text, ok = '确定', danger = false }) {
+  if (confirmResolve) confirmResolve(false);
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmText').textContent = text;
+  const btn = document.getElementById('confirmOkBtn');
+  btn.textContent = ok;
+  btn.className = `ui-btn ui-btn--md ${danger ? 'lr-btn-danger' : 'ui-btn--primary'}`;
+  document.getElementById('confirmModal').hidden = false;
+  btn.focus();
+  return new Promise(resolve => { confirmResolve = resolve; });
+}
+
+function closeConfirm(result) {
+  document.getElementById('confirmModal').hidden = true;
+  const r = confirmResolve;
+  confirmResolve = null;
+  if (r) r(!!result);
+}
 
 // ===================================================================
 //  Audio Player
@@ -2489,6 +3201,7 @@ function highlightSegment(segId) {
   if (!lineEl) return;
 
   lineEl.classList.add('is-active');
+  if (container.hidden) return;   // 重做时原文藏起来了，别把页面滚走
 
   // 滚到导航栏和播放条之间的正中间
   const topH = navHeight();
@@ -2621,6 +3334,8 @@ function updateCheckinBtn(count) {
 // ===================================================================
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
+    if (!document.getElementById('confirmModal').hidden) { closeConfirm(false); return; }
+    if (!document.getElementById('submitModal').hidden) { closeSubmitDialog(); return; }
     if (!document.getElementById('uploadModal').hidden) { closeUploadModal(); return; }
     if (!document.getElementById('attemptMenu').hidden) { toggleAttemptMenu(false); return; }
     if (!document.getElementById('deleteModal').hidden) { closeDeleteDialog(); return; }
@@ -2632,7 +3347,8 @@ document.addEventListener('keydown', (e) => {
     return;
   }
   if (state.view !== 'detail') return;
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT' || e.target.isContentEditable) return;
+  if (!document.getElementById('submitModal').hidden || !document.getElementById('confirmModal').hidden) return;
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   if (e.code === 'Space')      { e.preventDefault(); togglePlay(); }
   else if (e.code === 'ArrowLeft')  { e.preventDefault(); state.playUntil = null; audioEl.currentTime = Math.max(0, audioEl.currentTime - 3); }

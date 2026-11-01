@@ -170,8 +170,11 @@ def _groups(part, details):
     groups, answers = [], {}
     for rg, g in zip(raw, parsed):
         kind = g['kind']
-        if 'match' in (rg.get('type') or '').lower():
+        gtype = (rg.get('type') or '').lower()
+        if 'match' in gtype:
             kind = 'match'
+        elif 'map' in gtype:
+            kind = 'map'   # 地图 / 平面图：每题的选项只有 A–H 字母，字母在图上
         questions = []
         for q in g['questions']:
             answers[q['num']] = {'user': q['user_answer'], 'state': q['state']}
@@ -187,6 +190,7 @@ def _groups(part, details):
             'id': str(rg.get('id') or ''),
             'range': g['range'],
             'kind': kind,
+            'type': g['type'],
             'instruction_html': g['instruction_html'],
             'content_html': g['content_html'],
             'image': g['image'],

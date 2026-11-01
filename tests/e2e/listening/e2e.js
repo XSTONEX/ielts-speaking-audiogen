@@ -771,7 +771,7 @@ async function testPhone(browser) {
     await page.waitForSelector('.lr-line');
     await sleep(500);
     check(`phone ${theme}: detail no horizontal overflow`, await noOverflow());
-    const tools = await page.$$eval('#detailView .lr-head .ui-head__tools .ui-btn', els => els.map(e => Math.round(e.getBoundingClientRect().right)));
+    const tools = await page.$$eval('#detailView .lr-head .ui-head__tools .ui-btn:not([hidden])', els => els.map(e => Math.round(e.getBoundingClientRect().right)));
     check(`phone ${theme}: 译文 and 本篇笔记 buttons on screen (bug 2)`, tools.length === 2 && tools.every(r => r <= 390), tools);
     check(`phone ${theme}: title visible`, await page.$eval('#detailTitle', e => e.getBoundingClientRect().width > 100));
     check(`phone ${theme}: unstarred stars visible (bug 3)`, await page.$eval('.lr-line[data-seg-id="2"] .star-btn', b => getComputedStyle(b).opacity) === '1');
@@ -812,7 +812,7 @@ async function testPhone(browser) {
     await sleep(400);
     check(`phone ${theme}: drawer opens`, await visible(page, '#notesSide'));
     await shot(page, `phone-drawer-${theme}`);
-    await page.tap('.lr-side__close');
+    await page.tap('#sideInfoCard .lr-side__close');
     await sleep(300);
     check(`phone ${theme}: drawer closes`, !(await visible(page, '#notesSide')));
     // player

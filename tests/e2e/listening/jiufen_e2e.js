@@ -76,7 +76,7 @@ const check = (name, ok, got) => { ok ? pass++ : fail++; console.log(`${ok ? 'PA
   await page.click('#attemptBtn');
   await page.click('#attemptMenu [data-i="0"]');
   const sw = await page.evaluate(() => ({ btn: document.getElementById('attemptBtnText').textContent, score: document.getElementById('sideScoreNum').textContent, hl: document.querySelectorAll('#questionsPane .lr-hl').length }));
-  check('attempt switch', sw.btn === '第 1 次 · 9 月 24 日交卷' && sw.score === '3/5' && sw.hl === 5, sw);
+  check('attempt switch', sw.btn === '第 1 次 · 9 月 24 日九分' && sw.score === '3/5' && sw.hl === 5, sw);
 
   // 多列表格（编的 4 列表格题，形状照线上一篇 Part 1）：表头不能被挤成一个字母一行，解析放在表格下面
   await page.evaluate(() => {

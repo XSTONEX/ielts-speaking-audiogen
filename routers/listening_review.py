@@ -10,7 +10,7 @@ from core import (
 )
 from utils.audio_segment import transcribe_segmented, probe_duration
 from utils.json_store import save_json_atomic
-from utils import jiufen_listening
+from utils import jiufen_listening, listening_grade
 from utils.jiufen_import import JiufenFormatError
 
 listening_review_bp = Blueprint('listening_review', __name__)
@@ -1106,13 +1106,100 @@ def get_project(project_id):
     data = _load_project_data(project_id)
     if data is not None:
         data = _persist_migrated_error_tags(project_id, data)
+    exam = _load_exam(project_id)
+    if exam:
+        # 地图题、多选题按现在的规则再认一遍，以前导入的篇也一样显示
+        exam['groups'] = listening_grade.normalize_groups(exam.get('groups'))
 
     return jsonify({
         'success': True,
         'project': project,
         'data': data,  # may be None if still processing
-        'exam': _load_exam(project_id),  # 九分学长导入的篇才有: 题目 + 每次做题记录
+        'exam': exam,  # 九分学长导入的篇才有: 题目 + 每次做题记录
     })
+
+
+@listening_review_bp.route('/api/listening_review/project/<project_id>/attempts', methods=['POST'])
+@_serialized
+def submit_attempt(project_id):
+    """「重做」交卷: 按题目里的答案判分, 存成新的一次做题记录 (source: self), 和导入的记录放在一起"""
+    username = _get_auth_username()
+    if not username:
+        return jsonify({'error': '未登录或token无效'}), 401
+
+    projects, idx = _find_user_project(username, project_id)
+    if idx == -1:
+        return jsonify({'error': '项目不存在'}), 404
+    exam = _load_exam(project_id)
+    if not exam or not exam.get('groups'):
+        return jsonify({'error': '这一篇没有题目，不能交卷'}), 400
+
+    body = request.get_json(silent=True) or {}
+    submitted = body.get('answers')
+    if not isinstance(submitted, dict):
+        return jsonify({'error': '没收到答案'}), 400
+    try:
+        elapsed = max(0, min(int(body.get('elapsed_seconds') or 0), 6 * 3600))
+    except (TypeError, ValueError):
+        elapsed = 0
+
+    result = listening_grade.grade(exam['groups'], submitted)
+    attempt = {
+        'id': f'self-{uuid.uuid4().hex[:12]}',
+        'source': 'self',
+        'submitted_at': datetime.now().isoformat(timespec='seconds'),
+        'elapsed_seconds': elapsed or None,
+        'correct': result['correct'],
+        'total': result['total'],
+        'answers': result['answers'],
+        'marks': [],
+    }
+    attempts = [a for a in exam.get('attempts') or [] if isinstance(a, dict)]
+    attempts.append(attempt)
+    _sort_attempts(attempts)
+    exam['attempts'] = attempts
+    save_json_atomic(_exam_path(project_id), exam)
+
+    record = projects[idx]
+    record.update(score=_score(attempts), attempt_count=len(attempts), updated_at=datetime.now().isoformat())
+    _save_user_projects(username, projects)
+    return jsonify({
+        'success': True,
+        'attempt': attempt,
+        'attempts': attempts,
+        'index': attempts.index(attempt),
+        'score': record['score'],
+        'attempt_count': record['attempt_count'],
+    })
+
+
+@listening_review_bp.route('/api/listening_review/project/<project_id>/attempts/<attempt_id>', methods=['DELETE'])
+@_serialized
+def delete_attempt(project_id, attempt_id):
+    """删掉一次本站做的记录; 九分学长导入的不能删 (再导入同一个 Part 还会回来)"""
+    username = _get_auth_username()
+    if not username:
+        return jsonify({'error': '未登录或token无效'}), 401
+
+    projects, idx = _find_user_project(username, project_id)
+    if idx == -1:
+        return jsonify({'error': '项目不存在'}), 404
+    exam = _load_exam(project_id)
+    attempts = [a for a in (exam or {}).get('attempts') or [] if isinstance(a, dict)]
+    target = next((a for a in attempts if a.get('id') == attempt_id), None)
+    if not target:
+        return jsonify({'error': '这次记录不存在'}), 404
+    if target.get('source') != 'self':
+        return jsonify({'error': '九分学长导入的记录不能在这里删'}), 400
+
+    attempts.remove(target)
+    exam['attempts'] = attempts
+    save_json_atomic(_exam_path(project_id), exam)
+    record = projects[idx]
+    record.update(score=_score(attempts), attempt_count=len(attempts), updated_at=datetime.now().isoformat())
+    _save_user_projects(username, projects)
+    return jsonify({'success': True, 'attempts': attempts, 'score': record['score'],
+                    'attempt_count': record['attempt_count']})
 
 
 @listening_review_bp.route('/api/listening_review/project/<project_id>', methods=['DELETE'])
