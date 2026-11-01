@@ -2845,6 +2845,552 @@ html[data-theme="dark"] body.page-writing-practice .tpl-btn.ghost {
   .fb-gc-legend { display: none; }
   .fb-vu-grid { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* ==================== 手机版（≤820px）====================
+   桌面（>820px）一像素不动：下面这些手机专用的元素在桌面一律 display:none，
+   其余规则全在 820 / 640 的媒体查询里。手机上的思路：
+   - 右下角三个浮动按钮去掉，工具放进页头（实战页：速记 / AI 两个图标 + ⋯ 工具）；
+   - 屏幕底部是本页的主操作条（提交批改 / 下一句 / 去实战），由 Phone.sync 照着页面里原来的按钮生成；
+   - 题干、句子列表、题图这些侧栏内容收进底部弹层，正文只留「这一句」和输入框；
+   - 速记、AI 助手、复习中心都是整屏，返回手势先关它们。 */
+.wp-phone-only, .wp-head-tools, .wp-prow, .wp-more, .wp-actbar, .wp-lb-more,
+.wp-fig-thumb, .wp-sort-btn, .rv-del-m, .np-header-actions button.np-rename { display: none; }
+.wp-sheet[hidden] { display: none !important; }
+
+@media (max-width: 820px) {
+  .wp-desk-only { display: none !important; }
+  .wp-phone-only { display: inline; }
+
+  /* ---------- 外壳：左右 16px，底部只给操作条留位置 ---------- */
+  .main-panel-wrapper {
+    width: 100%; padding: 0 0 calc(var(--wp-bar-h, 0px) + 40px + env(safe-area-inset-bottom)) 0;
+  }
+  #app > [id$="View"], #app > #entryView { padding: 0 16px; }
+  .view-head, .dir-layout { margin-left: -16px; margin-right: -16px; }
+  .review-fab, .ai-float-btn, .np-fab { display: none !important; }
+  .editor-hint, .fu-hint { display: none; }
+  body.page-writing-practice .card { padding: 16px; }
+
+  /* ---------- 页头：返回 + 标题（一行截断）+ 工具；学习/实战换到第二行 ---------- */
+  .view-head { flex-wrap: wrap; gap: 8px 6px; padding: 10px 16px 12px 16px; }
+  #practiceView .view-head, #smallPracticeView .view-head,
+  #tplBigPracticeView .view-head, #tplSmallPracticeView .view-head { padding-bottom: 10px; }
+  .view-head > .back-btn { order: 0; }
+  .view-head-main { order: 1; flex: 1 1 0; min-width: 0; }
+  .view-head .breadcrumb {
+    margin-bottom: 2px; flex-wrap: nowrap; overflow: hidden; white-space: nowrap; gap: 6px;
+  }
+  .view-head .breadcrumb > * { flex-shrink: 0; }
+  .view-head .breadcrumb > :last-child { flex-shrink: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .view-head h2, .view-head .view-head-slot h2 {
+    font-size: 19px; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .view-head-title-row h2 { min-width: 0; }
+  .view-head .view-head-slot .tpl-hint, .view-head .view-head-slot p {
+    white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+  }
+  .wp-head-tools { order: 2; display: flex; align-items: center; gap: 0; flex-shrink: 0; margin-right: -8px; }
+  .wp-head-btn {
+    width: 44px; height: 44px; padding: 0; border: none; border-radius: var(--w-r-card);
+    background: transparent; color: var(--w-ink2);
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .wp-head-btn:active { background: var(--w-sunken); }
+  .wp-head-btn svg { width: 21px; height: 21px; }
+  .view-head > .seg-switch { order: 3; width: 100%; flex-basis: 100%; }
+  .view-head .seg-btn { flex: 1; height: 40px; padding: 0 12px; }
+  /* 「只看骨架 / 只看句型库」收进 ⋯ 工具 */
+  .view-head > .view-head-tools { display: none; }
+
+  /* ---------- 实战页：进度行（第几句 + 题干 / 看图），侧栏收进弹层 ---------- */
+  .wp-prow { order: 4; flex-basis: 100%; display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .wp-prow-main {
+    flex: 1 1 auto; min-width: 0; height: 44px; padding: 0 12px;
+    display: flex; align-items: center; gap: 10px; text-align: left;
+    border: 1px solid var(--w-line); border-radius: var(--w-r-card);
+    background: var(--w-surface); color: var(--w-ink); font-size: var(--w-fs-ui);
+  }
+  .wp-prow-txt { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+  .wp-prow-txt i { font-style: normal; font-weight: 400; color: var(--w-ink3); }
+  .wp-dots { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 4px; overflow: hidden; }
+  .wp-dots i {
+    width: 8px; height: 8px; flex-shrink: 0; border-radius: 50%;
+    background: var(--w-big-track); box-shadow: inset 0 0 0 1px var(--w-line-strong);
+  }
+  .wp-dots i.is-done { background: var(--w-ok); box-shadow: none; }
+  .wp-dots i.is-on { background: var(--w-big); box-shadow: none; width: 16px; border-radius: 4px; }
+  .wp-prow-main > svg { flex-shrink: 0; color: var(--w-ink3); }
+  .wp-chip {
+    flex-shrink: 0; height: 44px; padding: 0 14px; border-radius: var(--w-r-card);
+    border: 1px solid var(--w-line); background: var(--w-surface); color: var(--w-ink2);
+    font-size: var(--w-fs-ui); white-space: nowrap; display: inline-flex; align-items: center; gap: 6px;
+  }
+  #practiceView .prac-bar, #practiceView #pracQBox, #practiceView #sentenceList,
+  .sp-stepbar, .sp-side, .tpl-prac-bar, .tpl-side { display: none !important; }
+  .sp-main, .tpl-prac-main, #tplSmallPracticeView .tpl-prac-main { display: block; }
+
+  /* 任务卡：「这一句」+ 输入框，提示框排到输入框上面（键盘弹起时还看得见） */
+  .task-card, #smallPracticeView .task-card, .tpl-answer-card {
+    padding: 16px; border-radius: 10px; display: flex; flex-direction: column;
+  }
+  .task-card > .sp-hintbox, .tpl-answer-card > .sp-hintbox { order: 1; margin: 0 0 12px 0; }
+  .task-card > .task-input-label, .tpl-answer-card > .task-input-label { order: 2; }
+  .task-card > .editor-input, .tpl-answer-card > .editor-input { order: 3; }
+  .task-card > .task-answer, .tpl-answer-card > .task-answer { order: 3; }
+  .task-card > .task-actions, .tpl-answer-card > .tpl-answer-foot { order: 4; }
+  .tpl-answer-card > .tpl-peek { order: 5; }
+  .task-head { margin-bottom: 8px; }
+  .task-hist-btn { height: 36px; }
+  .task-label { margin-bottom: 8px; }
+  .task-cn, #practiceView .task-cn, #smallPracticeView .task-cn,
+  #tplBigPracticeView .task-cn, #tplSmallPracticeView .task-cn {
+    font-size: 20px; line-height: 1.55; margin: 0 0 14px 0;
+  }
+  .task-tagrow { margin-bottom: 10px; }
+  .tagrow-btn { height: 36px; }
+  .editor-input, .tpl-textarea { min-height: 116px; padding: 12px 14px; font-size: var(--w-fs-en); }
+  .task-answer { padding: 12px 14px; }
+  .task-actions, .fb-actions, .tpl-answer-foot, .tpl-fb-actions .tpl-fb-next { display: none !important; }
+  .tpl-skel { padding: 10px 12px; margin-bottom: 14px; }
+  .tpl-skel-text { font-size: var(--w-fs-ui); line-height: 1.6; }
+  .tpl-skel-btn { height: 36px; padding: 0 12px; }
+  .tpl-peek { margin-top: 12px; }
+  /* 小作文：题图缩略条放在任务卡最上面，写的时候一抬眼就能对着图 */
+  .wp-fig-thumb {
+    order: -1; display: block; width: 100%; height: 96px; padding: 0; margin: -4px 0 12px 0;
+    border: 1px solid var(--w-line); border-radius: var(--w-r-inner);
+    background: var(--w-sunken); overflow: hidden; cursor: zoom-in;
+  }
+  .wp-fig-thumb img { display: block; width: 100%; height: 100%; object-fit: contain; }
+  html[data-theme="dark"] body.page-writing-practice .wp-fig-thumb img { filter: brightness(.88); }
+
+  /* 打字时（键盘弹起）把「这一句」收小一点，原句和输入框一屏放得下 */
+  body.wp-typing .task-cn, body.wp-typing #practiceView .task-cn, body.wp-typing #smallPracticeView .task-cn,
+  body.wp-typing #tplBigPracticeView .task-cn, body.wp-typing #tplSmallPracticeView .task-cn {
+    font-size: 17px; line-height: 1.5; margin-bottom: 10px;
+  }
+  body.wp-typing .editor-input { min-height: 104px; }
+  body.wp-typing .wp-fig-thumb { height: 72px; }
+
+  /* ---------- 批改结果：分数条紧跟在答案下面 ---------- */
+  .feedback-card { animation: none; }
+  .fb-grid {
+    display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 12px; row-gap: 0;
+    margin-top: 12px; align-items: center;
+  }
+  .fb-grid::before {
+    content: ''; grid-row: 1; grid-column: 1 / -1; align-self: stretch;
+    background: var(--w-surface); border: 1px solid var(--w-line); border-radius: var(--w-r-card);
+  }
+  .fb-side, .fb-side:has(.score-ring) { display: contents; }
+  .fb-side > .score-ring { grid-row: 1; grid-column: 1; width: 60px; height: 60px; margin: 10px 0 10px 12px; align-self: center; }
+  .score-ring .ring-cap { display: none; }
+  .score-ring .ring-num { font-size: 40px; transform: translateY(12px); }
+  .fb-side > .score-gap { grid-row: 1; grid-column: 2; text-align: left; font-size: var(--w-fs-ui); line-height: 1.5; padding: 10px 12px 10px 0; }
+  .fb-side > .score-gap br { display: none; }
+  .fb-side > .score-gap b { display: block; }
+  .fb-side > .hist-panel { grid-column: 1 / -1; order: 3; margin-top: 12px; }
+  .fb-main { grid-column: 1 / -1; order: 2; min-width: 0; }
+  .fb-grid:not(:has(.score-ring))::before { display: none; }
+  .fb-grid:not(:has(.score-ring)) > .fb-side > .hist-panel { margin-top: 0; }
+  .fb-summary, .fb-section { padding: 14px 16px; }
+  .fb-summary { margin-top: 12px; }
+  .feedback-card { margin-top: 0; }
+  .fb-gc-fix, .fb-vu-pair { overflow-wrap: break-word; }
+  /* 箭头两边原本没有空格，整串「原文→改后」成了一个词，窄屏只能拦腰折断；箭头做成行内块，前后可以换行 */
+  .fb-gc-arrow { display: inline-block; }
+  .save-review-prompt { margin: 2px 0 0 0; }
+  .save-review-btn, .saved-badge { height: 44px; }
+  .hist-row { min-height: 44px; }
+
+  /* 仿写：去掉灰底外框，分数做成同样的分数条 */
+  .sp-fb { margin-top: 12px; padding: 0; background: transparent; border: none; }
+  .sp-fb-head {
+    margin-bottom: 0; padding: 12px 14px; gap: 4px 12px;
+    background: var(--w-surface); border: 1px solid var(--w-line); border-radius: var(--w-r-card);
+  }
+  .sp-fb-score { order: -1; font-size: 28px; line-height: 1.1; }
+  .sp-fb-head h4 { font-size: var(--w-fs-ui); }
+  .sp-fb-gap { display: none; }
+  /* 「离 7.0 还差几处」接在分数下面，和分数拼成同一张卡 */
+  .sp-fb-head:has(+ .score-gap) { border-bottom: none; border-radius: var(--w-r-card) var(--w-r-card) 0 0; padding-bottom: 2px; }
+  .sp-fb-head + .score-gap {
+    text-align: left; margin: 0; padding: 0 14px 12px 14px;
+    background: var(--w-surface); border: 1px solid var(--w-line); border-top: none;
+    border-radius: 0 0 var(--w-r-card) var(--w-r-card);
+  }
+  .sp-fb-head + .score-gap br { display: none; }
+  .sp-fb-head + .score-gap b { margin-left: 4px; }
+  .sp-fb .feedback-card { margin-top: 12px; }
+  .sp-fb .fb-summary { margin-top: 0; }
+
+  /* 模板：分数 + 总评在最上面 */
+  .tpl-fb { margin-top: 12px; padding: 14px 16px; }
+  .tpl-fb-top { gap: 8px 12px; }
+  .tpl-fb-score { font-size: 28px; line-height: 1.1; }
+  .tpl-fb-chip { order: 3; flex-basis: 100%; line-height: 1.6; }
+  .tpl-fb-which { margin-left: auto; }
+  .tpl-fb-top .tpl-prac-gap { display: none; }
+  .tpl-fb-card { padding: 14px 14px; }
+  .tpl-fb-actions { margin-top: 12px; }
+
+  /* 追问：16px 输入、44px 发送 */
+  .fu-card { padding: 12px 14px 14px; }
+  .practice-followup { padding: 4px 4px 4px 14px; align-items: center; }
+  .practice-followup textarea { font-size: 16px; height: 40px; line-height: 24px; }
+  .practice-followup .followup-send { height: 44px; padding: 0 16px; }
+  .fu-link { height: 40px; }
+  .fu-del { width: 40px; height: 40px; }
+
+  /* ---------- 底部主操作条 ---------- */
+  .wp-actbar {
+    position: fixed; left: 0; right: 0; bottom: var(--wp-kb, 0px); z-index: 1000;
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px max(16px, env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    background: var(--w-surface); border-top: 1px solid var(--w-line);
+  }
+  .wp-actbar[hidden] { display: none; }
+  body.wp-kb .wp-actbar { padding-bottom: 8px; }
+  .wp-actbar button {
+    flex: 0 0 auto; height: 48px; padding: 0 16px; border-radius: var(--w-r-card);
+    border: 1px solid var(--w-line-strong); background: var(--w-surface); color: var(--w-ink2);
+    font-size: var(--w-fs-ui); font-weight: 500; white-space: nowrap;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .wp-actbar button.is-primary {
+    flex: 1 1 auto; border-color: transparent; background: var(--w-big); color: #fff; font-weight: 600;
+  }
+  .wp-actbar button.is-on { border-color: var(--w-big-line); color: var(--w-big); background: var(--w-big-soft); }
+  .wp-actbar button:disabled { opacity: .55; }
+  .wp-actbar .spinner { border-color: rgba(255, 255, 255, .45); border-top-color: #fff; }
+  html[data-theme="dark"] body.page-writing-practice .wp-actbar button.is-primary { color: var(--w-paper); }
+
+  /* ---------- 学习页 ---------- */
+  .learn-top { grid-template-columns: minmax(0, 1fr); gap: 12px; margin-bottom: 18px; }
+  .learn-top .kw-bar { flex-direction: row; align-items: center; }
+  .kw-tag { min-height: 40px; padding: 6px 4px 6px 12px; }
+  .kw-tag .copy-icon {
+    opacity: 1; min-width: 32px; height: 32px; margin: -4px 0;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .chain-card { padding: 12px 8px 12px 14px; gap: 10px; }
+  .chain-copy { opacity: 1; width: 40px; height: 40px; border-color: transparent; background: transparent; }
+  .chain-cn { font-size: 16px; }
+  .ex-head { padding: 14px 16px; gap: 10px; }
+  .ex-q { font-size: var(--w-fs-ui); line-height: 1.6;
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+  .ex-card.is-open .ex-q { -webkit-line-clamp: unset; display: block; }
+  .ex-body { padding: 14px 16px 16px 16px; }
+  .ex-sent, .sl-sent { padding: 12px 4px 12px 0; gap: 10px; }
+  .ex-sent:hover, .ex-sent:focus-within { background: transparent; border-color: transparent; }
+  .ex-sent + .ex-sent { border-top: 1px solid var(--w-line); border-radius: 0; }
+  .ex-sent-acts, .sl-sent-acts { display: none; }
+  .sl-sent { padding: 12px 6px 12px 12px; }
+  .sl-sent:hover, .sl-sent:focus-within { background: var(--w-sunken); border-color: transparent; }
+  /* 每句右上角一个 ⋯：复制 / 问 AI / 就练这句，文字绕开它排，不占一整列 */
+  .wp-more {
+    display: inline-flex; float: right; align-items: center; justify-content: center;
+    width: 40px; height: 40px; margin: -8px -4px 0 6px; padding: 0;
+    border: none; border-radius: var(--w-r-card); background: transparent; color: var(--w-ink3);
+  }
+  .wp-more:active { background: var(--w-sunken); color: var(--w-ink); }
+  .tpl-row > .wp-more, .tpl-pattern > .wp-more { margin-top: -6px; }
+  .ex-foot { gap: 10px; }
+  .ex-go { width: 100%; justify-content: center; height: 44px; }
+  .sl-top { grid-template-columns: minmax(0, 1fr); gap: 12px; margin-bottom: 18px; }
+  .sl-go { display: none; }
+  .sl-qfoot { gap: 10px; }
+  .sl-question { margin-bottom: 12px; }
+  .fig-swap, .tpl-imgslot .tpl-reupload { display: none; }
+  .fig-tip .wp-desk-only + .wp-phone-only { display: inline; }
+  .section-block { padding: 14px 14px 14px 16px; }
+  .vocab-table { display: block; overflow-x: auto; }
+  .tpl-section-card, .tpl-group, .tsl-group { padding: 14px 16px; }
+  /* 参考资料：外面那层卡去掉，少一层框，正文宽一点 */
+  #tplRefBody > .tpl-section-card { padding: 0; border: none; background: transparent; }
+  #tplRefBody .tpl-hint a { display: inline-block; padding: 10px 4px; margin: -10px 0; }
+  .tpl-pattern { padding: 12px 8px 12px 14px; }
+  .tpl-cmp { gap: 12px; }
+  .tsl-item { padding: 12px 8px 12px 14px; }
+  .tsl-copy { display: none; }
+  .tsl-chip { height: 40px; }
+  .tsl-filter { flex-wrap: nowrap; overflow-x: auto; margin-left: -16px; margin-right: -16px; padding: 0 16px 2px; }
+  .tsl-filter::-webkit-scrollbar { display: none; }
+  .tsl-hint { display: none; }
+  .tsl-cta { padding: 14px 16px; }
+  #tplBigLearnToolbar .tpl-btn { display: none; }
+  .tpl-step { height: 40px; }
+  .kw-tip .wp-phone-only { display: inline; }
+
+  /* ---------- 首页：2×2 入口卡、工具三行 ---------- */
+  .home-head { padding: 18px 0 14px 0; }
+  .home-head > .nav-btn { display: none; }
+  .home-resume { padding: 14px 16px; gap: 10px; margin-bottom: 18px; }
+  .home-resume-main { min-width: 0; }
+  .home-resume-side { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: left; }
+  .home-resume-count { margin: 0; }
+  .home-resume-btn { height: 44px; padding: 0 20px; }
+  .home-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .entry-column { display: contents; }
+  .entry-column-title { grid-column: 1 / -1; margin: 8px 0 0 0; flex-wrap: wrap; row-gap: 2px; }
+  .entry-card { padding: 14px 14px 12px 14px; }
+  .entry-card-head { margin-bottom: 6px; gap: 6px; }
+  .entry-card-label { font-size: 16px; line-height: 1.4; }
+  .entry-card-arrow { width: 26px; height: 26px; }
+  .entry-card-desc {
+    font-size: var(--w-fs-meta); line-height: 1.55; margin-bottom: 12px;
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden;
+  }
+  .entry-card-prog { gap: 8px; }
+  .entry-card-meta { line-height: 1.5; }
+  .home-tools { grid-template-columns: minmax(0, 1fr); gap: 8px; margin-top: 18px; }
+  .home-tool { padding: 10px 14px; min-height: 60px; gap: 12px; }
+  .home-tool-icon { width: 36px; height: 36px; }
+
+  /* ---------- 选题页：话题条吸顶、44px 胶囊；卡片两列 ---------- */
+  .dir-rail {
+    position: sticky; top: var(--app-shell-h, 52px); z-index: 30;
+    margin: 0 0 14px 0; padding: 8px 0; background: var(--w-paper);
+  }
+  .cat-rail {
+    flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding: 0 16px; width: 100%;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+            mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+  }
+  .cat-rail.is-end { -webkit-mask-image: none; mask-image: none; }
+  .cat-rail::-webkit-scrollbar { display: none; }
+  .cat-item { height: 44px; padding: 0 16px; border: 1px solid var(--w-line); background: var(--w-surface); }
+  .cat-item.active { border-color: var(--w-big-line); }
+  .dir-main { padding: 0 16px 16px 16px; }
+  .dir-main-head { margin-bottom: 12px; }
+  .dir-main-head h3 { font-size: 19px; }
+  .sub-list, .example-list-grid { margin-top: 12px; }
+  .sub-card, #directoryView .dir-main .sub-card { padding: 12px; }
+  .sub-name, .small-ex-name { font-size: 16px; line-height: 1.4; }
+  #smallExampleList .sub-name { font-size: 16px; }
+  .sub-en { margin-bottom: 8px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+  .sub-actions { gap: 6px; margin-top: 10px; }
+  .mode-btn { height: 40px; padding: 0 6px; }
+  .tpl-type-card { padding: 12px; }
+  .tpl-type-feature { min-height: 0; margin-bottom: 10px;
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+  .tpl-type-name { font-size: 16px; flex-wrap: wrap; }
+  .tpl-card-prog .num { white-space: nowrap; }
+  .tpl-ref-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .tpl-ref-chip { min-height: 48px; padding: 10px 12px; }
+  /* 模板大作文：参考资料挪到题型卡上面 */
+  #tplBigTypesView:not([style*="none"]) { display: flex; flex-direction: column; }
+  #tplBigTypesView > .view-head { order: 0; }
+  #tplBigTypesView > .card-title { order: 1; margin: 16px 0 8px 0 !important; }
+  #tplBigTypesView > #tplBigRefList { order: 2; margin-bottom: 16px; }
+  #tplBigTypesView > #tplBigTypeGrid { order: 3; margin-top: 0; }
+  /* 范文 / 例题卡：两列，题目截 4 行 */
+  .tbs-overview { padding: 14px 16px; margin-bottom: 16px; }
+  .tbs-ov-top { gap: 6px 10px; }
+  .tbs-ov-bar { flex-grow: 1; width: auto; min-width: 80px; }
+  .tbs-ov-bottom { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-right: -16px; padding-right: 16px; }
+  .tbs-ov-bottom::-webkit-scrollbar { display: none; }
+  .tbs-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .tbs-card { padding: 12px; flex-direction: column; align-items: stretch; gap: 10px; }
+  .tbs-card-body { min-width: 0; display: flex; flex-direction: column; flex-grow: 1; }
+  .tbs-card-meta { gap: 4px 6px; margin-bottom: 6px; }
+  .tbs-card-q {
+    font-size: var(--w-fs-ui); line-height: 1.55; margin-bottom: 10px;
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden;
+  }
+  .tbs-card-prog { margin-top: auto; gap: 8px; }
+  .tbs-card-acts { flex-direction: column; gap: 6px; }
+  .tbs-btn { height: 40px; padding: 0 8px; width: 100%; }
+  .tbs-foot { padding: 14px 16px; gap: 12px; }
+  .tbs-foot .tbs-btn { height: 44px; }
+
+  /* ---------- 题图大图 ---------- */
+  .image-lightbox img { max-width: 100vw; max-height: 80vh; border-radius: 0; }
+  .image-lightbox-close { top: calc(12px + env(safe-area-inset-top)); right: 12px; }
+  .wp-lb-more {
+    position: absolute; top: calc(12px + env(safe-area-inset-top)); right: 64px;
+    width: 44px; height: 44px; border-radius: 50%; border: none;
+    background: rgba(255, 255, 255, .16); color: #fff;
+    align-items: center; justify-content: center;
+  }
+  .image-lightbox.can-swap .wp-lb-more { display: inline-flex; }
+
+  /* ---------- 复习中心：整屏，页签吸顶，排序收进一个按钮 ---------- */
+  .review-overlay-header { padding: calc(12px + env(safe-area-inset-top)) 64px 10px 16px; }
+  .review-overlay-header h2 { font-size: 20px; }
+  .review-eyebrow { display: none; }
+  .review-sub { font-size: var(--w-fs-meta); margin-top: 4px; }
+  .review-overlay-close { top: calc(10px + env(safe-area-inset-top)); }
+  .review-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 0 16px 12px 16px; }
+  .review-stat { padding: 10px 12px; min-height: 60px; }
+  .review-stat-num { font-size: 19px; }
+  .review-stat-label { margin-top: 2px; line-height: 1.4; }
+  .review-controls {
+    position: sticky; top: 0; z-index: 5; flex-wrap: nowrap; gap: 8px;
+    padding: 8px 16px; background: var(--w-paper); border-bottom: 1px solid var(--w-line);
+  }
+  .review-overlay-tabs { flex: 1 1 auto; min-width: 0; }
+  .review-overlay-tab { flex: 1 1 0; min-width: 0; height: 40px; padding: 0 6px; }
+  .review-controls-gap, .review-sort { display: none; }
+  .wp-sort-btn {
+    display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; height: 44px; padding: 0 12px;
+    border: 1px solid var(--w-line); border-radius: var(--w-r-chip); background: var(--w-surface);
+    color: var(--w-ink2); font-size: var(--w-fs-meta); white-space: nowrap;
+  }
+  .review-overlay-body { padding: 12px 16px calc(32px + env(safe-area-inset-bottom)) 16px; }
+  .rv-group-head { min-height: 52px; padding: 12px 14px; gap: 8px; flex-wrap: wrap; }
+  .rv-group-name { font-size: 16px; flex: 1 1 100%; order: 1; padding-left: 22px; margin-top: -22px; }
+  .rv-group-head > .rv-chev { order: 0; }
+  .rv-group-meta { order: 2; padding-left: 22px; }
+  .rv-group-head > .rv-gap { order: 3; }
+  .rv-avg { order: 4; }
+  .rv-group-body { padding: 10px; gap: 8px; }
+  .rv-item-head { min-height: 56px; padding: 10px 12px; gap: 10px; }
+  .rv-item-cn { white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-height: 1.55; }
+  .rv-item-more { display: none; }
+  .rv-item-detail { padding: 12px; }
+  .rv-fold { height: 40px; padding: 0 14px; }
+  .rv-detail-acts .rv-del { display: none; }
+  .rv-card { padding: 12px; }
+  .rv-foot { gap: 8px; }
+  .rv-del-m {
+    display: inline-flex; align-items: center; height: 44px; padding: 0 12px; margin-left: -12px;
+    border: none; background: transparent; color: var(--w-err); font-size: var(--w-fs-meta);
+  }
+  .rv-foot-meta { order: -1; flex-basis: 100%; }
+  .rv-again { height: 44px; padding: 0 18px; font-size: var(--w-fs-ui); }
+
+  /* ---------- 练习速记 / AI 助手：整屏 ---------- */
+  .np-window, .ai-chat-window {
+    left: 0 !important; top: 0 !important; right: 0; bottom: var(--wp-kb, 0px);
+    width: auto; max-width: none; height: auto; max-height: none;
+    border: none; border-radius: 0; box-shadow: none; z-index: 1350;
+    padding-top: env(safe-area-inset-top);
+  }
+  .np-window.open, .ai-chat-window.open { animation: wpSheetIn .2s ease-out; }
+  .np-header, .ai-chat-header { padding: 4px 8px 4px 16px; cursor: default; min-height: 52px; }
+  .np-header-actions, .ai-chat-header-actions { gap: 0; }
+  .np-header-actions button, .ai-chat-header-actions button {
+    width: 44px; height: 44px; border: none; background: transparent; font-size: 20px;
+  }
+  .np-header-actions button svg, .ai-chat-header-actions button svg { width: 18px; height: 18px; }
+  .np-header-actions button.np-rename { display: inline-flex; }
+  .np-tabs { padding: 4px 8px 0 8px; }
+  .np-tab { height: 44px; padding: 0 4px 0 12px; font-size: var(--w-fs-ui); }
+  .np-tab-close {
+    width: 36px; height: 36px; border: none; background: transparent; font-size: 18px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .np-tab-add { width: 44px; height: 44px; font-size: 22px; }
+  .np-toolbar { gap: 6px; padding: 6px 12px; }
+  .np-sw, .np-erase { width: 36px; height: 36px; border-radius: 50%; }
+  .np-erase { font-size: 16px; }
+  .np-editor { font-size: 17px; line-height: 1.9; padding: 14px 16px calc(14px + env(safe-area-inset-bottom)); }
+  .np-editor:empty:before { font-size: var(--w-fs-ui); }
+  .ai-chat-dropzone { margin: 10px 16px; padding: 12px 14px; min-height: 0; }
+  .ai-chat-dropzone svg { display: none; }
+  .ai-chat-dropzone.has-context { padding: 8px 8px 8px 14px; }
+  .ai-chat-context-chip { align-items: center; font-size: var(--w-fs-ui); }
+  .ai-chat-context-chip .remove-ctx { width: 36px; height: 36px; font-size: 18px; }
+  .ai-chat-msg { font-size: var(--w-fs-ui); max-width: 92%; }
+  .ai-chat-preset-row { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding: 0 16px 8px; }
+  .ai-chat-preset-row::-webkit-scrollbar { display: none; }
+  .ai-chat-preset-btn { height: 40px; padding: 0 14px; flex-shrink: 0; font-size: var(--w-fs-ui); }
+  .ai-chat-input-row { padding: 8px 12px calc(8px + env(safe-area-inset-bottom)) 16px; align-items: flex-end; }
+  body.wp-kb .ai-chat-input-row, body.wp-kb .np-editor { padding-bottom: 8px; }
+  .ai-chat-input { font-size: 16px; min-height: 44px; }
+  .ai-chat-send-btn { width: 44px; height: 44px; }
+  .ai-chat-history-panel { padding-top: env(safe-area-inset-top); }
+  .ai-chat-history-panel > div:first-child { min-height: 52px; }
+  .ai-chat-history-panel > div:first-child button { width: 44px; height: 44px; }
+  .ai-chat-history-item { min-height: 56px; margin: 2px 8px; flex-wrap: wrap; row-gap: 2px; }
+  .ai-chat-history-item .hist-del { width: 40px; height: 40px; order: 3; margin-left: auto; }
+  .ai-chat-history-item .hist-ctx { flex-basis: calc(100% - 50px); font-size: var(--w-fs-ui); }
+  .ai-chat-history-item .hist-meta { order: 4; flex-basis: 100%; }
+
+  /* ---------- 荧光笔：手机上停在屏幕下方，不和系统的「拷贝 / 查询」菜单抢位置 ---------- */
+  .wp-hl-toolbar.is-docked {
+    position: fixed; top: auto !important; left: 50% !important;
+    bottom: calc(var(--wp-bar-h, 0px) + var(--wp-kb, 0px) + 12px);
+    transform: translateX(-50%); padding: 4px;
+  }
+  .wp-hl-toolbar.is-docked.show { animation: none; }
+  .wp-hl-toolbar.is-docked button { height: 44px; padding: 0 18px; font-size: var(--w-fs-ui); }
+
+  /* ---------- 通用底部弹层（工具 / 句子 / 题干 / 排序 / 句子操作） ---------- */
+  .wp-sheet { position: fixed; inset: 0; z-index: 2100; display: flex; align-items: flex-end; }
+  .wp-sheet-mask { position: absolute; inset: 0; background: var(--w-mask); }
+  .wp-sheet-panel {
+    position: relative; width: 100%; max-height: calc(100dvh - env(safe-area-inset-top) - 40px);
+    overflow-y: auto; overscroll-behavior: contain;
+    background: var(--w-surface); border-top: 1px solid var(--w-line);
+    border-radius: 14px 14px 0 0; box-shadow: var(--w-shadow-lg);
+    padding: 0 16px calc(16px + env(safe-area-inset-bottom)) 16px;
+    animation: wpSheetIn .22s ease-out;
+  }
+  .wp-sheet-head {
+    position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 8px;
+    margin: 0 -16px; padding: 10px 8px 6px 16px; background: var(--w-surface);
+  }
+  .wp-sheet-title { flex: 1 1 auto; min-width: 0; font-size: var(--w-fs-en); font-weight: 600; color: var(--w-ink);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .wp-sheet-x {
+    width: 44px; height: 44px; flex-shrink: 0; border: none; border-radius: var(--w-r-card);
+    background: transparent; color: var(--w-ink3); font-size: 24px; line-height: 1;
+  }
+  .wp-sheet-sec { font-size: var(--w-fs-meta); color: var(--w-ink3); margin: 14px 0 8px 0; }
+  .wp-sheet-sec:first-child { margin-top: 4px; }
+  .wp-sheet-row {
+    width: 100%; min-height: 56px; display: flex; align-items: center; gap: 12px; text-align: left;
+    padding: 8px 12px; border: none; border-radius: var(--w-r-card); background: transparent;
+    color: var(--w-ink); font-size: var(--w-fs-ui);
+  }
+  .wp-sheet-row + .wp-sheet-row { margin-top: 2px; }
+  .wp-sheet-row:active { background: var(--w-sunken); }
+  .wp-sheet-row.is-on { background: var(--w-big-soft); color: var(--w-big); font-weight: 600; }
+  .wp-sheet-row.is-danger { color: var(--w-err); }
+  .wp-sheet-ico {
+    width: 36px; height: 36px; flex-shrink: 0; border-radius: var(--w-r-sm);
+    background: var(--w-sunken); color: var(--w-ink2); display: inline-flex; align-items: center; justify-content: center;
+  }
+  .wp-sheet-ico svg { width: 18px; height: 18px; }
+  .wp-sheet-row b { display: block; font-weight: 600; }
+  .wp-sheet-row i { display: block; font-style: normal; font-size: var(--w-fs-meta); color: var(--w-ink3); margin-top: 1px; }
+  .wp-sheet-quote {
+    font-family: var(--w-en); font-size: var(--w-fs-ui); line-height: 1.6; color: var(--w-ink2);
+    padding: 10px 12px; margin: 4px 0 8px 0; background: var(--w-sunken); border-radius: var(--w-r-inner);
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden;
+  }
+  .wp-sheet-q { font-family: var(--w-en); font-size: var(--w-fs-en); line-height: 1.7; color: var(--w-ink); margin: 0; }
+  .wp-sheet-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .wp-sheet-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+  .wp-sheet-pills .tpl-step, .wp-sheet-pills .ex-btn { height: 40px; }
+  .wp-sheet-list { display: flex; flex-direction: column; gap: 6px; }
+  .wp-sheet-list .sent-item, .wp-sheet-list .sp-done-item, .wp-sheet-list .tpl-side-item {
+    min-height: 52px; width: 100%; text-align: left;
+  }
+  .wp-sheet-list .sent-item { padding: 10px 12px; border: 1px solid var(--w-line); border-radius: var(--w-r-card);
+    background: var(--w-surface); display: flex; flex-direction: column; gap: 4px; }
+  .wp-sheet-list .sent-item.active { border-color: var(--w-big-line); background: var(--w-big-soft); }
+  .wp-sheet-list .sent-item .sent-idx { display: flex; align-items: center; gap: 8px; margin: 0; }
+  .wp-sheet-list .sent-item .sent-cn { white-space: normal; font-size: var(--w-fs-ui);
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+  .wp-sheet-list .sp-done-text, .wp-sheet-list .tpl-side-text { font-size: var(--w-fs-ui); }
+  .wp-sheet-fig { display: block; width: 100%; padding: 0; margin-top: 12px; border: 1px solid var(--w-line);
+    border-radius: var(--w-r-inner); background: var(--w-sunken); overflow: hidden; }
+  .wp-sheet-fig img { display: block; width: 100%; max-height: 220px; object-fit: contain; }
+  .wp-sheet .tpl-side-link { margin-top: 12px; }
+  .wp-sheet .prac-chip { background: var(--w-sunken); }
+}
+@keyframes wpSheetIn { from { transform: translateY(28px); opacity: .5; } to { transform: none; opacity: 1; } }
+@media (max-width: 820px) and (prefers-reduced-motion: reduce) {
+  .wp-sheet-panel, .np-window.open, .ai-chat-window.open { animation: none; }
+}
+@media (max-width: 640px) {
+  /* 600px 那条把列表收成一栏；手机上两张卡并排放得下 */
+  .sub-list, .example-list-grid, .tpl-type-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .rv-detail-top .rv-score { width: auto; }
+}
 </style>
 <link rel="stylesheet" href="/static/theme.css?v=20261101m">
 <script src="/static/theme.js?v=20261101m" defer></script>
@@ -2936,7 +3482,7 @@ html[data-theme="dark"] body.page-writing-practice .tpl-btn.ghost {
       </button>
       <button class="home-tool" type="button" onclick="toggleAIChat()">
         <span class="home-tool-icon"><svg width="19" height="19" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 2.6c4 0 7.2 2.7 7.2 6.2S14 15 10 15c-.8 0-1.6-.1-2.3-.3L3.6 16.3l1-3A5.9 5.9 0 0 1 2.8 8.8c0-3.4 3.2-6.2 7.2-6.2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></span>
-        <span class="home-tool-text"><b>AI 写作助手</b><i>把句子拖进去就能带上下文提问</i></span>
+        <span class="home-tool-text"><b>AI 写作助手</b><i><span class="wp-desk-only">把句子拖进去就能带上下文提问</span><span class="wp-phone-only">句子右上角 ⋯ 里点「问 AI」就能带上下文提问</span></i></span>
       </button>
     </div>
   </div>
@@ -3070,7 +3616,7 @@ html[data-theme="dark"] body.page-writing-practice .tpl-btn.ghost {
       <div class="card">
         <div class="card-title">关键词 Keywords</div>
         <div class="kw-bar" id="kwBar"></div>
-        <p class="kw-tip">选中任意单词可加荧光笔标注，双击可拖进 AI 助手提问。</p>
+        <p class="kw-tip"><span class="wp-desk-only">选中任意单词可加荧光笔标注，双击可拖进 AI 助手提问。</span><span class="wp-phone-only">长按选中单词可加荧光笔；句子右上角的 ⋯ 里可以「问 AI」。</span></p>
       </div>
       <div class="card">
         <div class="card-head">
@@ -3271,6 +3817,7 @@ html[data-theme="dark"] body.page-writing-practice .tpl-btn.ghost {
       <button class="review-overlay-tab" data-tab="tpl" onclick="switchReviewTab('tpl')">模板<i id="reviewCountTpl"></i></button>
     </div>
     <span class="review-controls-gap"></span>
+    <button type="button" class="wp-sort-btn" id="wpSortBtn" onclick="Phone.sortSheet()">低分优先 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 6 8 10.5 12.5 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     <div class="review-sort">
       <span class="review-sort-label">排序</span>
       <button type="button" class="review-sort-btn active" data-sort="low" onclick="setReviewSort('low')">低分优先</button>
@@ -3303,7 +3850,7 @@ html[data-theme="dark"] body.page-writing-practice .tpl-btn.ghost {
       <button onclick="closeAIChat()" title="关闭">&times;</button>
     </div>
   </div>
-  <div class="ai-chat-dropzone" id="aiDropzone"><svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 3.5v9M6 9l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 15.5v1a1.5 1.5 0 0 0 1.5 1.5h9a1.5 1.5 0 0 0 1.5-1.5v-1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span>把学习页的句子拖到这里<br>就带着上下文开始提问</span></div>
+  <div class="ai-chat-dropzone" id="aiDropzone"><svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 3.5v9M6 9l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 15.5v1a1.5 1.5 0 0 0 1.5 1.5h9a1.5 1.5 0 0 0 1.5-1.5v-1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="wp-desk-only">把学习页的句子拖到这里<br>就带着上下文开始提问</span><span class="wp-phone-only">在学习页句子右上角的 ⋯ 里点「问 AI」，<br>就带着这句开始提问；也可以直接输入问题</span></div>
   <div class="ai-chat-messages" id="aiChatMessages"></div>
   <div class="ai-chat-preset-row" id="aiPresetRow" style="display:none;"></div>
   <div class="ai-chat-input-row">
@@ -3328,6 +3875,7 @@ html[data-theme="dark"] body.page-writing-practice .tpl-btn.ghost {
   <div class="np-header" id="npHeader">
     <span class="np-title"><svg width="15" height="15" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 16.2V13l8.6-8.6a1.6 1.6 0 0 1 2.3 0l.5.5a1.6 1.6 0 0 1 0 2.3L6.8 15.8 4 16.2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg> 练习速记</span>
     <div class="np-header-actions">
+      <button class="np-rename" onclick="Notepad.renameTab(Notepad.doc.active_tab_id)" title="重命名当前标签" aria-label="重命名当前标签"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 16.2V13l8.6-8.6a1.6 1.6 0 0 1 2.3 0l.5.5a1.6 1.6 0 0 1 0 2.3L6.8 15.8 4 16.2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button>
       <button onclick="Notepad.newTab()" title="新建标签页">&#43;</button>
       <button class="np-del" onclick="Notepad.deleteAll()" title="删除全部速记" aria-label="删除全部速记"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 6h12M8 6V4.5h4V6M5.5 6l.8 10h7.4l.8-10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       <button onclick="Notepad.close()" title="收起">&times;</button>
@@ -3349,6 +3897,7 @@ html[data-theme="dark"] body.page-writing-practice .tpl-btn.ghost {
 
 <!-- Image Lightbox -->
 <div id="imageLightbox" class="image-lightbox" style="display:none;" onclick="closeLightbox(event)">
+  <button class="wp-lb-more" type="button" aria-label="更多操作" onclick="event.stopPropagation(); Phone.lightboxMenu()"><svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="4.5" cy="10" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="15.5" cy="10" r="1.6"/></svg></button>
   <button class="image-lightbox-close" onclick="closeLightbox(event)">&times;</button>
   <img id="lightboxImg" src="" alt="大图查看">
 </div>
@@ -3788,6 +4337,7 @@ function updateBackLabel() {
 }
 
 window.addEventListener('popstate', () => {
+  if (Phone.onPop()) return;
   if (!Nav.back() && Nav.current) backToEntry();
 });
 
@@ -4301,8 +4851,8 @@ function renderImageZone(zoneId) {
   if (data && data.image_path) {
     zone.classList.add('has-image');
     zone.innerHTML = `<button type="button" class="fig-swap" onclick="event.stopPropagation(); triggerImageUpload()">换一张</button>
-      <img class="fig-img" src="${data.image_path}" alt="题目图片" onclick="event.stopPropagation(); openLightbox('${data.image_path}')">
-      <div class="fig-tip">点击放大 · 支持拖拽替换</div>`;
+      <img class="fig-img" src="${data.image_path}" alt="题目图片" onclick="event.stopPropagation(); openLightbox('${data.image_path}', 'triggerImageUpload()')">
+      <div class="fig-tip"><span class="wp-desk-only">点击放大 · 支持拖拽替换</span><span class="wp-phone-only">点图放大 · 换图在大图右上角 ⋯ 里</span></div>`;
   } else {
     zone.classList.remove('has-image');
     zone.innerHTML = `<span class="fig-empty">
@@ -4317,25 +4867,30 @@ function renderImageZone(zoneId) {
   }
 }
 
-function openLightbox(src) {
+// swapJs：这张图可以换时传换图的调用（手机上放进大图右上角的 ⋯，桌面照旧在题图上换）
+function openLightbox(src, swapJs) {
+  const box = document.getElementById('imageLightbox');
   document.getElementById('lightboxImg').src = src;
-  document.getElementById('imageLightbox').style.display = 'flex';
+  box.style.display = 'flex';
+  box.classList.toggle('can-swap', !!swapJs);
+  Phone.lbSwap = swapJs || '';
   document.body.style.overflow = 'hidden';
+  Phone.open('lightbox', () => closeLightbox(null, true));
 }
 
-function closeLightbox(event) {
+function closeLightbox(event, fromBack) {
   if (event && event.target && event.target.id === 'lightboxImg') return;
-  document.getElementById('imageLightbox').style.display = 'none';
+  const box = document.getElementById('imageLightbox');
+  if (box.style.display === 'none') return;
+  box.style.display = 'none';
   document.body.style.overflow = '';
+  if (!fromBack) Phone.closed('lightbox');
 }
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     const overlay = document.getElementById('imageLightbox');
-    if (overlay && overlay.style.display !== 'none') {
-      overlay.style.display = 'none';
-      document.body.style.overflow = '';
-    }
+    if (overlay && overlay.style.display !== 'none') closeLightbox(null);
   }
 });
 
@@ -4469,7 +5024,7 @@ function renderSmallLearnContent() {
       const isNext = flatIdx === nextIdx;
       html += `<div class="sl-sent${isNext ? ' is-next' : ''}${doneSet.has(flatIdx) ? ' is-done' : ''}"
         ${isDrag ? 'draggable="true"' : ''} data-drag-info='${dragInfo}' ondragstart="onSentenceDragStart(event)" ondragend="onSentenceDragEnd(event)">
-        <div class="sl-sent-body">
+        <div class="sl-sent-body">${WP_MORE_BTN}
           <div class="sl-sent-tags">${tagHtml}<span class="sl-sent-no">句子${CN_NUM[si] || (si + 1)}${isNext ? ' · 下一句要练的' : ''}</span></div>
           <div class="sentence-en" data-hl-key="${hlBase}${flatIdx}|en">${sent.original}</div>
           <div class="sentence-cn" data-hl-key="${hlBase}${flatIdx}|cn">${sent.translation}</div>
@@ -4721,6 +5276,7 @@ function renderSmallEditor(idx) {
 
   const taskCard = (inner) => `
     <div class="task-card">
+      ${data.image_path ? `<button type="button" class="wp-fig-thumb" aria-label="放大看题图" onclick="openLightbox('${data.image_path}', 'triggerImageUpload()')"><img src="${data.image_path}" alt="题目图片" loading="lazy"></button>` : ''}
       ${(tagHtml || hasLib) ? `<div class="task-tagrow">
         ${tagHtml ? `<span class="task-tagrow-label">要套的句型</span>${tagHtml}` : ''}
         ${hasLib ? `<button type="button" class="tagrow-btn" onclick="openSmallPatternLib()">${tagHtml ? '看这个标签的句型库' : '看本段句型库'}</button>` : ''}
@@ -5058,7 +5614,7 @@ function renderLearning(d) {
       return `<div class="ex-sent${next ? ' is-next' : ''}"
         ${isDrag ? 'draggable="true"' : ''} data-drag-info='${dragInfo}' ondragstart="onSentenceDragStart(event)" ondragend="onSentenceDragEnd(event)">
         <span class="ex-sent-no">${si + 1}</span>
-        <div class="ex-sent-body">
+        <div class="ex-sent-body">${WP_MORE_BTN}
           <div class="sentence-en" data-hl-key="${hlBase}${i}_${si}|en">${sn.english}</div>
           <div class="sentence-cn" data-hl-key="${hlBase}${i}_${si}|cn">${sn.chinese}</div>
         </div>
@@ -5127,6 +5683,8 @@ function toggleExample(head) {
   const card = head.closest('.ex-card');
   if (card) card.classList.toggle('is-open');
 }
+// 手机上每句右上角的 ⋯：复制 / 问 AI / 就练这句（Phone.sentSheet），桌面上不显示
+const WP_MORE_BTN = '<button type="button" class="wp-more" aria-label="这句的更多操作" onclick="event.stopPropagation(); Phone.sentSheet(this)"><svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="4.5" cy="10" r="1.5"/><circle cx="10" cy="10" r="1.5"/><circle cx="15.5" cy="10" r="1.5"/></svg></button>';
 const COPY_ICON = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M10.5 3.5h-6a2 2 0 0 0-2 2v6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
 
 // 复制并在按钮上闪一下「已复制」
@@ -6117,13 +6675,15 @@ function advanceNext() {
 }
 
 /* ==================== Review Overlay ==================== */
-function toggleReview() {
+function toggleReview(fromBack) {
   if (!document.getElementById('reviewOverlay').classList.contains('open')) loadReviewStats();
   state.drawerOpen = !state.drawerOpen;
   document.getElementById('reviewOverlay').classList.toggle('open', state.drawerOpen);
   document.body.style.overflow = state.drawerOpen ? 'hidden' : '';
   document.querySelector('.main-panel-wrapper').style.visibility = state.drawerOpen ? 'hidden' : '';
   if (state.drawerOpen) loadReviewContent();
+  if (state.drawerOpen) Phone.open('review', () => { if (state.drawerOpen) toggleReview(true); });
+  else if (!fromBack) Phone.closed('review');
 }
 
 function switchReviewTab(tab) {
@@ -6232,6 +6792,7 @@ async function loadReviewStats() {
 function setReviewSort(mode) {
   state.reviewSort = mode;
   document.querySelectorAll('.review-sort-btn').forEach(b => b.classList.toggle('active', b.dataset.sort === mode));
+  Phone.paintSort();
   loadReviewContent();
 }
 
@@ -6414,6 +6975,7 @@ function rvItemHtml(it, group) {
       </div>` : ''}
       <div class="rv-foot">
         <span class="rv-foot-meta">${rvDate(last.timestamp)}${recs.length > 1 ? ` · 已练 ${recs.length} 次` : ''}</span>
+        <button type="button" class="rv-del-m" onclick="deleteReviewRecord('${group.tab}', '${last.id || ''}')">删除这条</button>
         <span class="rv-gap"></span>
         ${canRetry ? `<button type="button" class="rv-again" onclick="reviewPracticeAgain('${it.key.replace(/'/g, "\\'")}')">再练这一句 &rarr;</button>` : ''}
       </div>
@@ -6539,16 +7101,21 @@ function toggleAIChat() {
   const maxY = Math.max(12, window.innerHeight - winH - 24);
   const targetX = Math.min(saved ? saved.x : window.innerWidth - 440, Math.max(12, window.innerWidth - 400));
   const targetY = Math.min(saved ? saved.y : maxY, maxY);
-  win.style.left = targetX + 'px';
-  win.style.top = targetY + 'px';
-  win.style.transformOrigin = `${btnRect.left + 28 - targetX}px ${btnRect.top + 28 - targetY}px`;
+  // 手机上整屏铺开（样式里定死 left/top 0），浮窗位置只在电脑上算
+  if (!Phone.on()) {
+    win.style.left = targetX + 'px';
+    win.style.top = targetY + 'px';
+    win.style.transformOrigin = `${btnRect.left + 28 - targetX}px ${btnRect.top + 28 - targetY}px`;
+  }
   win.classList.remove('closing');
   win.style.display = 'flex';
   requestAnimationFrame(() => { win.classList.add('open'); });
   updateDraggableState();
+  Phone.open('ai', () => { if (state.aiChat.open) closeAIChat(true); });
 }
 
-function closeAIChat() {
+function closeAIChat(fromBack) {
+  if (!fromBack) Phone.closed('ai');
   const win = document.getElementById('aiChatWindow');
   const btn = document.getElementById('aiFloatBtn');
   const winRect = win.getBoundingClientRect();
@@ -6596,22 +7163,7 @@ function setupAIDropzone() {
     e.preventDefault(); dz.classList.remove('dragover');
     try {
       const info = JSON.parse(e.dataTransfer.getData('application/json'));
-      if (!info || !info.en) return;
-      if (!state.aiChat.open) toggleAIChat();
-      const sentenceKey = `${info.module}|${info.chartType || info.category || ''}|${info.exampleName || ''}|${info.sentenceIndex}`;
-      if (state.aiChat.messages.length && state.aiChat.context) await saveAIChatSession();
-      state.aiChat.context = { ...info, sentenceKey };
-      state.aiChat.messages = [];
-      state.aiChat.sessionId = null;
-      try {
-        const resp = await fetch(`/api/writing/chat_history/find?sentence_key=${encodeURIComponent(sentenceKey)}`, { headers: API.headers() });
-        const existing = await resp.json();
-        if (existing && existing.id) {
-          state.aiChat.sessionId = existing.id;
-          state.aiChat.messages = existing.messages || [];
-        }
-      } catch(e) {}
-      renderAIDropzone(); renderAIChatMessages(); renderAIPresets();
+      await attachAIContext(info);
     } catch(err) {}
   }
 
@@ -6626,6 +7178,26 @@ function setupAIDropzone() {
     el.addEventListener('dragleave', handleDragLeave);
     el.addEventListener('drop', handleSentenceDrop);
   });
+}
+
+// 带着一句话打开 AI 助手：同一句以前聊过就接着那段对话
+async function attachAIContext(info) {
+  if (!info || !info.en) return;
+  if (!state.aiChat.open) toggleAIChat();
+  const sentenceKey = `${info.module}|${info.chartType || info.category || ''}|${info.exampleName || ''}|${info.sentenceIndex}`;
+  if (state.aiChat.messages.length && state.aiChat.context) await saveAIChatSession();
+  state.aiChat.context = { ...info, sentenceKey };
+  state.aiChat.messages = [];
+  state.aiChat.sessionId = null;
+  try {
+    const resp = await fetch(`/api/writing/chat_history/find?sentence_key=${encodeURIComponent(sentenceKey)}`, { headers: API.headers() });
+    const existing = await resp.json();
+    if (existing && existing.id) {
+      state.aiChat.sessionId = existing.id;
+      state.aiChat.messages = existing.messages || [];
+    }
+  } catch(e) {}
+  renderAIDropzone(); renderAIChatMessages(); renderAIPresets();
 }
 
 function onSentenceDragStart(event) {
@@ -6658,7 +7230,7 @@ function renderAIDropzone() {
     dz.innerHTML = `<span class="ai-chat-context-chip"><span style="overflow:hidden;text-overflow:ellipsis;">${label}</span><button class="remove-ctx" onclick="clearAIContext()" title="移除">&times;</button></span>`;
   } else {
     dz.classList.remove('has-context');
-    dz.innerHTML = '<svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 3.5v9M6 9l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 15.5v1a1.5 1.5 0 0 0 1.5 1.5h9a1.5 1.5 0 0 0 1.5-1.5v-1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span>把学习页的句子拖到这里<br>就带着上下文开始提问</span>';
+    dz.innerHTML = '<svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 3.5v9M6 9l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 15.5v1a1.5 1.5 0 0 0 1.5 1.5h9a1.5 1.5 0 0 0 1.5-1.5v-1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="wp-desk-only">把学习页的句子拖到这里<br>就带着上下文开始提问</span><span class="wp-phone-only">在学习页句子右上角的 ⋯ 里点「问 AI」，<br>就带着这句开始提问；也可以直接输入问题</span>';
   }
 }
 
@@ -6694,7 +7266,7 @@ function renderAIChatMessages() {
   if (!state.aiChat.messages.length) {
     container.innerHTML = state.aiChat.context
       ? '<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px;">点击下方预设问题或输入你的疑问</div>'
-      : '<div style="text-align:center;padding:40px 20px;color:var(--text3);font-size:12px;">拖入句子后即可开始对话</div>';
+      : '<div style="text-align:center;padding:40px 20px;color:var(--text3);font-size:12px;"><span class="wp-desk-only">拖入句子后即可开始对话</span><span class="wp-phone-only">直接输入问题，或从学习页带一句过来</span></div>';
     return;
   }
   container.innerHTML = state.aiChat.messages.map((m, i) => {
@@ -6736,6 +7308,7 @@ async function globalAIProvider(query, context, chatHistory, { onLoading, onDone
 
 /* ==================== AI 浮窗：发送消息 ==================== */
 function handleAIChatKey(e) {
+  if (e.isComposing || e.keyCode === 229) return;
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAIChat(); }
 }
 
@@ -6952,6 +7525,8 @@ const Highlights = {
     this.initToolbar();
     this.toolbar.querySelector('button').innerHTML = `${this.ICONS[mode] || ''}<span>${label}</span>`;
     this.toolbar.classList.toggle('is-remove', mode === 'remove');
+    // 手机上停在屏幕下方（样式见 .is-docked），选区上方留给系统的「拷贝 / 查询」菜单
+    this.toolbar.classList.toggle('is-docked', Phone.on());
     this.toolbar.style.left = (rect.left + rect.width / 2 + window.scrollX) + 'px';
     this.toolbar.style.top = (rect.top + window.scrollY) + 'px';
     this.toolbar.classList.add('show');
@@ -7013,6 +7588,11 @@ const Highlights = {
 
   onMouseUp(e) {
     if (this.toolbar && this.toolbar.contains(e.target)) return;
+    this.checkSelection();
+  },
+
+  // 看当前选区落在哪句话上：电脑上松开鼠标时调，手机上长按选词（selectionchange）时调
+  checkSelection() {
     if (state.aiChat.open) { this.hideToolbar(); return; }   // AI 开启 = 拖拽模式
     const sel = window.getSelection();
     if (!sel || sel.isCollapsed || !sel.toString().trim()) { this.hideToolbar(); return; }
@@ -7076,8 +7656,22 @@ const Highlights = {
     }
   },
 
+  // 手机上长按选词不会有 mouseup，只能跟着 selectionchange 走；拖动选区两端时会连着触发，等停下来再看。
+  // 选区没了（比如点了下面的「高亮」按钮）先别急着收：按钮的 click 会紧跟着到
+  onSelectionChange() {
+    if (!Phone.on()) return;
+    clearTimeout(this.selTimer);
+    this.selTimer = setTimeout(() => {
+      const sel = window.getSelection();
+      const has = sel && !sel.isCollapsed && sel.toString().trim();
+      if (has) this.checkSelection();
+      else if (this.mode === 'create') this.hideToolbar();
+    }, 350);
+  },
+
   init() {
     document.addEventListener('mouseup', e => this.onMouseUp(e));
+    document.addEventListener('selectionchange', () => this.onSelectionChange());
     document.addEventListener('mousedown', e => {
       if (this.toolbar && !this.toolbar.contains(e.target)) this.hideToolbar();
     });
@@ -7090,7 +7684,8 @@ const Highlights = {
         this.onMarkClick(mark);
       }
     });
-    window.addEventListener('scroll', () => this.hideToolbar(), true);
+    // 手机上工具条停在屏幕底部，拖选区时页面会跟着滚，不能一滚就收
+    window.addEventListener('scroll', () => { if (!Phone.on()) this.hideToolbar(); }, true);
     window.addEventListener('resize', () => this.hideToolbar());
   }
 };
@@ -7161,16 +7756,21 @@ var Notepad = {
     const maxY = Math.max(12, window.innerHeight - winH - 24);
     const targetX = Math.min(saved ? saved.x : window.innerWidth - 460, Math.max(12, window.innerWidth - 436));
     const targetY = Math.min(saved ? saved.y : maxY, maxY);
-    this.win.style.left = targetX + 'px';
-    this.win.style.top = targetY + 'px';
-    this.win.style.transformOrigin = `${btnRect.left + 28 - targetX}px ${btnRect.top + 28 - targetY}px`;
+    // 手机上整屏铺开，浮窗位置只在电脑上算；也不自动弹键盘，先让人看到记过的内容
+    if (!Phone.on()) {
+      this.win.style.left = targetX + 'px';
+      this.win.style.top = targetY + 'px';
+      this.win.style.transformOrigin = `${btnRect.left + 28 - targetX}px ${btnRect.top + 28 - targetY}px`;
+    }
     this.win.classList.remove('closing');
     this.win.style.display = 'flex';
     requestAnimationFrame(() => this.win.classList.add('open'));
-    this.editor.focus();
+    if (!Phone.on()) this.editor.focus();
+    Phone.open('notepad', () => { if (this.open) this.close(true); });
   },
 
-  close() {
+  close(fromBack) {
+    if (!fromBack) Phone.closed('notepad');
     this.flush();
     const btnRect = this.fab.getBoundingClientRect();
     const winRect = this.win.getBoundingClientRect();
@@ -7399,6 +7999,566 @@ var Notepad = {
   }
 };
 
+
+/* ==================== 手机版（≤820px） ====================
+   桌面上这里什么都不做：Phone.on() 为假时不压历史、不画操作条，插进页头的按钮也被样式藏着。
+   - 弹层（底部弹层 / 复习中心 / 速记 / AI / 大图）打开时压一条历史，返回手势先关最上面那层；
+     点 × 关的，自己退掉那条历史（skipPops 记着，popstate 里认出来就不再当成翻页）。
+   - 底部操作条照着当前页面里原来的按钮生成（原按钮在手机上藏起来，点操作条就是点原按钮），
+     页面一有变化（MutationObserver）就重画，批改中、已批改、看历史各种状态都不用另外维护。
+   - 实战页页头下面的进度行：第几句 + 圆点，点开是句子列表；「题干」点开是题目和提示。 */
+var Phone = {
+  mq: window.matchMedia ? window.matchMedia('(max-width: 820px)') : null,
+  PRACTICE_VIEWS: ['practiceView', 'smallPracticeView', 'tplBigPracticeView', 'tplSmallPracticeView'],
+  layers: [], skipPops: 0, pendingBack: 0,
+  lbSwap: '', sheetActs: [], barItems: [], barSig: '',
+  armed: false, lastView: '', lastKey: '', lastResult: false, typing: null,
+
+  on() { return !!(this.mq && this.mq.matches); },
+
+  ICONS: {
+    notepad: '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 16.2V13l8.6-8.6a1.6 1.6 0 0 1 2.3 0l.5.5a1.6 1.6 0 0 1 0 2.3L6.8 15.8 4 16.2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
+    ai: '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 2.6c4 0 7.2 2.7 7.2 6.2S14 15 10 15c-.8 0-1.6-.1-2.3-.3L3.6 16.3l1-3A5.9 5.9 0 0 1 2.8 8.8c0-3.4 3.2-6.2 7.2-6.2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
+    review: '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 3.5h9a2 2 0 0 1 2 2V17l-4-2.2L7 17V5.5a2 2 0 0 0-2-2H4Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
+    more: '<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="4.5" cy="10" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="15.5" cy="10" r="1.6"/></svg>',
+    copy: '<svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M10.5 3.5h-6a2 2 0 0 0-2 2v6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
+    go: '<svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10h11M11 5.5 15.5 10 11 14.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    page: '<svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M3 4.5h12M3 9h12M3 13.5h7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
+    image: '<svg width="18" height="18" viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect x="4" y="6.5" width="24" height="19" rx="3" stroke="currentColor" stroke-width="2"/><path d="M4 20.5l6.5-6 5.5 5 4-3.5 8 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    chevDown: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 6 8 10.5 12.5 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  },
+
+  /* ---------- 返回手势：一层一条历史 ---------- */
+  open(name, closeFn) {
+    if (!this.on()) return;
+    const top = this.layers[this.layers.length - 1];
+    if (top && top.name === name) { top.closeFn = closeFn; return; }
+    this.layers.push({ name, closeFn });
+    try { history.pushState({ wpLayer: name }, ''); } catch (e) {}
+  },
+  // 用户点 × / 点遮罩关掉的：把那条历史退掉。同一轮里连关几层，合成一次 history.go(-n)
+  closed(name) {
+    for (let i = this.layers.length - 1; i >= 0; i--) {
+      if (this.layers[i].name !== name) continue;
+      this.layers.splice(i, 1);
+      this.pendingBack++;
+      if (this.pendingBack === 1) {
+        Promise.resolve().then(() => {
+          const n = this.pendingBack;
+          this.pendingBack = 0;
+          if (!n) return;
+          this.skipPops++;
+          history.go(-n);
+        });
+      }
+      return;
+    }
+  },
+  onPop() {
+    if (this.skipPops > 0) { this.skipPops--; return true; }
+    const top = this.layers.pop();
+    if (!top) return false;
+    try { top.closeFn(); } catch (e) { console.error(e); }
+    return true;
+  },
+
+  /* ---------- 通用底部弹层 ---------- */
+  sheet(title, html, acts) {
+    const el = this.sheetEl;
+    if (!el) return;
+    el.querySelector('.wp-sheet-title').textContent = title;
+    el.querySelector('.wp-sheet-body').innerHTML = html;
+    this.sheetActs = acts || [];
+    const wasOpen = !el.hidden;
+    el.hidden = false;
+    el.querySelector('.wp-sheet-panel').scrollTop = 0;
+    if (!wasOpen) this.open('sheet', () => this.hideSheet());
+  },
+  hideSheet() {
+    if (!this.sheetEl || this.sheetEl.hidden) return false;
+    this.sheetEl.hidden = true;
+    this.sheetEl.querySelector('.wp-sheet-body').innerHTML = '';
+    this.sheetActs = [];
+    return true;
+  },
+  closeSheet() { if (this.hideSheet()) this.closed('sheet'); },
+  // 弹层里的一行：先收起弹层再做事，都在这次点击里同步完成（选图这类必须在点击里调起）
+  act(i) {
+    const fn = this.sheetActs[i];
+    this.closeSheet();
+    if (fn) fn();
+  },
+  row(i, ico, title, sub, cls) {
+    return `<button type="button" class="wp-sheet-row${cls ? ' ' + cls : ''}" onclick="Phone.act(${i})">
+      ${ico ? `<span class="wp-sheet-ico">${ico}</span>` : ''}
+      <span><b>${escHtml(title)}</b>${sub ? `<i>${sub}</i>` : ''}</span></button>`;
+  },
+  sec(t) { return `<div class="wp-sheet-sec">${escHtml(t)}</div>`; },
+  // 把页面里（手机上藏起来的）按钮原样复制进弹层：内联 onclick 跟着走，去掉 id 免得重复
+  clones(root, sel) {
+    return [...root.querySelectorAll(sel)].map(el => {
+      const c = el.cloneNode(true);
+      c.removeAttribute('id');
+      c.querySelectorAll('[id]').forEach(x => x.removeAttribute('id'));
+      return c.outerHTML;
+    }).join('');
+  },
+
+  /* ---------- 页头 ⋯：工具 + 这一页的附加操作 ---------- */
+  toolsSheet() {
+    const view = document.getElementById(state.view);
+    const acts = [];
+    let html = '';
+    const pageBtns = view ? [...view.querySelectorAll('.view-head-tools button')] : [];
+    if (pageBtns.length) {
+      html += this.sec('这一页');
+      pageBtns.forEach(b => { acts.push(() => b.click()); html += this.row(acts.length - 1, this.ICONS.page, b.textContent.trim()); });
+      html += this.sec('工具');
+    }
+    acts.push(() => toggleReview());
+    html += this.row(acts.length - 1, this.ICONS.review, '复习中心', '<span id="wpToolReviewSub">练过的句子都在这里</span>');
+    acts.push(() => { if (!Notepad.open) Notepad.toggle(); });
+    html += this.row(acts.length - 1, this.ICONS.notepad, '练习速记', '多标签页 · 四色荧光笔');
+    acts.push(() => { if (!state.aiChat.open) toggleAIChat(); });
+    html += this.row(acts.length - 1, this.ICONS.ai, 'AI 写作助手', '随时问写法、语法、用词');
+    this.sheet('工具', html, acts);
+    // 复习中心那行带上真实条数
+    Promise.all(['/api/writing/small/practice_history', '/api/writing/practice_history', '/api/writing/template/practice_history']
+      .map(u => API.get(u).catch(() => null))).then(rs => {
+      const n = rs.reduce((a, r) => a + collectReviewRecords(r).length, 0);
+      const el = document.getElementById('wpToolReviewSub');
+      if (el) el.textContent = n ? `已收录 ${n} 句，点开复习` : '练过的句子都在这里';
+    });
+  },
+
+  /* ---------- 学习页每句的 ⋯：复制 / 问 AI / 就练这句 ---------- */
+  sentSheet(btn) {
+    const host = btn.closest('[data-drag-info]') || (btn.parentElement && btn.parentElement.querySelector('[data-drag-info]'));
+    if (!host) return;
+    let info = {};
+    try { info = JSON.parse(host.dataset.dragInfo || '{}'); } catch (e) { info = {}; }
+    const practice = host.querySelector('.sl-pill-btn');
+    const acts = [];
+    let html = info.en ? `<div class="wp-sheet-quote">${escHtml(info.en)}</div>` : '';
+    acts.push(() => { writeClipboard(info.en || ''); this.toast('已复制英文'); });
+    html += this.row(acts.length - 1, this.ICONS.copy, '复制英文');
+    if (info.zh) {
+      acts.push(() => { writeClipboard(info.zh || ''); this.toast('已复制中文'); });
+      html += this.row(acts.length - 1, this.ICONS.copy, '复制中文');
+    }
+    acts.push(() => attachAIContext(info));
+    html += this.row(acts.length - 1, this.ICONS.ai, '问 AI', '带着这一句打开 AI 写作助手');
+    if (practice) {
+      acts.push(() => practice.click());
+      html += this.row(acts.length - 1, this.ICONS.go, '就练这句', '直接进实战，停在这一句');
+    }
+    this.sheet('这一句', html, acts);
+  },
+
+  toast(msg) {
+    if (window.IELTSUI && IELTSUI.toast) IELTSUI.toast(msg, 'success');
+  },
+
+  /* ---------- 大图右上角的 ⋯：换一张图 ---------- */
+  lightboxMenu() {
+    const swap = this.lbSwap;
+    if (!swap) return;
+    this.sheet('题图', this.row(0, this.ICONS.image, '换一张题图', '从相册或文件里选一张，替换掉现在这张'), [() => {
+      closeLightbox(null);
+      try { new Function(swap)(); } catch (e) { console.error(e); }
+    }]);
+  },
+
+  /* ---------- 复习中心排序 ---------- */
+  SORTS: [['low', '低分优先'], ['recent', '最近练的'], ['name', '按话题']],
+  sortSheet() {
+    const cur = state.reviewSort || 'low';
+    const acts = [];
+    const html = this.SORTS.map(([k, label]) => {
+      acts.push(() => setReviewSort(k));
+      return this.row(acts.length - 1, '', label, '', k === cur ? 'is-on' : '');
+    }).join('');
+    this.sheet('排序', html, acts);
+  },
+  paintSort() {
+    const b = document.getElementById('wpSortBtn');
+    const hit = this.SORTS.find(x => x[0] === (state.reviewSort || 'low'));
+    if (b && hit) b.firstChild.textContent = hit[1] + ' ';
+  },
+
+  /* ---------- 实战页：进度行和两个弹层 ---------- */
+  pracInfo(view) {
+    if (view === 'practiceView') {
+      const d = state.subData, ex = d && d.examples && d.examples[state.currentExIdx];
+      if (!ex) return null;
+      const cur = state.activeSentIdx, n = ex.sentences.length;
+      const done = i => !!state.historySentences[`${state.currentExIdx}_${i}`]
+        || !!(state.sentResults[i] && state.sentResults[i]._savedToReview === true);
+      return { label: `例题 ${state.currentExIdx + 1}`, cur, n, done };
+    }
+    if (view === 'smallPracticeView') {
+      if (!state.small.exampleData) return null;
+      const { meta } = smallFlatSentences();
+      const cur = state.small.activeSentIdx;
+      const m = meta.find(x => cur >= x.from && cur <= x.to);
+      if (!m) return null;
+      return { label: m.name, cur: cur - m.from, n: m.to - m.from + 1, done: i => smallIsDoneAt(m.from + i) };
+    }
+    const p = Tpl.s.prac;
+    if (!p) return null;
+    const step = Tpl.curStep();
+    return { label: step.name, cur: p.activeIdx, n: step.sentences.length, done: i => !!Tpl.cellScore(step.id, i) };
+  },
+  paintProw(view) {
+    const row = document.querySelector(`#${view} > .view-head > .wp-prow`);
+    if (!row) return;
+    const info = this.pracInfo(view);
+    let html = '';
+    if (info) {
+      const pos = info.cur >= 0 ? `第 ${info.cur + 1}/${info.n} 句` : `${info.n} 句`;
+      const dots = info.n <= 14
+        ? Array.from({ length: info.n }, (_, i) => `<i class="${i === info.cur ? 'is-on' : info.done(i) ? 'is-done' : ''}"></i>`).join('')
+        : '';
+      html = `<button type="button" class="wp-prow-main" onclick="Phone.sentListSheet()" aria-label="换一句：${escHtml(info.label)} ${pos}">
+          <span class="wp-prow-txt">${escHtml(info.label)} <i>· ${pos}</i></span>
+          <span class="wp-dots">${dots}</span>${this.ICONS.chevDown}</button>
+        <button type="button" class="wp-chip" onclick="Phone.questionSheet()">题干</button>`;
+    }
+    if (row.dataset.html !== html) { row.innerHTML = html; row.dataset.html = html; }
+  },
+  sentListSheet() {
+    const v = state.view, root = document.getElementById(v);
+    if (!root) return;
+    const pills = h => h ? `<div class="wp-sheet-pills">${h}</div>` : '';
+    const list = h => h ? `<div class="wp-sheet-list">${h}</div>` : '';
+    let html = '', title = '选一句练';
+    if (v === 'practiceView') {
+      if ((state.subData.examples || []).length > 1) html += this.sec('例题') + pills(this.clones(root, '#exSwitch .ex-btn'));
+      html += this.sec(`例题 ${state.currentExIdx + 1} 的句子`) + list(this.clones(root, '#sentenceList .sent-item'));
+    } else if (v === 'smallPracticeView') {
+      html += this.sec('段落') + pills(this.clones(root, '#smallPracticeStepBar .tpl-step'));
+      const t = document.getElementById('smallPracticeSentTitle');
+      html += this.sec(t ? t.textContent : '本段句子') + list(this.clones(root, '#smallPracticeSentList .sp-done-item'));
+    } else {
+      const p = Tpl.s.prac, step = Tpl.curStep();
+      if (p.task === 'task1') {
+        html += this.sec('段落和句子') + pills(this.clones(root, '.tpl-prac-bar .tpl-step'));
+      } else {
+        html += this.sec('段落') + pills(this.clones(root, '.tpl-prac-bar .tpl-step'));
+        html += this.sec(`${step.name} 的 ${step.sentences.length} 句`) + list(this.clones(root, '.tpl-side-list .tpl-side-item'));
+      }
+      html += this.clones(root, '.tpl-side-link');
+    }
+    this.sheet(title, html);
+  },
+  questionSheet() {
+    const v = state.view, root = document.getElementById(v);
+    if (!root) return;
+    let q = '', extra = '', fig = null, swap = '', title = '题干';
+    if (v === 'practiceView') {
+      const ex = state.subData.examples[state.currentExIdx];
+      q = ex ? ex.question : '';
+      const chips = this.clones(root, '#pracHints .prac-chip');
+      if (chips) extra = this.sec('本题提示') + `<div class="wp-sheet-chips">${chips}</div>`;
+      title = '题干与本题提示';
+    } else if (v === 'smallPracticeView') {
+      const d = state.small.exampleData || {};
+      q = d.question || ''; fig = d.image_path || ''; swap = 'triggerImageUpload()';
+      title = '题干与题图';
+    } else {
+      const p = Tpl.s.prac || {};
+      q = p.question || '';
+      if (p.task === 'task1') { fig = p.imagePath || ''; swap = 'Tpl.pickImage()'; title = '题干与题图'; }
+      else title = '范文题目';
+    }
+    const acts = [];
+    let html = `<p class="wp-sheet-q">${escHtml(q)}</p>` + extra;
+    if (fig) {
+      html += `<button type="button" class="wp-sheet-fig" aria-label="放大看题图" onclick="openLightbox('${escHtml(fig)}', '${swap}')"><img src="${escHtml(fig)}" alt="题目图片"></button>`;
+    } else if (fig !== null) {
+      acts.push(() => { try { new Function(swap)(); } catch (e) { console.error(e); } });
+      html += this.row(0, this.ICONS.image, '上传题图', '对着图写更接近考场');
+    }
+    this.sheet(title, html, acts);
+  },
+
+  /* ---------- 底部操作条：照着原按钮生成 ---------- */
+  barSources() {
+    const v = state.view, root = document.getElementById(v);
+    if (!root || root.style.display === 'none') return [];
+    const all = sel => [...root.querySelectorAll(sel)];
+    if (v === 'practiceView' || v === 'smallPracticeView') {
+      const fa = all('.fb-actions').pop();
+      if (fa) return [...fa.querySelectorAll('button')];
+      const ta = root.querySelector('.task-actions-btns');
+      return ta ? [...ta.querySelectorAll('button')] : [];
+    }
+    if (v === 'tplBigPracticeView' || v === 'tplSmallPracticeView') {
+      const ab = root.querySelector('.tpl-answer-btns');
+      const list = ab ? [...ab.querySelectorAll('button')] : [];
+      const next = root.querySelector('#tplFeedback .tpl-fb-next');
+      if (next) list.push(next);
+      return list;
+    }
+    if (v === 'learningView') {
+      return state.subData && (state.subData.examples || []).length
+        ? [{ label: '去实战 →', run: () => gotoPractice() }] : [];
+    }
+    if (v === 'smallLearnView') return all('.sl-go').slice(0, 1);
+    if (v === 'tplBigLearnView') return all('#tplBigLearnToolbar .tpl-btn').slice(0, 1);
+    if (v === 'tplSmallLearnView') return all('.tsl-cta-btn').slice(0, 1);
+    return [];
+  },
+  shortLabel(t) {
+    t = String(t || '').replace(/\s+/g, ' ').trim();
+    if (t === '跳过这句') return '跳过';
+    if (t === '先看提示') return '提示';
+    if (/^改一遍/.test(t)) return '改一遍';
+    if (t === '偷看答案') return '偷看';
+    if (t === '收起答案') return '收起';
+    return t;
+  },
+  paintBar(on) {
+    const bar = this.barEl;
+    if (!bar) return;
+    const srcs = on ? this.barSources() : [];
+    const items = srcs.map((src, i) => {
+      if (!(src instanceof Element)) return { label: src.label, run: src.run, primary: i === srcs.length - 1 };
+      return {
+        src, label: this.shortLabel(src.textContent),
+        primary: i === srcs.length - 1,
+        busy: !!src.querySelector('.spinner'),
+        eye: src.classList.contains('tpl-eye-btn'),
+        isOn: src.classList.contains('is-on'),
+        disabled: src.disabled || !!src.closest('[inert]'),
+      };
+    });
+    const sig = JSON.stringify(items.map(x => [x.label, x.primary, x.busy, x.eye, x.isOn, x.disabled]));
+    this.barItems = items;
+    if (sig !== this.barSig) {
+      this.barSig = sig;
+      bar.innerHTML = items.map((x, i) => `<button type="button" data-i="${i}" class="${x.primary ? 'is-primary' : ''}${x.isOn ? ' is-on' : ''}"${x.disabled ? ' disabled' : ''}>${x.busy ? '<span class="spinner"></span>' : ''}${x.eye ? Tpl.EYE_ICON : ''}${escHtml(x.label)}</button>`).join('');
+    }
+    const show = items.length > 0;
+    bar.hidden = !show;
+    const h = show ? bar.offsetHeight : 0;
+    const s = document.body.style;
+    if (s.getPropertyValue('--wp-bar-h') !== h + 'px') {
+      s.setProperty('--wp-bar-h', h + 'px');
+      s.setProperty('--ui-bottom-bar-h', h + 'px');
+    }
+  },
+  barClick(i) {
+    const it = this.barItems[i];
+    if (!it || it.disabled) return;
+    if (it.src) it.src.click(); else if (it.run) it.run();
+  },
+
+  /* ---------- 换句 / 出分时把要看的东西滚进来 ---------- */
+  navH() {
+    const nav = document.querySelector('.app-shell-nav');
+    return nav ? Math.max(0, nav.getBoundingClientRect().bottom) : 0;
+  },
+  scrollToY(y) { window.scrollTo(0, Math.max(0, Math.round(y))); },
+  followScroll() {
+    const v = state.view;
+    if (v !== this.lastView) {
+      const first = !this.lastView;
+      this.lastView = v; this.lastKey = ''; this.lastResult = false;
+      // 换页面回到顶部（原来停在上一页滚到的位置，常常落在半截）
+      if (!first && this.armed) this.scrollToY(0);
+    }
+    if (!this.PRACTICE_VIEWS.includes(v)) return;
+    const root = document.getElementById(v);
+    const row = root.querySelector(':scope > .view-head > .wp-prow');
+    const key = (row && row.dataset.html) || '';
+    const result = !!root.querySelector('.feedback-card, #tplFeedback .tpl-fb');
+    if (!this.lastKey) { this.lastKey = key; this.lastResult = result; return; }
+    if (key !== this.lastKey) {
+      this.lastKey = key; this.lastResult = result;
+      // 换了一句：句子卡跑到屏幕外了（比如在长长的批改结果底部点了「下一句」）就滚回进度行
+      const card = root.querySelector('.task-card, .tpl-answer-card');
+      if (this.armed && card && row) {
+        const top = card.getBoundingClientRect().top;
+        if (top < this.navH() || top > window.innerHeight * 0.6) {
+          this.scrollToY(row.getBoundingClientRect().top + window.scrollY - this.navH() - 6);
+        }
+      }
+      return;
+    }
+    if (result && !this.lastResult && this.armed) this.reveal(root);
+    this.lastResult = result;
+  },
+  // 刚出分：「你写的」顶到导航条下面，分数条紧跟着，第一眼就是分数
+  reveal(root) {
+    const ans = root.querySelector('.task-answer');
+    // 分数条：思维链是 .fb-grid 的第一行（分数环那一行），另两个是各自的头部
+    const strip = root.querySelector('.fb-grid:has(.score-ring), .sp-fb-head, .tpl-fb-top');
+    if (!strip) return;
+    const last = strip.querySelector(':scope > .fb-side > .score-ring') || strip;
+    const top0 = this.navH() + 10;
+    const barH = this.barEl && !this.barEl.hidden ? this.barEl.offsetHeight : 0;
+    let target = (ans || strip).getBoundingClientRect().top + window.scrollY - top0;
+    const stripBottom = last.getBoundingClientRect().bottom + 12 + window.scrollY - target;
+    if (stripBottom > window.innerHeight - barH - 8) target = strip.getBoundingClientRect().top + window.scrollY - top0;
+    this.scrollToY(target);
+  },
+
+  /* ---------- 打字时：原句、输入框、提交按钮一屏放下 ---------- */
+  placeTyping() {
+    const ta = this.typing;
+    if (!ta || !ta.isConnected || !this.on()) return;
+    const card = ta.closest('.task-card, .tpl-answer-card');
+    if (!card) return;
+    const vv = window.visualViewport;
+    const vTop = vv ? vv.offsetTop : 0, vH = vv ? vv.height : window.innerHeight;
+    const barH = this.barEl && !this.barEl.hidden ? this.barEl.offsetHeight : 0;
+    const topLimit = Math.max(this.navH(), vTop) + 8;
+    const bottomLimit = vTop + vH - barH - 8;
+    const first = card.querySelector('.wp-fig-thumb, .task-tagrow, .tpl-skel, .task-head, .task-label') || card;
+    const cn = card.querySelector('.task-cn');
+    let dy = first.getBoundingClientRect().top - topLimit;
+    const taBottom = ta.getBoundingClientRect().bottom - dy;
+    if (taBottom > bottomLimit) {
+      // 放不下：先让出题图 / 标签，原句顶到最上面；还不够就只保住输入框
+      dy += taBottom - bottomLimit;
+      if (cn && cn.getBoundingClientRect().top - dy < topLimit) {
+        dy = Math.min(dy, cn.getBoundingClientRect().top - topLimit);
+        if (ta.getBoundingClientRect().bottom - dy > bottomLimit) dy = ta.getBoundingClientRect().bottom - bottomLimit;
+      }
+    }
+    if (Math.abs(dy) > 2) window.scrollBy(0, dy);
+  },
+  onViewport() {
+    const vv = window.visualViewport;
+    const kb = vv ? Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)) : 0;
+    document.documentElement.style.setProperty('--wp-kb', (this.on() ? kb : 0) + 'px');
+    document.body.classList.toggle('wp-kb', this.on() && kb > 80);
+    if (this.typing) { clearTimeout(this.typeTimer); this.typeTimer = setTimeout(() => this.placeTyping(), 120); }
+  },
+
+  /* ---------- 同步：进度行、操作条、滚动 ---------- */
+  schedule() {
+    if (this.syncQueued) return;
+    this.syncQueued = true;
+    requestAnimationFrame(() => this.sync());
+  },
+  sync() {
+    this.syncQueued = false;
+    const on = this.on();
+    if (on && this.PRACTICE_VIEWS.includes(state.view)) this.paintProw(state.view);
+    this.paintBar(on);
+    if (on) { this.followScroll(); this.paintRails(); }
+  },
+  // 话题 / 图表类型横条：选中的那颗滚进来；右边还有没露出来的就带一道渐隐
+  paintRails() {
+    document.querySelectorAll('.cat-rail').forEach(rail => {
+      if (!rail.offsetParent) return;
+      const act = rail.querySelector('.cat-item.active');
+      const id = act ? act.textContent : '';
+      if (act && rail.dataset.active !== id) {
+        rail.dataset.active = id;
+        const left = act.offsetLeft - rail.offsetLeft;
+        if (left < rail.scrollLeft || left + act.offsetWidth > rail.scrollLeft + rail.clientWidth) {
+          rail.scrollLeft = Math.max(0, left - 16);
+        }
+      }
+      this.railEnd(rail);
+    });
+  },
+  railEnd(rail) {
+    const end = rail.scrollLeft + rail.clientWidth >= rail.scrollWidth - 4;
+    if (rail.classList.contains('is-end') !== end) rail.classList.toggle('is-end', end);
+  },
+
+  init() {
+    // 底部弹层
+    const sh = document.createElement('div');
+    sh.className = 'wp-sheet';
+    sh.hidden = true;
+    sh.innerHTML = `<div class="wp-sheet-mask"></div>
+      <div class="wp-sheet-panel" role="dialog" aria-modal="true">
+        <div class="wp-sheet-head"><b class="wp-sheet-title"></b><button type="button" class="wp-sheet-x" aria-label="关闭">&times;</button></div>
+        <div class="wp-sheet-body"></div>
+      </div>`;
+    document.body.appendChild(sh);
+    this.sheetEl = sh;
+    sh.addEventListener('click', e => {
+      if (e.target.closest('.wp-sheet-mask, .wp-sheet-x')) { this.closeSheet(); return; }
+      // 复制进来的原按钮（选句子、切段落…）自己的 onclick 先跑完，这里再收起弹层
+      if (e.target.closest('.wp-sheet-body button, .wp-sheet-body [onclick]')) this.closeSheet();
+    });
+    // 底部操作条
+    const bar = document.createElement('div');
+    bar.className = 'wp-actbar';
+    bar.id = 'wpActBar';
+    bar.hidden = true;
+    document.body.appendChild(bar);
+    this.barEl = bar;
+    bar.addEventListener('click', e => {
+      const b = e.target.closest('button[data-i]');
+      if (b) this.barClick(Number(b.dataset.i));
+    });
+    // 页头：工具按钮（实战页多速记、AI 两个），实战页再加进度行
+    ALL_VIEWS.forEach(id => {
+      if (id === 'entryView') return;
+      const head = document.querySelector(`#${id} > .view-head`);
+      if (!head) return;
+      const prac = this.PRACTICE_VIEWS.includes(id);
+      const tools = document.createElement('div');
+      tools.className = 'wp-head-tools';
+      tools.innerHTML = (prac
+        ? `<button type="button" class="wp-head-btn" aria-label="练习速记" title="练习速记" onclick="Notepad.toggle()">${this.ICONS.notepad}</button>
+           <button type="button" class="wp-head-btn" aria-label="AI 写作助手" title="AI 写作助手" onclick="toggleAIChat()">${this.ICONS.ai}</button>`
+        : '') + `<button type="button" class="wp-head-btn" aria-label="工具" title="工具" onclick="Phone.toolsSheet()">${this.ICONS.more}</button>`;
+      head.appendChild(tools);
+      if (prac) {
+        const row = document.createElement('div');
+        row.className = 'wp-prow';
+        head.appendChild(row);
+      }
+    });
+    const ai = document.getElementById('aiChatInput');
+    if (ai && this.on()) ai.placeholder = '输入你的问题…';
+
+    new MutationObserver(() => this.schedule()).observe(document.getElementById('app'), {
+      childList: true, subtree: true, characterData: true,
+      attributes: true, attributeFilter: ['class', 'style', 'disabled', 'inert'],
+    });
+    if (this.mq) {
+      const onChange = () => { this.onViewport(); this.schedule(); };
+      if (this.mq.addEventListener) this.mq.addEventListener('change', onChange);
+      else if (this.mq.addListener) this.mq.addListener(onChange);
+    }
+    if (window.visualViewport) {
+      visualViewport.addEventListener('resize', () => this.onViewport());
+      visualViewport.addEventListener('scroll', () => this.onViewport());
+    }
+    window.addEventListener('resize', () => this.onViewport());
+    // 用户动过手之后才自动滚动：刷新后恢复的滚动位置不能被抢掉
+    const arm = () => { this.armed = true; };
+    document.addEventListener('pointerdown', arm, true);
+    document.addEventListener('keydown', arm, true);
+    document.addEventListener('scroll', e => {
+      if (e.target && e.target.classList && e.target.classList.contains('cat-rail')) this.railEnd(e.target);
+    }, true);
+    document.addEventListener('focusin', e => {
+      const t = e.target;
+      if (!this.on() || !t || !t.matches || !t.matches('.editor-input')) return;
+      this.typing = t;
+      document.body.classList.add('wp-typing');
+      clearTimeout(this.typeTimer);
+      this.typeTimer = setTimeout(() => this.placeTyping(), 320);
+    });
+    document.addEventListener('focusout', e => {
+      if (e.target !== this.typing) return;
+      this.typing = null;
+      setTimeout(() => { if (!this.typing) document.body.classList.remove('wp-typing'); }, 200);
+    });
+    this.onViewport();
+    this.schedule();
+  },
+};
 
 /* ==================== 模板写作模块 ====================
    语料来自飞书「九分学长 写作大+小模板」，由 script/import_writing_templates.py 导入。
@@ -7757,10 +8917,10 @@ var Tpl = {
         ? para.sentences
         : sec.sentences.map((st, i) => ({ tpl_index: i, tpl_text: st.text, sample_text: '', pairs: [] }));
       const left = rows.map((r, ri) => r.tpl_text
-        ? `<div class="tpl-row"><div class="tpl-sent" data-hl-key="${tplKey}|${sec.id}|${ri}|tpl" ${this.dragAttrs('', this.plain(r.tpl_text), d.name + ' / ' + sec.name)}>${this.tplText(r.tpl_text)}</div></div>`
+        ? `<div class="tpl-row">${WP_MORE_BTN}<div class="tpl-sent" data-hl-key="${tplKey}|${sec.id}|${ri}|tpl" ${this.dragAttrs('', this.plain(r.tpl_text), d.name + ' / ' + sec.name)}>${this.tplText(r.tpl_text)}</div></div>`
         : `<div class="tpl-row"><div class="tpl-sent empty">（范文在此处多写了一句）</div></div>`).join('');
       const right = rows.map((r, ri) => r.sample_text
-        ? `<div class="tpl-row"><div class="tpl-sent" data-hl-key="${smpKey}|${sec.id}|${ri}|sample" ${this.dragAttrs(r.chinese || '', this.plain(r.sample_text), d.name + ' / ' + sec.name)}>${this.sampleText(r.sample_text)}</div>
+        ? `<div class="tpl-row">${WP_MORE_BTN}<div class="tpl-sent" data-hl-key="${smpKey}|${sec.id}|${ri}|sample" ${this.dragAttrs(r.chinese || '', this.plain(r.sample_text), d.name + ' / ' + sec.name)}>${this.sampleText(r.sample_text)}</div>
              ${r.chinese ? `<div class="tpl-pattern-cn" style="margin-top:4px;">${this.esc(r.chinese)}</div>` : ''}
              ${(r.pairs || []).length ? `<div class="tpl-pairs">${r.pairs.map(pr => `<div class="tpl-pair"><b>${this.esc(pr.key)}</b> → ${this.esc(pr.value)}</div>`).join('')}</div>` : ''}
            </div>`
@@ -7993,8 +9153,8 @@ var Tpl = {
              ondragleave="Tpl.imgDrag(event,false)" ondrop="Tpl.imgDrop(event)">
           ${p.imagePath
             ? `<button type="button" class="fig-swap" onclick="event.stopPropagation(); Tpl.pickImage()">换一张</button>
-               <img class="fig-img" src="${this.esc(p.imagePath)}" alt="题目图片" onclick="event.stopPropagation(); openLightbox(this.src)">
-               <div class="fig-tip">点击放大 · 拖拽可替换</div>`
+               <img class="fig-img" src="${this.esc(p.imagePath)}" alt="题目图片" onclick="event.stopPropagation(); openLightbox(this.src, 'Tpl.pickImage()')">
+               <div class="fig-tip"><span class="wp-desk-only">点击放大 · 拖拽可替换</span><span class="wp-phone-only">点图放大 · 换图在大图右上角 ⋯ 里</span></div>`
             : `<span class="fig-empty">
                  <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect x="4" y="6.5" width="24" height="19" rx="3" stroke="currentColor" stroke-width="1.7"/><path d="M4 20.5l6.5-6 5.5 5 4-3.5 8 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="11.5" cy="12.5" r="1.8" fill="currentColor"/></svg>
                  <b>把题目图片拖到这里</b><i>或点击选择文件</i></span>`}
@@ -8142,8 +9302,10 @@ var Tpl = {
         </div>
       </div>`;
 
+    const thumb = (p.task === 'task1' && p.imagePath)
+      ? `<button type="button" class="wp-fig-thumb" aria-label="放大看题图" onclick="openLightbox(this.querySelector('img').src, 'Tpl.pickImage()')"><img src="${this.esc(p.imagePath)}" alt="题目图片" loading="lazy"></button>` : '';
     box.innerHTML = `
-      ${skel}
+      ${thumb}${skel}
       <div class="task-label">把这句写成英文</div>
       <p class="task-cn">${this.esc(sent.chinese || '（这句没有中文提示，可直接参考范文原句）')}</p>
       ${answer}
@@ -8559,7 +9721,7 @@ var Tpl = {
       if (it.type === 'note') return `<div class="tpl-note">${this.esc(it.text)}</div>`;
       const pt = (g.patterns || [])[it.index];
       if (!pt) return '';
-      return `<div class="tpl-pattern" ${this.dragAttrs(pt.chinese, this.plain(pt.text), dragDetail)}>
+      return `<div class="tpl-pattern" ${this.dragAttrs(pt.chinese, this.plain(pt.text), dragDetail)}>${WP_MORE_BTN}
         ${pt.chinese ? `<div class="tpl-pattern-cn" data-hl-key="${keyPrefix}${gi}_${it.index}|cn">${this.esc(pt.chinese)}</div>` : ''}
         <div class="tpl-pattern-en" data-hl-key="${keyPrefix}${gi}_${it.index}|en">${this.tplText(pt.text)}</div>
       </div>`;
@@ -8675,7 +9837,7 @@ var Tpl = {
         const pt = pats[x.index];
         if (!pt) return '';
         return `<div class="tsl-item" ${this.dragAttrs(pt.chinese, this.plain(pt.text), c.name + ' / ' + sec.name)}>
-          <div class="tsl-item-body">
+          <div class="tsl-item-body">${WP_MORE_BTN}
             <p class="tsl-item-en" data-hl-key="${keyPrefix}${gi}_${x.index}|en">${this.tplText(pt.text)}</p>
             ${pt.chinese ? `<p class="tsl-item-cn" data-hl-key="${keyPrefix}${gi}_${x.index}|cn">${this.esc(pt.chinese)}</p>` : ''}
           </div>
@@ -8714,7 +9876,7 @@ var Tpl = {
           <div class="tsl-list">
             ${(es.sentences || []).map((x, i) => `
               <div class="tsl-item" ${this.dragAttrs(x.chinese, x.english, c.name + ' / ' + es.name)}>
-                <div class="tsl-item-body">
+                <div class="tsl-item-body">${WP_MORE_BTN}
                   <p class="tsl-item-en" data-hl-key="tpl|ex|${ex.id}|${sec.id}|${k}_${i}|en">${this.esc(x.english)}</p>
                   <p class="tsl-item-cn" data-hl-key="tpl|ex|${ex.id}|${sec.id}|${k}_${i}|cn">${this.esc(x.chinese)}</p>
                 </div>
@@ -8815,7 +9977,7 @@ var Tpl = {
     this._imgEx = ex || null;
     if (path) {
       return `<div class="tpl-imgslot">
-        <img class="tpl-thumb" src="${this.esc(path)}" alt="题目图表（点击放大）" title="点击放大" onclick="openLightbox(this.src)">
+        <img class="tpl-thumb" src="${this.esc(path)}" alt="题目图表（点击放大）" title="点击放大" onclick="openLightbox(this.src${ex ? ", 'Tpl.pickImage()'" : ''})">
         ${ex ? '<button class="tpl-reupload" onclick="Tpl.pickImage()">换一张图</button>' : ''}
       </div>`;
     }
@@ -9089,6 +10251,7 @@ document.addEventListener('visibilitychange', () => {
   setupAIDropzone();
   Highlights.init();
   Notepad.init();
+  Phone.init();
   Tpl.loadProgress();
   if (!(await PageRestore.run())) renderHome();
 })();

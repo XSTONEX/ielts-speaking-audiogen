@@ -11,6 +11,7 @@
 | `vocabulary/` | 单词本 |
 | `study_tips/` | 学习技巧 |
 | `board/` | 学习交流小天地（不能叫 `message_board/`：`.gitignore` 会把任何层级叫这个名字的目录都忽略掉） |
+| `writing/` | 写作逻辑训练（手机检查 + 桌面像素对比） |
 
 各文件夹的 README 写了具体命令，套路都一样：
 
