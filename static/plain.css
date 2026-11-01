@@ -77,6 +77,7 @@ html[data-theme="dark"] body.ui-plain.theme-page .ui-select {
 
 /* 页面主体：最大 1180、92% 宽、居中 */
 .ui-page { width: 92%; max-width: var(--page-max); margin: 0 auto; }
+@media (max-width: 640px) { .ui-page { width: auto; margin-left: 16px; margin-right: 16px; } }
 
 /* 设计系统里的预览容器，页面里用 body.ui-plain 即可 */
 .ui-root {
@@ -341,6 +342,24 @@ html[data-theme="dark"] body.ui-plain.theme-page .ui-select {
 .ui-dialog__close:hover { background: var(--w-sunken); color: var(--w-ink); }
 .ui-dialog__body { padding: 18px 24px; display: flex; flex-direction: column; gap: 16px; }
 .ui-dialog__foot { display: flex; justify-content: flex-end; gap: 10px; padding: 0 24px 22px 24px; }
+
+/* 手机上弹窗改成从底部升起的面板：拇指够得着，按钮铺满一排，底部让开 Home 条 */
+@media (max-width: 640px) {
+  .ui-dialog-backdrop { align-items: flex-end; padding: calc(env(safe-area-inset-top) + 24px) 0 0 0; }
+  .ui-dialog {
+    width: 100%; max-height: calc(100vh - 24px); max-height: calc(100dvh - env(safe-area-inset-top) - 24px);
+    border-width: 1px 0 0 0; border-radius: 14px 14px 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    animation: ui-sheet-in .22s ease-out;
+  }
+  .ui-dialog__head { padding: 18px 16px 0 16px; }
+  .ui-dialog__close { width: 40px; height: 40px; margin-right: -8px; }
+  .ui-dialog__body { padding: 16px; }
+  .ui-dialog__foot { position: sticky; bottom: 0; padding: 12px 16px 16px 16px; background: var(--w-surface); }
+  .ui-dialog__foot > .ui-btn { flex: 1 1 0; }
+}
+@keyframes ui-sheet-in { from { transform: translateY(32px); opacity: .4; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .ui-dialog { animation: none; } }
 
 /* ==================== 提示 ==================== */
 .ui-toast {

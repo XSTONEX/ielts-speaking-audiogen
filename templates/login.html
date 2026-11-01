@@ -22,15 +22,15 @@
         })();
     </script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>登录 · IELTS Lab</title>
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
-    <link rel="stylesheet" href="/static/theme.css?v=20261031b">
-    <link rel="stylesheet" href="/static/plain.css?v=20261031">
-    <script src="/static/theme.js?v=20260919" defer></script>
+    <link rel="stylesheet" href="/static/theme.css?v=20261101m">
+    <link rel="stylesheet" href="/static/plain.css?v=20261101m">
+    <script src="/static/theme.js?v=20261101m" defer></script>
     <style>
         /* 登录页专属样式：只用设计系统令牌（--w-* 等）和 plain.css 的 ui- 组件，类名统一 lg- 前缀。
            没有导航栏（app-shell.js 在 /login 不画导航），整页只有中间一张卡片。 */
@@ -77,6 +77,7 @@
         @media (max-width: 480px) {
             .lg-wrap { justify-content: flex-start; padding-top: 40px; }
             .lg-card { padding: 24px 20px 20px 20px; }
+            .lg-eye { top: 2px; right: 2px; width: 40px; height: 40px; }
         }
     </style>
 </head>
@@ -94,7 +95,7 @@
             <form id="loginForm" class="lg-form" novalidate>
                 <label class="ui-field">
                     <span class="ui-field__label">用户名</span>
-                    <input type="text" id="username" class="ui-input" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+                    <input type="text" id="username" class="ui-input" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required>
                 </label>
                 <label class="ui-field">
                     <span class="ui-field__label">密码</span>

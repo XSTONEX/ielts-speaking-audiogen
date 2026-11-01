@@ -1,4 +1,16 @@
 (function () {
+  // iOS Safari 聚焦字号小于 16px 的输入框会把整页放大，放大后还不缩回去。
+  // 只在 iOS 上给 viewport 加 maximum-scale=1：iOS 10 起这条不拦双指缩放，只拦聚焦时的自动放大；
+  // 安卓会真的禁止缩放，而安卓本来就不自动放大，所以不加。
+  var ua = navigator.userAgent || '';
+  var isIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var meta = document.querySelector('meta[name="viewport"]');
+  if (isIOS && meta && !/maximum-scale/.test(meta.content)) {
+    meta.content = meta.content + ', maximum-scale=1';
+  }
+})();
+
+(function () {
   var STORAGE_KEY = 'ui-theme';
   var VALID_PREFERENCES = ['system', 'light', 'dark'];
   var mediaQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;

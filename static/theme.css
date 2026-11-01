@@ -771,7 +771,7 @@ body.has-app-shell.page-writing-practice .review-overlay { z-index: 1300; }
 
   .app-shell-nav {
     gap: 6px;
-    padding: env(safe-area-inset-top) 12px 0;
+    padding: env(safe-area-inset-top) max(12px, env(safe-area-inset-right)) 0 max(12px, env(safe-area-inset-left));
   }
 
   .app-shell-brand,
@@ -1156,4 +1156,51 @@ html[data-theme="dark"] body.page-intensive .vocab-btn.active {
 html[data-theme="dark"] body.page-intensive .audio-controls audio,
 html[data-theme="dark"] body.page-intensive #articleAudio {
   filter: brightness(0.88) contrast(1.05);
+}
+
+/* ============================================================
+   手机端公共约定（2026-11 手机端适配）。各页面的手机样式都建立在这几条上：
+   - 断点：≤820px 是手机/竖屏平板（导航栏收成「模块 ▾」），≤640px 是手机。桌面（>820px）一律不动。
+   - 页面左右留白 16px，卡片内边距 16px（下面改了令牌，用令牌的组件自动跟上）。
+   - 能点的东西至少 40px 高，主要按钮 44px 以上；屏幕底部留给本页的主操作（播放条、提交、添加）。
+   - 固定在底部的东西要加 env(safe-area-inset-bottom)，并把自己的高度写进 --ui-bottom-bar-h，
+     提示条会自动浮在它上面。
+   - iOS 聚焦输入框自动放大的问题由 theme.js 统一处理，页面里不用再为这个把字号改成 16px。
+   ============================================================ */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* 页面开了 viewport-fit=cover，横屏时左右的刘海区要自己让开 */
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+@media (max-width: 820px) {
+  :root {
+    --h-sm: 40px;
+  }
+
+  a,
+  button,
+  label,
+  summary,
+  [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .ielts-toast-host {
+    left: 16px;
+    right: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom) + var(--ui-bottom-bar-h, 0px));
+    max-width: none;
+    justify-items: center;
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --pad-card-y: 18px;
+    --pad-card-x: 16px;
+    --gutter: 16px;
+  }
 }

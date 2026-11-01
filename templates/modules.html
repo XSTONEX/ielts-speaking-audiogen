@@ -23,7 +23,7 @@
 </script>
 <meta charset="UTF-8">
 <script src="/static/auth-fetch.js?v=20260927"></script>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>IELTS Lab</title>
 <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
@@ -145,19 +145,39 @@
   .home-sec--review { margin-top: 20px; }
   .home-grid--more > .home-card:last-child { grid-column: 1 / -1; }
 }
+/* 手机：打开就先看到「继续上次」和「待复习」（今天该干什么），模块入口收成两列小卡片：
+   卡片只留名字和数据行，介绍文字藏起来；名字都是一行，所以同一排的细线自然对齐。
+   待复习是空的时候不往前提，免得一个空框占住首屏。 */
 @media (max-width: 640px) {
-  .home { padding: 22px 0 40px; }
-  .home-grid { grid-template-columns: minmax(0, 1fr); }
-  .home-grid--more > .home-card:last-child { grid-column: auto; }
-  .home-card { min-height: 0; }
-  .home-resume { flex-wrap: wrap; gap: 16px; }
+  .home { padding: 20px 0 calc(36px + env(safe-area-inset-bottom)); }
+  .home-head { padding-bottom: 18px; }
+  .home-resume { flex-wrap: wrap; gap: 14px; margin-bottom: 26px; padding: 16px; }
   .home-resume__go { width: 100%; }
-  .home-sec { flex-wrap: wrap; }
+  .home-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .home-grid + .home-grid { margin-top: 26px; }
+  .home-sec { flex-wrap: wrap; column-gap: 8px; }
+  .home-sec--review { order: -2; margin-top: 0; }
+  .home-review { order: -1; margin-bottom: 16px; padding: 4px 16px 14px; }
+  .home-grid--skills:has(#reviewEmpty:not([hidden])) .home-sec--review,
+  .home-grid--skills:has(#reviewEmpty:not([hidden])) .home-review { order: 0; margin-top: 16px; margin-bottom: 0; }
+  .home-grid--skills:has(#reviewEmpty:not([hidden])) .home-review { margin-top: 0; padding-top: 16px; }
+  .home-review__row { min-height: 46px; padding: 8px 0; box-sizing: border-box; }
+  .home-review__row:first-child { padding-top: 8px; }
+  .home-card { min-height: 0; padding: 14px 14px 12px; }
+  .home-card__top { align-items: flex-start; gap: 8px; margin-bottom: 10px; }
+  .home-card__name { font-size: 16px; line-height: 1.4; }
+  .home-card__go { width: 24px; height: 24px; font-size: 13px; }
+  .home-card__desc { display: none; }
+  .home-foot { margin-top: 0; padding-top: 10px; white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+  .home-foot__part { white-space: nowrap; }
+  /* 交流单独占一整排，带上「最新：…」这一行 */
+  .home-grid--more > .home-card:last-child { grid-column: 1 / -1; }
+  .home-grid--more > .home-card:last-child .home-card__desc { display: block; margin: -2px 0 10px; font-size: var(--w-fs-meta); }
 }
 </style>
-<link rel="stylesheet" href="/static/theme.css?v=20260919">
-<link rel="stylesheet" href="/static/plain.css?v=20261031">
-<script src="/static/theme.js?v=20260919" defer></script>
+<link rel="stylesheet" href="/static/theme.css?v=20261101m">
+<link rel="stylesheet" href="/static/plain.css?v=20261101m">
+<script src="/static/theme.js?v=20261101m" defer></script>
 <script src="/static/api-client.js?v=20260919" defer></script>
 <script src="/static/auth.js?v=20260927" defer></script>
 <script src="/static/app-shell.js?v=20261031" defer></script>
@@ -315,7 +335,10 @@
   function setFoot(name, html, muted) {
     var foot = document.querySelector('[data-foot="' + name + '"]');
     if (!foot) return;
-    foot.innerHTML = html;
+    // 每一段「4 个话题」包成不折行的小块，窄屏两列卡片换行时不会把「共 6 分钟」拆开
+    foot.innerHTML = String(html).split(' · ').map(function (part) {
+      return part.indexOf('home-foot__title') >= 0 ? part : '<span class="home-foot__part">' + part + '</span>';
+    }).join(' · ');
     foot.classList.toggle('is-muted', !!muted);
   }
 
@@ -368,7 +391,7 @@
 
     var r = data.intensive;
     setFoot('intensive', r.articles
-      ? num(r.articles) + ' 篇文章' + (r.latest_title ? ' · 最近在读 ' + esc(r.latest_title) : '')
+      ? num(r.articles) + ' 篇文章' + (r.latest_title ? ' · <span class="home-foot__title">最近在读 ' + esc(r.latest_title) + '</span>' : '')
       : '还没有文章', !r.articles);
 
     var w = data.writing;
