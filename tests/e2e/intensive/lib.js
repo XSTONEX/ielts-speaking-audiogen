@@ -22,7 +22,7 @@ const FAKE_USER = 'reader01';
 const TEST_TITLE = /（(chromium|webkit)）$|^Plain (chromium|webkit)$/;
 const TEST_MEANING = /e2e/;
 
-const SUITES = ['select', 'touch', 'import', 'misc'];
+const SUITES = ['select', 'touch', 'import', 'misc', 'phone'];
 const ENGINES = ['chromium', 'webkit'];
 
 function usage(msg) {

@@ -42,8 +42,9 @@ module.exports = async function suiteTouch({ cfg, browser, engine, t, lib }) {
     await longPress(w);
     let s = await st();
     ok(s.float === 'block' && s.sel === w.word, `long-press "${w.word}" shows popover: ${JSON.stringify(s)}`);
-    ok(s.fTop >= w.bottom && s.fBottom <= H && s.fLeft >= 0 && s.fRight <= W, `popover sits below the word and on screen: top=${s.fTop} bottom=${s.fBottom} word.bottom=${w.bottom}`);
-    ok(JSON.stringify(s.btn) === JSON.stringify(['高亮', '取消']), `buttons ${JSON.stringify(s.btn)}`);
+    // 手机上是贴在底部工具栏上面的一条操作栏，不在词旁边，挡不到系统的拷贝菜单和选区手柄
+    ok(s.fTop >= w.bottom && s.fBottom <= H && s.fLeft >= 0 && s.fRight <= W, `action bar sits below the word and on screen: top=${s.fTop} bottom=${s.fBottom} word.bottom=${w.bottom}`);
+    ok(JSON.stringify(s.btn) === JSON.stringify(['划线并写释义', '取消']), `buttons ${JSON.stringify(s.btn)}`);
 
     // 点「高亮」→ 释义框，输入框拿到焦点
     await p.tap('#floatBox .ir-pop-main');
@@ -62,12 +63,12 @@ module.exports = async function suiteTouch({ cfg, browser, engine, t, lib }) {
     ok(saved.text === w.word && saved.mark === w.word && saved.meaning === 'none', `saved line-initial "${w.word}": ${JSON.stringify(saved)}`);
     ok(Number(saved.count) === before + 1, `vocab count ${before} → ${saved.count}`);
 
-    // 点新高亮 → 释义气泡出现且在屏幕内
+    // 点新高亮 → 底部弹出单词卡，写着这个词和释义，在屏幕内
     const mk = await p.evaluate(id => { const m = document.querySelector(`#vContent mark.hl[data-hid="${id}"]`); m.scrollIntoView({ block: 'center' }); const r = m.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; }, saved.id);
     await p.touchscreen.tap(mk.x, mk.y);
-    await p.waitForTimeout(200);
-    const tip = await p.evaluate(id => { const m = document.querySelector(`#vContent mark.hl[data-hid="${id}"]`); const t = m.querySelector('.tooltip'); const r = t.getBoundingClientRect(); return { on: m.classList.contains('tip-on'), vis: getComputedStyle(t).display, l: r.left, r: r.right, txt: t.textContent }; }, saved.id);
-    ok(tip.on && tip.vis === 'block' && tip.l >= 0 && tip.r <= W && tip.txt === 'touch-e2e-释义', `tap mark shows meaning on screen: ${JSON.stringify(tip)}`);
+    await p.waitForTimeout(300);
+    const tip = await p.evaluate(() => { const c = document.getElementById('wordCard'); const r = c.getBoundingClientRect(); return { open: !c.hidden, word: document.getElementById('wcWord').textContent, txt: document.getElementById('wcMean').textContent, l: r.left, r: r.right, b: Math.round(r.bottom) }; });
+    ok(tip.open && tip.word === w.word && tip.txt === 'touch-e2e-释义' && tip.l >= 0 && tip.r <= W && tip.b <= H, `tap mark shows the word card on screen: ${JSON.stringify(tip)}`);
 
     // 长按高亮不能弹「删除？」确认框（安卓长按会顺带触发 contextmenu）
     await p.evaluate(id => { lastPointerType = 'touch'; const m = document.querySelector(`#vContent mark.hl[data-hid="${id}"]`); m.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true })); }, saved.id);

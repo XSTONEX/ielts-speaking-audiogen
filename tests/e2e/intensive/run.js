@@ -7,6 +7,7 @@ const SUITE_FILES = {
   touch: './suite_touch',     // 手机：长按选词、点高亮看释义、词汇底部面板、译文开关
   import: './suite_import',   // /intensive/new 导入九分学长 JSON → 原文 + 题目 + 作答 + 做题划线
   misc: './suite_misc',       // 删除确认、图片条和大图、改标题、改分类、朗读音频条
+  phone: './suite_phone',     // 手机版式：列表、阅读页、划词、单词卡、各种底部面板、题目面板、添加文章，系统返回关最上面一层
 };
 
 (async () => {

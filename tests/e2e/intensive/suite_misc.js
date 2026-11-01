@@ -12,10 +12,12 @@ module.exports = async function suiteMisc({ cfg, browser, engine, t, lib }) {
     const shot = name => p.screenshot({ path: `${cfg.out}/${tag}-${name}-${engine}.png` });
     try {
       await lib.openList(p, cfg);
-      // 删除按钮先问一句（取消 → 什么都不删）
+      // 删除按钮先问一句（取消 → 什么都不删）。手机上删除收在卡片的 ⋯ 面板里
       const n0 = await p.evaluate(() => allItems.length);
-      await p.evaluate(() => document.querySelector('.ir-card .ir-card-del').click());
+      if (tag === 'desk') await p.evaluate(() => document.querySelector('.ir-card .ir-card-del').click());
+      else { await p.tap('.ir-card .ir-card-more'); await p.waitForTimeout(300); await p.tap('#cardSheet .ir-sheet-row.is-danger'); }
       await p.waitForTimeout(200);
+      if (tag === 'phone') { await p.touchscreen.tap(195, 100); await p.waitForTimeout(300); }
       const n1 = await p.evaluate(() => fetch('/intensive_list').then(r => r.json()).then(d => d.items.length));
       ok(dialogs.length === 1 && /删除/.test(dialogs[0]) && (await p.evaluate(() => allItems.length)) === n0 && n1 === n0, `${tag} delete asks and dismiss keeps it: ${dialogs} (${n0} → ${n1})`);
 
@@ -44,34 +46,38 @@ module.exports = async function suiteMisc({ cfg, browser, engine, t, lib }) {
       const te2 = await p.evaluate(() => ({ edit: document.getElementById('titleEditContainer').style.display, title: document.getElementById('vTitle').textContent, id: currentArticle.id }));
       ok(te2.edit === 'none' && te2.title === 'Task1-饼图-城市用电来源' && te2.id === IDS.chart, `${tag} Esc cancels title edit ${JSON.stringify(te2)}`);
 
-      // ⋯ 菜单改分类：Writing → Listening → Writing，列表上的分类计数跟着变
+      // ⋯ 菜单改分类：Writing → Listening → Writing，列表上的分类计数跟着变（手机上是分段按钮）
       const counts = () => p.evaluate(() => [document.getElementById('count-Writing').textContent, document.getElementById('count-Listening').textContent, document.getElementById('moreMenu').classList.contains('open')]);
+      const pickCat = async cat => { await p.click('#moreBtn'); if (tag === 'desk') await p.selectOption('#vCategory', cat); else { await p.waitForTimeout(250); await p.tap(`#menuCatSeg [data-cat="${cat}"]`); } };
       const c0 = await counts();
-      await p.click('#moreBtn'); await p.selectOption('#vCategory', 'Listening');
+      await pickCat('Listening');
       await p.waitForFunction(() => currentArticle.category === 'Listening');
+      await p.waitForTimeout(200);
       const c1 = await counts();
       const saved = await p.evaluate(id => fetch('/intensive_article/' + encodeURIComponent(id)).then(r => r.json()).then(d => d.article.category), IDS.chart);
-      await p.click('#moreBtn'); await p.selectOption('#vCategory', 'Writing');
+      await pickCat('Writing');
       await p.waitForFunction(() => currentArticle.category === 'Writing');
       const c2 = await counts();
       ok(+c1[0] === +c0[0] - 1 && +c1[1] === +c0[1] + 1 && !c1[2] && saved === 'Listening' && c2[0] === c0[0] && c2[1] === c0[1], `${tag} category change moves the article ${JSON.stringify([c0, c1, saved, c2])}`);
 
-      // 已有朗读音频：底部音频条贴着屏幕底，按钮变成「重新生成」
+      // 已有朗读音频：桌面上音频条贴着屏幕底、按钮变成「重新生成」；手机上迷你播放条贴在底部工具栏上面，按钮一直是「朗读」
       await lib.openArticle(p, IDS.saltMarsh);
       await p.waitForFunction(() => document.getElementById('audioPanel').style.display === 'block');
       await p.waitForTimeout(400);
-      const au = await p.evaluate(() => { const r = document.getElementById('audioPanel').getBoundingClientRect(); const a = document.getElementById('articleAudio'); const lbl = document.getElementById('generateAudioBtn').textContent.trim(); return { bottom: Math.round(r.bottom), h: Math.round(r.height), src: /article_audio_20261015_090500\.mp3$/.test(a.src), lbl }; });
-      ok(au.bottom === vp.height && au.h < 70 && au.src && au.lbl === '重新生成', `${tag} audio bar at the bottom ${JSON.stringify(au)}`);
+      const au = await p.evaluate(() => { const r = document.getElementById('audioPanel').getBoundingClientRect(); const a = document.getElementById('articleAudio'); const lbl = document.getElementById('generateAudioBtn').textContent.trim(); const tools = document.querySelector('#viewer .ir-tools').getBoundingClientRect(); return { bottom: Math.round(r.bottom), h: Math.round(r.height), src: /article_audio_20261015_090500\.mp3$/.test(a.src), lbl, toolsTop: Math.round(tools.top) }; });
+      if (tag === 'desk') ok(au.bottom === vp.height && au.h < 70 && au.src && au.lbl === '重新生成', `${tag} audio bar at the bottom ${JSON.stringify(au)}`);
+      else ok(au.bottom === au.toolsTop && au.h <= 60 && au.src && au.lbl === '朗读', `${tag} mini player sits on the toolbar ${JSON.stringify(au)}`);
       const dur = await p.waitForFunction(() => { const a = document.getElementById('articleAudio'); return a.readyState >= 1 && isFinite(a.duration) ? a.duration : false; }, null, { timeout: 5000 }).then(h => h.jsonValue()).catch(() => null);
       ok(dur > 2 && dur < 4, `${tag} audio file loads (duration ${dur})`);
-      await p.evaluate(() => document.getElementById('vContent').scrollTop = 99999); await p.waitForTimeout(150);
+      await p.evaluate(() => { document.getElementById('vContent').scrollTop = 99999; window.scrollTo(0, 99999); }); await p.waitForTimeout(150);
       const last = await p.evaluate(() => { const ps = document.querySelectorAll('#vContent .reader p'); const r = ps[ps.length - 1].getBoundingClientRect(); return { lastBottom: Math.round(r.bottom), barTop: Math.round(document.getElementById('audioPanel').getBoundingClientRect().top) }; });
       ok(last.lastBottom <= last.barTop, `${tag} last line not hidden behind the audio bar ${JSON.stringify(last)}`);
       await shot('audio');
       // 生成音频时的进度文字，在手机上也要看得见（手机上工具栏按钮只留图标）
       await p.evaluate(() => { document.getElementById('generateAudioBtn').innerHTML = btnLabel('spin', '生成第3段... (2/9)'); });
       const busy = await p.evaluate(() => { const s = document.querySelector('#generateAudioBtn .ir-busy'); const l = document.querySelector('#zhToggle .ir-lbl'); return { busy: !!s && getComputedStyle(s).display !== 'none', lbl: l ? getComputedStyle(l).display : null }; });
-      ok(busy.busy && (tag === 'desk' ? busy.lbl !== 'none' : busy.lbl === 'none'), `${tag} progress text visible while generating ${JSON.stringify(busy)}`);
+      // 手机上工具栏按钮图标下面带字，进度文字是工具栏上面的一整条
+      ok(busy.busy && busy.lbl !== 'none', `${tag} progress text visible while generating ${JSON.stringify(busy)}`);
       await shot('busy');
       ok(errs.length === 0, `${tag} page errors ${errs.join(' | ')}`);
     } catch (e) {
