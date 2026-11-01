@@ -31,7 +31,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
   <link rel="stylesheet" href="/static/theme.css?v=20261031">
   <link rel="stylesheet" href="/static/plain.css">
-  <link rel="stylesheet" href="/static/listening.css?v=20261101">
+  <link rel="stylesheet" href="/static/listening.css?v=20261101b">
   <script src="/static/theme.js?v=20260919" defer></script>
   <script src="/static/api-client.js?v=20260919" defer></script>
   <script src="/static/auth.js?v=20260927" defer></script>
@@ -403,6 +403,8 @@ const ICONS = {
   edit: '<svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 2.5 13.5 5 5.5 13H3v-2.5z"/></svg>',
   retry: '<svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 8a5 5 0 1 1-1.5-3.5M13 3v2.5h-2.5"/></svg>',
   check: '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8.5 6.5 11.5 12.5 4.5"/></svg>',
+  caret: '<svg class="lq-slot__car" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 6 8 10.5 12.5 6"/></svg>',
+  zoom: '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 14 14M7 5v4M5 7h4"/></svg>',
   swipe: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 5.5 2 8l2.5 2.5M11.5 5.5 14 8l-2.5 2.5M2 8h12"/></svg>'
 };
 
@@ -2288,27 +2290,79 @@ function keysOf(ans, options) {
   return new Set(hit ? [String(hit.key).toUpperCase()] : []);
 }
 
-function blankChipHtml(q) {
+function ansCls(st) {
+  return st === 'right' ? ' is-ok' : st === 'wrong' ? ' is-err' : st === 'blank' ? ' is-blank' : '';
+}
+
+// 排版里这一行开头已经写着题号（「27. Zing ____」），空里就不再重复题号；只看这个空前面、同一行里的字
+function lineTextBefore(span) {
+  const block = span.closest('li, p, td, th, h1, h2, h3, h4, h5, h6') || span.parentElement;
+  let text = '';
+  const walker = document.createTreeWalker(block, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
+  for (let n = walker.nextNode(); n && n !== span; n = walker.nextNode()) {
+    if (n.nodeType === 3) { if (!n.parentElement.closest('.ir-blank')) text += n.data; }
+    else if (n.nodeName === 'BR' || n.classList.contains('ir-blank')) text = '';
+  }
+  return text.replace(/\s+/g, ' ').trim();
+}
+
+function numberLeads(span, num) {
+  return new RegExp('^\\(?' + String(num).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![0-9])').test(lineTextBefore(span));
+}
+
+// 填空的答案：同一条横线，绿 = 对，红 = 错（你的划掉、后面跟正确答案），虚线 = 没答
+function gapReviewHtml(q, { nonum = false, block = false } = {}) {
   const a = answerOf(q.num);
   const sel = q.num === state.selQ;
   const right = displayAnswer(q.answer);
   const user = String(a.user || '').trim();
-  let cls = 'lr-blank', inner = `<span class="lr-blank__n">${esc(q.num)}</span>`, label;
+  let cls = 'lq-gap', inner, label;
   if (a.state === 'right') {
-    inner += esc(user || right);
+    cls += ' is-ok';
+    inner = `<span class="lq-gap__val">${esc(user || right)}</span>`;
     label = `${user || right}，答对`;
   } else if (a.state === 'wrong' && user) {
     cls += ' is-err';
-    inner += `<span class="lr-blank__you">${esc(user)}</span><span class="lr-blank__right">${esc(right)}</span>`;
+    inner = `<span class="lq-gap__you">${esc(user)}</span><span class="lq-gap__right">${esc(right)}</span>`;
     label = `你填 ${user}，正确是 ${right}`;
   } else if (a.state) {
-    cls += ' is-blank';
-    inner += `<span class="lr-blank__none">没答</span><span class="lr-blank__right">${esc(right)}</span>`;
+    cls += ' is-none';
+    inner = `<span class="lq-gap__none">没答</span><span class="lq-gap__right">${esc(right)}</span>`;
     label = `没答，正确是 ${right}`;
   } else {
-    inner += `<span class="lr-blank__right">${esc(right)}</span>`;
+    inner = `<span class="lq-gap__right">${esc(right)}</span>`;
     label = `答案 ${right}`;
   }
+  if (nonum) cls += ' lq-gap--nonum';
+  else inner = `<span class="lq-n">${esc(q.num)}</span>` + inner;
+  if (block) cls += ' lq-gap--block';
+  if (sel) cls += ' is-sel';
+  return `<button class="${cls}" type="button" data-q="${esc(q.num)}" aria-expanded="${sel}" aria-label="第 ${esc(q.num)} 题：${esc(label)}">${inner}</button>`;
+}
+
+// 排版里要填字母的空的答案：字母 + 选项原文
+function slotReviewHtml(q, letters, { nonum = false } = {}) {
+  const a = answerOf(q.num);
+  const sel = q.num === state.selQ;
+  const right = [...keysOf(q.answer, letters)].sort(), mine = [...keysOf(a.user, letters)].sort();
+  const user = String(a.user || '').trim();
+  const textOf = k => String((letters.find(o => String(o.key).toUpperCase() === k) || {}).text || '').trim();
+  const rk = right.join('、') || displayAnswer(q.answer);
+  const rt = right.length === 1 ? textOf(right[0]) : '';
+  const answer = `<span class="lq-slot__k">${esc(rk)}</span>${rt ? `<span class="lq-slot__t">${esc(rt)}</span>` : ''}`;
+  let cls = 'lq-slot', inner, label;
+  if (a.state === 'right') {
+    cls += ' is-ok'; inner = answer; label = `${rk}，答对`;
+  } else if (a.state === 'wrong' && user) {
+    const you = mine.join('、') || user;
+    cls += ' is-err'; inner = `<s>${esc(you)}</s>${answer}`; label = `你选 ${you}，正确是 ${rk}`;
+  } else if (a.state) {
+    cls += ' is-none'; inner = `<span class="lq-gap__none">没答</span>${answer}`; label = `没答，正确是 ${rk}`;
+  } else {
+    inner = answer; label = `答案 ${rk}`;
+  }
+  if (nonum) cls += ' lq-slot--nonum';
+  else inner = `<span class="lq-n">${esc(q.num)}</span>` + inner;
   if (sel) cls += ' is-sel';
   return `<button class="${cls}" type="button" data-q="${esc(q.num)}" aria-expanded="${sel}" aria-label="第 ${esc(q.num)} 题：${esc(label)}">${inner}</button>`;
 }
@@ -2339,6 +2393,11 @@ function qxHtml(q, labels, multi) {
   </div>`;
 }
 
+function reviewOptHtml(o, cls, tag, om) {
+  return `<li><div class="lq-opt${cls}"><span class="lq-opt__k">${esc(o.key)}</span><span class="lq-opt__t">${hlText(o.text, om)}</span><span class="lq-opt__tag">${tag}</span></div></li>`;
+}
+
+// 单选的答案：你选错的红底划掉，正确的绿底；点题干展开解析
 function choiceHtml(q, gmarks) {
   const a = answerOf(q.num);
   const sel = q.num === state.selQ;
@@ -2347,19 +2406,37 @@ function choiceHtml(q, gmarks) {
     const k = String(o.key).toUpperCase();
     const isR = right.has(k), isM = mine.has(k);
     const cls = isM ? (isR ? ' is-right' : ' is-wrong') : isR ? ' is-right' : '';
-    const mark = isM ? (isR ? '你选 · 对' : '你选') : isR ? '答案' : '';
-    const om = gmarks.filter(m => m.q === q.num && m.o === o.key);
-    return `<li class="lr-opt${cls}"><span class="lr-opt__k">${esc(o.key)}</span><span>${hlText(o.text, om)}</span><span class="lr-opt__mark">${mark}</span></li>`;
+    const tag = isM ? (isR ? '你选 · 对' : '你选') : isR ? (a.state ? '正确答案' : '答案') : '';
+    return reviewOptHtml(o, cls, tag, gmarks.filter(m => m.q === q.num && m.o === o.key));
   }).join('');
   const stemMarks = gmarks.filter(m => m.q === q.num && !m.o);
-  return `<div class="lr-qs__stem${sel ? ' is-sel' : ''}" role="button" tabindex="0" data-q="${esc(q.num)}" aria-expanded="${sel}"><span class="lr-qnum${stateCls(a.state)}">${esc(q.num)}</span><span>${hlText(q.text, stemMarks)}</span></div>
-    <ul class="lr-qs__opts">${opts}</ul>${sel ? qxHtml(q) : ''}`;
+  return `<div class="lq-q"><span class="lq-n${ansCls(a.state)}" data-q="${esc(q.num)}">${esc(q.num)}</span>
+    <div class="lq-q__stem${sel ? ' is-sel' : ''}" role="button" tabindex="0" data-q="${esc(q.num)}" aria-expanded="${sel}">${hlText(q.text, stemMarks)}</div>
+    <div class="lq-q__body"><ul class="lq-opts is-review">${opts}</ul>${sel ? qxHtml(q) : ''}</div></div>`;
 }
 
-function rowHtml(q, gmarks) {
+// 题干里的划线下标按整句算，拆开放空格时两边各自平移
+function hlPart(text, marks, offset) {
+  return hlText(text, marks.map(m => ({ ...m, start: m.start - offset, end: m.end - offset })));
+}
+
+// 没有排版的填空题：句子里有 ____ 就把空放进句子；问句（简答题）空单独一行
+function textRowReviewHtml(q, gmarks) {
   const sel = q.num === state.selQ;
-  const stemMarks = gmarks.filter(m => m.q === q.num && !m.o);
-  return `<div class="lr-qs__match" role="button" tabindex="0" data-q="${esc(q.num)}" aria-expanded="${sel}"><span>${hlText(q.text, stemMarks)}</span>${blankChipHtml(q)}</div>${sel ? qxHtml(q) : ''}`;
+  const text = String(q.text || '');
+  const marks = gmarks.filter(m => m.q === q.num && !m.o);
+  const m = /_{2,}/.exec(text);
+  const qx = sel ? qxHtml(q) : '';
+  if (!m && /\?\s*$/.test(text)) {
+    const a = answerOf(q.num);
+    return `<div class="lq-q"><span class="lq-n${ansCls(a.state)}" data-q="${esc(q.num)}">${esc(q.num)}</span>
+      <div class="lq-q__stem${sel ? ' is-sel' : ''}" role="button" tabindex="0" data-q="${esc(q.num)}" aria-expanded="${sel}">${hlText(text, marks)}</div>
+      <div class="lq-q__body">${gapReviewHtml(q, { nonum: true, block: true })}${qx}</div></div>`;
+  }
+  const body = m
+    ? `${hlPart(text.slice(0, m.index), marks, 0)}${gapReviewHtml(q)}${hlPart(text.slice(m.index + m[0].length), marks, m.index + m[0].length)}`
+    : `${hlText(text, marks)} ${gapReviewHtml(q)}`;
+  return `<div class="lq-line" data-q="${esc(q.num)}">${body}</div>${qx}`;
 }
 
 // 多选题（Choose TWO letters）：几个题号共用一份选项，按组显示；字母不分先后
@@ -2370,6 +2447,7 @@ function multiUnits(g) {
   return units.map(nums => ({ nums, qs: nums.map(n => byNum[n]).filter(Boolean) })).filter(u => u.qs.length);
 }
 
+// 多选题的答案：托盘里每个题号填了什么（错的划掉、后面跟漏掉的那个），选项对的绿、错的红、漏选的绿色虚线
 function multiHtml(g, unit, gmarks) {
   const qs = unit.qs, opts = qs[0].options || [];
   const right = new Set(), mine = new Set();
@@ -2378,21 +2456,44 @@ function multiHtml(g, unit, gmarks) {
     keysOf(answerOf(q.num).user, opts).forEach(k => mine.add(k));
   });
   const selQ = qs.find(q => q.num === state.selQ);
+  const answered = qs.some(q => answerOf(q.num).state);
   const items = opts.map(o => {
     const k = String(o.key).toUpperCase();
     const isR = right.has(k), isM = mine.has(k);
-    const cls = isM ? (isR ? ' is-right' : ' is-wrong') : isR ? ' is-right' : '';
-    const mark = isM ? (isR ? '你选 · 对' : '你选') : isR ? '答案' : '';
-    const om = gmarks.filter(m => unit.nums.includes(m.q) && m.o === o.key);
-    return `<li class="lr-opt${cls}"><span class="lr-opt__k">${esc(o.key)}</span><span>${hlText(o.text, om)}</span><span class="lr-opt__mark">${mark}</span></li>`;
+    let cls = '', tag = '';
+    if (isM) { cls = isR ? ' is-right' : ' is-wrong'; tag = isR ? '你选 · 对' : '你选'; }
+    else if (isR && mine.size) { cls = ' is-miss'; tag = '漏选'; }
+    else if (isR) { cls = ' is-right'; tag = answered ? '正确答案' : '答案'; }
+    return reviewOptHtml(o, cls, tag, gmarks.filter(m => unit.nums.includes(m.q) && m.o === o.key));
   }).join('');
+  const missed = [...right].filter(k => !mine.has(k)).sort();
+  let slots;
+  if (qs.length === 1) {
+    const a = answerOf(qs[0].num), you = [...mine].sort().join('、'), rk = [...right].sort().join('、');
+    const cls = a.state === 'right' ? ' is-ok' : you ? ' is-err' : a.state ? ' is-none' : '';
+    const body = a.state === 'right' || !a.state ? esc(rk) : you ? `<s>${esc(you)}</s><b>${esc(rk)}</b>` : `<span class="lq-gap__none">没答</span><b>${esc(rk)}</b>`;
+    slots = `<span class="lq-tray__slot${cls}"><span class="lq-n${ansCls(a.state)}">${esc(qs[0].num)}</span>${body}</span>`;
+  } else {
+    slots = qs.map(q => {
+      const a = answerOf(q.num);
+      const you = [...keysOf(a.user, opts)].sort().join('、');
+      if (a.state === 'right') return `<span class="lq-tray__slot is-ok"><span class="lq-n is-ok">${esc(q.num)}</span>${esc(you)}</span>`;
+      if (!a.state) return `<span class="lq-tray__slot"><span class="lq-n">${esc(q.num)}</span>${esc(keysOf(q.answer, opts).size ? [...keysOf(q.answer, opts)].join('、') : '')}</span>`;
+      const fix = missed.shift() || '';
+      return you
+        ? `<span class="lq-tray__slot is-err"><span class="lq-n is-err">${esc(q.num)}</span><s>${esc(you)}</s><b>${esc(fix)}</b></span>`
+        : `<span class="lq-tray__slot is-none"><span class="lq-n is-blank">${esc(q.num)}</span><span class="lq-gap__none">没答</span><b>${esc(fix)}</b></span>`;
+    }).join('');
+  }
+  const nRight = qs.filter(q => answerOf(q.num).state === 'right').length;
+  const trayLabel = answered ? `对 ${nRight} 题` : '答案';
   const stemQ = qs.find(q => String(q.text || '').trim()) || qs[0];
   const stemMarks = gmarks.filter(m => m.q === stemQ.num && !m.o);
-  const nums = qs.map(q => `<span class="lr-qnum${stateCls(answerOf(q.num).state)}">${esc(q.num)}</span>`).join('');
-  const answered = qs.some(q => answerOf(q.num).state);
+  const nums = qs.map(q => `<span class="lq-n${ansCls(answerOf(q.num).state)}" data-q="${esc(q.num)}">${esc(q.num)}</span>`).join('');
   const multi = { answered, mine: [...mine].sort(), right: [...right].sort(), allRight: qs.every(q => answerOf(q.num).state === 'right') };
-  return `<div class="lr-qs__stem${selQ ? ' is-sel' : ''}" role="button" tabindex="0" data-q="${esc(qs[0].num)}" aria-expanded="${!!selQ}"><span class="lr-qnums">${nums}</span><span>${hlText(stemQ.text, stemMarks)}</span></div>
-    <ul class="lr-qs__opts">${items}</ul>${selQ ? qxHtml(selQ, null, multi) : ''}`;
+  return `<div class="lq-q"><span class="lq-nums">${nums}</span>
+    <div class="lq-q__stem${selQ ? ' is-sel' : ''}" role="button" tabindex="0" data-q="${esc(qs[0].num)}" aria-expanded="${!!selQ}">${hlText(stemQ.text, stemMarks)}</div>
+    <div class="lq-q__body"><div class="lq-tray"><span>${trayLabel}</span>${slots}</div><ul class="lq-opts lq-opts--multi is-review">${items}</ul>${selQ ? qxHtml(selQ, null, multi) : ''}</div></div>`;
 }
 
 function groupBank(g) {
@@ -2405,18 +2506,71 @@ function groupImageHtml(g) {
   return `<a class="lr-qs__imglink" href="${esc(g.image)}" target="_blank" rel="noopener noreferrer" title="点开看大图"><img class="lr-qs__img" src="${esc(g.image)}" alt="${esc(g.range || '题目')}的配图" loading="lazy" referrerpolicy="no-referrer" /></a>`;
 }
 
+// 地图题：图和答题表放一起，卷子够宽时图在左、表格在右
+function mapWrapHtml(g, inner) {
+  if (!g.image) return inner;
+  return `<div class="lq-map"><figure class="lq-map__fig">${groupImageHtml(g)}<a class="lq-map__zoom" href="${esc(g.image)}" target="_blank" rel="noopener noreferrer">${ICONS.zoom}看大图</a></figure><div>${inner}</div></div>`;
+}
+
+// 选项框；重做时字母后面标出被哪几题用了
+function bankHtml(g, gi, used) {
+  const bank = groupBank(g);
+  if (!bank.length) return '';
+  return `<div class="lq-bank" data-bank="${gi}">${bankItemsHtml(bank, used || {})}</div>`;
+}
+
+function bankItemsHtml(bank, used) {
+  return bank.map(o => {
+    const u = used[String(o.key).toUpperCase()] || [];
+    return `<div class="lq-bank__item${u.length ? ' is-used' : ''}"><span class="lq-bank__k">${esc(o.key)}</span><span class="lq-bank__t">${esc(o.text)}</span><span class="lq-bank__used">${u.map(n => `<span class="lq-n is-done">${esc(n)}</span>`).join('')}</span></div>`;
+  }).join('');
+}
+
+// 配对、地图的列：每题的选项一样，取第一题的（没有就用选项框）
+function gridLetters(g, qs) {
+  return letterOptions(g, (qs || g.questions)[0] || {});
+}
+
+// 配对 / 地图的答案：答题纸式表格，实心绿 = 正确答案，红圈划掉 = 你选错的，绿色虚线圈 = 没答
+function gridReviewHtml(g, qs, gmarks) {
+  const letters = gridLetters(g, qs);
+  if (!letters.length) return qs.map(q => textRowReviewHtml(q, gmarks)).join('');
+  const head = `<tr><th scope="col">${g.kind === 'map' ? '位置' : '题目'}</th>${letters.map(o => `<th scope="col"${o.text ? ` title="${esc(o.text)}"` : ''}>${esc(o.key)}</th>`).join('')}</tr>`;
+  const rows = qs.map(q => {
+    const a = answerOf(q.num);
+    const sel = q.num === state.selQ;
+    const right = keysOf(q.answer, letters), mine = keysOf(a.user, letters);
+    const blank = !!a.state && !mine.size;
+    const cells = letters.map(o => {
+      const k = String(o.key).toUpperCase();
+      const isR = right.has(k), isM = mine.has(k);
+      const cls = isM ? (isR ? ' is-right' : ' is-wrong') : isR ? (blank ? ' is-miss' : ' is-right') : '';
+      return `<td><span class="lq-cell${cls}">${esc(o.key)}</span></td>`;
+    }).join('');
+    const rk = [...right].sort().join('、') || displayAnswer(q.answer);
+    const you = [...mine].sort().join('、') || String(a.user || '').trim();
+    const label = a.state === 'right' ? `${rk}，答对` : a.state ? (you ? `你选 ${you}，正确是 ${rk}` : `没答，正确是 ${rk}`) : `答案 ${rk}`;
+    const stemMarks = gmarks.filter(m => m.q === q.num && !m.o);
+    let row = `<tr class="lq-grid__row${sel ? ' is-sel' : ''}" data-q="${esc(q.num)}"><td><span class="lq-grid__item" role="button" tabindex="0" data-q="${esc(q.num)}" aria-expanded="${sel}" aria-label="第 ${esc(q.num)} 题 ${esc(q.text)}：${esc(label)}"><span class="lq-n${ansCls(a.state)}">${esc(q.num)}</span><span>${hlText(q.text, stemMarks)}</span></span></td>${cells}</tr>`;
+    if (sel) row += `<tr class="lq-grid__qx"><td colspan="${letters.length + 1}">${qxHtml(q)}</td></tr>`;
+    return row;
+  }).join('');
+  return `<div class="lq-grid is-review"><table>${head}${rows}</table></div>`;
+}
+
 function groupHtml(g, gi, gmarks) {
   let html = '<div class="lr-qs__group">';
   if (g.range) html += `<div class="lr-qs__range">${esc(g.range)}</div>`;
   if (g.instruction_html) html += `<div class="lr-qs__inst">${g.instruction_html}</div>`;
-  if (g.image) html += groupImageHtml(g);
+  const mapGrid = g.kind === 'map' && !g.content_html;
+  if (g.image && !mapGrid) html += groupImageHtml(g);
   if (g.title) html += `<p class="lr-qs__title">${esc(g.title)}</p>`;
-  const bank = groupBank(g);
-  if (g.kind === 'match' && bank.length) html += `<div class="lr-qs__bank">${bank.map(o => `<b>${esc(o.key)}</b><span>${esc(o.text)}</span>`).join('')}</div>`;
+  if (g.kind === 'match') html += bankHtml(g, gi);
   if (g.content_html) html += `<div class="lr-qs__content" data-g="${gi}">${g.content_html}</div>`;
   else if (g.kind === 'multi') html += multiUnits(g).map(u => multiHtml(g, u, gmarks)).join('');
   else if (g.kind === 'choice' || g.kind === 'judge') html += g.questions.map(q => choiceHtml(q, gmarks)).join('');
-  else html += g.questions.map(q => rowHtml(q, gmarks)).join('');   // 填空、配对、地图：一题一行
+  else if (g.kind === 'match' || g.kind === 'map') html += mapWrapHtml(mapGrid ? g : {}, gridReviewHtml(g, g.questions, gmarks));
+  else html += g.questions.map(q => textRowReviewHtml(q, gmarks)).join('');
   return html + '</div>';
 }
 
@@ -2433,26 +2587,30 @@ function wrapTables(box) {
   });
 }
 
-// 题目版式（HTML）里的空格框换成填着答案的小框，选中的题在那一行下面展开解析
+// 题目版式（HTML）里的空格框换成填着答案的横线 / 字母槽，选中的题在那一行下面展开解析
 function fillContent(box, g, gmarks) {
   wrapMarks(box, gmarks.filter(m => !m.q));
   const byNum = {};
   g.questions.forEach(q => { byNum[q.num] = q; });
+  const letterKind = ['match', 'map', 'choice', 'multi'].includes(g.kind);
   const placed = new Set();
-  box.querySelectorAll('.ir-blank').forEach(span => {
-    const q = byNum[span.dataset.q];
+  // 先看每个空前面有没有题号，再替换（替换进去的框里也有题号，会干扰判断）
+  const spans = [...box.querySelectorAll('.ir-blank')].map(span => ({ span, q: byNum[span.dataset.q], nonum: numberLeads(span, span.dataset.q) }));
+  spans.forEach(({ span, q, nonum }) => {
     if (!q) return;
+    const letters = letterKind ? letterOptions(g, q) : [];
     const t = document.createElement('template');
-    t.innerHTML = blankChipHtml(q);
+    t.innerHTML = letters.length ? slotReviewHtml(q, letters, { nonum }) : gapReviewHtml(q, { nonum });
     span.replaceWith(t.content.firstElementChild);
     placed.add(q.num);
   });
   // 版式里没有空格框的题，列在版式下面
   const rest = g.questions.filter(q => !placed.has(q.num));
-  if (rest.length) box.insertAdjacentHTML('beforeend', rest.map(q => rowHtml(q, gmarks)).join(''));
+  if (rest.length) box.insertAdjacentHTML('beforeend', letterKind ? gridReviewHtml(g, rest, gmarks) : rest.map(q => textRowReviewHtml(q, gmarks)).join(''));
   wrapTables(box);
   if (state.selQ === null || !placed.has(state.selQ)) return;
-  const chip = box.querySelector(`.lr-blank[data-q="${CSS.escape(state.selQ)}"]`);
+  const sq = CSS.escape(state.selQ);
+  const chip = box.querySelector(`.lq-gap[data-q="${sq}"], .lq-slot[data-q="${sq}"]`);
   const t = document.createElement('template');
   const cell = chip.closest('table.lr-tbl td, table.lr-tbl th');
   t.innerHTML = qxHtml(byNum[state.selQ], cell ? cellLabels(cell) : null).trim();
@@ -2488,14 +2646,14 @@ function cellLabels(cell) {
   const table = row.closest('table');
   const text = el => {
     const c = el.cloneNode(true);
-    c.querySelectorAll('.lr-blank').forEach(b => b.remove());
+    c.querySelectorAll('.lq-gap, .lq-slot').forEach(b => b.remove());
     return c.textContent.replace(/\s+/g, ' ').trim();
   };
   const out = [];
   const top = table.rows[0];
-  if (top && top !== row && top.cells[cell.cellIndex] && !top.querySelector('.lr-blank')) out.push(text(top.cells[cell.cellIndex]));
+  if (top && top !== row && top.cells[cell.cellIndex] && !top.querySelector('.lq-gap, .lq-slot')) out.push(text(top.cells[cell.cellIndex]));
   const first = row.cells[0];
-  if (first && first !== cell && !first.querySelector('.lr-blank')) out.push(text(first));
+  if (first && first !== cell && !first.querySelector('.lq-gap, .lq-slot')) out.push(text(first));
   return out.filter(Boolean);
 }
 
@@ -2734,11 +2892,7 @@ function refreshRedoProgress() {
   map.innerHTML = paper ? redoQmapHtml(done) : '';
   const paneMap = document.querySelector('#questionsPane .lr-qmap');
   if (paneMap) paneMap.innerHTML = redoQmapHtml(done);
-  document.querySelectorAll('.lr-qs--redo [data-numtag]').forEach(el => {
-    const on = done.has(el.dataset.numtag);
-    el.classList.toggle('is-done', on);
-    el.classList.toggle('is-todo', !on);
-  });
+  document.querySelectorAll('.lr-qs--redo [data-numtag]').forEach(el => el.classList.toggle('is-done', done.has(el.dataset.numtag)));
   renderRedoTime();
 }
 
@@ -2771,16 +2925,16 @@ function syncRedoClock() {
 document.addEventListener('visibilitychange', syncRedoClock);
 window.addEventListener('pagehide', saveDraft);
 
-// --- 重做时的题目：空格是输入框，选择题点选项，配对 / 地图每题一排字母 ---
+// --- 重做时的题目：空是一条横线，选择题点卡片，配对 / 地图是答题纸表格，排版里要填字母的空是字母槽 ---
 function numTagHtml(num, done) {
-  const on = done.has(num);
-  return `<span class="lr-qnum ${on ? 'is-done' : 'is-todo'}" data-numtag="${esc(num)}">${esc(num)}</span>`;
+  return `<span class="lq-n${done.has(num) ? ' is-done' : ''}" data-numtag="${esc(num)}">${esc(num)}</span>`;
 }
 
 // 不开拼写检查和自动更正：浏览器给的红线 / 改词等于提示答案
-function redoInputHtml(q, wide) {
+function redoInputHtml(q, { wide = false, nonum = false, block = false } = {}) {
   const v = redoValue(q.num);
-  return `<label class="lr-inp${String(v).trim() ? ' is-filled' : ''}${wide ? ' lr-inp--wide' : ''}" data-nums="${esc(q.num)}"><span class="lr-inp__n">${esc(q.num)}</span><input class="lr-inp__box" type="text" data-q="${esc(q.num)}" value="${esc(v)}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="第 ${esc(q.num)} 题"></label>`;
+  const cls = 'lq-gap' + (String(v).trim() ? ' is-filled' : '') + (wide ? ' lq-gap--wide' : '') + (nonum ? ' lq-gap--nonum' : '') + (block ? ' lq-gap--block' : '');
+  return `<label class="${cls}" data-nums="${esc(q.num)}">${nonum ? '' : `<span class="lq-n">${esc(q.num)}</span>`}<input class="lq-gap__in" type="text" data-q="${esc(q.num)}" value="${esc(v)}"${block ? ' placeholder="写在这里"' : ''} autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="第 ${esc(q.num)} 题"></label>`;
 }
 
 function letterOptions(g, q) {
@@ -2788,49 +2942,54 @@ function letterOptions(g, q) {
   return opts.filter(o => String(o.key || '').trim());
 }
 
-// 版式里要填字母的空（带选项框的流程图 / 摘要 / 配对）：小下拉；已经用在别的题上的字母写着题号
-function selectOptionsHtml(g, q, letters, v) {
+// 同一组里别的题已经填了哪些字母：{ C: ['27'] }
+function usedLetters(g, except) {
   const used = {};
   g.questions.forEach(o => {
-    if (o.num === q.num) return;
-    const k = String(redoValue(o.num)).toUpperCase();
-    if (k) (used[k] = used[k] || []).push(o.num);
+    if (o.num === except) return;
+    splitKeys(redoValue(o.num)).forEach(k => (used[k] = used[k] || []).push(o.num));
   });
-  return '<option value="">选</option>' + letters.map(o => {
-    const k = String(o.key).toUpperCase();
-    const text = String(o.text || '').trim();
-    const note = used[k] ? `（已填在 ${used[k].join('、')}）` : '';
-    return `<option value="${esc(k)}"${k === v ? ' selected' : ''}>${esc(o.key)}${text ? ' · ' + esc(text) : ''}${esc(note)}</option>`;
-  }).join('');
+  return used;
 }
 
-function redoSelectHtml(g, q, letters) {
+// 字母槽：选了显示字母和选项原文；聚焦时直接按字母键也能填
+function slotHtml(g, gi, q, nonum) {
+  const letters = letterOptions(g, q);
   const v = String(redoValue(q.num)).toUpperCase();
-  return `<label class="lr-pickchip${v ? ' is-filled' : ''}" data-nums="${esc(q.num)}"><span class="lr-inp__n">${esc(q.num)}</span><select class="lr-pickchip__sel" data-q="${esc(q.num)}" aria-label="第 ${esc(q.num)} 题">${selectOptionsHtml(g, q, letters, v)}</select></label>`;
+  const o = letters.find(x => String(x.key).toUpperCase() === v);
+  const text = o ? String(o.text || '').trim() : '';
+  const body = o ? `<span class="lq-slot__k">${esc(o.key)}</span>${text ? `<span class="lq-slot__t">${esc(text)}</span>` : ''}` : '<span class="lq-slot__ph">选字母</span>';
+  return `<button class="lq-slot${o ? ' is-filled' : ''}${nonum ? ' lq-slot--nonum' : ''}" type="button" data-slot="${esc(q.num)}" data-g="${gi}" data-nonum="${nonum ? 1 : ''}" data-nums="${esc(q.num)}" aria-haspopup="listbox" aria-expanded="false" aria-label="第 ${esc(q.num)} 题：${o ? `已选 ${esc(o.key)}${text ? ' ' + esc(text) : ''}` : '还没选'}，也可以直接按字母键">${nonum ? '' : `<span class="lq-n">${esc(q.num)}</span>`}${body}${ICONS.caret}</button>`;
 }
 
-function refreshSelects(groupEl, g) {
-  groupEl.querySelectorAll('.lr-pickchip__sel').forEach(sel => {
-    const q = g.questions.find(x => x.num === sel.dataset.q);
-    if (q) sel.innerHTML = selectOptionsHtml(g, q, letterOptions(g, q), String(redoValue(q.num)).toUpperCase());
-  });
-}
-
-// 单选点一个；多选（Choose TWO letters，或答案本身有几个字母的题）点够个数后其余变灰
+// 单选点一张卡片；多选（Choose TWO letters，或答案本身有几个字母的题）点够个数后其余变虚线
 function redoPickHtml(u, done) {
   const mine = splitKeys(redoValue(u.key));
   const multi = u.pick > 1;
   const full = multi && mine.length >= u.pick;
+  const perNum = multi && u.nums.length === u.pick;   // 每个题号填一个字母
   const items = u.opts.map(o => {
     const k = String(o.key).toUpperCase();
     const on = mine.includes(k);
     const dim = full && !on;
-    return `<li><button class="lr-pick__opt${on ? ' is-on' : ''}${dim ? ' is-dim' : ''}" type="button" role="${multi ? 'checkbox' : 'radio'}" aria-checked="${on}"${dim ? ' aria-disabled="true"' : ''} data-unit="${esc(u.key)}" data-k="${esc(k)}" data-pick="${u.pick}"><span class="lr-pick__k">${esc(o.key)}</span><span>${esc(o.text)}</span></button></li>`;
+    const tag = on && perNum ? u.nums[mine.indexOf(k)] : '';
+    return `<li><button class="lq-opt${on ? ' is-on' : ''}${dim ? ' is-dim' : ''}" type="button" role="${multi ? 'checkbox' : 'radio'}" aria-checked="${on}"${dim ? ' aria-disabled="true"' : ''} data-unit="${esc(u.key)}" data-k="${esc(k)}" data-pick="${u.pick}"><span class="lq-opt__k">${esc(o.key)}</span><span class="lq-opt__t">${esc(o.text)}</span><span class="lq-opt__tag">${esc(tag)}</span></button></li>`;
   }).join('');
-  const hint = multi ? `<p class="lr-pick__hint">选 ${u.pick} 个 · 已选 <b>${mine.length}</b>${full ? '，选够了，要换先取消一个' : ''}</p>` : '';
-  return `<div class="lr-unit" data-unit="${esc(u.key)}" data-nums="${esc(u.nums.join(' '))}">
-    <div class="lr-qs__stem"><span class="lr-qnums">${u.nums.map(n => numTagHtml(n, done)).join('')}</span><span>${esc(u.text)}</span></div>
-    <ul class="lr-pick${multi ? ' lr-pick--multi' : ''}" role="${multi ? 'group' : 'radiogroup'}" aria-label="第 ${esc(u.nums.join('、'))} 题${multi ? `，选 ${u.pick} 个` : ''}">${items}</ul>${hint}</div>`;
+  let tray = '', hint = '';
+  if (multi) {
+    const left = u.pick - mine.length;
+    const slots = perNum
+      ? u.nums.map((n, i) => mine[i]
+        ? `<span class="lq-tray__slot"><span class="lq-n is-done">${esc(n)}</span>${esc(mine[i])}</span>`
+        : `<span class="lq-tray__slot is-empty"><span class="lq-n">${esc(n)}</span>${i === mine.length ? (left === 1 ? '还差一个' : '没选') : '没选'}</span>`).join('')
+      : `<span class="lq-tray__slot${mine.length ? '' : ' is-empty'}"><span class="lq-n${mine.length ? ' is-done' : ''}">${esc(u.nums[0])}</span>${esc(mine.join('、')) || '没选'}</span>`;
+    tray = `<div class="lq-tray"><span>选 ${u.pick} 个 · 已选 <b class="lq-tray__count">${mine.length}</b></span>${slots}</div>`;
+    if (full) hint = '<p class="lq-hint">选够了，其他选项变成虚线；想换就先点掉一个已选的。先后不算分。</p>';
+  }
+  const chips = u.nums.length > 1 ? `<span class="lq-nums">${u.nums.map(n => numTagHtml(n, done)).join('')}</span>` : numTagHtml(u.nums[0], done);
+  return `<div class="lq-q lr-unit" data-unit="${esc(u.key)}" data-nums="${esc(u.nums.join(' '))}">${chips}
+    <div class="lq-q__stem">${esc(u.text)}</div>
+    <div class="lq-q__body">${tray}<ul class="lq-opts${multi ? ' lq-opts--multi' : ''}" role="${multi ? 'group' : 'radiogroup'}" aria-label="第 ${esc(u.nums.join('、'))} 题${multi ? `，选 ${u.pick} 个` : ''}">${items}</ul>${hint}</div></div>`;
 }
 
 function redoChoiceHtml(q, done) {
@@ -2845,70 +3004,77 @@ function redoMultiHtml(g, unit, done) {
   return redoPickHtml({ key: unit.nums[0], nums: unit.nums, text: stemQ.text, opts, pick }, done);
 }
 
-function redoLetterRowHtml(g, q, done) {
-  const letters = letterOptions(g, q);
-  if (!letters.length) return redoTextRowHtml(q);
-  const v = String(redoValue(q.num)).toUpperCase();
-  const btns = letters.map(o => {
-    const k = String(o.key).toUpperCase();
-    return `<button class="lr-letter${k === v ? ' is-on' : ''}" type="button" data-q="${esc(q.num)}" data-k="${esc(k)}" aria-pressed="${k === v}"${o.text ? ` title="${esc(o.text)}"` : ''}>${esc(o.key)}</button>`;
+// 配对 / 地图：答题纸式表格，行是题、列是字母，一行点一个圈
+function redoGridHtml(g, gi, qs, done) {
+  const letters = gridLetters(g, qs);
+  if (!letters.length) return qs.map(q => redoTextRowHtml(q, done)).join('');
+  const head = `<tr><th scope="col">${g.kind === 'map' ? '位置' : '题目'}</th>${letters.map(o => `<th scope="col"${o.text ? ` title="${esc(o.text)}"` : ''}>${esc(o.key)}</th>`).join('')}</tr>`;
+  const rows = qs.map(q => {
+    const v = String(redoValue(q.num)).toUpperCase();
+    const cells = letters.map(o => {
+      const k = String(o.key).toUpperCase();
+      const on = k === v;
+      return `<td><button class="lq-cell${on ? ' is-on' : ''}" type="button" data-q="${esc(q.num)}" data-k="${esc(k)}" aria-pressed="${on}" aria-label="第 ${esc(q.num)} 题选 ${esc(o.key)}${o.text ? '：' + esc(o.text) : ''}">${esc(o.key)}</button></td>`;
+    }).join('');
+    return `<tr data-nums="${esc(q.num)}"><td><span class="lq-grid__item">${numTagHtml(q.num, done)}<span>${esc(q.text)}</span></span></td>${cells}</tr>`;
   }).join('');
-  return `<div class="lr-letrow" data-nums="${esc(q.num)}">${numTagHtml(q.num, done)}<span class="lr-letrow__text">${esc(q.text)}</span><div class="lr-letters" role="group" aria-label="第 ${esc(q.num)} 题选字母">${btns}</div></div>`;
+  return `<div class="lq-grid" data-g="${gi}" role="group" aria-label="第 ${esc(qs[0].num)}–${esc(qs[qs.length - 1].num)} 题，每题选一个字母"><table>${head}${rows}</table></div>`;
 }
 
-// 句子填空：题干里的 ____ 换成输入框；简答题（问句）框放在后面、宽一点
-function redoTextRowHtml(q) {
+// 句子填空：题干里的 ____ 换成横线；简答题（问句）空单独一行、更宽
+function redoTextRowHtml(q, done) {
   const text = String(q.text || '');
   const m = /_{2,}/.exec(text);
-  const body = m
-    ? `${esc(text.slice(0, m.index))}${redoInputHtml(q)}${esc(text.slice(m.index + m[0].length))}`
-    : `${esc(text)} ${redoInputHtml(q, /\?\s*$/.test(text))}`;
-  return `<div class="lr-qs__row lr-redo-row" data-nums="${esc(q.num)}">${body}</div>`;
+  if (m) return `<div class="lq-line" data-nums="${esc(q.num)}">${esc(text.slice(0, m.index))}${redoInputHtml(q)}${esc(text.slice(m.index + m[0].length))}</div>`;
+  if (/\?\s*$/.test(text)) return `<div class="lq-q" data-nums="${esc(q.num)}">${numTagHtml(q.num, done)}<div class="lq-q__stem">${esc(text)}</div><div class="lq-q__body">${redoInputHtml(q, { nonum: true, block: true })}</div></div>`;
+  return `<div class="lq-line" data-nums="${esc(q.num)}">${esc(text)} ${redoInputHtml(q)}</div>`;
 }
 
 function redoGroupHtml(g, gi, done) {
   let html = `<div class="lr-qs__group" data-g="${gi}">`;
   if (g.range) html += `<div class="lr-qs__range">${esc(g.range)}</div>`;
   if (g.instruction_html) html += `<div class="lr-qs__inst">${g.instruction_html}</div>`;
-  if (g.image) html += groupImageHtml(g);
+  const mapGrid = g.kind === 'map' && !g.content_html;
+  if (g.image && !mapGrid) html += groupImageHtml(g);
   if (g.title) html += `<p class="lr-qs__title">${esc(g.title)}</p>`;
-  const bank = groupBank(g);
-  if (g.kind === 'match' && bank.length) html += `<div class="lr-qs__bank">${bank.map(o => `<b>${esc(o.key)}</b><span>${esc(o.text)}</span>`).join('')}</div>`;
+  if (g.kind === 'match') html += bankHtml(g, gi, usedLetters(g));
   if (g.content_html) html += `<div class="lr-qs__content" data-g="${gi}">${g.content_html}</div>`;
   else if (g.kind === 'multi') html += multiUnits(g).map(u => redoMultiHtml(g, u, done)).join('');
-  else if (g.kind === 'choice' || g.kind === 'judge') html += g.questions.map(q => redoChoiceHtml(q, done)).join('');
-  else if (g.kind === 'match' || g.kind === 'map') html += g.questions.map(q => redoLetterRowHtml(g, q, done)).join('');
-  else html += g.questions.map(q => redoTextRowHtml(q)).join('');
+  else if (g.kind === 'choice' || g.kind === 'judge') html += '<p class="lq-keyhint">点选项作答，再点一次取消；选中后也可以直接按字母键改。</p>' + g.questions.map(q => redoChoiceHtml(q, done)).join('');
+  else if (g.kind === 'match' || g.kind === 'map') html += mapWrapHtml(mapGrid ? g : {}, redoGridHtml(g, gi, g.questions, done));
+  else html += g.questions.map(q => redoTextRowHtml(q, done)).join('');
   return html + '</div>';
 }
 
-// 题目版式里的空格框：要写词的换成输入框，要选字母的换成小下拉
-function fillRedoContent(box, g, done) {
+// 题目版式里的空格框：要写词的换成横线，要选字母的换成字母槽
+function fillRedoContent(box, g, gi, done) {
   const byNum = {};
   g.questions.forEach(q => { byNum[q.num] = q; });
   const letterKind = ['match', 'map', 'choice', 'multi'].includes(g.kind);
   const placed = new Set();
-  box.querySelectorAll('.ir-blank').forEach(span => {
-    const q = byNum[span.dataset.q];
+  const spans = [...box.querySelectorAll('.ir-blank')].map(span => ({ span, q: byNum[span.dataset.q], nonum: numberLeads(span, span.dataset.q) }));
+  spans.forEach(({ span, q, nonum }) => {
     if (!q) return;
-    const letters = letterKind ? letterOptions(g, q) : [];
     const t = document.createElement('template');
-    t.innerHTML = letters.length ? redoSelectHtml(g, q, letters) : redoInputHtml(q);
+    t.innerHTML = letterKind && letterOptions(g, q).length ? slotHtml(g, gi, q, nonum) : redoInputHtml(q, { nonum });
     span.replaceWith(t.content.firstElementChild);
     placed.add(q.num);
   });
   const rest = g.questions.filter(q => !placed.has(q.num));
-  if (rest.length) box.insertAdjacentHTML('beforeend', rest.map(q => letterKind ? redoLetterRowHtml(g, q, done) : redoTextRowHtml(q)).join(''));
+  if (rest.length) box.insertAdjacentHTML('beforeend', letterKind ? redoGridHtml(g, gi, rest, done) : rest.map(q => redoTextRowHtml(q, done)).join(''));
   wrapTables(box);
 }
 
+// 横线跟着字变长
 function sizeInput(box) {
-  const min = box.closest('.lr-tbl') ? 6 : 9;
+  if (box.closest('.lq-gap--block')) return;
+  const min = box.closest('.lr-tbl') ? 6 : 8;
   box.style.width = Math.min(36, Math.max(min, box.value.length + 2)) + 'ch';
 }
 
 // 原文显示时题目在右栏（顶上有题号总览）；原文隐藏时在左边的卷子里（题号总览在答题卡上）
 function renderRedoQuestions() {
+  closeSlotMenu(false);
   const paper = !state.showScript;
   const pane = document.getElementById('questionsPane'), paperQs = document.getElementById('paperQs');
   const host = paper ? paperQs : pane;
@@ -2916,8 +3082,8 @@ function renderRedoQuestions() {
   const done = answeredNums();
   const qmap = paper ? '' : `<div class="lr-qmap" role="group" aria-label="题号，点一题跳到那道题">${redoQmapHtml(done)}</div>`;
   host.innerHTML = `${qmap}<div class="lr-qs lr-qs--redo">${state.exam.groups.map((g, gi) => redoGroupHtml(g, gi, done)).join('')}</div>`;
-  host.querySelectorAll('.lr-qs__content').forEach(box => fillRedoContent(box, state.exam.groups[+box.dataset.g], done));
-  host.querySelectorAll('.lr-inp__box').forEach(sizeInput);
+  host.querySelectorAll('.lr-qs__content').forEach(box => fillRedoContent(box, state.exam.groups[+box.dataset.g], +box.dataset.g, done));
+  host.querySelectorAll('.lq-gap__in').forEach(sizeInput);
   requestAnimationFrame(updateTableHints);
 }
 
@@ -2930,8 +3096,19 @@ function setRedoAnswer(num, value) {
   saveDraftSoon();
 }
 
+// 选项框里「被哪几题用了」跟着变
+function refreshBank(gi) {
+  const g = state.exam && state.exam.groups[gi];
+  if (!g) return;
+  document.querySelectorAll(`.lq-bank[data-bank="${gi}"]`).forEach(el => { el.innerHTML = bankItemsHtml(groupBank(g), usedLetters(g)); });
+}
+
+function groupIndexOf(num) {
+  return state.exam.groups.findIndex(x => x.questions.some(q => q.num === num));
+}
+
 function redoUnitHtml(key) {
-  const g = state.exam.groups.find(x => x.questions.some(q => q.num === key));
+  const g = state.exam.groups[groupIndexOf(key)];
   if (!g) return '';
   const done = answeredNums();
   if (g.kind === 'multi') {
@@ -2956,20 +3133,144 @@ function clickPick(opt) {
   t.innerHTML = html.trim();
   const fresh = t.content.firstElementChild;
   unitEl.replaceWith(fresh);
-  const again = fresh.querySelector(`.lr-pick__opt[data-k="${CSS.escape(k)}"]`);
+  const again = fresh.querySelector(`.lq-opt[data-k="${CSS.escape(k)}"]`);
   if (again) again.focus({ preventScroll: true });
 }
 
-function clickLetter(btn) {
+function clickCell(btn) {
   const num = btn.dataset.q, k = btn.dataset.k;
   const next = String(redoValue(num)).toUpperCase() === k ? '' : k;
   setRedoAnswer(num, next);
-  btn.closest('.lr-letters').querySelectorAll('.lr-letter').forEach(b => {
+  btn.closest('tr').querySelectorAll('.lq-cell').forEach(b => {
     const on = b.dataset.k === next;
     b.classList.toggle('is-on', on);
     b.setAttribute('aria-pressed', on ? 'true' : 'false');
   });
+  btn.focus({ preventScroll: true });   // Safari 点按钮不给焦点，这里补上，接着能用方向键 / 字母键
+  refreshBank(groupIndexOf(num));
 }
+
+// 字母槽换成新填的值；原来有焦点的话焦点留在新的槽上
+function setSlotValue(num, k) {
+  setRedoAnswer(num, k);
+  const gi = groupIndexOf(num);
+  const g = state.exam.groups[gi];
+  const q = g && g.questions.find(x => x.num === num);
+  if (!q) return;
+  document.querySelectorAll(`.lq-slot[data-slot="${CSS.escape(num)}"]`).forEach(slot => {
+    const focused = document.activeElement === slot || (slotMenu && slotMenu.slot === slot);
+    const t = document.createElement('template');
+    t.innerHTML = slotHtml(g, gi, q, !!slot.dataset.nonum);
+    const fresh = t.content.firstElementChild;
+    slot.replaceWith(fresh);
+    if (focused) fresh.focus({ preventScroll: true });
+  });
+  refreshBank(gi);
+}
+
+function slotLetters(slot) {
+  const g = state.exam.groups[+slot.dataset.g];
+  const q = g && g.questions.find(x => x.num === slot.dataset.slot);
+  return q ? { g, q, letters: letterOptions(g, q) } : null;
+}
+
+// --- 字母槽的选项菜单：宽屏挂在槽下面，手机从底部弹出 ---
+let slotMenu = null;   // { el, scrim, slot }
+function openSlotMenu(slot) {
+  closeSlotMenu(false);
+  const info = slotLetters(slot);
+  if (!info) return;
+  const { g, q, letters } = info;
+  const v = String(redoValue(q.num)).toUpperCase();
+  const used = usedLetters(g, q.num);
+  const sheet = window.matchMedia('(max-width: 640px)').matches;
+  const el = document.createElement('div');
+  el.className = 'lq-menu' + (sheet ? ' is-sheet' : '');
+  el.setAttribute('role', 'listbox');
+  el.setAttribute('aria-label', `第 ${q.num} 题的选项`);
+  const first = letters[0] ? String(letters[0].key).toUpperCase() : 'A', last = letters.length ? String(letters[letters.length - 1].key).toUpperCase() : 'A';
+  el.innerHTML = `<div class="lq-menu__head">${sheet ? `<span class="lq-n is-done">${esc(q.num)}</span>选一个字母` : `第 ${esc(q.num)} 题 · 直接按 <span class="lr-kbd">${esc(first)}</span>–<span class="lr-kbd">${esc(last)}</span> 也行`}</div>`
+    + letters.map(o => {
+      const k = String(o.key).toUpperCase();
+      const on = k === v;
+      const u = used[k];
+      return `<button class="lq-menu__opt${on ? ' is-on' : ''}${u ? ' is-used' : ''}" type="button" role="option" aria-selected="${on}" data-k="${esc(k)}"><span class="lq-opt__k">${esc(o.key)}</span><span>${esc(o.text)}</span><span class="lq-menu__used">${u ? `已填在 ${esc(u.join('、'))}` : ''}</span></button>`;
+    }).join('')
+    + (v ? '<div class="lq-menu__foot"><button class="lr-linkbtn" type="button" data-clear="1">清空这一题</button></div>' : '');
+  let scrim = null;
+  if (sheet) {
+    scrim = document.createElement('div');
+    scrim.className = 'lq-scrim';
+    scrim.addEventListener('click', () => closeSlotMenu(true));
+    document.body.appendChild(scrim);
+  }
+  document.body.appendChild(el);
+  if (!sheet) {
+    const r = slot.getBoundingClientRect();
+    const playerH = document.getElementById('lrPlayer').offsetHeight;
+    const h = el.offsetHeight, w = el.offsetWidth;
+    const left = Math.max(8, Math.min(r.left, window.innerWidth - w - 12));
+    const below = r.bottom + 6 + h <= window.innerHeight - playerH - 8;
+    el.style.left = left + window.scrollX + 'px';
+    el.style.top = (below ? r.bottom + 6 : Math.max(8, r.top - h - 6)) + window.scrollY + 'px';
+  }
+  slot.classList.add('is-open');
+  slot.setAttribute('aria-expanded', 'true');
+  slotMenu = { el, scrim, slot };
+  el.addEventListener('click', (e) => {
+    const opt = e.target.closest('.lq-menu__opt');
+    if (opt) { pickFromMenu(opt.dataset.k); return; }
+    if (e.target.closest('[data-clear]')) pickFromMenu('');
+  });
+  el.addEventListener('keydown', onSlotMenuKeydown);
+  (el.querySelector('.lq-menu__opt.is-on') || el.querySelector('.lq-menu__opt')).focus({ preventScroll: true });
+}
+
+function closeSlotMenu(refocus = true) {
+  if (!slotMenu) return;
+  const { el, scrim, slot } = slotMenu;
+  slotMenu = null;
+  el.remove();
+  if (scrim) scrim.remove();
+  if (slot.isConnected) {
+    slot.classList.remove('is-open');
+    slot.setAttribute('aria-expanded', 'false');
+    if (refocus) slot.focus({ preventScroll: true });
+  }
+}
+
+function pickFromMenu(k) {
+  if (!slotMenu) return;
+  const num = slotMenu.slot.dataset.slot;
+  setSlotValue(num, k);
+  const fresh = document.querySelector(`.lq-slot[data-slot="${CSS.escape(num)}"]`);
+  if (slotMenu) { slotMenu.slot = fresh || slotMenu.slot; }
+  closeSlotMenu(true);
+}
+
+function onSlotMenuKeydown(e) {
+  e.stopPropagation();   // 菜单里的按键不给播放器
+  if (e.key === 'Escape') { e.preventDefault(); closeSlotMenu(true); return; }
+  if (e.key === 'Tab') { closeSlotMenu(true); return; }
+  const opts = [...slotMenu.el.querySelectorAll('.lq-menu__opt')];
+  const i = opts.indexOf(document.activeElement);
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    const n = opts[(i + (e.key === 'ArrowDown' ? 1 : -1) + opts.length) % opts.length];
+    if (n) n.focus();
+    return;
+  }
+  if (/^[a-z]$/i.test(e.key) && !e.metaKey && !e.ctrlKey && !e.altKey) {
+    const hit = opts.find(o => o.dataset.k === e.key.toUpperCase());
+    if (hit) { e.preventDefault(); pickFromMenu(hit.dataset.k); }
+  }
+}
+
+document.addEventListener('mousedown', (e) => {
+  if (slotMenu && !slotMenu.el.contains(e.target) && !slotMenu.slot.contains(e.target) && !(slotMenu.scrim && slotMenu.scrim.contains(e.target))) closeSlotMenu(false);
+});
+window.addEventListener('resize', () => closeSlotMenu(false));
+document.getElementById('notesSide').addEventListener('scroll', () => { if (slotMenu && !slotMenu.el.classList.contains('is-sheet')) closeSlotMenu(false); }, { passive: true });
 
 function focusRedoQuestion(num) {
   const paper = !state.showScript;
@@ -2979,54 +3280,95 @@ function focusRedoQuestion(num) {
   if (paper && isDrawerMode() && state.sideOpen) toggleSide(false);
   if (paper) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   else scrollSideTo(el);
-  const f = el.querySelector('input, select, .lr-letter.is-on, .lr-pick__opt.is-on, .lr-letter, .lr-pick__opt');
+  const f = el.matches('.lq-slot, .lq-gap') ? el : el.querySelector('input, .lq-slot, .lq-cell.is-on, .lq-opt.is-on, .lq-cell, .lq-opt');
   if (f) f.focus({ preventScroll: true });
 }
 
 function onRedoClick(e) {
   if (state.mode !== 'redo') return;
-  const opt = e.target.closest('.lr-pick__opt');
+  const opt = e.target.closest('.lq-opt');
   if (opt) { clickPick(opt); return; }
-  const letter = e.target.closest('.lr-letter');
-  if (letter) { clickLetter(letter); return; }
+  const cell = e.target.closest('.lq-cell');
+  if (cell) { clickCell(cell); return; }
+  const slot = e.target.closest('.lq-slot');
+  if (slot) { if (slotMenu && slotMenu.slot === slot) closeSlotMenu(true); else openSlotMenu(slot); return; }
   const num = e.target.closest('.lr-qmap [data-q]');
   if (num) focusRedoQuestion(num.dataset.q);
 }
 
 function onRedoInput(e) {
   if (state.mode !== 'redo') return;
-  const box = e.target.closest('.lr-inp__box');
+  const box = e.target.closest('.lq-gap__in');
   if (!box) return;
   setRedoAnswer(box.dataset.q, box.value);
-  box.closest('.lr-inp').classList.toggle('is-filled', !!box.value.trim());
+  box.closest('.lq-gap').classList.toggle('is-filled', !!box.value.trim());
   sizeInput(box);
 }
 
-function onRedoChange(e) {
-  if (state.mode !== 'redo') return;
-  const sel = e.target.closest('.lr-pickchip__sel');
-  if (!sel) return;
-  setRedoAnswer(sel.dataset.q, sel.value);
-  sel.closest('.lr-pickchip').classList.toggle('is-filled', !!sel.value);
-  const groupEl = sel.closest('.lr-qs__group');
-  const g = groupEl && state.exam.groups[+groupEl.dataset.g];
-  if (g) refreshSelects(groupEl, g);
+// 方向键在一组按钮里挪焦点；grid：上下换行、左右换列
+function moveFocus(list, from, step) {
+  const i = list.indexOf(from);
+  const n = list[i + step];
+  if (n) n.focus({ preventScroll: false });
 }
 
-// Enter 跳到下一个空
+// Enter 跳到下一个空；选项、表格的圈、字母槽上按字母键直接选；空格、方向键不交给播放器
 function onRedoKeydown(e) {
-  if (state.mode !== 'redo' || e.key !== 'Enter' || e.isComposing) return;
-  if (!e.target.matches('.lr-inp__box, .lr-pickchip__sel')) return;
-  e.preventDefault();
-  const all = [...e.currentTarget.querySelectorAll('.lr-inp__box, .lr-pickchip__sel')];
-  const next = all[all.indexOf(e.target) + 1];
-  if (next) { next.focus({ preventScroll: true }); next.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+  if (state.mode !== 'redo' || e.isComposing) return;
+  const t = e.target;
+  if (t.matches('.lq-gap__in')) {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const all = [...e.currentTarget.querySelectorAll('.lq-gap__in, .lq-slot')];
+    const next = all[all.indexOf(t) + 1];
+    if (next) { next.focus({ preventScroll: true }); next.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+    return;
+  }
+  const slot = t.closest('.lq-slot'), opt = t.closest('.lq-opt'), cell = t.closest('.lq-cell');
+  if (!slot && !opt && !cell) return;
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.key === ' ' || e.key === 'Enter') { e.stopPropagation(); return; }   // 让按钮自己点下去，别触发播放 / 暂停
+  const letter = /^[a-z]$/i.test(e.key) ? e.key.toUpperCase() : '';
+  const arrows = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+  if (slot) {
+    const info = slotLetters(slot);
+    if (letter && info && info.letters.some(o => String(o.key).toUpperCase() === letter)) { e.preventDefault(); e.stopPropagation(); setSlotValue(slot.dataset.slot, letter); }
+    else if (e.key === 'Backspace' || e.key === 'Delete') { e.preventDefault(); e.stopPropagation(); setSlotValue(slot.dataset.slot, ''); }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); openSlotMenu(slot); }
+    else if (arrows.includes(e.key)) e.stopPropagation();
+    return;
+  }
+  if (opt) {
+    const list = [...opt.closest('.lq-opts').querySelectorAll('.lq-opt')];
+    if (letter) {
+      const hit = list.find(o => o.dataset.k === letter);
+      if (hit) { e.preventDefault(); e.stopPropagation(); clickPick(hit); }
+    } else if (arrows.includes(e.key)) {
+      e.preventDefault(); e.stopPropagation();
+      moveFocus(list, opt, e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1 : -1);
+    }
+    return;
+  }
+  const row = cell.closest('tr');
+  const rowCells = [...row.querySelectorAll('.lq-cell')];
+  if (letter) {
+    const hit = rowCells.find(c => c.dataset.k === letter);
+    if (hit) { e.preventDefault(); e.stopPropagation(); clickCell(hit); hit.focus({ preventScroll: true }); }
+  } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+    e.preventDefault(); e.stopPropagation();
+    moveFocus(rowCells, cell, e.key === 'ArrowRight' ? 1 : -1);
+  } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+    e.preventDefault(); e.stopPropagation();
+    const rows = [...row.parentElement.querySelectorAll('tr')].filter(r => r.querySelector('.lq-cell'));
+    const other = rows[rows.indexOf(row) + (e.key === 'ArrowDown' ? 1 : -1)];
+    const target = other && other.querySelectorAll('.lq-cell')[rowCells.indexOf(cell)];
+    if (target) target.focus();
+  }
 }
 
 [questionsPaneEl, document.getElementById('paperQs')].forEach(el => {
   el.addEventListener('click', onRedoClick);
   el.addEventListener('input', onRedoInput);
-  el.addEventListener('change', onRedoChange);
   el.addEventListener('keydown', onRedoKeydown);
 });
 document.getElementById('redoMap').addEventListener('click', onRedoClick);

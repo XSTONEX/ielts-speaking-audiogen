@@ -41,7 +41,7 @@ const check = (name, ok, got) => { ok ? pass++ : fail++; console.log(`${ok ? 'PA
   check('downloaded, skipped ASR, stopped at translation (no key)', card.phase === 'polish' && /WILDAPI_API_KEY/.test(card.err), card);
   execFileSync('python3', [fake, sb]);
   await page.evaluate(async () => { await loadProjects(); const p = state.projects.find(p => p.source_type === 'jiufen'); await openProject(p.id); });
-  await page.waitForSelector('#questionsPane .lr-blank');
+  await page.waitForSelector('#questionsPane .lq-gap');
   const d = await page.evaluate(() => ({
     meta: document.getElementById('detailMeta').textContent,
     score: document.getElementById('sideScoreNum').textContent,
@@ -57,7 +57,7 @@ const check = (name, ok, got) => { ok ? pass++ : fail++; console.log(`${ok ? 'PA
   check('answer underlines', d.ans === 'twelve,passport,mill,seven', d.ans);
   check('highlights in layout and choice', d.hl === 'Half-day,old,under,electric,steep', d.hl);
   check('silence divider', /^看题时间 0:07–0:33，没有声音$/.test(d.gap || ''), d.gap);
-  await page.click('#questionsPane .lr-blank[data-q="3"]');
+  await page.click('#questionsPane .lq-gap[data-q="3"]');
   const s = await page.evaluate(() => ({ evi: document.querySelector('.lr-evi .lr-evi__head') && document.querySelector('.lr-evi .lr-evi__head').innerText, inBand: [...document.querySelectorAll('.lr-evi .lr-line')].map(e => e.dataset.segId).join(','), qx: document.querySelector('#questionsPane .lr-qx') && document.querySelector('#questionsPane .lr-qx').innerText }));
   check('evidence band', /Q3 出处 · 0:48–0:50/.test(s.evi || '') && s.inBand === '7', s);
   check('explanation', /你的答案\s*hill/.test(s.qx || '') && /正确答案\s*mill/.test(s.qx || '') && /干扰/.test(s.qx || ''), s.qx);
