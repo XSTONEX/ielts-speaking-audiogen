@@ -98,7 +98,17 @@ async function run(theme, width) {
     await shot('07b-focus-narrow');
   }
   await page.click('#focusClose');
-  await page.click('#listBody .st-group:nth-child(5) [data-action="edit"]');
+  // 手机上卡片的编辑 / 删除收在右上角 ⋯ 里
+  const cardAction = async (n, action) => {
+    if (mobile) {
+      await page.click(`#listBody .st-group:nth-child(${n}) [data-action="more"]`);
+      await page.click(`#actList [data-act="${action}"]`);
+      await page.waitForTimeout(300);
+    } else {
+      await page.click(`#listBody .st-group:nth-child(${n}) [data-action="${action}"]`);
+    }
+  };
+  await cardAction(5, 'edit');
   await shot('08-synonym-edit-dialog');
   await page.keyboard.press('Escape');
   await go('#reading/hypernyms', '#listBody .st-group');
@@ -118,7 +128,7 @@ async function run(theme, width) {
   await page.waitForSelector('#importStatus .st-check--err');
   await shot('10b-import-error');
   await page.keyboard.press('Escape');
-  await page.click('#listBody .st-group:nth-child(5) [data-action="delete"]');
+  await cardAction(5, 'delete');
   await shot('11-delete-confirm');
   await page.keyboard.press('Escape');
   if (mobile) {

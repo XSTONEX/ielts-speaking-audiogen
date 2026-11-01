@@ -206,42 +206,168 @@
     .st-check--err { background: var(--w-err-soft); border-color: var(--w-err-line); color: var(--w-err-ink); }
     .st-check ul { margin: 6px 0 0 0; padding-left: 1.3em; }
     .st-sample__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .st-sample__tools { display: flex; align-items: center; gap: 8px; }
     .st-sample__pre { margin: 0; max-height: 210px; overflow: auto; padding: 12px 16px; background: var(--w-sunken); border: 1px solid var(--w-line); border-radius: var(--w-r-inner); font-family: var(--st-mono); font-size: var(--w-fs-meta); line-height: 1.6; color: var(--w-ink2); white-space: pre; }
 
-    /* 手机：不精修，保证不横向溢出、功能都能点到 */
+    /* ⋯ 菜单、目录面板：只有手机上会打开，样式放在外面，跨过断点时也不走样 */
+    .st-acts { padding-top: 6px; padding-bottom: 6px; gap: 2px; }
+    .st-acts__btn { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 0 12px; border: none; border-radius: var(--w-r-inner); background: transparent; color: var(--w-ink); font-size: var(--w-fs-ui); text-align: left; cursor: pointer; }
+    .st-acts__btn:hover, .st-acts__btn:active { background: var(--w-sunken); }
+    .st-acts__btn .st-svg { width: 18px; height: 18px; color: var(--w-ink3); }
+    .st-acts__btn--danger, .st-acts__btn--danger .st-svg { color: var(--w-err); }
+    .st-sheet-head { min-width: 0; }
+    .st-sheet-head .ui-dialog__title { overflow-wrap: anywhere; }
+    .st-sheet-meta { margin-top: 2px; font-size: var(--w-fs-meta); color: var(--w-ink3); }
+    .st-tocsheet__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+    .st-tocsheet__link { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; border-radius: var(--w-r-inner); font-size: var(--w-fs-ui); line-height: 1.45; color: var(--w-ink2); text-decoration: none; overflow-wrap: anywhere; }
+    .st-tocsheet__link.is-d1 { color: var(--w-ink); font-weight: 600; }
+    .st-tocsheet__link.is-d3 { padding-left: 28px; }
+    .st-tocsheet__link.is-d4 { padding-left: 44px; color: var(--w-ink3); }
+    .st-tocsheet__link.is-d5 { padding-left: 60px; color: var(--w-ink3); }
+    .st-tocsheet__link.is-active { background: var(--w-big-soft); color: var(--w-big); font-weight: 600; }
+    /* 只在手机上出现的按钮和文字：桌面一律不显示 */
+    .st-more, .st-lbl-m, .st-sort__ico, #readerNow, #readerTocBtn, #editorSaveTop, #importSampleToggle { display: none; }
+
+    /* ==================== 手机（≤820px） ====================
+       列表：科目和类型两排吸顶（往下翻收起、往上翻出来），卡片右上角 ⋯ 收着编辑 / 改名 / 删除，
+       全屏 / 导入 / 新建放在底部操作条；技巧详情和编辑器整屏显示，自带顶栏（‹ 返回、目录、保存），
+       目录改成从底部升起的面板；弹窗是底部面板（plain.css），键盘弹出时跟着可见区域往上收 */
     @media (max-width: 820px) {
-      .st-head { flex-wrap: wrap; padding: 18px 0 14px 0; }
-      .st-head__tools { width: 100%; }
-      #readerTools .ui-seg { display: none; }
-      .st-dir { grid-template-columns: minmax(0, 1fr); }
-      .st-rail { position: static; flex-direction: row; gap: 6px; padding: 12px 0; border-bottom: 1px solid var(--w-line); overflow-x: auto; }
-      .st-rail .ui-rail__label { display: none; }
-      .st-rail .ui-rail__item { flex: 1 1 0; min-width: 0; width: auto; gap: 4px; padding: 8px 4px; justify-content: center; }
-      .st-rail .ui-rail__ico { display: none; }
-      .st-rail .ui-rail__name { flex-grow: 0; }
-      .st-main { padding: 16px 0 32px 0; border-left: none; min-height: 0; }
-      .st-bar .ui-seg { width: 100%; gap: 4px; }
-      .st-bar .ui-seg__btn { flex: 1 1 0; padding: 8px 6px; }
-      .st-grid, .st-grid--3 { grid-template-columns: minmax(0, 1fr); }
-      .st-doc { padding: 16px 14px 16px 16px; flex-direction: column; gap: 8px; }
-      .st-doc .st-group__actions { align-self: flex-end; }
-      .st-reader, .st-reader.is-toc-off { grid-template-columns: minmax(0, 1fr); }
-      .st-toc { position: static; max-height: none; padding: 14px 0 6px 0; border-bottom: 1px solid var(--w-line); }
-      .st-toc__open { position: static; padding-top: 12px; }
-      .st-article-wrap { padding: 20px 0 48px 0; border-left: none; }
-      .st-editor__area, .st-editor__preview { min-height: 360px; }
-      .st-editor__preview { padding: 16px; }
-      .st-focus__bar { flex-wrap: wrap; gap: 10px; padding: 10px 16px; }
-      .st-focus__title { width: 100%; }
+      .st-page { width: auto; margin: 0; padding-bottom: calc(var(--ui-bottom-bar-h, 0px) + 24px); }
+      body.st-view-list { --ui-bottom-bar-h: calc(64px + env(safe-area-inset-bottom)); }
+      #viewList, #readerBody, #readerState, #editorForm, #editorState { padding-left: 16px; padding-right: 16px; }
+
+      /* 列表 */
+      #viewList > .st-head { padding: 14px 0 4px 0; border-bottom: none; }
+      #viewList .st-head__title { font-size: 20px; }
+      .st-dir { display: block; }
+      .st-rail {
+        --st-rail-h: 58px;
+        position: sticky; top: var(--app-shell-h); z-index: 6; height: var(--st-rail-h); box-sizing: border-box;
+        display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding: 8px 0 6px 0;
+        background: var(--w-paper); border: none; transition: top .2s ease;
+      }
+      .st-rail .ui-rail__label, .st-rail .ui-rail__ico { display: none; }
+      .st-rail .ui-rail__item { justify-content: center; gap: 4px; min-width: 0; height: 44px; padding: 0 4px; border: 1px solid var(--w-line); border-radius: var(--w-r-chip); background: var(--w-surface); }
+      .st-rail .ui-rail__item.is-active { background: var(--w-big-soft); border-color: var(--w-big-line); }
+      .st-rail .ui-rail__name { flex-grow: 0; white-space: nowrap; }
+      .st-main { padding: 0; border-left: none; min-height: 0; }
+      .st-bar { position: sticky; top: calc(var(--app-shell-h) + 58px); z-index: 5; padding: 0 0 8px 0; background: var(--w-paper); box-shadow: 0 1px 0 var(--w-line); transition: top .2s ease; }
+      .st-bar .ui-seg { width: 100%; box-sizing: border-box; }
+      .st-bar .ui-seg__btn { flex: 1 1 0; min-width: 0; padding: 0 6px; }
+      /* 往下翻时两排一起缩到导航栏后面，往上翻再出来 */
+      body.st-tucked .st-rail { top: calc(var(--app-shell-h) - 114px); }
+      body.st-tucked .st-bar { top: calc(var(--app-shell-h) - 56px); }
+      .st-sub { flex-wrap: nowrap; margin: 12px 0 10px 0; }
+      .st-sub__note { flex: 1 1 auto; min-width: 0; }
+      .st-sort { flex-shrink: 0; }
+      /* 排序收成一个开关：点一下在「最新在前 / 最早在前」之间切 */
+      .st-sort .ui-chip:not(.is-on) { display: none; }
+      .st-sort .ui-chip { gap: 5px; padding: 0 12px; }
+      .st-sort__ico { display: inline-flex; }
+      .st-grid, .st-grid--3 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      .st-group { padding: 12px 4px 16px 16px; }
+      .st-group__head { gap: 4px; margin-bottom: 10px; }
+      .st-group__lead { padding-top: 2px; }
+      .st-group__title, .st-group--static .st-group__title { cursor: default; }
+      .st-group__title:hover { background: transparent; }
+      .st-group__actions { margin-right: 0; }
+      .st-group__actions .st-act { display: none; }
+      .st-more { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin: -8px 0; padding: 0; border: none; border-radius: var(--w-r-chip); background: transparent; color: var(--w-ink2); cursor: pointer; }
+      .st-more:hover, .st-more:active { background: var(--w-sunken); color: var(--w-ink); }
+      .st-more .st-svg { width: 20px; height: 20px; }
+      .st-words { gap: 6px; }
+      .st-word { padding: 6px 10px; }
+      .st-word__en { font-size: 16px; }
+      .st-tree__label { line-height: 38px; }
+      .st-doc { padding: 14px 4px 16px 16px; gap: 4px; }
+      .st-state__actions--dup { display: none; }
+      /* 底部操作条：全屏复习 / 导入 / 新建（做题技巧是「写一篇」） */
+      #listTools {
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+        display: flex; flex-wrap: nowrap; gap: 8px;
+        padding: 10px max(16px, env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+        background: var(--w-surface); border-top: 1px solid var(--w-line);
+      }
+      #listTools .ui-btn { flex: 1 1 0; min-width: 0; height: 44px; padding: 0 8px; gap: 6px; }
+      #listTools .ui-btn--primary { flex-grow: 1.4; }
+      .st-lbl-d { display: none; }
+      .st-lbl-m { display: inline; }
+
+      /* 全屏复习：只读，卡片不带 ⋯ */
+      .st-focus__bar { min-height: 0; flex-wrap: nowrap; gap: 8px; padding: calc(env(safe-area-inset-top) + 8px) 12px 8px 16px; }
+      .st-focus__title { display: block; flex: 1 1 auto; min-width: 0; font-size: 16px; line-height: 1.4; }
+      #focusTitle, #focusMeta { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .st-focus__spacer, .st-focus__layout { display: none; }
-      .st-focus__body { padding: 16px 16px 40px 16px; }
-      .ui-dialog-backdrop { padding: 12px; }
-      .ui-dialog__head { padding: 16px 16px 0 16px; }
-      .ui-dialog__body { padding: 14px 16px; }
-      .ui-dialog__foot { padding: 0 16px 16px 16px; }
-      .st-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 30px; gap: 6px; }
-      .st-row__del { width: 30px; }
-      .st-drop { flex-wrap: wrap; }
+      #focusClose { height: 44px; padding: 0 16px; }
+      .st-focus__body { padding: 12px 16px calc(32px + env(safe-area-inset-bottom)) 16px; }
+      #focus .st-group__actions { display: none; }
+
+      /* 技巧详情、编辑器：整屏，导航栏让位给自己的顶栏 */
+      body.has-app-shell.st-immersive { padding-top: 0 !important; }
+      body.st-immersive .app-shell-nav { display: none; }
+      #viewReader > .st-head, #viewEditor > .st-head {
+        position: sticky; top: var(--st-vv-top, 0px); z-index: 20;
+        flex-wrap: nowrap; gap: 4px;
+        padding: calc(env(safe-area-inset-top) + 6px) max(8px, env(safe-area-inset-right)) 6px max(8px, env(safe-area-inset-left));
+        background: var(--w-surface); border-bottom: 1px solid var(--w-line);
+      }
+      #viewReader .st-head__lead, #viewEditor .st-head__lead { flex: 1 1 auto; gap: 4px; }
+      #viewReader .st-head__main, #viewEditor .st-head__main { flex: 1 1 auto; }
+      .st-head .ui-icon-btn--back { border-color: transparent; background: transparent; }
+      .st-head .ui-head__crumb { display: none; }
+      #viewReader .st-head__title, #viewEditor .st-head__title { display: block; font-size: 16px; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      #readerMeta { display: none; }
+      #readerNow { display: block; margin-top: 1px; font-size: var(--w-fs-meta); color: var(--w-ink3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      #readerTools, #viewEditor .st-head__tools { width: auto; flex-wrap: nowrap; gap: 4px; }
+      #readerTools .ui-seg { display: none; }
+      #readerTocBtn { display: inline-flex; }
+      #readerTocBtn[hidden] { display: none; }
+      .st-iconbtn { width: 44px; height: 44px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: var(--w-r-chip); background: transparent; color: var(--w-ink2); cursor: pointer; text-decoration: none; }
+      .st-iconbtn:hover, .st-iconbtn:active { background: var(--w-sunken); color: var(--w-ink); }
+      .st-iconbtn .st-svg { width: 20px; height: 20px; }
+      #readerEdit { width: 44px; height: 44px; padding: 0; border-color: transparent; background: transparent; }
+      #readerEdit .st-svg { width: 20px; height: 20px; }
+      #readerEdit .st-btn-label { display: none; }
+      .st-reader, .st-reader.is-toc-off { display: block; }
+      #toc, #tocOpen { display: none; }
+      .st-article-wrap { padding: 18px 0 48px 0; border-left: none; }
+      .st-md { font-size: 16px; line-height: 1.8; }
+      .st-md h1 { font-size: 20px; }
+      .st-md h2 { font-size: 18px; margin-top: 32px; }
+      .st-md h3, .st-md h4, .st-md h5, .st-md h6 { font-size: 16px; }
+      .st-md h1, .st-md h2, .st-md h3, .st-md h4, .st-md h5, .st-md h6 { scroll-margin-top: calc(env(safe-area-inset-top) + 72px); }
+      .st-md code, .st-md pre code { font-size: 14px; }
+
+      /* 编辑器：保存放在顶栏，键盘弹出来也够得着；正文框跟着内容长高，不在框里再滚一层 */
+      #viewEditor .st-head__tools .ui-seg__btn { padding: 0 12px; }
+      #editorSaveTop { display: inline-flex; position: relative; height: 40px; padding: 0 16px; }
+      #editorSaveTop.is-dirty::after { content: ''; position: absolute; top: 5px; right: 5px; width: 6px; height: 6px; border-radius: 50%; background: var(--w-on-big); }
+      .st-editor { padding: 16px 0 32px 0; gap: 14px; }
+      #editorTitle { height: 44px; font-size: 16px; }
+      .st-editor__area { min-height: 50vh; font-size: 16px; resize: none; overflow-y: hidden; }
+      .st-editor__preview { min-height: 50vh; padding: 16px; }
+      .st-editor__foot { position: static; padding: 0; border-top: none; background: transparent; }
+      .st-editor__foot .st-tools { display: none; }
+      .st-kbd-hint { display: none; }   /* 手机上换成不带 Ctrl/⌘ + S 的那一份（同一句拆成两段，桌面上「。」后的间距会变，所以放两份） */
+
+      /* 弹窗（底部面板）：键盘弹出来时整块收进可见区域，底下的保存按钮跟着上来 */
+      body.page-study-techniques .ui-dialog-backdrop { top: var(--st-vv-top, 0px); bottom: var(--st-kb, 0px); }
+      body.page-study-techniques .ui-dialog { max-height: 100%; }
+      body.page-study-techniques .ui-dialog__foot .ui-btn { height: 44px; }
+      .st-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 44px; gap: 6px; }
+      .st-row .ui-input, #groupTitle, #renameInput { height: 44px; font-size: 16px; }
+      .st-row__del { width: 44px; height: 44px; }
+      .st-add-row { align-self: stretch; justify-content: center; height: 44px; font-size: var(--w-fs-ui); }
+      .st-drop { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px 12px; }
+      #importPick { grid-column: 1 / -1; height: 44px; font-size: var(--w-fs-ui); }
+      #importSampleToggle { display: inline-flex; }
+      .st-sample__pre { max-height: none; white-space: pre-wrap; overflow-wrap: anywhere; }
+      #importSampleField.is-collapsed .st-sample__pre, #importSampleField.is-collapsed .ui-field__hint { display: none; }
+    }
+    @media (max-width: 640px) {
+      #viewList .st-head__desc { display: none; }
+      .st-grid, .st-grid--3 { grid-template-columns: minmax(0, 1fr); }
     }
   </style>
   <script src="/static/theme.js?v=20261101m" defer></script>
@@ -285,6 +411,7 @@
           <div class="st-head__main">
             <div class="ui-head__crumb" id="readerCrumb"></div>
             <h1 class="st-head__title"><span id="readerTitle"></span><span class="ui-head__meta ui-num" id="readerMeta"></span></h1>
+            <div id="readerNow" aria-live="off"></div>
           </div>
         </div>
         <div class="st-head__tools" id="readerTools">
@@ -292,7 +419,8 @@
             <button class="ui-seg__btn" type="button" data-action="layout" data-layout="narrow" aria-pressed="false">窄栏</button>
             <button class="ui-seg__btn" type="button" data-action="layout" data-layout="wide" aria-pressed="false">宽栏</button>
           </div>
-          <a class="ui-btn ui-btn--md" id="readerEdit" href="#"><svg class="st-svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 2.5 13.5 5 5.5 13H3v-2.5z"></path></svg>编辑</a>
+          <button class="st-iconbtn" type="button" id="readerTocBtn" data-action="toc-open" aria-label="目录" title="目录"><svg class="st-svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 4h8M5.5 8h8M5.5 12h8M2.5 4h.01M2.5 8h.01M2.5 12h.01"></path></svg></button>
+          <a class="ui-btn ui-btn--md" id="readerEdit" href="#" aria-label="编辑"><svg class="st-svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 2.5 13.5 5 5.5 13H3v-2.5z"></path></svg><span class="st-btn-label">编辑</span></a>
         </div>
       </header>
       <div id="readerBody">
@@ -330,6 +458,7 @@
             <button class="ui-seg__btn is-on" type="button" role="tab" aria-selected="true" data-action="editor-tab" data-tab="edit">编辑</button>
             <button class="ui-seg__btn" type="button" role="tab" aria-selected="false" data-action="editor-tab" data-tab="preview">预览</button>
           </div>
+          <button class="ui-btn ui-btn--md ui-btn--primary" type="button" id="editorSaveTop" data-action="editor-save">保存</button>
         </div>
       </header>
       <div class="st-editor" id="editorForm">
@@ -340,7 +469,7 @@
         <div class="ui-field" id="editorWriteField">
           <label class="ui-field__label" for="editorContent">内容</label>
           <textarea class="ui-textarea st-editor__area" id="editorContent" spellcheck="false" placeholder="# 开头的行是标题，会出现在目录里"></textarea>
-          <span class="ui-field__hint">支持 Markdown：# 开头的标题会出现在目录里；**粗体**、==高亮==、++下划线++、表格、列表都能用。Ctrl/⌘ + S 保存。</span>
+          <span class="ui-field__hint"><span class="st-kbd-hint">支持 Markdown：# 开头的标题会出现在目录里；**粗体**、==高亮==、++下划线++、表格、列表都能用。Ctrl/⌘ + S 保存。</span><span class="st-lbl-m">支持 Markdown：# 开头的标题会出现在目录里；**粗体**、==高亮==、++下划线++、表格、列表都能用。</span></span>
         </div>
         <div class="ui-field" id="editorPreviewField" hidden>
           <span class="ui-field__label">预览</span>
@@ -409,10 +538,13 @@
           <input type="file" id="importFile" accept=".json,application/json" hidden>
         </div>
         <div id="importStatus"></div>
-        <div class="ui-field">
+        <div class="ui-field" id="importSampleField">
           <div class="st-sample__head">
             <span class="ui-field__label">文件格式</span>
-            <button class="ui-btn ui-btn--sm" type="button" data-action="import-copy" id="importCopy">复制示例</button>
+            <div class="st-sample__tools">
+              <button class="ui-btn ui-btn--sm" type="button" data-action="sample-toggle" id="importSampleToggle" aria-expanded="false" aria-controls="importSample">查看示例</button>
+              <button class="ui-btn ui-btn--sm" type="button" data-action="import-copy" id="importCopy">复制示例</button>
+            </div>
           </div>
           <pre class="st-sample__pre" id="importSample"></pre>
           <span class="ui-field__hint" id="importSampleHint"></span>
@@ -421,6 +553,54 @@
       <div class="ui-dialog__foot">
         <button class="ui-btn ui-btn--md" type="button" data-action="dlg-close" id="importCancel">取消</button>
         <button class="ui-btn ui-btn--md ui-btn--primary" type="button" data-action="import-run" id="importRun" disabled>导入</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 手机：卡片右上角 ⋯ 打开的操作面板 -->
+  <div class="ui-dialog-backdrop" id="actDlg" hidden>
+    <div class="ui-dialog" role="dialog" aria-modal="true" aria-labelledby="actTitle">
+      <div class="ui-dialog__head">
+        <div class="st-sheet-head"><h3 class="ui-dialog__title" id="actTitle"></h3><div class="st-sheet-meta ui-num" id="actMeta"></div></div>
+        <button class="ui-dialog__close" type="button" data-action="dlg-close" aria-label="关闭">&times;</button>
+      </div>
+      <div class="ui-dialog__body st-acts" id="actList"></div>
+      <div class="ui-dialog__foot">
+        <button class="ui-btn ui-btn--md" type="button" data-action="dlg-close">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 手机：改组标题（桌面是点标题直接改） -->
+  <div class="ui-dialog-backdrop" id="renameDlg" hidden>
+    <div class="ui-dialog" role="dialog" aria-modal="true" aria-labelledby="renameDlgTitle">
+      <div class="ui-dialog__head">
+        <h3 class="ui-dialog__title" id="renameDlgTitle">改组标题</h3>
+        <button class="ui-dialog__close" type="button" data-action="dlg-close" aria-label="关闭">&times;</button>
+      </div>
+      <div class="ui-dialog__body">
+        <label class="ui-field">
+          <span class="ui-field__label">组标题</span>
+          <input class="ui-input" id="renameInput" type="text" maxlength="200" autocomplete="off" enterkeyhint="done">
+        </label>
+        <p class="st-form-err" id="renameErr" role="alert" hidden></p>
+      </div>
+      <div class="ui-dialog__foot">
+        <button class="ui-btn ui-btn--md" type="button" data-action="dlg-close">取消</button>
+        <button class="ui-btn ui-btn--md ui-btn--primary" type="button" id="renameSave" data-action="rename-save">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 手机：技巧详情的目录面板 -->
+  <div class="ui-dialog-backdrop" id="tocDlg" hidden>
+    <div class="ui-dialog" role="dialog" aria-modal="true" aria-labelledby="tocDlgTitle" id="tocDlgBox">
+      <div class="ui-dialog__head">
+        <div class="st-sheet-head"><h3 class="ui-dialog__title" id="tocDlgTitle">目录</h3><div class="st-sheet-meta ui-num" id="tocDlgMeta"></div></div>
+        <button class="ui-dialog__close" type="button" data-action="dlg-close" aria-label="关闭">&times;</button>
+      </div>
+      <div class="ui-dialog__body">
+        <ul class="st-tocsheet__list" id="tocSheetList"></ul>
       </div>
     </div>
   </div>
@@ -456,7 +636,12 @@
       expand: '<path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10"></path>',
       upload: '<path d="M8 10.5V2.5M5 5.5l3-3 3 3M2.5 10.5v3h11v-3"></path>',
       plus: '<path d="M8 3v10M3 8h10"></path>',
-      cross: '<path d="M4 4l8 8M12 4l-8 8"></path>'
+      cross: '<path d="M4 4l8 8M12 4l-8 8"></path>',
+      more: '<circle cx="3.5" cy="8" r="1.15" fill="currentColor" stroke="none"></circle><circle cx="8" cy="8" r="1.15" fill="currentColor" stroke="none"></circle><circle cx="12.5" cy="8" r="1.15" fill="currentColor" stroke="none"></circle>',
+      swap: '<path d="M5 13V3M2.5 5.5 5 3l2.5 2.5M11 3v10M8.5 10.5 11 13l2.5-2.5"></path>',
+      edit: '<path d="M11 2.5 13.5 5 5.5 13H3v-2.5z"></path>',
+      rename: '<path d="M3.5 4.5V3h9v1.5M8 3v10M6 13h4"></path>',
+      trash: '<path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 8.5h5.8l.6-8.5"></path>'
     };
     var CATS = [
       { key: 'listening', name: '听力' },
@@ -545,7 +730,12 @@
     var editor = null;
     var docCache = {};
     var tocHeadings = [];
+    var tocActive = 0;
     var dialogStack = [];
+    var act = null;          // ⋯ 面板对应的那一条：{cat, type, id}
+    var renameJob = null;    // 手机上的改名面板
+    // 手机（≤820px）：底部操作条、⋯ 菜单、整屏阅读和编辑、返回键先关面板。桌面不受影响
+    var PHONE = window.matchMedia('(max-width: 820px)');
 
     // ---------- 小工具 ----------
     function $(id) { return document.getElementById(id); }
@@ -692,7 +882,7 @@
 
     function onHashChange() {
       var next = parseHash();
-      if (focusState) closeFocus();
+      if (focusState) { forgetLayerHistory(); closeFocus(); }
       // 编辑器里有没保存的改动：先回到编辑器，问一句再走
       if (editor && editor.hash !== routeHash(next) && editorDirty()) {
         var target = window.location.hash;
@@ -727,6 +917,10 @@
       $('viewReader').hidden = route.view !== 'read';
       $('viewEditor').hidden = route.view !== 'edit' && route.view !== 'new';
       if (route.view !== 'edit' && route.view !== 'new') editor = null;
+      // 手机样式靠这几个类：列表有底部操作条；详情和编辑器整屏，收起导航栏
+      document.body.classList.toggle('st-view-list', route.view === 'list');
+      document.body.classList.toggle('st-immersive', route.view !== 'list');
+      if (lastView !== viewKey) document.body.classList.remove('st-tucked');
 
       if (route.view === 'list') {
         lsSet(VIEW_KEY, route.cat + '/' + route.type);
@@ -770,8 +964,8 @@
         $('listTools').innerHTML = '<a class="ui-btn ui-btn--md ui-btn--primary" href="' + href(cat, 'techniques', 'new') + '">写一篇</a>';
       } else {
         $('listTools').innerHTML =
-          '<button class="ui-btn ui-btn--md" type="button" data-action="focus-open"' + (list.length ? '' : ' disabled title="还没有内容"') + '>' + svg(ICON.expand) + '全屏</button>' +
-          '<button class="ui-btn ui-btn--md" type="button" data-action="import-open"' + (ready ? '' : ' disabled') + '>' + svg(ICON.upload) + '导入 JSON</button>' +
+          '<button class="ui-btn ui-btn--md" type="button" data-action="focus-open"' + (list.length ? '' : ' disabled title="还没有内容"') + '>' + svg(ICON.expand) + '<span class="st-lbl-d">全屏</span><span class="st-lbl-m">复习</span></button>' +
+          '<button class="ui-btn ui-btn--md" type="button" data-action="import-open"' + (ready ? '' : ' disabled') + '>' + svg(ICON.upload) + '<span class="st-lbl-d">导入 JSON</span><span class="st-lbl-m">导入</span></button>' +
           '<button class="ui-btn ui-btn--md ui-btn--primary" type="button" data-action="group-new"' + (ready ? '' : ' disabled') + '>新建一组</button>';
       }
 
@@ -788,7 +982,8 @@
         var actions = type === 'techniques'
           ? '<a class="ui-btn ui-btn--md ui-btn--primary" href="' + href(cat, 'techniques', 'new') + '">写一篇</a>'
           : '<button class="ui-btn ui-btn--md" type="button" data-action="import-open">导入 JSON</button><button class="ui-btn ui-btn--md ui-btn--primary" type="button" data-action="group-new">新建一组</button>';
-        body.innerHTML = stateCard(CAT_NAME[cat] + '还没有' + TYPE_NAME[type], EMPTY_TEXT[type], actions);
+        // 手机上底部操作条已经有这两个按钮，空状态里就不再重复（--dup）
+        body.innerHTML = stateCard(CAT_NAME[cat] + '还没有' + TYPE_NAME[type], EMPTY_TEXT[type], actions, true);
         return;
       }
 
@@ -803,17 +998,19 @@
       }
     }
 
-    function stateCard(title, text, actions) {
+    function stateCard(title, text, actions, dup) {
       return '<div class="ui-card st-state"><div class="ui-empty">' +
         (title ? '<p class="ui-empty__title">' + esc(title) + '</p>' : '') +
         '<p class="ui-empty__text">' + text + '</p>' +
-        (actions ? '<div class="st-state__actions">' + actions + '</div>' : '') +
+        (actions ? '<div class="st-state__actions' + (dup ? ' st-state__actions--dup' : '') + '">' + actions + '</div>' : '') +
         '</div></div>';
     }
+    // 桌面两个筹码二选一；手机只露出当前那个，带 ⇅，点一下换成另一种（见点击处理里的 sort）
     function sortChips(order) {
       return ['desc', 'asc'].map(function (o) {
         var on = o === order;
-        return '<button class="ui-chip' + (on ? ' is-on' : '') + '" type="button" aria-pressed="' + on + '" data-action="sort" data-order="' + o + '">' + (o === 'desc' ? '最新在前' : '最早在前') + '</button>';
+        return '<button class="ui-chip' + (on ? ' is-on' : '') + '" type="button" aria-pressed="' + on + '" data-action="sort" data-order="' + o + '">' +
+          '<span class="st-sort__ico">' + svg(ICON.swap) + '</span>' + (o === 'desc' ? '最新在前' : '最早在前') + '</button>';
       }).join('');
     }
     function summaryText(cat, type, list) {
@@ -850,7 +1047,8 @@
           '</div>';
       }
       if (date) meta += ' · ' + date;
-      var titleAttrs = renamable
+      // 手机上点标题不改名（一碰就弹键盘），改名放进 ⋯ 菜单
+      var titleAttrs = renamable && !PHONE.matches
         ? ' data-action="rename" tabindex="0" title="点击改名" aria-label="' + esc((title || '未命名') + '，点击改名') + '"'
         : '';
       return '<article class="st-group' + (renamable ? '' : ' st-group--static') + '" data-cat="' + cat + '" data-type="' + type + '" data-id="' + esc(item.id) + '">' +
@@ -860,7 +1058,12 @@
         '<div class="st-group__actions">' +
         '<button class="st-act" type="button" data-action="edit">编辑</button>' +
         '<button class="st-act st-act--danger" type="button" data-action="delete">删除</button>' +
+        moreBtn(title) +
         '</div></div>' + words + '</article>';
+    }
+    // 手机上卡片右上角的 ⋯（桌面隐藏，用上面的文字按钮）
+    function moreBtn(title) {
+      return '<button class="st-more" type="button" data-action="more" aria-haspopup="dialog" aria-label="' + esc('更多操作：' + (title || '未命名')) + '">' + svg(ICON.more) + '</button>';
     }
 
     function docCard(cat, item) {
@@ -878,6 +1081,7 @@
         '<div class="st-group__actions">' +
         '<a class="st-act" href="' + esc(href(cat, 'techniques', item.id, 'edit')) + '">编辑</a>' +
         '<button class="st-act st-act--danger" type="button" data-action="delete">删除</button>' +
+        moreBtn(String(item.title || '').trim()) +
         '</div></article>';
     }
 
@@ -992,6 +1196,11 @@
       var d = fmtDate(item.updated_at || item.created_at);
       if (d) meta.push(d + '更新');
       $('readerMeta').textContent = meta.join(' · ');
+      // 手机顶栏：有目录才有目录按钮；第二行平时写「读到哪一节」，没有标题的文章写更新日期
+      $('readerTocBtn').hidden = !tocHeadings.length;
+      $('tocDlgMeta').textContent = (tocHeadings.length ? tocHeadings.length + ' 条' : '') + (tocHeadings.length && d ? ' · ' : '') + (d ? d + '更新' : '');
+      $('readerNow').dataset.idle = d ? d + '更新' : '';
+      $('readerNow').textContent = $('readerNow').dataset.idle;
       applyLayout();
       applyToc();
       updateActiveToc();
@@ -1036,7 +1245,8 @@
     function updateActiveToc() {
       tocTicking = false;
       if (!route || route.view !== 'read' || !tocHeadings.length) return;
-      var nav = document.querySelector('.app-shell-nav');
+      // 手机上导航栏收起了，顶上盖着的是详情自己的顶栏
+      var nav = PHONE.matches ? document.querySelector('#viewReader > .st-head') : document.querySelector('.app-shell-nav');
       var line = (nav ? nav.getBoundingClientRect().bottom : 0) + 28;
       var active = 0;
       for (var i = 0; i < tocHeadings.length; i++) {
@@ -1044,6 +1254,11 @@
       }
       // 翻到底时最后几个短小节可能永远到不了线，直接点亮最后一个
       if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) active = tocHeadings.length - 1;
+      // 手机顶栏第二行和目录面板用的「读到哪一节」：还在第一个标题上面时不算读到任何一节（短文一屏就到底，
+      // 上面那条「到底就点亮最后一个」会把最后一节当成当前节）
+      var started = tocHeadings[0].getBoundingClientRect().top - line <= 0;
+      tocActive = started ? active : -1;
+      $('readerNow').textContent = started ? tocHeadings[active].textContent.trim() : ($('readerNow').dataset.idle || '');
       var links = $('tocList').querySelectorAll('.st-toc__link');
       links.forEach(function (a, i) {
         var on = i === active;
@@ -1107,11 +1322,28 @@
         $('editorErr').hidden = true;
         setEditorTab('edit');
         $('editorSaved').textContent = item ? '上次保存 ' + fmtDate(item.updated_at || item.created_at) : '还没保存过';
-        setTimeout(function () { (isNew ? $('editorTitle') : $('editorContent')).focus({ preventScroll: true }); }, 0);
+        // 手机上一进来就聚焦会直接弹出键盘、挡住半屏，让人自己点
+        if (!PHONE.matches) setTimeout(function () { (isNew ? $('editorTitle') : $('editorContent')).focus({ preventScroll: true }); }, 0);
       }
       updateEditorDirty();
+      growEditor();
     }
-    function updateEditorDirty() { $('editorDirty').hidden = !editorDirty(); }
+    function updateEditorDirty() {
+      var dirty = editorDirty();
+      $('editorDirty').hidden = !dirty;
+      $('editorSaveTop').classList.toggle('is-dirty', dirty);
+      $('editorSaveTop').setAttribute('aria-label', dirty ? '保存（有未保存的改动）' : '保存');
+    }
+    // 手机：正文框跟着内容长高，只有整页在滚；桌面保持固定高度、框里滚
+    function growEditor() {
+      var ta = $('editorContent');
+      if (!PHONE.matches || route.view === 'list' || route.view === 'read') { ta.style.height = ''; return; }
+      if (ta.offsetParent === null) return;
+      var y = window.scrollY;
+      ta.style.height = 'auto';
+      ta.style.height = (ta.scrollHeight + 2) + 'px';
+      if (window.scrollY !== y) window.scrollTo(0, y);
+    }
     function setEditorTab(tab) {
       document.querySelectorAll('[data-action="editor-tab"]').forEach(function (b) {
         var on = b.dataset.tab === tab;
@@ -1123,6 +1355,8 @@
       if (tab === 'preview') {
         var content = $('editorContent').value;
         $('editorPreview').innerHTML = content.trim() ? renderMarkdown(content) : '<p style="color: var(--w-ink3);">还没有内容。</p>';
+      } else if (route) {
+        growEditor();
       }
     }
     function saveEditor() {
@@ -1137,10 +1371,13 @@
         return;
       }
       err.hidden = true;
-      var ed = editor, btn = $('editorSave');
+      var ed = editor;
+      // 底栏的保存（桌面）和顶栏的保存（手机）一起变
+      var btn = { set: function (busy) {
+        [$('editorSave'), $('editorSaveTop')].forEach(function (b) { b.disabled = busy; b.textContent = busy ? '保存中…' : '保存'; });
+      } };
       ed.saving = true;
-      btn.disabled = true;
-      btn.textContent = '保存中…';
+      btn.set(true);
       var req = ed.id
         ? api('PUT', itemUrl('techniques', ed.cat, ed.id), { title: title, content: content })
         : api('POST', '/api/study_techniques/techniques/' + ed.cat, { title: title, content: content });
@@ -1163,8 +1400,7 @@
         err.hidden = false;
       }).then(function () {
         ed.saving = false;
-        btn.disabled = false;
-        btn.textContent = '保存';
+        btn.set(false);
       });
     }
 
@@ -1177,6 +1413,7 @@
       syncScrollLock();
       renderFocus();
       $('focusClose').focus();
+      openLayer('focus', closeFocus);
     }
     function renderFocus() {
       if (!focusState) return;
@@ -1207,7 +1444,94 @@
       $('focus').hidden = true;
       syncScrollLock();
       renderList();
-      if (opener && document.contains(opener)) opener.focus();
+      if (opener && document.contains(opener)) opener.focus({ preventScroll: PHONE.matches });
+      return closeLayer('focus');
+    }
+
+    // ---------- 手机返回键：先关最上面那一层 ----------
+    // 手机上每打开一层（弹窗、⋯ 面板、目录、全屏复习）就压一条同网址的历史记录，
+    // 按返回键 / 右滑返回只关这一层、不离开页面；用界面上的按钮关掉时，再把那条记录退掉。
+    // 桌面不压历史，和以前一样。记录条数始终等于打开的层数（syncHistory 负责对齐）
+    var layers = [];        // [{ key, back }]，最上面的在最后
+    var histEntries = 0;    // 已经替这些层压进历史的条数
+    var histSkip = 0;       // 自己 history.go 引起、要忽略的 popstate
+    var histWaiters = [];
+    function openLayer(key, back) {
+      layers.push({ key: key, back: back });
+      return syncHistory();
+    }
+    function closeLayer(key) {
+      for (var i = layers.length - 1; i >= 0; i--) {
+        if (layers[i].key === key) { layers.splice(i, 1); break; }
+      }
+      return syncHistory();
+    }
+    function setScrollRestore(mode) {
+      try { if ('scrollRestoration' in history) history.scrollRestoration = mode; } catch (e) { /* 不支持就算了 */ }
+    }
+    function flushHistWaiters() {
+      var waiting = histWaiters;
+      histWaiters = [];
+      waiting.forEach(function (fn) { fn(); });
+    }
+    // 返回的 Promise 在历史记录退好之后才完成：关完一层紧接着要跳转（改 hash）的，等它再跳
+    function syncHistory() {
+      // 上一次退记录还没退完：等它退完再对齐，免得新压进去的记录被那次后退一起退掉
+      if (histSkip) return new Promise(function (resolve) { histWaiters.push(function () { syncHistory().then(resolve); }); });
+      var want = PHONE.matches ? layers.length : 0;
+      if (want > histEntries) {
+        // 退回这几条记录时别让浏览器把页面滚回压记录那一刻的位置（比如点目录跳到别的节）
+        setScrollRestore('manual');
+        while (histEntries < want) {
+          histEntries++;
+          history.pushState({ stLayer: histEntries }, '', window.location.href);
+        }
+      } else if (want < histEntries) {
+        var n = histEntries - want;
+        histEntries = want;
+        histSkip++;
+        var done = new Promise(function (resolve) { histWaiters.push(resolve); });
+        history.go(-n);
+        // 万一等不到 popstate，也别把后面的操作卡住
+        setTimeout(function () { if (histSkip) { histSkip = 0; flushHistWaiters(); } }, 800);
+        return done;
+      }
+      return Promise.resolve();
+    }
+    window.addEventListener('popstate', function () {
+      if (histSkip) {
+        histSkip--;
+        if (!histSkip) flushHistWaiters();
+        if (!histEntries) setScrollRestore('auto');
+        return;
+      }
+      if (!histEntries) return;   // 不是我们压的记录：hash 路由的前进后退，交给 hashchange
+      histEntries--;
+      var top = layers[layers.length - 1];
+      if (top) top.back();
+      // 这一层没关掉（比如先问「放弃改动？」），把记录补回去，下次返回还是先关它
+      syncHistory();
+      if (!histEntries) setScrollRestore('auto');
+    });
+    // 换了页面路由（改 hash）时，旧的层记录留在后面当普通历史，不再归我们管
+    function forgetLayerHistory() { histEntries = 0; }
+
+    // ---------- 手机键盘 ----------
+    // iOS / 新版安卓弹键盘时不缩布局视口，贴底的面板会被键盘挡住。把可见区域的上沿和键盘高度写进
+    // CSS 变量（--st-vv-top / --st-kb），弹窗和编辑器顶栏跟着可见区域走。双指放大时不算
+    function syncViewport() {
+      var root = document.documentElement, vv = window.visualViewport;
+      if (!vv || !PHONE.matches || Math.abs(vv.scale - 1) > 0.01) {
+        root.style.removeProperty('--st-vv-top');
+        root.style.removeProperty('--st-kb');
+        return;
+      }
+      root.style.setProperty('--st-vv-top', Math.max(0, Math.round(vv.offsetTop)) + 'px');
+      root.style.setProperty('--st-kb', Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)) + 'px');
+    }
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', syncViewport);
+      window.visualViewport.addEventListener('scroll', syncViewport);
     }
 
     // ---------- 弹窗通用 ----------
@@ -1218,6 +1542,7 @@
       dialogStack.push({ el: el, onRequestClose: onRequestClose, opener: document.activeElement });
       el.hidden = false;
       syncScrollLock();
+      openLayer(el, function () { requestClose(el); });
     }
     function hideDialog(el) {
       for (var i = dialogStack.length - 1; i >= 0; i--) {
@@ -1226,10 +1551,11 @@
           el.hidden = true;
           syncScrollLock();
           if (entry.opener && document.contains(entry.opener) && entry.opener.focus) entry.opener.focus({ preventScroll: true });
-          return;
+          return closeLayer(el);
         }
       }
       el.hidden = true;
+      return Promise.resolve();
     }
     function requestClose(el) {
       for (var i = dialogStack.length - 1; i >= 0; i--) {
@@ -1251,8 +1577,8 @@
         var finish = function (value) {
           if (confirmResolve !== resolve) return;
           confirmResolve = null;
-          hideDialog($('confirmDlg'));
-          resolve(value);
+          // 手机上等这一层的历史记录退掉再往下走：后面常常紧跟着改 hash 跳页面
+          hideDialog($('confirmDlg')).then(function () { resolve(value); });
         };
         ok.onclick = function () { finish(true); };
         showDialog($('confirmDlg'), function () { finish(false); });
@@ -1486,11 +1812,7 @@
         // 清空等于没改：组标题只能在编辑弹窗里删掉
         if (!save || !next || next === original) { paint(original); return; }
         paint(next);
-        var payload = type === 'synonyms'
-          ? { title: next, synonyms: item.synonyms || [] }
-          : { title: next, upper_words: item.upper_words || [], lower_words: item.lower_words || [] };
-        api('PUT', itemUrl(type, cat, item.id), payload).then(function () {
-          item.title = next;
+        putTitle(cat, type, item, next).then(function () {
           toast('已改名', 'success');
         }).catch(function (e) {
           paint(original);
@@ -1514,6 +1836,123 @@
       el.addEventListener('keydown', onKey);
       el.addEventListener('blur', onBlur);
       el.addEventListener('paste', onPaste);
+    }
+    // 只改标题：词原样带上（PUT 是整组覆盖）
+    function putTitle(cat, type, item, next) {
+      var payload = type === 'synonyms'
+        ? { title: next, synonyms: item.synonyms || [] }
+        : { title: next, upper_words: item.upper_words || [], lower_words: item.lower_words || [] };
+      return api('PUT', itemUrl(type, cat, item.id), payload).then(function () { item.title = next; });
+    }
+
+    // ---------- 手机：改名面板 ----------
+    function openRenameSheet(cat, type, item) {
+      renameJob = { cat: cat, type: type, item: item, saving: false };
+      $('renameInput').value = String(item.title || '').trim();
+      $('renameErr').hidden = true;
+      $('renameSave').disabled = false;
+      $('renameSave').textContent = '保存';
+      showDialog($('renameDlg'), closeRenameSheet);
+      $('renameInput').focus();
+      $('renameInput').select();
+    }
+    function closeRenameSheet() {
+      if (!renameJob || renameJob.saving) return Promise.resolve();
+      renameJob = null;
+      return hideDialog($('renameDlg'));
+    }
+    function saveRename() {
+      var job = renameJob;
+      if (!job || job.saving) return;
+      var err = $('renameErr');
+      var next = $('renameInput').value.replace(/\s+/g, ' ').trim();
+      // 和点标题改名一样：标题只能在「编辑」里清空
+      if (!next) { err.textContent = '标题不能空着。要去掉标题，在「编辑」里把它清空。'; err.hidden = false; $('renameInput').focus(); return; }
+      if (next === String(job.item.title || '').trim()) { closeRenameSheet(); return; }
+      err.hidden = true;
+      job.saving = true;
+      $('renameSave').disabled = true;
+      $('renameSave').textContent = '保存中…';
+      putTitle(job.cat, job.type, job.item, next).then(function () {
+        job.saving = false;
+        closeRenameSheet();
+        toast('已改名', 'success');
+        refreshAfterChange();
+      }).catch(function (e) {
+        job.saving = false;
+        $('renameSave').disabled = false;
+        $('renameSave').textContent = '保存';
+        if (e && e.status === 401) return;
+        if (e && e.status === 404) {
+          closeRenameSheet();
+          toast(errorText(e, '改名没保存上'), 'error');
+          loadType(job.cat, job.type).then(refreshAfterChange, function () {});
+          return;
+        }
+        err.textContent = errorText(e, '改名没保存上');
+        err.hidden = false;
+      });
+    }
+
+    // ---------- 手机：卡片的 ⋯ 面板 ----------
+    function openActions(card) {
+      var cat = card.dataset.cat, type = card.dataset.type;
+      var item = findItem(cat, type, card.dataset.id);
+      if (!item) return;
+      act = { cat: cat, type: type, id: item.id };
+      var title = String(item.title || '').trim();
+      $('actTitle').textContent = title || '未命名';
+      var meta = type === 'synonyms' ? wordsOf(item.synonyms).length + ' 个词'
+        : type === 'hypernyms' ? '上义 ' + wordsOf(item.upper_words).length + ' · 下义 ' + wordsOf(item.lower_words).length
+        : CAT_NAME[cat] + ' · 做题技巧';
+      $('actMeta').textContent = meta;
+      var rows = type === 'techniques'
+        ? [['edit', ICON.edit, '编辑这篇'], ['delete', ICON.trash, '删除这篇']]
+        : [['edit', ICON.edit, '编辑词组'], ['rename', ICON.rename, '改组标题'], ['delete', ICON.trash, '删除这一组']];
+      $('actList').innerHTML = rows.map(function (r) {
+        return '<button class="st-acts__btn' + (r[0] === 'delete' ? ' st-acts__btn--danger' : '') + '" type="button" data-action="act" data-act="' + r[0] + '">' + svg(r[1]) + r[2] + '</button>';
+      }).join('');
+      showDialog($('actDlg'), closeActions);
+      $('actList').querySelector('button').focus({ preventScroll: true });
+    }
+    function closeActions() {
+      act = null;
+      return hideDialog($('actDlg'));
+    }
+    function runAction(which) {
+      var a = act;
+      if (!a) return;
+      // 先把面板（和它的历史记录）收掉，再开下一层
+      closeActions().then(function () {
+        var item = findItem(a.cat, a.type, a.id);
+        if (!item) return;
+        if (which === 'edit') {
+          if (a.type === 'techniques') go(href(a.cat, 'techniques', a.id, 'edit'));
+          else openGroupDialog(a.cat, a.type, item);
+        } else if (which === 'rename') {
+          openRenameSheet(a.cat, a.type, item);
+        } else if (which === 'delete') {
+          askDelete(a.cat, a.type, a.id);
+        }
+      });
+    }
+
+    // ---------- 手机：目录面板 ----------
+    function openTocSheet() {
+      var links = $('tocList').querySelectorAll('.st-toc__link');
+      if (!links.length) return;
+      $('tocSheetList').innerHTML = Array.prototype.map.call(links, function (a, i) {
+        var depth = (/\bis-d\d\b/.exec(a.className) || [''])[0];
+        var on = i === tocActive;
+        return '<li><a class="st-tocsheet__link ' + depth + (on ? ' is-active' : '') + '" href="#' + a.dataset.target + '" data-action="toc-sheet-go" data-target="' + a.dataset.target + '"' + (on ? ' aria-current="location"' : '') + '>' + esc(a.textContent) + '</a></li>';
+      }).join('');
+      showDialog($('tocDlg'), function () { hideDialog($('tocDlg')); });
+      // 当前读到的那一节放到面板中间
+      var box = $('tocDlgBox'), cur = $('tocSheetList').querySelector('.is-active');
+      if (cur) {
+        box.scrollTop += cur.getBoundingClientRect().top - box.getBoundingClientRect().top - box.clientHeight / 2;
+        cur.focus({ preventScroll: true });
+      }
     }
 
     // ---------- 删除 ----------
@@ -1562,6 +2001,7 @@
         ? 'title 可以不写，导入后按顺序叫「词汇组 1」「词汇组 2」……；每个词要有 word，definition 可以留空。'
         : 'title 可以不写，导入后按顺序叫「上下义词组 1」「上下义词组 2」……；upper_words 和 lower_words 至少有一个不为空，每个词要有 word。';
       $('importFile').value = '';
+      setSampleOpen(!PHONE.matches);
       renderImport();
       showDialog($('importDlg'), closeImport);
       $('importPick').focus();
@@ -1576,7 +2016,9 @@
       var busy = imp.state === 'importing';
       var r = imp.result;
       $('importFileName').textContent = imp.file ? imp.file.name : '还没选文件';
-      $('importFileHint').textContent = imp.file ? (Math.max(1, Math.round(imp.file.size / 1024)) + ' KB · 也可以把文件拖到这里') : '选一个 .json 文件，也可以把文件拖到这里';
+      // 手机上没法拖文件，不提拖放
+      var drag = PHONE.matches ? '' : '也可以把文件拖到这里';
+      $('importFileHint').textContent = imp.file ? (Math.max(1, Math.round(imp.file.size / 1024)) + ' KB' + (drag ? ' · ' + drag : '')) : '选一个 .json 文件' + (drag ? '，' + drag : '');
       $('importPick').textContent = imp.file ? '换一个文件' : '选择文件';
       $('importPick').disabled = busy;
       $('importClose').hidden = busy;
@@ -1716,6 +2158,12 @@
         }
       });
     }
+    // 手机上示例默认收起（桌面一直展开），点「查看示例」再展开，展开后长行自动折行，不用左右滑
+    function setSampleOpen(open) {
+      $('importSampleField').classList.toggle('is-collapsed', !open);
+      $('importSampleToggle').textContent = open ? '收起示例' : '查看示例';
+      $('importSampleToggle').setAttribute('aria-expanded', String(open));
+    }
     function copySample() {
       var text = $('importSample').textContent;
       var btn = $('importCopy');
@@ -1750,7 +2198,10 @@
         case 'type': go(href(route.cat, el.dataset.type)); break;
         case 'sort': {
           var type = focusState && el.closest('#focus') ? focusState.type : route.type;
-          sortOrder[type] = el.dataset.order;
+          var order = el.dataset.order;
+          // 手机上只露出当前那个排序，点它就换成另一种
+          if (PHONE.matches && el.classList.contains('is-on')) order = order === 'desc' ? 'asc' : 'desc';
+          sortOrder[type] = order;
           if (route.view === 'list') renderList();
           if (focusState) renderFocus();
           break;
@@ -1803,7 +2254,21 @@
         case 'delete':
           if (card) askDelete(card.dataset.cat, card.dataset.type, card.dataset.id);
           break;
-        case 'rename': startRename(el); break;
+        case 'rename': if (!PHONE.matches) startRename(el); break;
+        case 'more': if (card) openActions(card); break;
+        case 'act': runAction(el.dataset.act); break;
+        case 'rename-save': saveRename(); break;
+        case 'sample-toggle': setSampleOpen($('importSampleField').classList.contains('is-collapsed')); break;
+        case 'toc-open': openTocSheet(); break;
+        case 'toc-sheet-go': {
+          e.preventDefault();
+          var dest = $(el.dataset.target);
+          // 面板和它的历史记录收好了再滚，免得返回时浏览器又把页面滚回去
+          hideDialog($('tocDlg')).then(function () {
+            if (dest) dest.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          });
+          break;
+        }
         case 'toc-toggle':
           lsSet(TOC_KEY, $('toc').hidden ? 'false' : 'true');
           applyToc();
@@ -1845,6 +2310,12 @@
         startRename(e.target);
         return;
       }
+      if (e.key === 'Enter' && e.target.id === 'renameInput') {
+        if (e.isComposing || e.keyCode === 229) return;
+        e.preventDefault();
+        saveRename();
+        return;
+      }
       // 词组弹窗：回车跳到下一格，最后一格回车再加一行；Ctrl/⌘ + 回车保存
       if (e.key === 'Enter' && groupDlg && e.target.closest && e.target.closest('#groupDlg')) {
         if (e.isComposing || e.keyCode === 229) return;
@@ -1866,6 +2337,7 @@
 
     document.addEventListener('input', function (e) {
       if (e.target.closest && e.target.closest('#groupDlgBody')) updateRowCounts();
+      if (e.target.id === 'editorContent') growEditor();
       if (e.target.id === 'editorTitle' || e.target.id === 'editorContent') {
         updateEditorDirty();
         if (!$('editorErr').hidden && $('editorTitle').value.trim() && $('editorContent').value.trim()) $('editorErr').hidden = true;
@@ -1904,6 +2376,27 @@
         e.returnValue = '';
       }
     });
+
+    // ---------- 手机：列表往下翻收起科目 / 类型两排，往上翻再出来 ----------
+    var tuckY = 0;
+    window.addEventListener('scroll', function () {
+      if (!PHONE.matches || !route || route.view !== 'list') return;
+      var y = window.scrollY;
+      if (Math.abs(y - tuckY) < 8) return;
+      document.body.classList.toggle('st-tucked', y > tuckY && y > 240);
+      tuckY = y;
+    }, { passive: true });
+
+    // 跨过 820px（转屏、拖窗口）时重画一遍：改名方式、正文框高度、历史记录都跟着换
+    function onPhoneChange() {
+      syncViewport();
+      syncHistory();
+      if (!PHONE.matches) document.body.classList.remove('st-tucked');
+      if (route) { render(); growEditor(); }
+    }
+    if (PHONE.addEventListener) PHONE.addEventListener('change', onPhoneChange);
+    else if (PHONE.addListener) PHONE.addListener(onPhoneChange);
+    syncViewport();
 
     // ---------- 启动 ----------
     function start() {
