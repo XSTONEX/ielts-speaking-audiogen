@@ -358,22 +358,235 @@ async function summary(eng, browser) {
   check(`${tag} 没有页面报错`, errors.length === 0, errors);
   await ctx.close();
 
-  // ---- 手机 ----
+  // ---- 手机（细的检查在 phone 套件里）：先列文章，点一篇进到它的词，都是一行两张 ----
   const mctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
   await mctx.route('https://dict.youdao.com/**', r => r.abort());
   const merr = [];
   const m = await openPage(mctx, merr);
   await go(m, '/vocab_summary');
-  await m.waitForSelector('.vs-word');
+  await m.waitForSelector('.vs-art');
   check(`${tag} 手机不横向溢出`, await m.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
-  const mcards = await m.$$eval('.vs-word', els => els.slice(0, 2).map(e => e.getBoundingClientRect().x));
-  check(`${tag} 手机一行一张`, near(mcards[0], mcards[1]), mcards);
-  await m.click('#challengeBtn');
+  const marts = await m.$$eval('.vs-art', els => els.slice(0, 2).map(e => { const r = e.getBoundingClientRect(); return { x: r.x, y: r.y }; }));
+  check(`${tag} 手机文章一行两张`, near(marts[0].y, marts[1].y) && marts[1].x > marts[0].x, marts);
+  await m.locator('.vs-art').first().click();
+  await m.waitForSelector('.vs-word');
+  const mcards = await m.$$eval('.vs-word', els => els.slice(0, 2).map(e => { const r = e.getBoundingClientRect(); return { x: r.x, y: r.y }; }));
+  check(`${tag} 手机词卡一行两张`, near(mcards[0].y, mcards[1].y) && mcards[1].x > mcards[0].x, mcards);
+  await m.click('#vsBarStart');
   const dlg = await rect(m, '#challengeSetupModal .vs-dlg');
   check(`${tag} 手机弹窗不出屏`, dlg.x >= 0 && dlg.x + dlg.w <= 390, dlg);
   await m.screenshot({ path: path.join(OUT, `${eng}-summary-phone.png`) });
   check(`${tag} 手机没有页面报错`, merr.length === 0, merr);
   await mctx.close();
+}
+
+// ==================== 手机版式（≤820px） ====================
+// WebKit 390×844（iPhone 尺寸、触摸）和 Chromium 360×780（安卓手机模式）。每一段单独计分，前面出错不影响后面。
+// 键盘弹起用「把视口改成 470 高」模拟。
+async function phone(eng, browser) {
+  const tag = `[${eng} 手机]`;
+  const device = eng === 'webkit'
+    ? { viewport: { width: 390, height: 844 }, hasTouch: true, deviceScaleFactor: 2 }
+    : { viewport: { width: 360, height: 780 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 };
+  const W = device.viewport.width, H = device.viewport.height, KB = 470;
+  const errors = [];
+  const ctx = await browser.newContext(Object.assign({ acceptDownloads: true }, device));
+  await ctx.route('https://dict.youdao.com/**', r => r.abort());
+  await ctx.addInitScript(() => { try { window.__jumpAtStart = sessionStorage.getItem('jumpToHighlight'); } catch (e) {} });
+  const p = await ctx.newPage();
+  p.on('pageerror', e => errors.push(new URL(p.url()).pathname + ': ' + e.message));
+  const dialogs = []; let acceptNext = false;
+  p.on('dialog', d => { dialogs.push(d.message()); if (acceptNext) { acceptNext = false; d.accept(); } else d.dismiss(); });
+  await p.goto(BASE + '/static/plain.css', { waitUntil: 'commit' });
+  await p.evaluate(t => localStorage.setItem('authToken', t), TOKEN);
+  const box = async sel => p.evaluate(sel => { const e = document.querySelector(sel); if (!e) return null; const r = e.getBoundingClientRect(); const cs = getComputedStyle(e); return { x: r.x, y: r.y, w: r.width, h: r.height, b: r.bottom, r: r.right, vis: cs.display !== 'none' && cs.visibility !== 'hidden' && r.width > 0, fs: parseFloat(cs.fontSize) }; }, sel);
+  const back = async () => { await p.evaluate(() => history.back()); await sleep(500); };
+  const shot = name => p.screenshot({ path: path.join(OUT, `${eng}-phone-${name}.png`) }).catch(() => {});
+  const noOverflow = () => p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
+  async function section(name, fn) {
+    try { await fn(); } catch (e) { check(`${tag} ${name}：中途出错`, false, e.message.split('\n').slice(0, 3).join(' | ')); await shot('crash-' + name); }
+  }
+  const master = async () => { await go(p, '/vocab_summary'); await p.waitForSelector('.vs-art', { timeout: 15000 }); await sleep(400); };
+
+  await section('文章列表', async () => {
+    await master();
+    check(`${tag} 不横向溢出`, await noOverflow());
+    const arts = await p.$$eval('.vs-art', els => els.map(e => { const r = e.getBoundingClientRect(); return { x: Math.round(r.x), y: Math.round(r.y), fs: parseFloat(getComputedStyle(e.querySelector('.vs-art__title')).fontSize) }; }));
+    check(`${tag} 文章一行两张、标题 ≥ 15px`, arts.length === 3 && arts[0].y === arts[1].y && arts[1].x > arts[0].x && arts[2].y > arts[0].y && arts[0].fs >= 15, arts);
+    check(`${tag} 第一屏先列文章，不再先看 240px 的嵌套小列表`, !(await box('.vs-pane')).vis && !(await box('.vs-head__desc')).vis);
+    const seg = await box('#tab-Reading'), more = await box('#vsMoreBtn'), start = await box('#vsBarStart');
+    check(`${tag} 分类按钮 ≥ 40px，⋯ 44px`, seg.h >= 40 && more.w >= 44 && more.h >= 44, { seg, more });
+    check(`${tag} 开始挑战钉在底部、整宽`, start.vis && start.h >= 44 && Math.round(start.b) <= H && start.w >= W * 0.8, start);
+    await p.evaluate(() => window.scrollTo(0, 99999)); await sleep(150);
+    const note = await box('#railNote'), bar = await box('#vsBar');
+    check(`${tag} 翻到底，文章列表下面的说明不被底栏挡住`, note.b <= bar.y, { note: note.b, bar: bar.y });
+    await p.evaluate(() => window.scrollTo(0, 0));
+    check(`${tag} 旧的导出 / 挑战记录 / 开始挑战按钮收起来了`, !(await box('#exportBtn')).vis && !(await box('#historyBtn')).vis && !(await box('#challengeBtn')).vis);
+    await shot('01-master');
+  });
+
+  await section('⋯ 面板', async () => {
+    await master();
+    await p.tap('#vsMoreBtn'); await sleep(350);
+    const sheet = await box('#vsMoreSheet .ui-dialog');
+    const rows = await p.$$eval('#vsMoreSheet .vs-sheet-row', els => els.map(e => Math.round(e.getBoundingClientRect().height)));
+    check(`${tag} ⋯ 面板从底部升起、四行都 ≥ 44px、不出屏`, sheet.vis && Math.round(sheet.b) === H && sheet.x >= 0 && sheet.r <= W && rows.length === 4 && rows.every(h => h >= 44), { sheet, rows });
+    check(`${tag} 当前文章那一行写着文章名和词数`, (await p.textContent('#moreCurrentDesc')).includes('9 个词'));
+    check(`${tag} 打开面板压了一条历史`, await p.evaluate(() => !!(history.state && history.state.vsLayer === 'vsMoreSheet')));
+    await shot('02-more');
+    await back();
+    check(`${tag} 系统返回关掉 ⋯ 面板`, !(await visible(p, '#vsMoreSheet')));
+    await p.tap('#vsMoreBtn'); await sleep(300);
+    const file = await download(p, () => p.tap('[data-more="current"]'));
+    check(`${tag} 从 ⋯ 导出当前文章`, file.name === `${DATA.lighthouseTitle}_词汇.csv` && file.text.split('\n').length >= 10, file.name);
+    await sleep(400);
+    check(`${tag} 导出后面板收起`, !(await visible(p, '#vsMoreSheet')));
+  });
+
+  await section('第二屏', async () => {
+    await master();
+    await p.evaluate(() => window.scrollTo(0, 0));
+    await p.locator('.vs-art', { hasText: 'Night Ferry' }).tap();
+    await p.waitForFunction(() => document.querySelectorAll('.vs-word').length === 6);
+    await sleep(300);
+    const words = await p.$$eval('.vs-word', els => els.slice(0, 3).map(e => { const r = e.getBoundingClientRect(); return { x: Math.round(r.x), y: Math.round(r.y) }; }));
+    check(`${tag} 点一篇进到它的词，一行两张`, words[0].y === words[1].y && words[1].x > words[0].x && words[2].y > words[0].y, words);
+    check(`${tag} 进第二屏压了一条历史`, (await p.evaluate(() => !!(history.state && history.state.vsLayer === 'detail'))) && !(await box('.vs-rail')).vis);
+    const backBtn = await box('#vsPaneBack'), search = await box('#vocabSearch'), jump = await box('.vs-word .vs-jump');
+    check(`${tag} ‹ 44px、搜索框 16px、↗ 44px`, backBtn.w >= 44 && backBtn.h >= 44 && search.fs >= 16 && search.h >= 44 && jump.w >= 44 && jump.h >= 44, { backBtn, fs: search.fs, jump });
+    check(`${tag} 底栏变成只挑这一篇`, (await p.textContent('#vsBarStart')) === '用这篇开始挑战');
+    await shot('03-detail');
+    await p.evaluate(() => window.scrollTo(0, 400)); await sleep(200);
+    const s2 = await box('#vocabSearch');
+    check(`${tag} 往下翻时搜索框吸在导航栏下面`, s2.y > 40 && s2.y < 130, s2);
+    await p.evaluate(() => window.scrollTo(0, 99999)); await sleep(200);
+    const lastWord = await p.evaluate(() => { const ws = document.querySelectorAll('.vs-word'); return Math.round(ws[ws.length - 1].getBoundingClientRect().bottom); });
+    const barTop = (await box('#vsBar')).y;
+    check(`${tag} 翻到底，最后一张词卡不被底栏挡住`, lastWord <= barTop, { lastWord, barTop });
+    await back();
+    check(`${tag} 系统返回回到文章列表`, (await box('.vs-rail')).vis && !(await box('.vs-pane')).vis && new URL(p.url()).pathname === '/vocab_summary');
+    await p.locator('.vs-art').first().tap(); await p.waitForSelector('.vs-word'); await sleep(200);
+    await p.tap('#vsPaneBack'); await sleep(450);
+    check(`${tag} ‹ 也回到文章列表`, (await box('.vs-rail')).vis && (await p.$$eval('.vs-art', els => els.length)) === 3);
+  });
+
+  await section('跳到原文', async () => {
+    await master();
+    await p.locator('.vs-art').first().tap(); await p.waitForSelector('.vs-word'); await sleep(200);
+    const hid = await p.locator('.vs-word', { hasText: 'gale' }).getAttribute('data-hid');
+    const pages = ctx.pages().length;
+    await p.locator('.vs-word', { hasText: 'gale' }).locator('.vs-jump').tap();
+    await p.waitForURL(/\/intensive#article-/, { timeout: 8000 });
+    check(`${tag} ↗ 在同一个标签页打开原文`, ctx.pages().length === pages && p.url().endsWith('/intensive#article-' + DATA.LIGHTHOUSE), p.url());
+    check(`${tag} 原文页拿到要滚到的高亮`, (await p.evaluate(() => window.__jumpAtStart)) === hid, hid);
+    await p.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {});
+    await p.goBack({ waitUntil: 'commit' }); await sleep(800);
+    check(`${tag} 返回回到词汇汇总`, new URL(p.url()).pathname === '/vocab_summary', p.url());
+  });
+
+  await section('开始挑战', async () => {
+    await master();
+    await p.locator('.vs-art').first().tap(); await p.waitForSelector('.vs-word'); await sleep(200);
+    await p.tap('#vsBarStart'); await sleep(400);
+    const dlg = await box('#challengeSetupModal .vs-dlg');
+    const checked = await p.$$eval('#filteredArticles input:checked', els => els.map(e => e.value));
+    check(`${tag} 第二屏开始挑战：只勾这一篇`, checked.length === 1 && checked[0] === DATA.LIGHTHOUSE, checked);
+    check(`${tag} 开始挑战几乎占满屏幕、贴着底`, dlg.vis && Math.round(dlg.b) === H && dlg.h > H * 0.85 && dlg.x >= 0 && dlg.r <= W, dlg);
+    const start = await box('#startChallengeBtn'), cancel = await box('#challengeSetupModal .vs-dlg__foot [data-close]');
+    check(`${tag} 主按钮整宽、写着题数，没有「取消」`, start.w >= W * 0.8 && start.h >= 44 && /开始挑战 · \d+ 题/.test(await p.textContent('#startChallengeBtn')) && !cancel.vis, { start, label: await p.textContent('#startChallengeBtn') });
+    const v0 = await p.inputValue('#challengeWordCount');
+    await p.tap('.vs-step[data-step="-1"]'); await p.tap('.vs-step[data-step="-1"]');
+    const v1 = await p.inputValue('#challengeWordCount');
+    check(`${tag} 题数 − / ＋ 按钮`, Number(v1) === Number(v0) - 2 && (await p.inputValue('#wordCountSlider')) === v1, [v0, v1]);
+    const stepBox = await box('.vs-step');
+    check(`${tag} − / ＋ 44px、题数框 16px`, stepBox.w >= 44 && stepBox.h >= 44 && (await box('#challengeWordCount')).fs >= 16);
+    await shot('10-setup');
+    await p.focus('#challengeWordCount');
+    await p.setViewportSize({ width: W, height: KB }); await sleep(350);
+    await p.evaluate(() => document.getElementById('challengeWordCount').scrollIntoView({ block: 'center' })); await sleep(150);
+    const inp = await box('#challengeWordCount'), st2 = await box('#startChallengeBtn');
+    check(`${tag} 键盘弹起（${KB}px）时题数框和开始按钮都看得见`, inp.y >= 0 && inp.b <= st2.y && st2.b <= KB, { inp, st2 });
+    await shot('11-setup-keyboard');
+    await p.setViewportSize(device.viewport); await sleep(200);
+    await back();
+    check(`${tag} 系统返回关掉开始挑战`, !(await visible(p, '#challengeSetupModal')));
+  });
+
+  await section('答题', async () => {
+    await master();
+    await p.tap('#vsBarStart'); await sleep(300);
+    await p.check('#selectAllArticles');
+    await p.fill('#challengeWordCount', '5'); await p.dispatchEvent('#challengeWordCount', 'input');
+    await p.tap('#startChallengeBtn');
+    await p.waitForSelector('#challengeGameModal:not([hidden])'); await sleep(400);
+    const opts = await p.$$eval('#challengeOptions .vs-opt', els => els.map(e => Math.round(e.getBoundingClientRect().height)));
+    const skip = await box('#skipBtn'), quit = await box('#quitBtnTop'), dlg = await box('#challengeGameModal .vs-dlg');
+    check(`${tag} 答题全屏，选项 ≥ 64px，跳过整宽`, dlg.h > H * 0.85 && opts.length >= 2 && opts.every(h => h >= 64) && skip.w >= W * 0.8 && skip.h >= 44, { opts, skip, h: dlg.h });
+    check(`${tag} 左上角 ✕ 44px`, quit.vis && quit.w >= 44 && quit.h >= 44, quit);
+    const firstOpt = await box('#challengeOptions .vs-opt');
+    check(`${tag} 选项在下半屏（拇指够得着）`, firstOpt.y > H * 0.35, firstOpt);
+    await shot('20-game');
+    // 系统返回：先问一句；取消就还在答题
+    const n0 = dialogs.length;
+    await back();
+    check(`${tag} 答题中按返回先问一句，取消就接着答`, dialogs.length === n0 + 1 && /退出这次挑战/.test(dialogs[n0]) && await visible(p, '#challengeGameModal'));
+    acceptNext = true;
+    await back();
+    check(`${tag} 确认后退出答题`, !(await visible(p, '#challengeGameModal')) && new URL(p.url()).pathname === '/vocab_summary');
+  });
+
+  await section('结果', async () => {
+    await master();
+    await p.tap('#vsBarStart'); await sleep(300);
+    await p.check('#selectAllArticles');
+    await p.fill('#challengeWordCount', '5'); await p.dispatchEvent('#challengeWordCount', 'input');
+    await p.tap('#startChallengeBtn');
+    await p.waitForSelector('#challengeGameModal:not([hidden])');
+    for (let n = 1; n <= 5; n++) {
+      await p.waitForFunction(n => document.getElementById('challengeProgress').textContent.startsWith(`第 ${n} /`) && !document.getElementById('skipBtn').disabled, n, { timeout: 8000 });
+      await p.tap('#skipBtn');
+    }
+    await p.waitForSelector('#challengeResultModal:not([hidden])', { timeout: 8000 }); await sleep(300);
+    const rows = await p.$$eval('#wrongWordsSection .vs-list__row', els => els.slice(0, 2).map(e => { const w = e.querySelector('.vs-list__word').getBoundingClientRect(); const pk = e.querySelector('.vs-list__pick').getBoundingClientRect(); return { below: pk.top >= w.bottom - 1, left: Math.round(pk.left - w.left) }; }));
+    check(`${tag} 结果里「跳过 / 选了」另起一行、左对齐`, rows.length === 2 && rows.every(r => r.below && Math.abs(r.left) < 2), rows);
+    const again = await box('#restartBtn'), review = await box('#reviewWrongBtn'), close = await box('#challengeResultModal .vs-dlg__foot [data-close]');
+    check(`${tag} 结果底栏：复习 + 再来一次，都 ≥ 44px，主按钮在右`, again.h >= 44 && review.h >= 44 && again.x > review.x && Math.round(again.b) <= H && !close.vis, { again, review });
+    await shot('30-result');
+    await back();
+    check(`${tag} 系统返回关掉结果`, !(await visible(p, '#challengeResultModal')));
+  });
+
+  await section('挑战记录', async () => {
+    await master();
+    await p.tap('#vsMoreBtn'); await sleep(300);
+    await p.tap('[data-more="history"]'); await sleep(500);
+    const dlg = await box('#challengeHistoryModal .vs-dlg'), tab = await box('#recentTab'), close = await box('#challengeHistoryModal .vs-dlg__foot [data-close]');
+    check(`${tag} 挑战记录全屏、分段标签 ≥ 40px、没有重复的「关闭」`, dlg.h > H * 0.85 && tab.h >= 40 && !close.vis, { h: dlg.h, tab: tab.h });
+    const recBtns = await p.$$eval('.vs-rec .ui-btn', els => els.slice(0, 2).map(e => Math.round(e.getBoundingClientRect().height)));
+    check(`${tag} 最近挑战的按钮 ≥ 44px`, recBtns.length === 2 && recBtns.every(h => h >= 44), recBtns);
+    await shot('40-history');
+    await p.tap('#wrongTab'); await sleep(300);
+    const ww = await p.$$eval('.vs-ww', els => els.slice(0, 1).map(e => [...e.querySelectorAll('button')].map(b => Math.round(b.getBoundingClientRect().height))));
+    check(`${tag} 错词本的 ▶ 和「记住了」≥ 44px`, ww.length && ww[0].every(h => h >= 44), ww);
+    check(`${tag} 挑战记录不横向溢出`, await p.evaluate(() => { const b = document.getElementById('historyContent'); return b.scrollWidth <= b.clientWidth + 1; }));
+    await shot('41-history-wrong');
+    await back();
+    check(`${tag} 系统返回关掉挑战记录`, !(await visible(p, '#challengeHistoryModal')));
+  });
+
+  await section('暗色', async () => {
+    await p.emulateMedia({ colorScheme: 'dark' });
+    await master();
+    check(`${tag} 暗色文章卡底色`, (await p.$eval('.vs-art:not(.active)', e => getComputedStyle(e).backgroundColor)) === 'rgb(30, 30, 30)');
+    await shot('50-dark-master');
+    await p.locator('.vs-art').first().tap(); await p.waitForSelector('.vs-word'); await sleep(200);
+    check(`${tag} 暗色词卡底色`, (await p.$eval('.vs-word', e => getComputedStyle(e).backgroundColor)) === 'rgb(30, 30, 30)');
+    await shot('51-dark-detail');
+    await p.emulateMedia({ colorScheme: 'light' });
+  });
+
+  check(`${tag} 没有页面报错`, errors.length === 0, errors);
+  await ctx.close();
 }
 
 // ==================== 登录 ====================
@@ -472,7 +685,8 @@ async function login(eng, browser) {
 
 (async () => {
   const args = process.argv.slice(2);
-  const suites = ['summary', 'login'].filter(s => !args.some(a => ['summary', 'login'].includes(a)) || args.includes(s));
+  const SUITES = ['summary', 'login', 'phone'];
+  const suites = SUITES.filter(s => !args.some(a => SUITES.includes(a)) || args.includes(s));
   const engines = ['chromium', 'webkit'].filter(e => !args.some(a => ['chromium', 'webkit'].includes(a)) || args.includes(e));
   for (const eng of engines) {
     resetData();
@@ -480,7 +694,7 @@ async function login(eng, browser) {
     const before = { passed, failed };
     for (const s of suites) {
       try {
-        await (s === 'summary' ? summary : login)(eng, browser);
+        await ({ summary, login, phone })[s](eng, browser);
       } catch (e) {
         failed++;
         console.log('FAIL', `[${eng} ${s}] 出错中断：`, e && e.stack ? e.stack.split('\n').slice(0, 4).join(' | ') : e);

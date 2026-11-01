@@ -141,6 +141,78 @@ body.page-intensive-new .ir-part .ir-input { font: 600 16px var(--w-en); backgro
   .ir-card { padding: 16px; }
   .ir-tabs { margin-top: 20px; }
 }
+
+/* 只在手机上出现的元素 */
+.ir-phone, .ir-paste, .ir-l-retry { display: none; }
+.ir-seg-track { display: contents; }
+
+/* ==================== 手机（≤820px） ====================
+   顶上 ‹ 文章精读、标题、一行说明，两种添加方式是分段按钮；所有字段 16px；
+   「导入」「创建」钉在屏幕底部（键盘弹起时托在键盘上面），翻译失败时底栏换成「不翻译，直接导入 / 重试翻译」。 */
+@media (max-width: 820px) {
+  .ir-desk { display: none !important; }
+  .ir-page { padding: 8px 16px calc(132px + env(safe-area-inset-bottom)); }
+  .ir-back { min-height: 44px; margin-left: -6px; padding-right: 8px; font-size: 15px; }
+  .ir-back svg { width: 20px; height: 20px; }
+  .ir-h1 { margin: 0 0 2px; font-size: 20px; }
+  .ir-sub { font-size: 14px; line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .ir-tabs { display: block; margin: 14px 0 12px; border-bottom: none; }
+  .ir-seg-track { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; padding: 3px; border: 1px solid var(--w-line); border-radius: 10px; background: var(--w-sunken); }
+  .ir-tabs button { height: 40px; margin: 0; padding: 0 6px; border: none; border-radius: 8px; font-size: 15px; }
+  .ir-tabs button.active { background: var(--w-surface); border: none; box-shadow: 0 0 0 1px var(--w-line), 0 1px 2px rgba(0, 0, 0, .06); }
+  .ir-card { padding: 16px; }
+  .ir-hint { font-size: 14px; }
+  /* 粘贴：先给一个大按钮读剪贴板（浏览器支持才出现），手动长按粘贴照样能用 */
+  .has-clipboard .ir-paste { display: flex; flex-direction: column; align-items: stretch; gap: 6px; margin-bottom: 12px; }
+  .ir-paste-btn { height: 52px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px dashed var(--w-accent); border-radius: var(--w-r-card); background: var(--w-accent-soft); color: var(--w-accent); font: 600 16px/1 var(--w-cn); }
+  .ir-paste-btn svg { width: 20px; height: 20px; }
+  .ir-paste span { font-size: 13px; color: var(--w-ink3); text-align: center; }
+  body.page-intensive-new .ir-textarea.is-mono { min-height: 132px; font-size: 16px; line-height: 1.5; }
+  body.page-intensive-new .ir-input, body.page-intensive-new .ir-textarea { font-size: 16px; }
+  body.page-intensive-new .ir-input { height: 48px; }
+  body.page-intensive-new .ir-part .ir-input { font-size: 16px; }
+  .ir-part-label { font-size: 13px; }
+  .ir-facts { font-size: 14px; }
+  .ir-chip { padding: 2px 10px; font-size: 13px; }
+  .ir-label { font-size: 14px; }
+  /* 分类：分段按钮代替下拉框 */
+  .ir-row { display: block; }
+  .ir-row > .ir-label { margin: 0 0 6px !important; }
+  body.page-intensive-new .ir-select { display: none; }
+  .ir-segs.ir-phone { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; padding: 3px; border: 1px solid var(--w-line); border-radius: 10px; background: var(--w-sunken); }
+  .ir-segs button { height: 40px; padding: 0 2px; border: none; border-radius: 8px; background: transparent; color: var(--w-ink2); font: 500 15px/1 var(--w-cn); }
+  .ir-segs button.is-on { background: var(--w-surface); color: var(--w-ink); font-weight: 600; box-shadow: 0 0 0 1px var(--w-line); }
+  /* 逐句翻译：一整行开关，说明在下面 */
+  .ir-check { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 2px 12px; min-height: 48px; margin-top: 14px; font-size: 16px; }
+  .ir-check input {
+    grid-column: 2; grid-row: 1; width: 48px; height: 30px; -webkit-appearance: none; appearance: none; border-radius: 15px; cursor: pointer;
+    background: radial-gradient(circle at 15px 50%, #fff 11px, transparent 12px), var(--w-line-strong); transition: background .15s;
+  }
+  .ir-check input:checked { background: radial-gradient(circle at 33px 50%, #fff 11px, transparent 12px), var(--w-accent); }
+  .ir-check small { grid-column: 1 / -1; grid-row: 2; font-size: 13px; }
+  /* 图片：第一格是「＋ 添加图片」，一行三格 */
+  .ir-field--images { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ir-field--images > .ir-label { flex: 1 0 100%; margin-bottom: 0; }
+  .ir-field--images .ir-images { display: contents; }
+  .ir-add-img, .ir-thumb { flex: 0 0 calc((100% - 16px) / 3); width: auto; height: auto; aspect-ratio: 1; }
+  .ir-add-img { flex-direction: column; gap: 2px; padding: 0; border-style: dashed; color: var(--w-accent); font-size: 14px; }
+  .ir-add-img .ir-phone { display: block; text-align: center; line-height: 1.5; }
+  .ir-add-img b { display: block; font-size: 24px; font-weight: 400; line-height: 1; }
+  .ir-thumb button { top: 0; right: 0; width: 44px; height: 44px; border-radius: 0; background: radial-gradient(circle, rgba(0, 0, 0, .6) 15px, transparent 16px); font-size: 14px; line-height: 44px; }
+  /* 底部操作栏：导入 / 创建，键盘弹起时托在键盘上面 */
+  .ir-actions {
+    position: fixed; left: 0; right: 0; bottom: var(--ir-kb, 0px); z-index: 1100; margin: 0;
+    display: flex; flex-wrap: wrap; gap: 8px; padding: 10px max(16px, env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    background: var(--w-surface); border-top: 1px solid var(--w-line); box-shadow: 0 -4px 16px rgba(0, 0, 0, .06);
+  }
+  .ir-actions .ir-btn { flex: 1 1 0; height: 48px; font-size: 16px; }
+  .ir-actions .ir-msg { order: -1; flex: 1 0 100%; font-size: 14px; line-height: 1.5; }
+  .ir-actions .ir-msg:empty { display: none; }
+  .ir-actions.is-failed #importNoZhBtn { order: 1; background: var(--w-accent); border-color: var(--w-accent); color: var(--accent-contrast); }
+  .ir-actions.is-failed #importBtn { order: 2; background: var(--w-surface); border-color: var(--w-line); color: var(--w-ink); }
+  .ir-actions.is-failed #importBtn .ir-l-def { display: none; }
+  .ir-actions.is-failed #importBtn .ir-l-retry { display: inline; }
+}
   </style>
   <link rel="stylesheet" href="/static/theme.css?v=20261101m">
   <script src="/static/theme.js?v=20261101m" defer></script>
@@ -156,14 +228,18 @@ body.page-intensive-new .ir-part .ir-input { font: 600 16px var(--w-en); backgro
     <div class="ir-sub">导入九分学长的做题记录，原文、题目和你的作答都会还原；也可以直接粘贴一篇文章。</div>
 
     <div class="ir-tabs" role="tablist">
+      <div class="ir-seg-track">
       <button id="tab-json" class="active" role="tab" onclick="setMode('json')">九分学长 JSON</button>
       <button id="tab-text" role="tab" onclick="setMode('text')">粘贴文本</button>
+      </div>
     </div>
 
     <!-- 九分学长 JSON -->
     <section id="pane-json" class="ir-card">
       <p class="ir-hint">把九分学长作答结果接口返回的整段 JSON 粘贴进来（一般以 <code>{"code": "200"</code> 开头）。前后多带了几个字没关系，会自动认出来。</p>
-      <textarea id="raw" class="ir-textarea is-mono" spellcheck="false" placeholder='{"code": "200", "data": { "attempt": { ... } } }'></textarea>
+      <!-- 手机：读剪贴板的大按钮（浏览器支持 navigator.clipboard.readText 才出现） -->
+      <div class="ir-paste"><button type="button" class="ir-paste-btn" onclick="pasteFromClipboard()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>从剪贴板粘贴</button><span>或者在下面的框里长按、粘贴</span></div>
+      <textarea id="raw" class="ir-textarea is-mono" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder='{"code": "200", "data": { "attempt": { ... } } }'></textarea>
       <div id="preview" class="ir-preview"></div>
       <div class="ir-row">
         <label class="ir-label" for="jsonCategory" style="margin:0;">分类</label>
@@ -172,10 +248,11 @@ body.page-intensive-new .ir-part .ir-input { font: 600 16px var(--w-en); backgro
           <option value="Listening">Listening</option>
           <option value="Writing">Writing</option>
         </select>
+        <div class="ir-segs ir-phone" data-for="jsonCategory"><button type="button" data-cat="Reading">Reading</button><button type="button" data-cat="Listening">Listening</button><button type="button" data-cat="Writing">Writing</button></div>
         <label class="ir-check"><input type="checkbox" id="translate" checked>逐句翻译成中文 <small>导入时翻一次，约半分钟</small></label>
       </div>
       <div class="ir-actions">
-        <button class="ir-btn ir-btn-primary" id="importBtn" onclick="importJson(true)" disabled>导入</button>
+        <button class="ir-btn ir-btn-primary" id="importBtn" onclick="importJson(true)" disabled><span class="ir-l-def">导入</span><span class="ir-l-retry">重试翻译</span></button>
         <button class="ir-btn" id="importNoZhBtn" onclick="importJson(false)" style="display: none;">不翻译，直接导入</button>
         <span id="importMsg" class="ir-msg"></span>
       </div>
@@ -185,7 +262,7 @@ body.page-intensive-new .ir-part .ir-input { font: 600 16px var(--w-en); backgro
     <section id="pane-text" class="ir-card" hidden>
       <div class="ir-field">
         <label class="ir-label" for="title">标题</label>
-        <input id="title" class="ir-input" type="text" placeholder="可以不填">
+        <input id="title" class="ir-input" type="text" placeholder="可以不填" enterkeyhint="next">
       </div>
       <div class="ir-field">
         <label class="ir-label" for="category">分类</label>
@@ -194,14 +271,15 @@ body.page-intensive-new .ir-part .ir-input { font: 600 16px var(--w-en); backgro
           <option value="Listening">Listening</option>
           <option value="Writing">Writing</option>
         </select>
+        <div class="ir-segs ir-phone" data-for="category"><button type="button" data-cat="Reading">Reading</button><button type="button" data-cat="Listening">Listening</button><button type="button" data-cat="Writing">Writing</button></div>
       </div>
       <div class="ir-field">
         <label class="ir-label" for="content">正文</label>
         <textarea id="content" class="ir-textarea" placeholder="整篇粘贴进来。一句英文一行、译文紧跟在下一行，阅读时就是逐句对照。创建后正文不能再改，只能高亮和记释义。"></textarea>
       </div>
-      <div class="ir-field">
+      <div class="ir-field ir-field--images">
         <label class="ir-label">图片（可选）</label>
-        <button type="button" class="ir-btn" onclick="triggerImageUpload()">选择图片</button>
+        <button type="button" class="ir-btn ir-add-img" onclick="triggerImageUpload()"><span class="ir-desk">选择图片</span><span class="ir-phone"><b>＋</b>添加图片</span></button>
         <div class="ir-images" id="imagesPreview"></div>
       </div>
       <div class="ir-actions">
@@ -229,6 +307,42 @@ body.page-intensive-new .ir-part .ir-input { font: 600 16px var(--w-en); backgro
     }
     window.onload=function(){ checkStoredToken().then(valid=>{ if(!valid){ window.location.href='/login'; } }); restoreMode(); }
 
+    // ===== 手机（≤820px） =====
+    const phoneMQ = window.matchMedia ? window.matchMedia('(max-width: 820px)') : { matches: false };
+    function isPhone(){ return !!phoneMQ.matches; }
+    // 能读剪贴板才显示「从剪贴板粘贴」
+    if(navigator.clipboard && typeof navigator.clipboard.readText === 'function') document.body.classList.add('has-clipboard');
+    function pasteFromClipboard(){
+      navigator.clipboard.readText().then(text => {
+        if(!text || !text.trim()){ setMsg('importMsg', '剪贴板是空的，先去九分学长复制作答结果', 'err'); return; }
+        const raw = document.getElementById('raw'); raw.value = text; raw.dispatchEvent(new Event('input'));
+      }).catch(() => setMsg('importMsg', '没读到剪贴板（浏览器没给权限），请在下面的框里长按粘贴', 'err'));
+    }
+    // 分类：手机上是分段按钮，选中的值仍然写回原来的下拉框
+    document.querySelectorAll('.ir-segs[data-for]').forEach(seg => {
+      const sel = document.getElementById(seg.dataset.for);
+      const paint = () => seg.querySelectorAll('[data-cat]').forEach(b => { const on = b.dataset.cat === sel.value; b.classList.toggle('is-on', on); b.setAttribute('aria-pressed', String(on)); });
+      seg.addEventListener('click', e => { const b = e.target.closest('[data-cat]'); if(b){ sel.value = b.dataset.cat; paint(); } });
+      sel.addEventListener('change', paint); paint();
+    });
+    // 正文框跟着内容长高，不在小框里来回滚
+    const contentBox = document.getElementById('content');
+    contentBox.addEventListener('input', () => { if(!isPhone()) return; contentBox.style.height = 'auto'; contentBox.style.height = Math.max(220, contentBox.scrollHeight + 2) + 'px'; });
+    // 底栏的高度告诉提示条（浮在它上面）；键盘弹起时（iOS 只缩可视区域）把底栏托在键盘上面
+    function syncBottomBar(){
+      const b = document.body;
+      if(!isPhone()){ b.style.removeProperty('--ui-bottom-bar-h'); b.style.removeProperty('--ir-kb'); return; }
+      const bar = document.querySelector('section:not([hidden]) > .ir-actions');
+      b.style.setProperty('--ui-bottom-bar-h', (bar ? bar.offsetHeight : 0) + 'px');
+      const vv = window.visualViewport;
+      if(vv) b.style.setProperty('--ir-kb', Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)) + 'px');
+    }
+    if(window.visualViewport){ window.visualViewport.addEventListener('resize', syncBottomBar); window.visualViewport.addEventListener('scroll', syncBottomBar); }
+    if(window.ResizeObserver){ const ro = new ResizeObserver(syncBottomBar); document.querySelectorAll('.ir-actions').forEach(el => ro.observe(el)); }
+    if(phoneMQ.addEventListener) phoneMQ.addEventListener('change', syncBottomBar); else if(phoneMQ.addListener) phoneMQ.addListener(syncBottomBar);
+    // 导入 / 创建成功后打开文章：手机上替换掉这一页，系统返回回到文章列表，而不是又回到填好的导入页
+    function goToArticle(id){ const url = '/intensive#article-' + id; if(isPhone()) location.replace(url); else location.href = url; }
+
     function escapeHtml(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c])); }
     function setMsg(id, text, kind){ const el=document.getElementById(id); el.textContent=text||''; el.className='ir-msg' + (kind ? ' is-' + kind : ''); }
 
@@ -239,6 +353,7 @@ body.page-intensive-new .ir-part .ir-input { font: 600 16px var(--w-en); backgro
         document.getElementById('pane-'+m).hidden = m!==mode;
       });
       try{ localStorage.setItem('intensiveNewMode', mode); }catch(e){}
+      if(typeof syncBottomBar === 'function') syncBottomBar();
     }
     function restoreMode(){ let m='json'; try{ m = localStorage.getItem('intensiveNewMode') || 'json'; }catch(e){} setMode(m === 'text' ? 'text' : 'json'); }
 
@@ -250,7 +365,7 @@ body.page-intensive-new .ir-part .ir-input { font: 600 16px var(--w-en); backgro
     document.getElementById('raw').addEventListener('input', function(){
       clearTimeout(previewTimer);
       previewParts = null; refreshImportButtons();
-      document.getElementById('importNoZhBtn').style.display = 'none'; setMsg('importMsg', '');
+      document.getElementById('importNoZhBtn').style.display = 'none'; document.getElementById('importBtn').parentNode.classList.remove('is-failed'); setMsg('importMsg', '');
       const raw = this.value;
       if(!raw.trim()){ document.getElementById('preview').innerHTML=''; return; }
       previewTimer = setTimeout(() => loadPreview(raw), 400);
@@ -303,11 +418,12 @@ body.page-intensive-new .ir-part .ir-input { font: 600 16px var(--w-en); backgro
         .then(d => {
           if(d.success){
             setMsg('importMsg', (d.warnings || []).join('；') || '导入好了，正在打开…', 'ok');
-            setTimeout(() => { location.href = '/intensive#article-' + d.ids[0]; }, (d.warnings || []).length ? 1500 : 300);
+            setTimeout(() => { goToArticle(d.ids[0]); }, (d.warnings || []).length ? 1500 : 300);
             return;
           }
           setMsg('importMsg', d.error || '导入失败', 'err');
           noZh.style.display = d.translate_failed ? '' : 'none';
+          btn.parentNode.classList.toggle('is-failed', !!d.translate_failed);   // 手机底栏：「不翻译，直接导入」变成主按钮
           btn.innerHTML = label; btn.disabled = false; noZh.disabled = false;
         })
         .catch(() => { setMsg('importMsg', '网络出错，没导入成功，可以再试一次', 'err'); btn.innerHTML = label; btn.disabled = false; noZh.disabled = false; });
@@ -334,7 +450,7 @@ body.page-intensive-new .ir-part .ir-input { font: 600 16px var(--w-en); backgro
             uploadImagesForArticle(articleId, createBtn, originalContent);
           } else {
             setMsg('createMsg', '创建好了，正在打开…', 'ok');
-            setTimeout(()=>{ location.href = '/intensive#article-' + articleId; }, 300);
+            setTimeout(()=>{ goToArticle(articleId); }, 300);
           }
         } else {
           setMsg('createMsg', d.error||'创建失败', 'err');
@@ -367,7 +483,7 @@ body.page-intensive-new .ir-part .ir-input { font: 600 16px var(--w-en); backgro
           else setMsg('createMsg', '创建好了，但图片没传上去', 'err');
         })
         .catch(error => { console.error('图片上传失败:', error); setMsg('createMsg', '创建好了，但图片没传上去', 'err'); })
-        .finally(() => { setTimeout(()=>{ location.href = '/intensive#article-' + articleId; }, 1000); });
+        .finally(() => { setTimeout(()=>{ goToArticle(articleId); }, 1000); });
     }
 
     // 图片相关功能

@@ -1,5 +1,5 @@
 // /intensive/new 导入九分学长 JSON → 文章页：原文、题目栏（对错、解析、定位原文）、成绩、做题时的划线；
-// 再看一篇带译文的导入文章、一篇普通旧文章，以及粘贴文本模式和手机上的「原文 / 题目」切换。
+// 再看一篇带译文的导入文章、一篇普通旧文章，以及粘贴文本模式和手机上的题目面板（只露一题 / 展开列表 / 定位原文）。
 // 导入用的是 tests/fixtures/jiufen_reading_attempt.json（编的「The Glass Bridge」，3 段 8 句 5 题，对 2/5，用时 10:00）。
 const fs = require('fs');
 const path = require('path');
@@ -149,22 +149,25 @@ module.exports = async function suiteImport({ cfg, browser, engine, t, lib }) {
     ok(await p.isVisible('#pane-text') && !(await p.isVisible('#pane-json')), 'remembers last mode');
     await p.click('#tab-json');
 
-    // ---- 手机：原文 / 题目两个标签；定位原文切到原文，切回题目还在原来的位置 ----
+    // ---- 手机：题目是底部面板，平时只露当前一题；定位原文时面板收成一题、原文滚到面板上方，展开列表还在原来的位置 ----
     pc = await lib.newContext(cfg, browser, { viewport: { width: 390, height: 844 }, hasTouch: true });
     const m = await lib.newPage(pc, 10000); m.on('pageerror', e => errs.push('phone ' + e));
     await m.goto(BASE + '/intensive#article-' + encodeURIComponent(IDS.glassBridge));
     await m.waitForFunction(() => currentArticle && document.querySelector('#examPane .ir-q')); await m.waitForTimeout(400);
-    const t0 = await m.evaluate(() => ({ tabs: getComputedStyle(document.getElementById('examTabs')).display, pane: getComputedStyle(document.getElementById('examPane')).display, label: document.getElementById('examTabQ').textContent }));
-    ok(t0.tabs === 'flex' && t0.pane === 'none' && t0.label === '题目 · 对 2/5', `phone opens on passage ${JSON.stringify(t0)}`);
-    await m.tap('#examTabQ'); await m.waitForTimeout(200);
+    const t0 = await m.evaluate(() => ({ tabs: getComputedStyle(document.getElementById('examTabs')).display, pane: getComputedStyle(document.getElementById('examPane')).display, btn: getComputedStyle(document.getElementById('examSheetBtn')).display }));
+    ok(t0.tabs === 'none' && t0.pane === 'none' && t0.btn !== 'none', `phone opens on passage, 题目 in the toolbar ${JSON.stringify(t0)}`);
+    await m.tap('#examSheetBtn'); await m.waitForTimeout(300);
+    const peek = await m.evaluate(() => ({ shown: [...document.querySelectorAll('#examPane .ir-q')].filter(q => getComputedStyle(q).display !== 'none').map(q => q.dataset.num), title: document.getElementById('qsTitle').textContent }));
+    ok(JSON.stringify(peek.shown) === '["1"]' && /第 1 题/.test(peek.title), `peek shows only the current question ${JSON.stringify(peek)}`);
+    await m.tap('#examPane .ir-qs-head .ir-qs-more'); await m.waitForTimeout(300);
     await m.evaluate(() => document.querySelector('#examPane .ir-q[data-num="5"]').scrollIntoView({ block: 'center' }));
     const sc = await m.evaluate(() => document.getElementById('examPane').scrollTop);
-    await m.tap('#examPane .ir-q[data-num="5"] [data-act="locate"]'); await m.waitForTimeout(700);
-    const ph = await m.evaluate(() => { const ev = [...document.querySelectorAll('#vContent p.ir-ev')]; const r = ev[0].getBoundingClientRect(); return { onText: !document.querySelector('#viewer .ir-body').classList.contains('show-q'), s: ev.map(p => p.dataset.s).join(), inView: r.top > 90 && r.bottom < innerHeight }; });
-    ok(ph.onText && ph.s === '7' && ph.inView, `phone locate → passage tab, sentence 7 ${JSON.stringify(ph)}`);
-    await m.tap('#examTabQ'); await m.waitForTimeout(200);
+    await m.tap('#examPane .ir-q[data-num="5"] [data-act="locate"]'); await m.waitForTimeout(900);
+    const ph = await m.evaluate(() => { const ev = [...document.querySelectorAll('#vContent p.ir-ev')]; const r = ev[0].getBoundingClientRect(); const pane = document.getElementById('examPane'); const top = pane.getBoundingClientRect().top; return { peek: pane.classList.contains('is-peek'), cur: document.querySelector('#examPane .ir-q.is-cur').dataset.num, s: ev.map(p => p.dataset.s).join(), inView: r.top > 52 && r.bottom < top }; });
+    ok(ph.peek && ph.cur === '5' && ph.s === '7' && ph.inView, `phone locate → sheet shrinks to Q5, sentence 7 visible above it ${JSON.stringify(ph)}`);
+    await m.tap('#examPane .ir-qs-head .ir-qs-more'); await m.waitForTimeout(300);
     const sc2 = await m.evaluate(() => document.getElementById('examPane').scrollTop);
-    ok(sc > 200 && Math.abs(sc2 - sc) < 2, `back to questions keeps position ${sc} → ${sc2}`);
+    ok(sc > 200 && Math.abs(sc2 - sc) < 2, `back to the full list keeps position ${sc} → ${sc2}`);
 
     ok(errs.length === 0, `page errors ${errs.join(' | ')}`);
   } catch (e) {

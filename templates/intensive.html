@@ -216,7 +216,9 @@ html[data-theme="dark"] body.page-intensive {
 .ir-title-edit .ir-btn { height: 34px; padding: 0 12px; }
 .ir-tools { flex: none; display: flex; align-items: center; gap: 2px; }
 
+/* ⋯ 是顶栏的直接子元素（手机上工具栏挪到底部，它留在顶栏），桌面上和工具栏按钮照旧只隔 2px */
 .ir-more { position: relative; }
+.ir-bar > .ir-more { margin-left: -6px; }
 .ir-menu {
   position: absolute; top: calc(100% + 6px); right: 0; z-index: 30;
   display: none; min-width: 188px; padding: 4px;
@@ -453,7 +455,8 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
 .ir-exam-empty { display: none; padding: 32px 0; text-align: center; font-size: 14px; color: var(--w-ink3); }
 .ir-exam.only-wrong.no-wrong .ir-exam-empty { display: block; }
 
-@media (max-width: 900px) {
+/* 821–900px 还是桌面版式，只是题目栏放不下，改用「原文 / 题目」切换。≤820px 是手机版式，见下面 */
+@media (min-width: 821px) and (max-width: 900px) {
   .ir-body.has-exam .ir-exam { position: absolute; inset: 0; flex: none; border-left: none; display: none; padding: 20px 18px 120px; }
   .ir-body.has-exam.show-q .ir-exam { display: block; }
   .ir-body.has-exam.show-q .ir-content { visibility: hidden; }
@@ -461,44 +464,352 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
   .ir-seg button { flex: 1; height: 32px; border: none; border-radius: var(--w-r-sm); background: transparent; color: var(--w-ink3); font: 500 14px/1 var(--w-cn); cursor: pointer; }
   .ir-seg button.active { background: var(--w-sunken); color: var(--w-ink); }
   .ir-body.has-exam .ir-content .reader { padding: 20px 18px 32px; }
+  /* 打开词汇面板时正文（和题目）让出面板的宽度，不再被面板盖住半截 */
+  .ir-body.has-exam .ir-content.panel-open { margin-right: var(--panel-width, 320px); }
+  .ir-body.has-exam.show-q:has(.ir-panel.active) .ir-exam { right: var(--panel-width, 320px); }
 }
 
-/* ==================== 手机 ==================== */
+/* ==================== 触屏 ==================== */
 @media (hover: none) {
   .ir-card-del { opacity: .6; }
   .image-delete-btn { opacity: 1; }
 }
-@media (max-width: 768px) {
-  .ir-home { padding: 20px 16px 48px; }
-  .ir-head { flex-direction: column; gap: 14px; margin-bottom: 20px; }
+
+/* 只在手机上出现的元素 */
+.ir-phone, .ir-qs-head, .ir-qs-bar, .ir-qs-nav { display: none; }
+.ir-seg-track, .ir-fb-row, .ir-mb-row, #irDock { display: contents; }
+@keyframes ir-sheet-in { from { transform: translateY(40px); opacity: .4; } to { transform: none; opacity: 1; } }
+
+/* ==================== 手机（≤820px） ====================
+   列表：标题一行 + 吸顶分类 + 一行两张卡 + 右下角「添加文章」。
+   阅读：正文就是整页滚动（Safari 的地址栏能收起，点状态栏回顶部）；顶栏只留 ‹ 标题 ⋯，
+   译文 / 朗读 / 词汇 / 题目放到底部工具栏，朗读的迷你播放条贴在工具栏上面。
+   划词、写释义、看词、⋯ 菜单、改标题、题目都是从底部升起的面板；系统返回键先关最上面一层。 */
+@media (max-width: 820px) {
+  .ir-desk { display: none !important; }
+
+  /* ---- 文章列表 ---- */
+  .ir-home { padding: 14px 16px calc(96px + env(safe-area-inset-bottom)); }
+  .ir-head { align-items: center; gap: 12px; margin-bottom: 6px; }
+  .ir-eyebrow, .ir-sub { display: none; }
+  .ir-h1 { margin: 0; font-size: 20px; }
   .ir-head-actions { padding-top: 0; }
-  .ir-tabs { gap: 20px; margin-bottom: 14px; }
-  .ir-list { grid-template-columns: 1fr; gap: 8px; }
-  .ir-card { min-height: 0; padding: 14px 16px; gap: 10px; }
+  .ir-head-actions .ir-btn { height: 44px; padding: 0 14px; font-size: 15px; }
+  /* 添加文章：右下角的悬浮按钮，单手拇指够得着 */
+  .ir-head-actions .ir-btn-primary {
+    position: fixed; z-index: 1100; right: max(16px, env(safe-area-inset-right)); bottom: calc(16px + env(safe-area-inset-bottom));
+    height: 52px; padding: 0 22px 0 18px; border-radius: 26px; font-size: 16px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .18);
+  }
+  .ir-head-actions .ir-btn-primary svg { width: 20px; height: 20px; }
+  /* 分类：吸在导航栏下面的分段按钮，翻到哪儿都能切 */
+  .ir-tabs {
+    position: sticky; top: var(--app-shell-h, 56px); z-index: 50; display: block;
+    margin: 0 -16px 10px; padding: 8px 16px; border-bottom: none; background: var(--w-paper);
+  }
+  .ir-seg-track {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; padding: 3px;
+    border: 1px solid var(--w-line); border-radius: 10px; background: var(--w-sunken);
+  }
+  .ir-tabs button { height: 40px; margin: 0; padding: 0 4px; border: none; border-radius: 8px; font-size: 15px; white-space: nowrap; }
+  .ir-tabs button.active { background: var(--w-surface); border: none; box-shadow: 0 0 0 1px var(--w-line), 0 1px 2px rgba(0, 0, 0, .06); }
+  .ir-count { margin-left: 4px; }
+  /* 一行两张卡：标题最多 3 行，下面一行成绩 / 词数 / 音频 / 日期，右下角 ⋯ 是删除和改分类 */
+  .ir-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .ir-card { min-height: 112px; padding: 12px 12px 0; gap: 4px; }
+  .ir-card h3 {
+    padding-right: 0; font-size: 15px; line-height: 1.4; overflow-wrap: anywhere;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .ir-card-del { display: none; }
+  .ir-meta { flex-wrap: wrap; gap: 0 8px; min-height: 44px; padding-right: 34px; font-size: 12px; line-height: 1.4; }
+  .ir-audio-tag svg { width: 13px; height: 13px; }
+  .ir-meta .ir-phone { display: inline; }
+  .ir-card-more.ir-phone {
+    position: absolute; right: 0; bottom: 0; width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    border: none; background: transparent; color: var(--w-ink3); border-radius: var(--w-r-card);
+  }
+  .ir-card-more svg { width: 18px; height: 18px; }
 
-  .ir-bar { padding: 0 4px; gap: 2px; }
-  .ir-tools .ir-lbl { display: none; }
-  .ir-tools .ir-icon-btn { padding: 0 7px; }
-  .ir-bar .ir-edit-title { display: none !important; }
-  .ir-title { font-size: 15px; }
+  /* ---- 底部面板（⋯ 菜单、改标题、看词、列表卡片的操作） ---- */
+  .ir-scrim { position: fixed; inset: 0; z-index: 1455; background: var(--w-mask); }
+  .ir-scrim.ir-phone:not([hidden]), .ir-sheet.ir-phone:not([hidden]) { display: block; }
+  .ir-sheet, body.page-intensive .ir-menu.open, #titleEditContainer.is-sheet {
+    position: fixed; left: 0; right: 0; top: auto; bottom: 0; z-index: 1490;
+    max-height: calc(100vh - 48px); max-height: calc(100dvh - env(safe-area-inset-top) - 48px); overflow-y: auto; overscroll-behavior: contain;
+    min-width: 0; padding: 0 16px calc(12px + env(safe-area-inset-bottom));
+    background: var(--w-surface); border: none; border-top: 1px solid var(--w-line); border-radius: 14px 14px 0 0;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, .12); animation: ir-sheet-in .22s ease-out;
+  }
+  .ir-grab.ir-phone { display: block; width: 36px; height: 4px; margin: 8px auto 6px; border-radius: 2px; background: var(--w-line-strong); }
+  .ir-sheet-title.ir-phone { display: block; margin: 2px 0 8px; font: 600 16px/1.4 var(--w-cn); color: var(--w-ink); overflow-wrap: anywhere; }
+  .ir-sheet-sub { margin: -4px 0 10px; font-size: 13px; color: var(--w-ink3); }
+  .ir-sheet-row {
+    display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 0 4px;
+    border: none; border-top: 1px solid var(--w-line); background: transparent; color: var(--w-ink);
+    font: 16px/1.3 var(--w-cn); text-align: left; cursor: pointer;
+  }
+  .ir-sheet-row svg { width: 20px; height: 20px; flex: none; color: var(--w-ink2); }
+  .ir-sheet-row.is-danger, .ir-sheet-row.is-danger svg { color: var(--w-err); }
+  .ir-sheet-row:disabled { opacity: .5; }
+  .ir-segs { flex: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; padding: 3px; border-radius: 10px; background: var(--w-sunken); border: 1px solid var(--w-line); }
+  .ir-segs button { height: 38px; padding: 0 2px; border: none; border-radius: 8px; background: transparent; color: var(--w-ink2); font: 500 14px/1 var(--w-cn); }
+  .ir-segs button.is-on { background: var(--w-surface); color: var(--w-ink); font-weight: 600; box-shadow: 0 0 0 1px var(--w-line); }
+  .ir-switch { flex: none; position: relative; width: 46px; height: 28px; border-radius: 14px; background: var(--w-line-strong); transition: background .15s; }
+  .ir-switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, .25); transition: transform .15s; }
+  [aria-checked="true"] > .ir-switch, .ir-switch.is-on { background: var(--w-accent); }
+  [aria-checked="true"] > .ir-switch::after, .ir-switch.is-on::after { transform: translateX(18px); }
+  .ir-grow { flex: 1; min-width: 0; }
 
-  .ir-content { padding: 0 0 120px; background: var(--w-surface); }
+  /* ---- 阅读页：整页滚动，全站导航先藏起来 ---- */
+  body.ir-reading .ir-home { display: none; }
+  body.ir-reading .app-shell-nav, body.ir-reading .app-shell-scrim, body.ir-reading .app-shell-panel { display: none !important; }
+  body.has-app-shell.ir-reading { padding-top: 0 !important; }
+  .ir-viewer { position: static; z-index: auto; min-height: 100vh; background: var(--w-surface); }
+  .ir-viewer.active { display: block; }
+  .ir-body { display: block; }
+  .ir-content { overflow: visible; padding: 0 0 calc(var(--ir-dock-h, 72px) + 40px) !important; background: var(--w-surface); }
   .ir-content.panel-open { margin-right: 0; }
-  .ir-content .reader { max-width: none; padding: 20px 18px 32px; border: none; border-radius: 0; }
-  .ir-images { padding: 16px 18px 0; margin-bottom: 0; }
-  .image-item { width: 88px; height: 88px; }
+  .ir-content .reader { max-width: none; padding: 18px 18px 32px; border: none; border-radius: 0; }
+  .ir-body.has-exam .ir-content .reader { padding: 18px 18px 32px; }
+  .reader mark.hl .tooltip { display: none !important; }
+  .reader mark.hl:hover { background: var(--w-hl); }
 
+  /* 顶栏：‹ 返回、标题（点一下看全）、⋯ */
+  .ir-bar {
+    position: sticky; top: 0; z-index: 1450; gap: 0;
+    height: auto; min-height: calc(52px + env(safe-area-inset-top));
+    padding: env(safe-area-inset-top) max(4px, env(safe-area-inset-right)) 0 max(4px, env(safe-area-inset-left));
+  }
+  .ir-bar > .ir-icon-btn, .ir-more > .ir-icon-btn { width: 44px; height: 44px; padding: 0; }
+  .ir-bar > .ir-icon-btn svg, .ir-more > .ir-icon-btn svg { width: 22px; height: 22px; }
+  .ir-bar > .ir-more { margin-left: 0; }
+  .ir-bar .ir-edit-title { display: none !important; }
+  .ir-title-wrap { min-height: 44px; }
+  .ir-title { padding: 4px 4px; font-size: 16px; cursor: pointer; }
+  .ir-title.is-full { white-space: normal; overflow-wrap: anywhere; }
+  .ir-seg { display: none !important; }
+
+  /* 底部工具栏：译文 / 朗读 / 词汇 / 题目，图标下面带字 */
+  body.page-intensive .ir-tools {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 1400;
+    display: flex; align-items: stretch; gap: 0;
+    height: calc(56px + env(safe-area-inset-bottom));
+    padding: 0 max(4px, env(safe-area-inset-right)) env(safe-area-inset-bottom) max(4px, env(safe-area-inset-left));
+    background: var(--w-surface); border-top: 1px solid var(--w-line);
+    -webkit-user-select: none; user-select: none;
+  }
+  .ir-tools .ir-icon-btn {
+    position: relative; flex: 1 1 0; min-width: 0; height: auto; min-height: 44px; padding: 0 2px;
+    display: grid; grid-template-columns: auto auto; justify-content: center; align-content: center; gap: 4px 3px;
+    border-radius: 0; background: transparent !important; color: var(--w-ink2); font-size: 12px;
+  }
+  .ir-tools .ir-icon-btn > svg, .ir-tools .ir-icon-btn > .ir-spin { grid-column: 1 / -1; justify-self: center; width: 22px; height: 22px; }
+  .ir-tools .ir-icon-btn > .ir-spin { width: 18px; height: 18px; margin: 2px 0; }
+  .ir-tools .ir-lbl { font: 500 12px/1 var(--w-cn); white-space: nowrap; }
+  .ir-tools .ir-lbl:last-child { grid-column: 1 / -1; justify-self: center; }
+  .ir-tools .ir-icon-btn.is-on { color: var(--w-accent); }
+  .ir-tools .ir-badge { font: 500 12px/1 var(--w-cn); color: inherit; opacity: .8; }
+  #resumeAudioBtn[style*="inline-block"] { display: grid !important; }
+  #examSheetBtn.ir-phone { display: none; }
+  .ir-viewer.has-exam #examSheetBtn.ir-phone { display: grid; }
+  /* 生成朗读音频时的进度：工具栏上面一整条 */
+  #generateAudioBtn .ir-busy {
+    position: fixed; left: 0; right: 0; bottom: calc(56px + env(safe-area-inset-bottom)); z-index: 1;
+    height: 34px; padding: 0 16px; display: flex; align-items: center; justify-content: center;
+    background: var(--w-accent-soft); border-top: 1px solid var(--w-accent-line); color: var(--w-accent);
+    font: 500 13px/1 var(--w-cn); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  /* 朗读：迷你播放条贴在工具栏上面；˅ 只是收起，不卸载音频 */
+  body.page-intensive .ir-audio {
+    position: fixed; left: 0; right: 0; bottom: calc(56px + env(safe-area-inset-bottom)); z-index: 1400;
+    height: 56px; padding: 0 max(8px, env(safe-area-inset-right)) 0 max(8px, env(safe-area-inset-left));
+    -webkit-user-select: none; user-select: none;
+  }
+  .ir-audio.is-collapsed { display: none !important; }
+  .ir-audio-row { height: 100%; gap: 8px; }
+  .ir-audio audio, #downloadAudioBtn, .ir-audio-row > .ir-icon-btn:not(.ir-phone) { display: none !important; }
+  .ir-ap-btn.ir-phone { display: flex; flex: none; width: 44px; height: 44px; align-items: center; justify-content: center; padding: 0; border: none; border-radius: 22px; background: transparent; color: var(--w-ink2); }
+  .ir-ap-btn.is-main { background: var(--w-accent); color: var(--accent-contrast); }
+  .ir-ap-btn svg { width: 22px; height: 22px; }
+  .ir-ap-seek.ir-phone { display: block; flex: 1; min-width: 0; height: 44px; margin: 0; accent-color: var(--w-accent); background: transparent; }
+  .ir-ap-time.ir-phone { display: block; flex: none; min-width: 76px; text-align: right; font: 12px/1 var(--w-cn); color: var(--w-ink3); font-variant-numeric: tabular-nums; }
+
+  /* ⋯ 菜单变成底部面板 */
+  .ir-more { position: static; }
+  body.page-intensive .ir-menu.open { display: block; z-index: 1490; }
+  .ir-menu .ir-menu-item { height: auto; min-height: 52px; padding: 0 4px; border-radius: 0; border-top: 1px solid var(--w-line); font-size: 16px; gap: 12px; white-space: normal; }
+  .ir-menu .ir-menu-item svg { width: 20px; height: 20px; }
+  .ir-menu .ir-grab + .ir-menu-item { border-top: none; }
+  .ir-menu label.ir-menu-item:not(.ir-phone) { display: none; }
+  .ir-menu .ir-menu-item.ir-phone { display: flex; }
+  .ir-menu .ir-menu-item.ir-phone[hidden] { display: none; }
+  .ir-menu .ir-badge { margin-left: auto; font-size: 13px; }
+  .ir-menu .ir-switch.ir-phone { display: block; margin-left: auto; }
+  #jiufenMarksBtn .ir-badge { display: none; }
+  #jiufenMarksBtn[style*="none"] + .ir-menu-item { border-top: 1px solid var(--w-line); }
+
+  /* 改标题：底部面板，跟着键盘走 */
+  #titleEditContainer.is-sheet { bottom: var(--ir-kb, 0px); display: flex; flex-wrap: wrap; gap: 10px; padding-top: 0; padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+  #titleEditContainer.is-sheet .ir-grab { flex: 0 0 36px; margin: 8px calc(50% - 18px) 0; }
+  #titleEditContainer.is-sheet .ir-sheet-title { flex: 1 0 100%; margin: 0; display: flex; align-items: center; justify-content: space-between; }
+  #titleEditContainer.is-sheet input { flex: 1; height: 48px; font: 600 16px var(--w-en); }
+  #titleEditContainer.is-sheet .ir-btn { height: 48px; padding: 0 18px; font-size: 16px; }
+  #titleEditContainer.is-sheet .title-edit-cancel { display: none; }
+
+  /* ---- 词汇面板：底部面板，搜索框吸顶 ---- */
   .ir-panel {
-    position: fixed; top: auto; left: 0; right: 0; bottom: 0; z-index: 1450;
-    width: auto !important; max-width: none; min-width: 0; height: 70vh;
-    border-left: none; border-top: 1px solid var(--w-line); border-radius: 12px 12px 0 0;
-    box-shadow: 0 -4px 16px rgba(0, 0, 0, .08);
+    position: fixed; top: auto; left: 0; right: 0; bottom: 0; z-index: 1460;
+    width: auto !important; max-width: none; min-width: 0; height: 72vh; height: 72dvh;
+    border-left: none; border-top: 1px solid var(--w-line); border-radius: 14px 14px 0 0;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, .12);
     transform: translateY(100%);
     padding-bottom: env(safe-area-inset-bottom);
   }
   .ir-panel.active { transform: none; }
   .resize-handle { display: none; }
-  body.page-intensive #meaningBox input { width: min(200px, 52vw); }
+  .ir-panel-head { position: relative; flex-wrap: wrap; gap: 8px; padding: 18px 8px 10px 16px; }
+  .ir-panel-head .ir-grab { position: absolute; top: 8px; left: 50%; margin: 0 0 0 -18px; }
+  .ir-panel-title { flex: 1; font-size: 16px; }
+  .ir-panel-head .ir-icon-btn { width: 44px; height: 44px; }
+  body.page-intensive .ir-panel-head input { order: 5; flex: 1 0 100%; height: 44px; margin-right: 8px; font-size: 16px; }
+  .ir-vi { min-height: 56px; align-items: center; padding: 6px 4px 6px 16px; }
+  .ir-vi-word { font-size: 16px; }
+  .ir-vi-mean { font-size: 14px; }
+  .ir-vi.is-flash { background: var(--w-accent-soft); }
+  .ir-vi-actions .ir-icon-btn { width: 44px; height: 44px; min-width: 44px; }
+  .ir-vi-actions .ir-icon-btn svg { width: 20px; height: 20px; }
+
+  /* ---- 划词：选中后在底部出一条操作栏，不挡系统的拷贝菜单和选区手柄 ---- */
+  .floating#floatBox {
+    left: 0 !important; right: 0; top: auto !important; bottom: var(--ir-dock-h, 0px); z-index: 1470;
+    padding: 8px max(12px, env(safe-area-inset-right)) 8px max(16px, env(safe-area-inset-left));
+    border: none; border-top: 1px solid var(--w-line); border-radius: 0; box-shadow: 0 -4px 16px rgba(0, 0, 0, .08);
+    -webkit-user-select: none; user-select: none; animation: ir-sheet-in .16s ease-out;
+  }
+  .ir-fb-row { display: flex; align-items: center; gap: 8px; }
+  .ir-pop-word.ir-phone { display: block; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 16px/1.3 var(--w-en); color: var(--w-ink); }
+  .floating button { height: 44px; padding: 0 14px; font-size: 15px; }
+  #floatBox .ir-pop-main { order: 3; background: var(--w-accent); color: var(--accent-contrast); }
+  #floatBox .ir-pop-main:disabled { background: var(--w-sunken); color: var(--w-ink3); }
+  #floatBox .ir-pop-danger { order: 3; border: 1px solid var(--w-err-line); }
+  #floatBox .ir-pop-cancel { order: 2; }
+
+  /* 写释义：底部面板贴着键盘 */
+  .floating#meaningBox {
+    left: 0 !important; right: 0; top: auto !important; bottom: var(--ir-kb, 0px); z-index: 1520;
+    padding: 0 16px calc(12px + env(safe-area-inset-bottom));
+    border: none; border-top: 1px solid var(--w-line); border-radius: 14px 14px 0 0;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, .14); white-space: normal; animation: ir-sheet-in .18s ease-out;
+  }
+  .ir-mb-head.ir-phone { display: flex; align-items: center; gap: 6px; min-height: 48px; }
+  .ir-mb-word { flex: 1; min-width: 0; font: 600 18px/1.3 var(--w-en); color: var(--w-ink); overflow-wrap: anywhere; }
+  .ir-mb-row { display: flex; align-items: center; gap: 8px; }
+  body.page-intensive #meaningBox input { flex: 1; width: auto; height: 48px; margin: 0; font-size: 16px; }
+  #meaningBox .ir-pop-main { height: 48px; padding: 0 18px; background: var(--w-accent); color: var(--accent-contrast); font-size: 16px; }
+  #meaningBox .ir-pop-cancel { display: none; }
+  #meaningBox .ir-pill { padding: 0 14px; border: 1px solid var(--w-line); border-radius: 22px; color: var(--w-accent); }
+  #meaningBox .ir-x { width: 44px; padding: 0; }
+  /* 触屏上 :hover 会粘在刚点过的按钮上，手机版不要悬停底色 */
+  .ir-icon-btn:hover { background: transparent; color: var(--w-ink2); }
+  .ir-icon-btn.is-on:hover { color: var(--w-accent); }
+
+  /* 点高亮：底部的单词卡（自动念一遍；▶ 再听） */
+  #wordCard { z-index: 1480; padding-bottom: calc(10px + env(safe-area-inset-bottom)); box-shadow: 0 -8px 24px rgba(0, 0, 0, .14); }
+  .ir-wc-head { display: flex; align-items: center; gap: 8px; }
+  .ir-wc-word { flex: 1; min-width: 0; font: 600 20px/1.35 var(--w-en); color: var(--w-ink); overflow-wrap: anywhere; }
+  .ir-wc-mean { margin: 6px 0 12px; font: 16px/1.6 var(--w-cn); color: var(--w-ink2); overflow-wrap: anywhere; }
+  .ir-wc-mean:empty::before { content: '（没写释义）'; color: var(--w-ink3); }
+  .ir-wc-actions { display: flex; gap: 8px; }
+  .ir-wc-actions .ir-btn { flex: 1; justify-content: center; height: 44px; font-size: 15px; }
+  .ir-btn.is-danger { color: var(--w-err); border-color: var(--w-err-line); }
+  .ir-pill { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 44px; padding: 0 14px; border: 1px solid var(--w-line); border-radius: 22px; background: var(--w-surface); color: var(--w-accent); font: 500 15px/1 var(--w-cn); }
+  .ir-pill svg { width: 18px; height: 18px; }
+  .ir-x { flex: none; width: 44px; height: 44px; margin-right: -10px; display: flex; align-items: center; justify-content: center; border: none; background: transparent; color: var(--w-ink3); }
+  .ir-x svg { width: 20px; height: 20px; }
+
+  /* ---- 图片：一条缩略图，大图左右滑、双击放大 ---- */
+  .ir-images { max-width: none; padding: 14px 18px 0; margin-bottom: 0; }
+  .images-grid { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .image-item { flex: none; width: 88px; height: 88px; }
+  .image-delete-btn { display: none; }
+  .image-modal-close { top: calc(8px + env(safe-area-inset-top)); left: 8px; right: auto; width: 44px; height: 44px; }
+  .image-modal-nav { display: none; }
+  #modalImage { max-width: 100vw; max-height: 78vh; border-radius: 0; transition: transform .2s; touch-action: pan-y pinch-zoom; }
+  #modalImage.is-zoomed { transform: scale(2.2); touch-action: auto; }
+  .image-modal-info { bottom: calc(16px + env(safe-area-inset-bottom)); }
+  .counter-and-delete { gap: 16px; font-size: 15px; }
+  #deleteImageBtn { height: 44px; padding: 0 18px; font-size: 15px; }
+
+  /* ---- 九分学长导入的文章：题目从底部升起，平时只露当前这道题，原文和题目同时看得见 ---- */
+  .ir-body.has-exam .ir-exam {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 1460; display: none;
+    max-height: min(54vh, 460px); overflow-y: auto; overscroll-behavior: contain; padding: 0 16px;
+    border: none; border-top: 1px solid var(--w-line); border-radius: 14px 14px 0 0;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, .14);
+  }
+  .ir-body.has-exam .ir-exam.is-open { display: block; animation: ir-sheet-in .2s ease-out; }
+  .ir-body.has-exam .ir-exam.is-full { height: calc(100vh - 56px); height: calc(100dvh - env(safe-area-inset-top) - 56px); max-height: none; }
+  .ir-exam .ir-exam-head { display: none; }
+  .ir-qs-head {
+    position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 4px;
+    margin: 0 -16px; padding: 10px 6px 0 16px; min-height: 52px; background: var(--w-surface); cursor: pointer;
+    -webkit-user-select: none; user-select: none;
+  }
+  .ir-qs-head::before { content: ''; position: absolute; top: 6px; left: 50%; width: 36px; height: 4px; margin-left: -18px; border-radius: 2px; background: var(--w-line-strong); }
+  .ir-qs-title { flex: 1; min-width: 0; font: 600 16px/1.3 var(--w-cn); color: var(--w-ink); }
+  .ir-qs-title span { margin-left: 6px; font-weight: 400; font-size: 13px; color: var(--w-ink3); }
+  .ir-qs-head .ir-qs-more { height: 44px; padding: 0 10px; border: none; background: transparent; color: var(--w-accent); font: 500 14px/1 var(--w-cn); display: inline-flex; align-items: center; gap: 2px; }
+  .ir-qs-head .ir-qs-more svg { width: 16px; height: 16px; transition: transform .15s; }
+  .ir-exam.is-full .ir-qs-more svg { transform: rotate(180deg); }
+  .ir-qs-bar {
+    position: sticky; top: 52px; z-index: 2; margin: 0 -16px; padding: 4px 16px 10px;
+    background: var(--w-surface); border-bottom: 1px solid var(--w-line);
+  }
+  .ir-exam.is-full .ir-qs-bar { display: block; }
+  .ir-qs-score { margin-bottom: 8px; font-size: 14px; color: var(--w-ink2); font-variant-numeric: tabular-nums; }
+  .ir-qs-score b { font-weight: 600; color: var(--w-ink); }
+  .ir-qs-tools { display: flex; align-items: center; gap: 10px; }
+  .ir-qs-tools .ir-segs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ir-qs-switch { flex: none; display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 2px; border: none; background: transparent; color: var(--w-ink2); font: 14px/1 var(--w-cn); }
+  .ir-qs-nav {
+    position: sticky; bottom: 0; z-index: 2; display: grid; grid-template-columns: 1fr auto auto 1fr; gap: 8px;
+    margin: 8px -16px 0; padding: 8px 16px calc(8px + env(safe-area-inset-bottom)); background: var(--w-surface); border-top: 1px solid var(--w-line);
+  }
+  .ir-exam.is-full .ir-qs-nav { display: none; }
+  .ir-qs-nav button { height: 44px; padding: 0 12px; border: 1px solid var(--w-line); border-radius: 22px; background: var(--w-surface); color: var(--w-ink); font: 500 15px/1 var(--w-cn); white-space: nowrap; }
+  .ir-qs-nav button.is-on { background: var(--w-accent-soft); border-color: var(--w-accent-line); color: var(--w-accent); }
+  .ir-qs-nav button[data-act="qs-prev"] { justify-self: start; }
+  .ir-qs-nav button[data-act="qs-next"] { justify-self: end; }
+  .ir-qs-nav button:disabled { opacity: .4; }
+  .ir-exam.hide-ans .ir-qs-nav [data-act="qs-locate"], .ir-exam.hide-ans .ir-qs-nav [data-act="qs-analysis"] { visibility: hidden; }
+  /* 只露当前一题：其余题、题组说明都收起来 */
+  .ir-exam.is-peek .ir-group:not(.has-cur), .ir-exam.is-peek .ir-group > :not(.ir-q), .ir-exam.is-peek .ir-q:not(.is-cur), .ir-exam.is-peek .ir-exam-empty { display: none !important; }
+  .ir-exam.is-peek .ir-group { padding: 4px 0 0; border: none; }
+  .ir-exam.is-peek .ir-q { margin-top: 0; border-color: var(--w-line); box-shadow: none; }
+  .ir-exam.is-peek .ir-q-actions { display: none; }
+  .ir-exam.is-full .ir-q.is-cur { border-color: var(--w-accent-line); }
+  .ir-group { padding: 18px 0 6px; }
+  .ir-group-inst { font-size: 14px; }
+  /* 题号放进题干那一行，不再空出左边一栏 */
+  .ir-q { padding: 12px 12px 10px; }
+  .ir-q-num { position: static; float: left; margin: 0 8px 0 0; }
+  .ir-q-text { font-size: 16px; }
+  .ir-q-zh { font-size: 14px; }
+  .ir-opts { clear: both; padding-top: 2px; margin-bottom: 0; }
+  .ir-opt { min-height: 36px; align-items: center; padding: 4px 10px; font-size: 14px; }
+  .ir-ans { clear: both; font-size: 14px; }
+  .ir-ans b { font-size: 14px; }
+  .ir-q-actions { clear: both; margin: 6px 0 0 -6px; gap: 4px; }
+  .ir-q-actions .ir-icon-btn { height: 44px; padding: 0 10px; font-size: 15px; }
+  .ir-analysis { clear: both; font-size: 14px; }
+  .ir-blank { min-width: 32px; height: 32px; padding: 0 8px; font: 600 14px/30px var(--w-cn); }
+  .ir-layout summary { min-height: 44px; display: flex; align-items: center; font-size: 14px; }
+}
+@media (max-width: 820px) and (prefers-reduced-motion: reduce) {
+  .ir-sheet, body.page-intensive .ir-menu.open, #titleEditContainer.is-sheet, .floating#floatBox, .floating#meaningBox, .ir-body.has-exam .ir-exam.is-open { animation: none; }
 }
   </style>
   <!-- 词汇发音管理器 -->
@@ -524,9 +835,11 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       </div>
     </header>
     <div class="ir-tabs">
+      <div class="ir-seg-track">
       <button id="tab-Reading" class="active" onclick="setActiveCat('Reading')">Reading<span class="ir-count" id="count-Reading"></span></button>
       <button id="tab-Listening" onclick="setActiveCat('Listening')">Listening<span class="ir-count" id="count-Listening"></span></button>
       <button id="tab-Writing" onclick="setActiveCat('Writing')">Writing<span class="ir-count" id="count-Writing"></span></button>
+      </div>
     </div>
     <div id="list" class="ir-list"></div>
     <div id="empty" class="ir-empty" style="display:none;">这个分类还没有文章</div>
@@ -536,33 +849,40 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
     <div class="ir-bar">
       <button class="ir-icon-btn" onclick="closeViewer()" title="返回文章列表" aria-label="返回文章列表"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>
       <div class="ir-title-wrap">
-        <div class="ir-title" id="vTitle">-</div>
+        <div class="ir-title" id="vTitle" onclick="toggleFullTitle()">-</div>
         <button id="editTitleBtn" class="ir-icon-btn ir-edit-title" onclick="startEditTitle()" title="修改标题" aria-label="修改标题"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
         <div id="titleEditContainer" class="ir-title-edit" style="display: none;">
-          <input type="text" id="titleEditInput" placeholder="输入新标题">
+          <div class="ir-grab ir-phone"></div><div class="ir-sheet-title ir-phone"><span>修改标题</span><button type="button" class="ir-x" onclick="cancelTitleEdit()" aria-label="取消"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+          <input type="text" id="titleEditInput" placeholder="输入新标题" enterkeyhint="done">
           <button class="ir-btn ir-btn-primary title-edit-save" onclick="saveTitleEdit()">保存</button>
           <button class="ir-btn title-edit-cancel" onclick="cancelTitleEdit()">取消</button>
         </div>
       </div>
       <div class="ir-tools">
         <button id="zhToggle" class="ir-icon-btn is-on" onclick="toggleTranslation()" title="显示 / 隐藏中文译文" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg><span class="ir-lbl">译文</span></button>
-        <button id="generateAudioBtn" class="ir-icon-btn" onclick="generateArticleAudio()" title="生成英文音频"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg><span class="ir-lbl">音频</span></button>
+        <button id="generateAudioBtn" class="ir-icon-btn" onclick="audioButtonClick()" title="生成英文音频"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg><span class="ir-lbl">音频</span></button>
         <button id="resumeAudioBtn" class="ir-icon-btn" onclick="resumeAudioGeneration()" title="恢复中断的音频生成" style="display: none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg><span class="ir-lbl">恢复</span></button>
         <button id="vocabToggle" class="ir-icon-btn" onclick="toggleHighlightsPanel()" title="本文词汇"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2Z"/><path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7Z"/></svg><span class="ir-lbl">词汇</span><span class="ir-badge" id="vocabCount"></span></button>
-        <div class="ir-more">
-          <button id="moreBtn" class="ir-icon-btn" onclick="toggleMoreMenu(event)" title="更多" aria-label="更多"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
-          <div class="ir-menu" id="moreMenu">
-            <button id="uploadImageBtn" class="ir-menu-item" onclick="closeMoreMenu(); triggerImageUpload()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>上传图片</span></button>
-            <button class="ir-menu-item" id="jiufenMarksBtn" onclick="closeMoreMenu(); toggleJiufenMarks()" style="display: none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h16"/><path d="M7 16 15.5 7.5a2.1 2.1 0 0 1 3 3L10 19H7Z"/></svg><span>做题时的划线</span><span class="ir-badge" id="jiufenMarksState"></span></button>
-            <button class="ir-menu-item" onclick="closeMoreMenu(); startEditTitle()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg><span>修改标题</span></button>
-            <label class="ir-menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg><span>分类</span>
-              <select id="vCategory" class="ir-select">
-                <option value="Reading">Reading</option>
-                <option value="Listening">Listening</option>
-                <option value="Writing">Writing</option>
-              </select>
-            </label>
-          </div>
+        <button id="examSheetBtn" class="ir-icon-btn ir-phone" onclick="toggleQuestionsSheet()" title="题目"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11"/><path d="M9 12h11"/><path d="M9 18h11"/><path d="m3.5 6 1 1 2-2"/><path d="m3.5 12 1 1 2-2"/><path d="m3.5 18 1 1 2-2"/></svg><span class="ir-lbl">题目</span></button>
+      </div>
+      <div class="ir-more">
+        <button id="moreBtn" class="ir-icon-btn" onclick="toggleMoreMenu(event)" title="更多" aria-label="更多"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+        <div class="ir-menu" id="moreMenu">
+          <div class="ir-grab ir-phone"></div>
+          <button id="uploadImageBtn" class="ir-menu-item" onclick="closeMoreMenu(); triggerImageUpload()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg><span>上传图片</span></button>
+          <button class="ir-menu-item" id="jiufenMarksBtn" onclick="menuToggleJiufenMarks()" style="display: none;" role="switch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h16"/><path d="M7 16 15.5 7.5a2.1 2.1 0 0 1 3 3L10 19H7Z"/></svg><span>做题时的划线</span><span class="ir-badge" id="jiufenMarksState"></span><span class="ir-switch ir-phone" id="jiufenSwitch"></span></button>
+          <button class="ir-menu-item" onclick="menuEditTitle()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg><span>修改标题</span></button>
+          <label class="ir-menu-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg><span>分类</span>
+            <select id="vCategory" class="ir-select">
+              <option value="Reading">Reading</option>
+              <option value="Listening">Listening</option>
+              <option value="Writing">Writing</option>
+            </select>
+          </label>
+          <!-- 手机：分类用分段按钮，下载 / 重新生成音频也收在这里（重新生成要花钱，不放在随手能点到的地方） -->
+          <div class="ir-menu-item ir-phone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg><span>分类</span><div class="ir-segs" id="menuCatSeg"><button type="button" data-cat="Reading">Reading</button><button type="button" data-cat="Listening">Listening</button><button type="button" data-cat="Writing">Writing</button></div></div>
+          <button class="ir-menu-item ir-phone" id="menuDownloadBtn" onclick="menuDownloadAudio()" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg><span>下载朗读音频</span></button>
+          <button class="ir-menu-item ir-phone" id="menuRegenBtn" onclick="menuRegenerateAudio()" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg><span>重新生成朗读音频</span><span class="ir-badge">覆盖原来的</span></button>
         </div>
       </div>
     </div>
@@ -575,6 +895,7 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       <aside class="ir-panel" id="highlightsPanel">
         <div class="resize-handle" id="resizeHandle"></div>
         <div class="ir-panel-head">
+          <div class="ir-grab ir-phone"></div>
           <div class="ir-panel-title">本文词汇</div>
           <input id="hpSearch" type="text" placeholder="搜索单词或释义" oninput="renderHighlightsPanel()">
           <button class="ir-icon-btn" onclick="closeHighlightsPanel()" title="关闭" aria-label="关闭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
@@ -588,15 +909,39 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
         <audio id="articleAudio" controls>您的浏览器不支持音频播放。</audio>
         <button id="downloadAudioBtn" class="ir-icon-btn" onclick="downloadAudio()" title="下载音频" aria-label="下载音频"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg></button>
         <button class="ir-icon-btn" onclick="closeAudioPanel()" title="收起音频条" aria-label="收起音频条"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        <!-- 手机：自己画的迷你播放条（系统自带的控件太小、暗色下发灰） -->
+        <button class="ir-ap-btn is-main ir-phone" id="apPlay" onclick="toggleAudioPlay()" aria-label="播放"></button>
+        <input class="ir-ap-seek ir-phone" id="apSeek" type="range" min="0" max="1000" step="1" value="0" aria-label="播放进度">
+        <span class="ir-ap-time ir-phone" id="apTime">0:00 / 0:00</span>
+        <button class="ir-ap-btn ir-phone" onclick="collapseAudioPanel()" title="收起播放条" aria-label="收起播放条（不停止）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
       </div>
     </div>
+    <!-- 手机上从顶栏里挪出来的面板（顶栏吸顶后自成一层，留在里面盖不过遮罩） -->
+    <div id="irDock"></div>
   </div>
 
   <div class="floating" id="floatBox" style="display: none;">
-    <button class="ir-pop-main" onclick="confirmHighlight()">高亮</button><button onclick="cancelFloat()">取消</button><button class="ir-pop-danger" onclick="removeCurrentHighlight()">删除高亮</button>
+    <div class="ir-fb-row"><span class="ir-pop-word ir-phone" id="popWord"></span><button class="ir-pop-main" onclick="confirmHighlight()">高亮</button><button class="ir-pop-cancel" onclick="cancelFloat()">取消</button><button class="ir-pop-danger" onclick="removeCurrentHighlight()">删除高亮</button></div>
   </div>
   <div class="floating" id="meaningBox" style="display: none;">
-    <input id="meaningInput" type="text" placeholder="写下中文释义，回车保存" autocomplete="off" onkeydown="if(event.key==='Enter'){ event.preventDefault(); saveMeaning(); } else if(event.key==='Escape'){ event.preventDefault(); cancelMeaning(); }"><button class="ir-pop-main" onclick="saveMeaning()">保存</button><button onclick="cancelMeaning()">取消</button>
+    <div class="ir-mb-head ir-phone"><span class="ir-mb-word" id="mbWord"></span><button type="button" class="ir-pill" onclick="playSelectedWord()" aria-label="听发音"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>发音</button><button type="button" class="ir-x" onclick="cancelMeaning()" aria-label="取消"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <div class="ir-mb-row"><input id="meaningInput" type="text" placeholder="写下中文释义，回车保存" autocomplete="off" enterkeyhint="done" onkeydown="if(event.key==='Enter'){ event.preventDefault(); saveMeaning(); } else if(event.key==='Escape'){ event.preventDefault(); cancelMeaning(); }"><button class="ir-pop-main" onclick="saveMeaning()">保存</button><button class="ir-pop-cancel" onclick="cancelMeaning()">取消</button></div>
+  </div>
+
+  <!-- 手机：遮罩、点高亮弹出的单词卡、列表卡片的操作面板 -->
+  <div class="ir-scrim ir-phone" id="irScrim" hidden onclick="closeTopModalLayer()"></div>
+  <div class="ir-sheet ir-phone" id="wordCard" hidden role="dialog" aria-label="单词">
+    <div class="ir-grab ir-phone"></div>
+    <div class="ir-wc-head"><div class="ir-wc-word" id="wcWord"></div><button type="button" class="ir-pill" onclick="wordCardPlay()" aria-label="听发音"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>发音</button><button type="button" class="ir-x" onclick="closeWordCard()" aria-label="关闭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <div class="ir-wc-mean" id="wcMean"></div>
+    <div class="ir-wc-actions"><button type="button" class="ir-btn" onclick="wordCardShowInList()">在词汇表中查看</button><button type="button" class="ir-btn is-danger" onclick="wordCardDelete()">删除这个词</button></div>
+  </div>
+  <div class="ir-sheet ir-phone" id="cardSheet" hidden role="dialog" aria-labelledby="cardSheetTitle">
+    <div class="ir-grab ir-phone"></div>
+    <div class="ir-sheet-title ir-phone" id="cardSheetTitle"></div>
+    <div class="ir-sheet-sub" id="cardSheetSub"></div>
+    <div class="ir-sheet-row"><span>分类</span><div class="ir-segs" id="cardCatSeg"><button type="button" data-cat="Reading">Reading</button><button type="button" data-cat="Listening">Listening</button><button type="button" data-cat="Writing">Writing</button></div></div>
+    <button type="button" class="ir-sheet-row is-danger" onclick="cardSheetDelete()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>删除文章</button>
   </div>
 
   <!-- 隐藏的文件上传输入框 -->
@@ -632,7 +977,71 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       trash: SVG('<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/>'),
       jump: SVG('<path d="M7 17 17 7"/><path d="M8 7h9v9"/>'),
       spin: '<span class="ir-spin"></span>',
+      more: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg>',
+      play: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z"/></svg>',
+      pause: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6.5" y="5" width="4" height="14" rx="1"/><rect x="13.5" y="5" width="4" height="14" rx="1"/></svg>',
+      chevUp: SVG('<path d="m6 15 6-6 6 6"/>'),
+      close: SVG('<path d="M18 6 6 18M6 6l12 12"/>'),
     };
+
+    // ===== 手机（≤820px）：判断、弹层和系统返回键 =====
+    const phoneMQ = window.matchMedia ? window.matchMedia('(max-width: 820px)') : { matches: false };
+    function isPhone(){ return !!phoneMQ.matches; }
+    const $id = id => document.getElementById(id);
+    // 手机上每打开一层（底部面板、大图、题目面板）就往历史里压一条：系统返回 / iOS 侧滑先关最上面这一层，
+    // 不会一下子离开精读页。界面自己关掉一层（✕、点遮罩、保存）时同步收起，再 history.go(-n) 把条目退掉，
+    // 那次 popstate 由 skipPops 吃掉。退历史是异步的，退的途中又要压新条目（关单词卡、马上开词汇表）就先排队。
+    const layers = [];   // [{ name, hide, modal }]，最上面一层在最后
+    let skipPops = 0, afterPop = null; const queuedHistory = [];
+    function withHistory(fn){ if(skipPops > 0) queuedHistory.push(fn); else { try{ fn(); }catch(e){} } }
+    function historyBack(n, after){
+      if(n <= 0){ if(after) after(); return; }
+      skipPops++; afterPop = after || null; history.go(-n);
+    }
+    function hasLayer(name){ return layers.some(l => l.name === name); }
+    function openLayer(name, hide, modal){
+      if(!isPhone() || hasLayer(name)) return;
+      layers.push({ name, hide, modal: !!modal });
+      const state = Object.assign({}, history.state, { irLayer: name, irDepth: layers.length });
+      withHistory(() => history.pushState(state, ''));
+      syncScrim();
+    }
+    function closeLayer(name, after){
+      const i = layers.findIndex(l => l.name === name);
+      if(i < 0){ if(after) after(); return; }
+      const removed = layers.splice(i);
+      removed.reverse().forEach(l => l.hide());
+      syncScrim();
+      historyBack(removed.length, after);
+    }
+    // 从一层直接换到另一层（⋯ 菜单 →「修改标题」）：历史条目不动，只换名字
+    function swapLayer(oldName, name, hide, modal){
+      const l = layers.find(x => x.name === oldName);
+      if(!l){ openLayer(name, hide, modal); return; }
+      l.hide(); Object.assign(l, { name, hide, modal: !!modal });
+      const state = Object.assign({}, history.state, { irLayer: name });
+      withHistory(() => history.replaceState(state, ''));
+      syncScrim();
+    }
+    function closeAllLayers(){ const n = layers.length; layers.splice(0).reverse().forEach(l => l.hide()); syncScrim(); return n; }
+    function closeTopModalLayer(){ const top = layers.slice().reverse().find(l => l.modal); if(top) closeLayer(top.name); }
+    function syncScrim(){ const s = $id('irScrim'); if(s) s.hidden = !layers.some(l => l.modal); }
+    window.addEventListener('popstate', function(e){
+      if(skipPops > 0){
+        skipPops--; const f = afterPop; afterPop = null; if(f) f();
+        if(!skipPops) queuedHistory.splice(0).forEach(fn => { try{ fn(); }catch(err){} });
+        return;
+      }
+      const depth = (e.state && e.state.irDepth) || 0;
+      while(layers.length > depth){ layers.pop().hide(); }
+      syncScrim();
+      syncReaderWithUrl();
+    });
+    // 手机上关面板走的是 history.back()，浏览器默认会把整页滚回打开面板时的位置，「定位原文」刚滚到的地方就丢了
+    function syncScrollRestoration(){ try{ history.scrollRestoration = isPhone() ? 'manual' : 'auto'; }catch(e){} }
+    syncScrollRestoration();
+    // 刷新页面后，历史里留着上次打开的面板那一条：这一页已经没有那一层了，清掉，免得返回键对不上
+    if(history.state && history.state.irLayer){ try{ history.replaceState(history.state.irReader ? { irReader: history.state.irReader } : null, ''); }catch(e){} }
     // 工具栏按钮 = 图标 + 文字。手机上只留图标，但「生成中…」这类进度文字照常显示
     function btnLabel(icon, text){ return `${IC[icon]}<span class="${icon === 'spin' ? 'ir-busy' : 'ir-lbl'}">${text}</span>`; }
 
@@ -647,9 +1056,49 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       try{ localStorage.setItem('intensiveHideZh', hide ? '1' : '0'); }catch(e){}
       cancelFloat(); applyTranslationPref(hide);
     }
-    function toggleMoreMenu(e){ e.stopPropagation(); document.getElementById('moreMenu').classList.toggle('open'); }
-    function closeMoreMenu(){ document.getElementById('moreMenu').classList.remove('open'); }
-    document.addEventListener('click', function(e){ if(!(e.target.closest && e.target.closest('.ir-more'))) closeMoreMenu(); });
+    function toggleMoreMenu(e){
+      e.stopPropagation();
+      const menu = document.getElementById('moreMenu');
+      if(!isPhone()){ menu.classList.toggle('open'); return; }
+      // 手机：底部面板
+      if(menu.classList.contains('open')){ closeMoreMenu(); return; }
+      refreshPhoneMenu(); menu.classList.add('open'); menu.scrollTop = 0;
+      openLayer('more', hideMoreMenu, true);
+    }
+    function hideMoreMenu(){ document.getElementById('moreMenu').classList.remove('open'); }
+    function closeMoreMenu(){ hideMoreMenu(); closeLayer('more'); }
+    // 手机上 ⋯ 面板挪到了顶栏外面（#irDock），点面板里面不算「点外面」
+    document.addEventListener('click', function(e){ if(!(e.target.closest && (e.target.closest('.ir-more') || e.target.closest('#moreMenu')))) closeMoreMenu(); });
+    // 手机 ⋯ 面板：分类分段按钮、下载 / 重新生成音频只在有音频时出现
+    function refreshPhoneMenu(){
+      paintSegs('menuCatSeg', (currentArticle && currentArticle.category) || 'Reading');
+      const hasAudio = !!(currentAudioUrl || currentAudioInfo);
+      document.getElementById('menuDownloadBtn').hidden = !hasAudio;
+      document.getElementById('menuRegenBtn').hidden = !hasAudio;
+    }
+    function paintSegs(id, value){ document.querySelectorAll('#' + id + ' [data-cat]').forEach(b => { const on = b.dataset.cat === value; b.classList.toggle('is-on', on); b.setAttribute('aria-pressed', String(on)); }); }
+    function menuEditTitle(){
+      if(isPhone() && hasLayer('more')){ swapLayer('more', 'title', hideTitleSheet, true); startEditTitle(); return; }
+      closeMoreMenu(); startEditTitle();
+    }
+    // 手机上是开关，点完面板不收起，看得见现在的状态
+    function menuToggleJiufenMarks(){ if(!isPhone()) closeMoreMenu(); toggleJiufenMarks(); }
+    // 下载要等收面板退历史那一下做完（WebKit 里开始下载会把还没做完的 history.go 取消掉）
+    function menuDownloadAudio(){ if(!currentAudioUrl && currentAudioInfo) currentAudioUrl = currentAudioInfo.audio_url; hideMoreMenu(); closeLayer('more', downloadAudio); }
+    function menuRegenerateAudio(){ closeMoreMenu(); regenerateAudioPhone(); }
+    function postCategory(id, cat){ return fetch('/intensive_update_category',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id, category: cat})}).then(r=>r.json()); }
+    document.getElementById('menuCatSeg').addEventListener('click', function(e){
+      const b = e.target.closest('[data-cat]'); if(!b || !currentArticle) return;
+      const cat = b.dataset.cat, old = currentArticle.category || 'Reading'; if(cat === old) return;
+      paintSegs('menuCatSeg', cat);
+      postCategory(currentArticle.id, cat).then(d => {
+        if(!d.success){ alert(d.error||'保存失败'); paintSegs('menuCatSeg', old); return; }
+        currentArticle.category = cat; document.getElementById('vCategory').value = cat;
+        const it=(allItems||[]).find(x=>x.id===currentArticle.id); if(it){ it.category=cat; renderList(); }
+        closeMoreMenu();
+      }).catch(() => { alert('保存失败'); paintSegs('menuCatSeg', old); });
+    });
+    function toggleFullTitle(){ if(isPhone()) document.getElementById('vTitle').classList.toggle('is-full'); }
     function updateVocabCount(){ const el=document.getElementById('vocabCount'); if(el) el.textContent = new Set((highlights||[]).map(h=>h.start+'-'+h.end)).size || ''; }
     function checkStoredToken(){
       const tk=localStorage.getItem('authToken');
@@ -683,7 +1132,8 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
                   const el = document.getElementById('tab-'+c);
                   if(el) el.className = (c === activeCat ? 'active' : '');
                 });
-                // 然后打开文章（不设置hash，因为已经有了）
+                // 然后打开文章（不设置hash，因为已经有了）。这条历史不是我们压的：系统返回回到来的地方（比如词汇汇总）
+                readerPushed = false;
                 openArticleDirect(articleId, d.article);
               } else {
                 // 文章不存在，清除hash并恢复分类状态
@@ -725,7 +1175,7 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       document.getElementById('vCategory').value = art.category || 'Reading';
       const contentDiv = document.getElementById('vContent');
       contentDiv.innerHTML = `<div id="articleImages" class="ir-images" style="display: none;"><div class="ir-images-head">文章图片</div><div class="images-grid" id="imagesGrid"></div></div><div class=\"reader\"></div>`; renderReader(contentDiv.querySelector('.reader'), art); setupExam(art);
-      document.getElementById('viewer').classList.add('active');
+      document.getElementById('viewer').classList.add('active'); enterReader();
       loadArticleImages();
       restoreHighlights(contentDiv, art);
       closeHighlightsPanel();
@@ -779,14 +1229,15 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
         const highlightCount = it.highlight_count||0;
         const createdDate = (it.created_at||'').slice(0,10);
         const score = it.exam && it.exam.total ? `<span>对 ${it.exam.correct}/${it.exam.total}</span>` : '';
-        div.innerHTML = `<h3>${title}</h3><div class="ir-meta">${score}<span>${highlightCount} 个高亮</span><span>${createdDate}</span></div>`;
+        // 手机上卡片窄：「9 个高亮」写成「9 词」，日期去掉年份
+        div.innerHTML = `<h3>${title}</h3><div class="ir-meta">${score}<span><span class="ir-desk">${highlightCount} 个高亮</span><span class="ir-phone">${highlightCount} 词</span></span><span><span class="ir-desk">${createdDate}</span><span class="ir-phone">${createdDate.slice(5)}</span></span></div>`;
 
         // 异步检查音频状态，有音频就在信息行末尾标一下
         checkExistingAudio(it.id).then(audioInfo => {
           if (audioInfo.exists) {
             const tag = document.createElement('span');
             tag.className = 'ir-audio-tag';
-            tag.innerHTML = `${IC.volume}音频`;
+            tag.innerHTML = `${IC.volume}<span class="ir-desk">音频</span>`;
             tag.title = `已有音频（${new Date(audioInfo.created_time).toLocaleString()}）`;
             div.querySelector('.ir-meta').appendChild(tag);
           }
@@ -798,16 +1249,72 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
         delBtn.onclick=function(e){ e.stopPropagation(); if(!confirm('确定删除这篇文章吗？此操作不可恢复。')) return; fetch('/intensive_delete_article',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id: it.id})}).then(r=>r.json()).then(d=>{ if(d.success){ renderAfterDelete(it.id); } else { alert(d.error||'删除失败'); } }); };
         div.onclick=function(){ openArticle(it.id); };
         div.onkeydown=function(e){ if(e.key==='Enter' && e.target===div) openArticle(it.id); };
-        div.appendChild(delBtn); wrap.appendChild(div);
+        // 手机：垃圾桶不再常驻在每张卡上，删除和改分类收进 ⋯ 面板
+        const moreBtn=document.createElement('button'); moreBtn.className='ir-card-more ir-phone'; moreBtn.setAttribute('aria-label','更多操作：改分类、删除'); moreBtn.innerHTML=IC.more;
+        moreBtn.onclick=function(e){ e.stopPropagation(); openCardSheet(it); };
+        div.appendChild(delBtn); div.appendChild(moreBtn); wrap.appendChild(div);
       });
     }
     function renderAfterDelete(id){ allItems = (allItems||[]).filter(x=>x.id!==id); renderList(); if(window.clearArticlePronunciationCache){ window.clearArticlePronunciationCache(id); } }
 
-    function openArticle(id){
-      // 设置URL hash以便刷新时保持状态
-      window.location.hash = `#article-${id}`;
+    // ===== 手机：列表卡片的 ⋯ 面板（改分类、删除） =====
+    let cardSheetItem = null;
+    function openCardSheet(it){
+      cardSheetItem = it;
+      document.getElementById('cardSheetTitle').textContent = it.title || '未命名';
+      document.getElementById('cardSheetSub').textContent = [(it.created_at||'').slice(0,10), `${it.highlight_count||0} 个高亮`].filter(Boolean).join(' · ');
+      paintSegs('cardCatSeg', it.category || 'Reading');
+      document.getElementById('cardSheet').hidden = false;
+      openLayer('card', hideCardSheet, true);
+    }
+    function hideCardSheet(){ document.getElementById('cardSheet').hidden = true; cardSheetItem = null; }
+    function closeCardSheet(){ hideCardSheet(); closeLayer('card'); }
+    document.getElementById('cardCatSeg').addEventListener('click', function(e){
+      const b = e.target.closest('[data-cat]'); const it = cardSheetItem; if(!b || !it) return;
+      const cat = b.dataset.cat, old = it.category || 'Reading'; if(cat === old) return;
+      paintSegs('cardCatSeg', cat);
+      postCategory(it.id, cat).then(d => {
+        if(!d.success){ alert(d.error||'保存失败'); paintSegs('cardCatSeg', old); return; }
+        it.category = cat; renderList(); closeCardSheet();
+      }).catch(() => { alert('保存失败'); paintSegs('cardCatSeg', old); });
+    });
+    function cardSheetDelete(){
+      const it = cardSheetItem; if(!it) return;
+      if(!confirm('确定删除这篇文章吗？此操作不可恢复。')) return;
+      fetch('/intensive_delete_article',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id: it.id})}).then(r=>r.json()).then(d=>{ if(d.success){ closeCardSheet(); renderAfterDelete(it.id); } else { alert(d.error||'删除失败'); } });
+    }
 
-      fetch(`/intensive_article/${id}`).then(r=>r.json()).then(d=>{ if(!d.success){ alert(d.error||'加载失败'); return; } const art=d.article; currentArticle=art; highlights = art.highlights||[]; currentImages = art.images||[]; document.getElementById('vTitle').textContent = `${art.title||'未命名'}`; document.getElementById('vCategory').value = art.category||'Reading'; const contentDiv=document.getElementById('vContent'); contentDiv.innerHTML = `<div id="articleImages" class="ir-images" style="display: none;"><div class="ir-images-head">文章图片</div><div class="images-grid" id="imagesGrid"></div></div><div class=\"reader\"></div>`; renderReader(contentDiv.querySelector('.reader'), art); setupExam(art); document.getElementById('viewer').classList.add('active'); loadArticleImages(); restoreHighlights(contentDiv, art); closeHighlightsPanel(); checkForJumpHighlight(); 
+    // ===== 打开 / 关上文章：网址带 #article-<id>，系统返回关掉阅读页回到列表 =====
+    let readerPushed = false;   // 当前文章那条历史是不是我们压的（从 #article- 链接直接进来的不是）
+    let listScrollY = 0;
+    function articleHash(id){ return '#article-' + id; }
+    function hashArticleId(){ const m = /^#article-(.+)$/.exec(location.hash); if(!m) return null; try{ return decodeURIComponent(m[1]); }catch(e){ return m[1]; } }
+    function openArticle(id){
+      // 设置URL hash以便刷新时保持状态；同一篇重新加载（删高亮后）不再压一条
+      if(hashArticleId() !== id){ withHistory(() => history.pushState({ irReader: id }, '', articleHash(id))); readerPushed = true; }
+      loadArticle(id);
+    }
+    // 手机上阅读页就是整页：记下列表滚到哪儿，藏起全站导航，从顶上开始读
+    function enterReader(){
+      const b = document.body;
+      if(!b.classList.contains('ir-reading')){ listScrollY = window.scrollY; b.classList.add('ir-reading'); }
+      document.getElementById('vTitle').classList.remove('is-full');
+      if(isPhone()) window.scrollTo(0, 0);
+      updateDock();
+    }
+    // 网址和阅读页对不上时（系统返回、前进）把阅读页跟过去
+    function syncReaderWithUrl(){
+      const id = hashArticleId();
+      const open = document.getElementById('viewer').classList.contains('active');
+      if(!id){ if(open){ closeViewerUi(); readerPushed = false; } return; }
+      readerPushed = !!(history.state && history.state.irReader);
+      if(!open || !currentArticle || currentArticle.id !== id) loadArticle(id);
+    }
+
+    function loadArticle(id){
+      // 手机上前进 / 后退会直接从一篇换到另一篇：上一篇的播放条先收掉
+      if(isPhone() && currentArticle && currentArticle.id !== id){ closeAudioPanel(); currentAudioInfo = null; }
+      fetch(`/intensive_article/${id}`).then(r=>r.json()).then(d=>{ if(!d.success){ alert(d.error||'加载失败'); return; } const art=d.article; currentArticle=art; highlights = art.highlights||[]; currentImages = art.images||[]; document.getElementById('vTitle').textContent = `${art.title||'未命名'}`; document.getElementById('vCategory').value = art.category||'Reading'; const contentDiv=document.getElementById('vContent'); contentDiv.innerHTML = `<div id="articleImages" class="ir-images" style="display: none;"><div class="ir-images-head">文章图片</div><div class="images-grid" id="imagesGrid"></div></div><div class=\"reader\"></div>`; renderReader(contentDiv.querySelector('.reader'), art); setupExam(art); document.getElementById('viewer').classList.add('active'); enterReader(); loadArticleImages(); restoreHighlights(contentDiv, art); closeHighlightsPanel(); checkForJumpHighlight();
       
       // 检查音频文件状态并更新按钮
       checkExistingAudio(id).then(audioInfo => {
@@ -835,28 +1342,42 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       const searchVal=(document.getElementById('hpSearch').value||'').toLowerCase(); const body=document.getElementById('hpBody'); body.innerHTML='';
       const wordOf = h => h.text || (currentArticle.content_text||'').substring(h.start, h.end);
       const say = h => { const w = wordOf(h); if(w && window.playWordPronunciation){ window.playWordPronunciation(w.trim(), currentArticle?.id); } };
-      let list=(highlights||[]).slice().sort((a,b)=>a.start-b.start);
+      // 同一个范围存了两条（旧版本留下的）只列一次，和正文、词数一致
+      let list=(highlights||[]).filter((h,i,all)=>all.findIndex(x=>x.start===h.start&&x.end===h.end)===i).sort((a,b)=>a.start-b.start);
       if(searchVal){ list=list.filter(h=> wordOf(h).toLowerCase().includes(searchVal) || (h.meaning||'').toLowerCase().includes(searchVal)); }
       if(!list.length){ body.innerHTML=`<div class="ir-panel-empty">${searchVal?'没有匹配的词':'还没有高亮。在正文里选中单词或短语，就能记下释义。'}</div>`; return; }
       list.forEach(h=>{
-        const item=document.createElement('div'); item.className='ir-vi';
+        const item=document.createElement('div'); item.className='ir-vi'; item.dataset.hid=h.id;
         item.innerHTML=`<div class="ir-vi-text"><div class="ir-vi-word"></div><div class="ir-vi-mean"></div></div><div class="ir-vi-actions"><button class="ir-icon-btn" title="播放发音" aria-label="播放发音">${IC.volume}</button><button class="ir-icon-btn" title="跳到原文" aria-label="跳到原文">${IC.jump}</button></div>`;
         item.querySelector('.ir-vi-word').textContent = wordOf(h);
         item.querySelector('.ir-vi-mean').textContent = h.meaning || '';
         const [playBtn, jumpBtn] = item.querySelectorAll('button');
         playBtn.onclick=function(e){ e.stopPropagation(); say(h); };
         // 手机上面板会挡住正文，跳过去之前先收起
-        jumpBtn.onclick=function(e){ e.stopPropagation(); if(window.innerWidth <= 768) closeHighlightsPanel(); scrollToHighlight(h.id); };
+        jumpBtn.onclick=function(e){ e.stopPropagation(); if(isPhone()) closeHighlightsPanel(); scrollToHighlight(h.id); };
         item.onclick=function(){ say(h); };
         body.appendChild(item);
       });
     }
     let panelWidth = 320; // 默认宽度
-    function toggleHighlightsPanel(){ const panel=document.getElementById('highlightsPanel'); const content=document.getElementById('vContent'); const btn=document.getElementById('vocabToggle'); const isOpen=panel.classList.contains('active'); if(isOpen){ panel.classList.remove('active'); content.classList.remove('panel-open'); btn.classList.remove('is-on'); } else { renderHighlightsPanel(); panel.classList.add('active'); content.classList.add('panel-open'); btn.classList.add('is-on'); updatePanelWidth(); } }
-    function closeHighlightsPanel(){ const panel=document.getElementById('highlightsPanel'); const content=document.getElementById('vContent'); const btn=document.getElementById('vocabToggle'); panel.classList.remove('active'); content.classList.remove('panel-open'); btn.classList.remove('is-on'); }
-    function updatePanelWidth(){ const panel=document.getElementById('highlightsPanel'); const content=document.getElementById('vContent'); if(panel && content){ panel.style.width = panelWidth + 'px'; content.style.setProperty('--panel-width', panelWidth + 'px'); } }
+    function toggleHighlightsPanel(){ const panel=document.getElementById('highlightsPanel'); if(panel.classList.contains('active')){ closeHighlightsPanel(); } else { showHighlightsPanel(); openLayer('vocab', hideHighlightsPanel, true); } }
+    function showHighlightsPanel(){ const panel=document.getElementById('highlightsPanel'); const content=document.getElementById('vContent'); const btn=document.getElementById('vocabToggle'); renderHighlightsPanel(); panel.classList.add('active'); content.classList.add('panel-open'); btn.classList.add('is-on'); updatePanelWidth(); }
+    function hideHighlightsPanel(){ const panel=document.getElementById('highlightsPanel'); const content=document.getElementById('vContent'); const btn=document.getElementById('vocabToggle'); panel.classList.remove('active'); content.classList.remove('panel-open'); btn.classList.remove('is-on'); }
+    function closeHighlightsPanel(){ hideHighlightsPanel(); closeLayer('vocab'); }
+    // --panel-width 也写在 .ir-body 上：821–900px 的题目栏（正文的兄弟元素）要按它让位
+    function updatePanelWidth(){ const panel=document.getElementById('highlightsPanel'); const content=document.getElementById('vContent'); if(panel && content){ panel.style.width = panelWidth + 'px'; content.style.setProperty('--panel-width', panelWidth + 'px'); content.parentNode.style.setProperty('--panel-width', panelWidth + 'px'); } }
     function scrollToHighlight(hid){ try{ const container=document.getElementById('vContent'); const mark=container.querySelector(`mark.hl[data-hid="${hid}"]`); if(mark){ mark.scrollIntoView({behavior:'smooth', block:'center'}); mark.classList.add('active'); setTimeout(()=>{ mark.classList.remove('active'); }, 1200); } }catch(e){} }
+    // ‹ 返回：关掉阅读页。文章那条历史是我们压的就退回去（以前是再写一个空 hash，又多压一条，
+    // 之后按系统返回「什么都没发生」）；是从链接直接进来的，就把网址里的 #article- 去掉
     function closeViewer(){
+      const n = closeAllLayers();
+      closeViewerUi();
+      const clearHash = () => { if(hashArticleId()) history.replaceState(null, '', location.pathname + location.search); };
+      historyBack(n + (readerPushed ? 1 : 0), clearHash);
+      readerPushed = false;
+    }
+    function closeViewerUi(){
+      closeAllLayers();
       document.getElementById('viewer').classList.remove('active');
       currentArticle=null;
       selectionRange=null;
@@ -870,11 +1391,10 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       currentAudioInfo=null;
       updateAudioButton(false);
       document.getElementById('resumeAudioBtn').style.display = 'none';
-
-      // 清除URL hash，返回列表视图
-      if(window.location.hash && window.location.hash.startsWith('#article-')){
-        window.location.hash = '';
-      }
+      if(isPhone() && document.getElementById('titleEditContainer').style.display !== 'none') cancelTitleEdit();
+      document.body.classList.remove('ir-reading');
+      if(isPhone()) window.scrollTo(0, listScrollY);
+      updateDock();
     }
 
     // 拖拽调整侧边栏宽度
@@ -1005,14 +1525,17 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       removeBtn.style.display = isExisting ? '' : 'none';
       // 本文已经高亮过的词不能再划一次
       highlightBtn.disabled = !isExisting && isDuplicate;
-      highlightBtn.textContent = highlightBtn.disabled ? '已划过' : '高亮';
+      highlightBtn.textContent = highlightBtn.disabled ? '已划过' : (isPhone() ? '划线并写释义' : '高亮');
       highlightBtn.title = highlightBtn.disabled ? '这个词在本文里已经高亮过了' : '';
+      // 手机：底部操作栏左边写出选中的词
+      document.getElementById('popWord').textContent = (selectionRange && selectionRange.text) || '';
       box.style.display='block';
       positionBoxAtRect(box, rect);
     }
     // 浮层是 position:fixed，直接用选区在视口里的坐标（以前加了 window.scrollY，列表往下翻过再打开文章，浮层就跑到屏幕外）。
     // 鼠标划词放在选区上方；手机放在下方，让开系统的复制菜单；哪边放不下就翻到另一边。
     function positionBoxAtRect(el, rect){
+      if(isPhone()) return;   // 手机上是贴底的操作栏 / 面板，位置由样式决定
       const below = lastPointerType !== 'mouse';
       const w = el.offsetWidth, h = el.offsetHeight, gap = below ? 14 : 8, minTop = 64;
       const x = Math.max(8, Math.min(window.innerWidth - w - 8, rect.left + rect.width/2 - w/2));
@@ -1051,10 +1574,13 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       mInput.value='';
       document.getElementById('floatBox').style.display='none';
       mBox.style.display='block';
-      if(lastSelectionRect){ positionBoxAtRect(mBox, lastSelectionRect); }
+      if(isPhone()){ document.getElementById('mbWord').textContent = selectionRange.text || ''; openLayer('meaning', hideMeaning, false); }
+      else if(lastSelectionRect){ positionBoxAtRect(mBox, lastSelectionRect); }
       mInput.focus();
     }
-    function cancelMeaning(){ document.getElementById('meaningBox').style.display='none'; cancelFloat(); }
+    function hideMeaning(){ document.getElementById('meaningBox').style.display='none'; cancelFloat(); }
+    function cancelMeaning(){ hideMeaning(); closeLayer('meaning'); }
+    function playSelectedWord(){ const w = selectionRange && selectionRange.text; if(w && window.playWordPronunciation && currentArticle) window.playWordPronunciation(w.trim(), currentArticle.id); }
     function saveMeaning(){ const meaning=document.getElementById('meaningInput').value.trim(); if(!meaning){ alert('请先写下释义'); return; } const selTxt=(selectionRange&&selectionRange.text)?selectionRange.text:''; const body={ id: currentArticle.id, start: selectionRange.start, end: selectionRange.end, meaning, text: selTxt }; fetch('/intensive_add_highlight',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)}).then(r=>r.json()).then(d=>{ if(d.success){ const list=document.getElementById('vContent'); // 防重复：先清理并重绘
         restoreHighlights(list, {highlights: (function(){ const idx = (highlights||[]).findIndex(h=>h.id===d.highlight.id); if(idx>=0){ highlights[idx]=d.highlight; } else { // 若存在相同范围，替换
             const sameIdx=(highlights||[]).findIndex(h=>h.start===d.highlight.start && h.end===d.highlight.end);
@@ -1114,7 +1640,10 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       uniq.sort((a,b)=>a.start-b.start).forEach(h=>{ applyOneHighlight(container, h); }); updateVocabCount(); paintExamMarks(); }
     function applyOneHighlight(container, h){ try{ const reader=container.querySelector('.reader'); if(!reader || !(h.end > h.start)) return; // 已存在则跳过
       if(container.querySelector(`mark.hl[data-hid="${h.id}"]`)) return; wrapOriginalRange(reader, h.start, h.end, h); }catch(e){} }
-    function deleteHighlight(hid){ if(!currentArticle) return; fetch('/intensive_delete_highlight',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id: currentArticle.id, highlight_id: hid})}).then(r=>r.json()).then(d=>{ if(d.success){ // 重新加载文章以刷新 DOM
+    function deleteHighlight(hid){ if(!currentArticle) return; fetch('/intensive_delete_highlight',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id: currentArticle.id, highlight_id: hid})}).then(r=>r.json()).then(d=>{ if(d.success){
+          // 手机：只把这一个高亮从页面上拿掉，不整篇重载（不然播放条、题目面板、读到的位置都会被重置）
+          if(isPhone()){ highlights = (highlights||[]).filter(h => h.id !== hid); restoreHighlights(document.getElementById('vContent'), { highlights, content_text: currentArticle.content_text }); if(document.getElementById('highlightsPanel').classList.contains('active')) renderHighlightsPanel(); return; }
+          // 重新加载文章以刷新 DOM
           openArticle(currentArticle.id);
         } else { alert(d.error||'删除失败'); } }); }
 
@@ -1128,6 +1657,7 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       viewer.classList.toggle('has-exam', !!exam); body.classList.toggle('has-exam', !!exam);
       document.getElementById('jiufenMarksBtn').style.display = exam && (exam.marks || []).length ? '' : 'none';
       showExamTab('text');
+      if(hasLayer('qs')) closeLayer('qs'); else hideQuestionsSheet();
       examSentenceAt = {};
       pane.classList.remove('only-wrong', 'no-wrong');
       if(!exam){ pane.innerHTML = ''; if(window.CSS && CSS.highlights) CSS.highlights.delete('jiufen'); return; }
@@ -1139,19 +1669,26 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       const a = exam.attempt;
       document.getElementById('examTabQ').textContent = a ? `题目 · 对 ${a.correct}/${a.total}` : '题目';
       pane.onclick = onExamClick;
+      setCurrentQuestion(pane.querySelector('.ir-q'));
     }
     function examQuestions(exam){ return (exam.groups || []).flatMap(g => g.questions || []); }
     function fmtDuration(sec){ const m = Math.floor(sec / 60), s = sec % 60; return `${m}:${String(s).padStart(2, '0')}`; }
     function examHtml(exam){
       const a = exam.attempt; const qs = examQuestions(exam);
       const missed = qs.filter(q => q.state === 'wrong' || q.state === 'blank').length;
-      let h = `<div class="ir-exam-head"><div><div class="ir-exam-part">${escapeHtml([exam.part, qs.length + ' 题'].filter(Boolean).join(' · '))}</div>`;
+      // 手机：面板顶上一行（第几题、展开全部、收起），展开后是成绩 + 全部 / 只看错题 + 显示答案，平时底下是上一题 / 定位 / 解析 / 下一题
+      let h = `<div class="ir-qs-head" data-act="qs-toggle"><div class="ir-qs-title" id="qsTitle">题目</div><button type="button" class="ir-qs-more" data-act="qs-toggle"><span id="qsMoreLabel">全部题目</span>${IC.chevUp}</button><button type="button" class="ir-x" data-act="qs-close" aria-label="收起题目">${IC.close}</button></div>`;
+      h += `<div class="ir-qs-bar">` + (a ? `<div class="ir-qs-score">对 <b>${a.correct}</b> / ${a.total}${a.elapsed_seconds ? ' · 用时 ' + fmtDuration(a.elapsed_seconds) : ''}</div>` : '')
+        + `<div class="ir-qs-tools">` + (a ? `<div class="ir-segs"><button type="button" class="is-on" data-act="qs-all">全部 ${qs.length}</button><button type="button" data-act="qs-wrong">只看错题${missed ? ' ' + missed : ''}</button></div>` : `<span class="ir-grow"></span>`)
+        + `<button type="button" class="ir-qs-switch" data-act="qs-answers" role="switch" aria-checked="true">显示答案<span class="ir-switch"></span></button></div></div>`;
+      h += `<div class="ir-exam-head"><div><div class="ir-exam-part">${escapeHtml([exam.part, qs.length + ' 题'].filter(Boolean).join(' · '))}</div>`;
       if(a) h += `<div class="ir-exam-score">对 ${a.correct} / ${a.total}<span>${a.elapsed_seconds ? '用时 ' + fmtDuration(a.elapsed_seconds) : ''}</span></div>`;
       h += `</div><div class="ir-exam-tools">`;
       if(a) h += `<button class="ir-icon-btn" data-act="only-wrong">只看错题${missed ? ' ' + missed : ''}</button>`;
       h += `<button class="ir-icon-btn is-on" data-act="answers" title="隐藏答案可以重新做一遍">答案</button></div></div>`;
       (exam.groups || []).forEach(g => { h += groupHtml(g); });
-      return h + `<div class="ir-exam-empty">这一篇没有错题</div>`;
+      h += `<div class="ir-exam-empty">这一篇没有错题</div>`;
+      return h + `<div class="ir-qs-nav"><button type="button" data-act="qs-prev">‹ 上一题</button><button type="button" data-act="qs-locate">定位</button><button type="button" data-act="qs-analysis">解析</button><button type="button" data-act="qs-next">下一题 ›</button></div>`;
     }
     function groupHtml(g){
       let h = `<section class="ir-group">`;
@@ -1170,7 +1707,7 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
     function questionHtml(g, q){
       const cls = { right: ' is-right', wrong: ' is-wrong', blank: ' is-blank' }[q.state] || '';
       const answers = (q.answer || '').split('|').map(x => x.trim()).filter(Boolean);
-      let h = `<div class="ir-q${cls}" data-num="${escapeHtml(q.num)}"><span class="ir-q-num">${escapeHtml(q.num)}</span>`;
+      let h = `<div class="ir-q${cls}" data-num="${escapeHtml(q.num)}" data-kind="${escapeHtml(g.kind || '')}"><span class="ir-q-num">${escapeHtml(q.num)}</span>`;
       if(q.text) h += `<div class="ir-q-text">${escapeHtml(q.text)}</div>`;
       if(q.zh) h += `<div class="ir-q-zh">${escapeHtml(q.zh)}</div>`;
       if((q.options || []).length){
@@ -1204,21 +1741,43 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
     function onExamClick(e){
       const pane = document.getElementById('examPane');
       const blank = e.target.closest('.ir-blank');
-      if(blank){ const q = pane.querySelector(`.ir-q[data-num="${CSS.escape(blank.dataset.q || '')}"]`); if(q){ q.scrollIntoView({ behavior: 'smooth', block: 'center' }); markActiveQuestion(q); } return; }
-      const btn = e.target.closest('[data-act]'); if(!btn) return;
+      if(blank){ const q = pane.querySelector(`.ir-q[data-num="${CSS.escape(blank.dataset.q || '')}"]`); if(q){ q.scrollIntoView({ behavior: 'smooth', block: 'center' }); markActiveQuestion(q); if(isPhone()) setCurrentQuestion(q); } return; }
+      const btn = e.target.closest('[data-act]');
+      // 手机：展开的题目列表里点一道题，它就是「当前题」，收起后面板露的就是它
+      if(!btn){ const q = e.target.closest('.ir-q'); if(q && isPhone()) setCurrentQuestion(q); return; }
       const qEl = btn.closest('.ir-q');
       switch(btn.dataset.act){
-        case 'answers': setAnswersHidden(!pane.classList.contains('hide-ans')); break;
-        case 'only-wrong': { const on = pane.classList.toggle('only-wrong'); btn.classList.toggle('is-on', on); pane.classList.toggle('no-wrong', !pane.querySelector('.ir-q.is-wrong, .ir-q.is-blank')); break; }
-        case 'analysis': { const box = qEl.querySelector('.ir-analysis'); box.hidden = !box.hidden; btn.classList.toggle('is-on', !box.hidden); break; }
+        case 'answers': case 'qs-answers': setAnswersHidden(!pane.classList.contains('hide-ans')); break;
+        case 'only-wrong': setOnlyWrong(!pane.classList.contains('only-wrong')); break;
+        case 'qs-all': setOnlyWrong(false); break;
+        case 'qs-wrong': setOnlyWrong(true); break;
+        case 'analysis': { const box = qEl.querySelector('.ir-analysis'); box.hidden = !box.hidden; btn.classList.toggle('is-on', !box.hidden); paintQuestionsHead(); break; }
         case 'locate': locateEvidence(qEl); break;
+        case 'qs-toggle': setQuestionsFull(!pane.classList.contains('is-full')); break;
+        case 'qs-close': closeQuestionsSheet(); break;
+        case 'qs-prev': stepQuestion(-1); break;
+        case 'qs-next': stepQuestion(1); break;
+        case 'qs-locate': { const q = currentQuestionEl(); if(q) locateEvidence(q); break; }
+        case 'qs-analysis': { const q = currentQuestionEl(); const box = q && q.querySelector('.ir-analysis'); if(box){ box.hidden = !box.hidden; const b = q.querySelector('[data-act="analysis"]'); if(b) b.classList.toggle('is-on', !box.hidden); } paintQuestionsHead(); break; }
       }
+    }
+    // 只看错题：桌面的按钮和手机的「全部 / 只看错题」分段一起变
+    function setOnlyWrong(on){
+      const pane = document.getElementById('examPane');
+      pane.classList.toggle('only-wrong', on);
+      pane.querySelectorAll('[data-act="only-wrong"], [data-act="qs-wrong"]').forEach(b => b.classList.toggle('is-on', on));
+      pane.querySelectorAll('[data-act="qs-all"]').forEach(b => b.classList.toggle('is-on', !on));
+      pane.classList.toggle('no-wrong', !pane.querySelector('.ir-q.is-wrong, .ir-q.is-blank'));
+      const cur = currentQuestionEl();
+      if(on && cur && !visibleQuestions().includes(cur)) setCurrentQuestion(visibleQuestions()[0] || cur);
+      else paintQuestionsHead();
     }
     // 隐藏答案：对错、解析、定位一起藏起来，可以照着原文重新做一遍
     function setAnswersHidden(hide, silent){
       const pane = document.getElementById('examPane');
       pane.classList.toggle('hide-ans', hide);
       const btn = pane.querySelector('[data-act="answers"]'); if(btn) btn.classList.toggle('is-on', !hide);
+      pane.querySelectorAll('[data-act="qs-answers"]').forEach(b => b.setAttribute('aria-checked', String(!hide)));
       if(!silent){ try{ localStorage.setItem('intensiveHideAnswers', hide ? '1' : '0'); }catch(e){} }
     }
     function markActiveQuestion(qEl){ document.querySelectorAll('#examPane .ir-q.is-active').forEach(x => x.classList.remove('is-active')); qEl.classList.add('is-active'); }
@@ -1232,8 +1791,101 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       for(let i = q.evidence[0]; i <= q.evidence[1]; i++){ const p = reader.querySelector(`p[data-s="${i}"]`); if(p) ps.push(p); }
       if(!ps.length) return;
       ps.forEach(p => p.classList.add('ir-ev'));
+      if(isPhone()){
+        // 手机：题目面板收成只露这一题，原文滚到面板上方的可见区域里，题和证据句同时看得见
+        setCurrentQuestion(qEl);
+        const pane = document.getElementById('examPane');
+        if(pane.classList.contains('is-full')) setQuestionsFull(false);
+        else if(!pane.classList.contains('is-open')) openQuestionsSheet();
+        requestAnimationFrame(() => scrollPassageTo(ps));
+        return;
+      }
       if(window.innerWidth <= 900) showExamTab('text');
       ps[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    // 把证据句滚到「顶栏以下、题目面板以上」那块的中间；太长就让开头贴着顶栏
+    function scrollPassageTo(ps){
+      const top = ps[0].getBoundingClientRect().top, bottom = ps[ps.length - 1].getBoundingClientRect().bottom;
+      const barH = document.querySelector('#viewer .ir-bar').getBoundingClientRect().bottom;
+      const pane = document.getElementById('examPane');
+      const dock = pane.classList.contains('is-open') ? pane.offsetHeight : (parseFloat(getComputedStyle(document.body).getPropertyValue('--ir-dock-h')) || 0);
+      const visTop = barH + 12, visH = Math.max(80, window.innerHeight - dock - 12 - visTop);
+      const h = bottom - top;
+      const delta = h <= visH ? top - visTop - (visH - h) / 2 : top - visTop;
+      window.scrollTo({ top: Math.max(0, window.scrollY + delta), behavior: 'smooth' });
+    }
+
+    // ===== 手机：题目面板（平时只露当前一题，点顶上一行展开成整张题目列表） =====
+    const KIND_NAME = { judge: '判断', choice: '选择', blank: '填空', match: '配对' };
+    let qsListScroll = 0;   // 展开的列表收起再展开时回到原来的位置
+    function examQuestionEls(){ return [...document.querySelectorAll('#examPane .ir-q')]; }
+    function currentQuestionEl(){ return document.querySelector('#examPane .ir-q.is-cur'); }
+    function visibleQuestions(){ const pane = document.getElementById('examPane'); const only = pane.classList.contains('only-wrong'); return examQuestionEls().filter(q => !only || q.classList.contains('is-wrong') || q.classList.contains('is-blank')); }
+    function setCurrentQuestion(qEl){
+      if(!qEl) return;
+      examQuestionEls().forEach(q => q.classList.toggle('is-cur', q === qEl));
+      document.querySelectorAll('#examPane .ir-group').forEach(g => g.classList.toggle('has-cur', g.contains(qEl)));
+      paintQuestionsHead();
+    }
+    function paintQuestionsHead(){
+      const pane = document.getElementById('examPane'); const title = document.getElementById('qsTitle'); if(!title) return;
+      const full = pane.classList.contains('is-full');
+      const q = currentQuestionEl(); const vis = visibleQuestions(); const i = vis.indexOf(q);
+      const kind = q ? (KIND_NAME[q.dataset.kind] || '') : '';
+      title.innerHTML = full ? '题目' : (q ? `第 ${escapeHtml(q.dataset.num)} 题<span>${[kind, i >= 0 ? (i + 1) + ' / ' + vis.length : ''].filter(Boolean).join(' · ')}</span>` : '题目');
+      document.getElementById('qsMoreLabel').textContent = full ? '收起' : '全部题目';
+      const nav = pane.querySelector('.ir-qs-nav'); if(!nav) return;
+      nav.querySelector('[data-act="qs-prev"]').disabled = i <= 0;
+      nav.querySelector('[data-act="qs-next"]').disabled = i < 0 || i >= vis.length - 1;
+      const loc = q && q.querySelector('[data-act="locate"]'), an = q && q.querySelector('.ir-analysis');
+      nav.querySelector('[data-act="qs-locate"]').disabled = !loc;
+      const anBtn = nav.querySelector('[data-act="qs-analysis"]'); anBtn.disabled = !an; anBtn.classList.toggle('is-on', !!an && !an.hidden);
+    }
+    function stepQuestion(d){
+      const vis = visibleQuestions(); const i = vis.indexOf(currentQuestionEl());
+      const next = vis[Math.max(0, Math.min(vis.length - 1, (i < 0 ? 0 : i + d)))];
+      if(next){ setCurrentQuestion(next); document.getElementById('examPane').scrollTop = 0; }
+    }
+    function toggleQuestionsSheet(){ if(document.getElementById('examPane').classList.contains('is-open')) closeQuestionsSheet(); else openQuestionsSheet(); }
+    function openQuestionsSheet(){
+      const pane = document.getElementById('examPane');
+      if(!currentArticle || !currentArticle.exam || !isPhone()) return;
+      cancelFloat(); closeWordCard();
+      if(!currentQuestionEl() || !visibleQuestions().includes(currentQuestionEl())) setCurrentQuestion(visibleQuestions()[0] || examQuestionEls()[0]);
+      pane.classList.add('is-open', 'is-peek'); pane.classList.remove('is-full'); pane.scrollTop = 0;
+      document.getElementById('examSheetBtn').classList.add('is-on');
+      paintQuestionsHead(); updateDock();
+      openLayer('qs', hideQuestionsSheet, false);
+    }
+    function hideQuestionsSheet(){
+      const pane = document.getElementById('examPane');
+      pane.classList.remove('is-open', 'is-peek', 'is-full');
+      const b = document.getElementById('examSheetBtn'); if(b) b.classList.remove('is-on');
+      paintQuestionsHead(); updateDock();
+    }
+    function closeQuestionsSheet(){ hideQuestionsSheet(); closeLayer('qs'); }
+    function setQuestionsFull(full){
+      const pane = document.getElementById('examPane');
+      if(!full){ closeLayer('qs-full'); return; }
+      if(!pane.classList.contains('is-open')) openQuestionsSheet();
+      pane.classList.add('is-full'); pane.classList.remove('is-peek');
+      paintQuestionsHead(); updateDock();
+      // 回到上次看到的位置；当前题不在视野里就把它滚进来
+      pane.scrollTop = qsListScroll;
+      const q = currentQuestionEl();
+      if(q){
+        const stick = pane.querySelector('.ir-qs-head').offsetHeight + pane.querySelector('.ir-qs-bar').offsetHeight;
+        if(q.offsetTop < pane.scrollTop + stick || q.offsetTop + Math.min(q.offsetHeight, 200) > pane.scrollTop + pane.clientHeight) pane.scrollTop = Math.max(0, q.offsetTop - stick - 12);
+      }
+      openLayer('qs-full', collapseQuestionsUi, true);
+    }
+    function collapseQuestionsUi(){
+      const pane = document.getElementById('examPane');
+      if(pane.classList.contains('is-full')) qsListScroll = pane.scrollTop;
+      pane.classList.remove('is-full');
+      if(pane.classList.contains('is-open')) pane.classList.add('is-peek');
+      pane.scrollTop = 0;
+      paintQuestionsHead(); updateDock();
     }
     let examPaneScroll = 0;   // 窄屏切走再切回「题目」时回到原来看到的位置
     function showExamTab(tab){
@@ -1249,6 +1901,8 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
     function paintExamMarks(){
       const exam = currentArticle && currentArticle.exam;
       const state = document.getElementById('jiufenMarksState'); if(state) state.textContent = jiufenMarks ? '显示中' : '已隐藏';
+      const sw = document.getElementById('jiufenSwitch'); if(sw) sw.classList.toggle('is-on', jiufenMarks);
+      document.getElementById('jiufenMarksBtn').setAttribute('aria-checked', String(jiufenMarks));
       if(!window.CSS || !CSS.highlights || typeof Highlight === 'undefined') return;
       CSS.highlights.delete('jiufen');
       const reader = document.querySelector('#vContent .reader');
@@ -1343,8 +1997,9 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       // 手机长按是在选词，安卓还会顺带触发 contextmenu，这时不能弹删除确认
       mark.addEventListener('contextmenu', function(ev){ if(lastPointerType !== 'mouse') return; ev.preventDefault(); if(confirm('删除该高亮/笔记？')){ deleteHighlight(meta.id); } });
       mark.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation();
-        // 手机没有悬停：点一下显示释义，再点一下收起
-        if(lastPointerType !== 'mouse'){ document.querySelectorAll('#vContent mark.hl.tip-on').forEach(m => { if(m !== mark) m.classList.remove('tip-on'); }); fitTip(mark); mark.classList.toggle('tip-on'); }
+        // 手机：底部弹出单词卡（释义、发音、删除）；平板等触屏宽屏：点一下显示释义气泡，再点一下收起
+        if(isPhone()){ openWordCard(meta.id); }
+        else if(lastPointerType !== 'mouse'){ document.querySelectorAll('#vContent mark.hl.tip-on').forEach(m => { if(m !== mark) m.classList.remove('tip-on'); }); fitTip(mark); mark.classList.toggle('tip-on'); }
         const word = meta.text || mark.textContent.replace(tip.textContent, '').trim(); if(word && window.playWordPronunciation){ window.playWordPronunciation(word, currentArticle?.id); } }); }
     // 释义气泡默认在高亮正上方居中；靠近正文左右边缘时往里挪，上方被顶栏挡住时翻到下面
     function fitTip(mark){
@@ -1400,6 +2055,12 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
     
     function updateAudioButton(audioExists = false) {
       const btn = document.getElementById('generateAudioBtn');
+      // 手机：工具栏上永远是「朗读」，只管显示 / 收起播放条；重新生成放在 ⋯ 面板里
+      if (isPhone()) {
+        btn.innerHTML = btnLabel('volume', '朗读');
+        btn.title = audioExists ? '显示 / 收起朗读播放条' : '生成朗读音频';
+        return;
+      }
       if (audioExists) {
         btn.innerHTML = btnLabel('redo', '重新生成');
         btn.title = '重新生成英文音频';
@@ -2008,6 +2669,8 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       
       // 显示音频面板
       audioPanel.style.display = 'block';
+      audioPanel.classList.remove('is-collapsed');
+      syncAudioUi();
       
       // 调整内容区域，为音频面板留出空间
       const content = document.getElementById('vContent');
@@ -2036,6 +2699,7 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       
       // 隐藏面板
       audioPanel.style.display = 'none';
+      audioPanel.classList.remove('is-collapsed');
       
       // 恢复内容区域
       if (content) {
@@ -2043,6 +2707,7 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       }
       
       currentAudioUrl = null;
+      syncAudioUi();
     }
     
     function downloadAudio() {
@@ -2224,6 +2889,7 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       
       // 阻止背景滚动
       document.body.style.overflow = 'hidden';
+      openLayer('image', hideImageModal, false);
     }
     
     function updateModalImage() {
@@ -2233,6 +2899,7 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       
       if (currentImages[currentImageIndex]) {
         const image = currentImages[currentImageIndex];
+        modalImage.classList.remove('is-zoomed');
         modalImage.src = `/intensive_image/${currentArticle.id}/${image.filename}`;
         imageCounter.textContent = `${currentImageIndex + 1} / ${currentImages.length}`;
         
@@ -2322,9 +2989,11 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       });
     }
     
-    function closeImageModal() {
+    function closeImageModal() { hideImageModal(); closeLayer('image'); }
+    function hideImageModal() {
       const modal = document.getElementById('imageModal');
       modal.classList.remove('active');
+      document.getElementById('modalImage').classList.remove('is-zoomed');
       
       setTimeout(() => {
         modal.style.display = 'none';
@@ -2374,10 +3043,17 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       const editContainer = document.getElementById('titleEditContainer');
       const editInput = document.getElementById('titleEditInput');
       
+      if (isPhone()) {
+        // 手机：顶栏不动，从底部升起一个改标题的面板（贴着键盘）
+        editContainer.classList.add('is-sheet');
+        editContainer.style.display = 'flex';
+        openLayer('title', hideTitleSheet, true);
+      } else {
       // 隐藏标题和编辑按钮，显示编辑界面
       titleElement.style.display = 'none';
       editBtn.style.display = 'none';
       editContainer.style.display = 'flex';
+      }
       
       // 设置当前标题作为初始值
       editInput.value = currentArticle.title || '未命名';
@@ -2385,7 +3061,11 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       editInput.select();
     }
     
-    function cancelTitleEdit() {
+    function cancelTitleEdit(after) {
+      hideTitleSheet();
+      closeLayer('title', after);
+    }
+    function hideTitleSheet() {
       const titleElement = document.getElementById('vTitle');
       const editBtn = document.getElementById('editTitleBtn');
       const editContainer = document.getElementById('titleEditContainer');
@@ -2394,6 +3074,7 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       titleElement.style.display = 'block';
       editBtn.style.display = 'block';
       editContainer.style.display = 'none';
+      editContainer.classList.remove('is-sheet');
     }
     
     function saveTitleEdit() {
@@ -2448,18 +3129,21 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
             console.log('文件:', data.details.files);
             console.log('目录:', data.details.directories);
             
-            // 更新浏览器URL（如果有hash）
-            if (window.location.hash === `#article-${oldArticleId}`) {
-              window.location.hash = `#article-${data.new_article_id}`;
-            }
           }
+          // 更新浏览器URL（如果有hash）：换掉当前这条，不再多压一条历史（以前中文 ID 的文章比较不上，网址也不改）。
+          // 手机上要等改标题面板那条历史退掉以后再换，不然退回去又是旧 ID
+          const fixHash = () => {
+            if (data.renamed_files && hashArticleId() === oldArticleId) {
+              history.replaceState(Object.assign({}, history.state, { irReader: data.new_article_id }), '', articleHash(data.new_article_id));
+            }
+          };
           
           // 刷新文章列表以显示新标题
           if (typeof loadList === 'function') {
             loadList();
           }
           
-          cancelTitleEdit();
+          cancelTitleEdit(fixHash);
         } else {
           alert(data.error || '标题更新失败');
         }
@@ -2475,7 +3159,152 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
         saveBtn.style.opacity = '1';
       });
     }
-    
+
+    // ===== 手机：点高亮弹出的单词卡 =====
+    let wordCardHid = null;
+    function openWordCard(hid){
+      const h = (highlights || []).find(x => x.id === hid); if(!h) return;
+      const mark = document.querySelector(`#vContent mark.hl[data-hid="${CSS.escape(hid)}"]`);
+      wordCardHid = hid;
+      document.getElementById('wcWord').textContent = h.text || (mark ? mark.firstChild.nodeValue : '');
+      document.getElementById('wcMean').textContent = h.meaning || '';
+      document.getElementById('wordCard').hidden = false;
+      openLayer('word', hideWordCard, false);
+    }
+    function hideWordCard(){ document.getElementById('wordCard').hidden = true; wordCardHid = null; }
+    function closeWordCard(){ if(wordCardHid === null && document.getElementById('wordCard').hidden) return; hideWordCard(); closeLayer('word'); }
+    function wordCardPlay(){ const w = document.getElementById('wcWord').textContent.trim(); if(w && window.playWordPronunciation && currentArticle) window.playWordPronunciation(w, currentArticle.id); }
+    function wordCardShowInList(){
+      const hid = wordCardHid;
+      swapLayer('word', 'vocab', hideHighlightsPanel, true);
+      document.getElementById('hpSearch').value = '';
+      showHighlightsPanel();
+      const row = document.querySelector(`#hpBody .ir-vi[data-hid="${CSS.escape(hid || '')}"]`);
+      if(row){ row.scrollIntoView({ block: 'center' }); row.classList.add('is-flash'); setTimeout(() => row.classList.remove('is-flash'), 1400); }
+    }
+    function wordCardDelete(){
+      const hid = wordCardHid; if(!hid) return;
+      if(!confirm('删除这个词的高亮和释义？')) return;
+      closeWordCard(); deleteHighlight(hid);
+    }
+    // 单词卡开着时点正文别处（不是另一个高亮）就收起；滚动不算点
+    document.addEventListener('click', function(e){
+      if(wordCardHid === null || !e.target.closest) return;
+      if(e.target.closest('#wordCard') || e.target.closest('mark.hl')) return;
+      closeWordCard();
+    }, true);
+
+    // ===== 手机：朗读按钮、迷你播放条 =====
+    function audioButtonClick(){
+      if(!isPhone()) return generateArticleAudio();
+      const panel = document.getElementById('audioPanel');
+      if(panel.style.display === 'block'){ panel.classList.toggle('is-collapsed'); syncAudioUi(); return; }
+      if(currentAudioInfo){ showAudioPlayer(currentAudioInfo.audio_url, currentAudioInfo.filename, true); currentAudioUrl = currentAudioInfo.audio_url; return; }
+      // 生成要调付费的语音合成：先问一句，不让随手一点就花钱
+      if(!confirm('这篇还没有朗读音频，现在生成吗？\n\n会调用语音合成，长文章要一两分钟。')) return;
+      generateArticleAudio();
+    }
+    function regenerateAudioPhone(){
+      if(!currentArticle) return;
+      const when = currentAudioInfo && currentAudioInfo.created_time ? `（生成时间：${new Date(currentAudioInfo.created_time).toLocaleString()}）` : '';
+      if(!confirm(`此文章已有音频文件${when}。\n\n是否要重新生成音频？这将覆盖原有文件，并重新调用语音合成。`)) return;
+      cleanupExistingAudio().then(() => proceedWithAudioGeneration()).catch(error => {
+        console.error('清理音频文件失败:', error);
+        alert('清理旧音频文件时出现问题，但将继续生成新音频');
+        proceedWithAudioGeneration();
+      });
+    }
+    function collapseAudioPanel(){ document.getElementById('audioPanel').classList.add('is-collapsed'); syncAudioUi(); }
+    function toggleAudioPlay(){ const a = document.getElementById('articleAudio'); if(a.paused){ const p = a.play(); if(p && p.catch) p.catch(() => {}); } else a.pause(); }
+    function syncAudioUi(){
+      const panel = document.getElementById('audioPanel');
+      const shown = panel.style.display === 'block' && !panel.classList.contains('is-collapsed');
+      const btn = document.getElementById('generateAudioBtn');
+      if(isPhone()) btn.classList.toggle('is-on', shown); else btn.classList.remove('is-on');
+      updateDock();
+    }
+    (function(){
+      const a = document.getElementById('articleAudio'), play = document.getElementById('apPlay'), seek = document.getElementById('apSeek'), time = document.getElementById('apTime');
+      const fmt = s => (isFinite(s) && s >= 0) ? Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0') : '0:00';
+      let seeking = false;
+      const paint = () => {
+        play.innerHTML = a.paused ? IC.play : IC.pause; play.setAttribute('aria-label', a.paused ? '播放' : '暂停');
+        const d = a.duration;
+        if(!seeking) seek.value = isFinite(d) && d > 0 ? Math.round(a.currentTime / d * 1000) : 0;
+        time.textContent = fmt(a.currentTime) + ' / ' + fmt(d);
+      };
+      ['play', 'pause', 'timeupdate', 'loadedmetadata', 'durationchange', 'ended', 'emptied'].forEach(ev => a.addEventListener(ev, paint));
+      seek.addEventListener('input', () => { seeking = true; const d = a.duration; if(isFinite(d)) time.textContent = fmt(seek.value / 1000 * d) + ' / ' + fmt(d); });
+      seek.addEventListener('change', () => { const d = a.duration; if(isFinite(d) && d > 0) a.currentTime = seek.value / 1000 * d; seeking = false; paint(); });
+      paint();
+    })();
+
+    // ===== 手机：底部占了多高（工具栏 + 播放条，或者题目面板），正文留出这么多、划词操作栏贴在它上面 =====
+    function updateDock(){
+      const b = document.body;
+      if(!isPhone() || !document.getElementById('viewer').classList.contains('active')){ b.style.removeProperty('--ir-dock-h'); b.style.removeProperty('--ui-bottom-bar-h'); return; }
+      const tools = document.querySelector('#viewer .ir-tools'), ap = document.getElementById('audioPanel'), qs = document.getElementById('examPane');
+      let h = (tools ? tools.offsetHeight : 0) + (ap.offsetHeight || 0);
+      if(qs.classList.contains('is-peek')) h = qs.offsetHeight;
+      b.style.setProperty('--ir-dock-h', h + 'px');
+      b.style.setProperty('--ui-bottom-bar-h', h + 'px');
+    }
+    if(window.ResizeObserver){ const ro = new ResizeObserver(() => updateDock()); ['audioPanel', 'examPane'].forEach(id => ro.observe(document.getElementById(id))); ro.observe(document.querySelector('#viewer .ir-tools')); }
+    // 键盘弹起时（iOS 只缩可视区域，不缩布局视口）把写释义、改标题的面板托在键盘上面
+    if(window.visualViewport){
+      const vv = window.visualViewport;
+      const onVV = () => { if(!isPhone()){ document.body.style.removeProperty('--ir-kb'); return; } document.body.style.setProperty('--ir-kb', Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)) + 'px'); };
+      vv.addEventListener('resize', onVV); vv.addEventListener('scroll', onVV);
+    }
+
+    // ===== 手机：⋯ 面板和改标题面板挪出顶栏 =====
+    // 顶栏在手机上是 sticky，自成一个层叠上下文，留在里面的面板永远盖不过遮罩；宽屏时放回原位
+    const chromeHomes = new Map();
+    function placePhoneChrome(){
+      const dock = document.getElementById('irDock');
+      ['moreMenu', 'titleEditContainer'].forEach(id => {
+        const el = document.getElementById(id);
+        if(!chromeHomes.has(el)) chromeHomes.set(el, { parent: el.parentNode, next: el.nextSibling });
+        const home = chromeHomes.get(el);
+        if(isPhone()){ if(el.parentNode !== dock) dock.appendChild(el); }
+        else if(el.parentNode !== home.parent){ home.parent.insertBefore(el, home.next); }
+      });
+    }
+    placePhoneChrome();
+
+    // ===== 手机：大图左右滑换张、双击放大 =====
+    (function(){
+      const modal = document.getElementById('imageModal'); let x0 = null, y0 = 0, lastTap = 0;
+      modal.addEventListener('touchstart', e => { if(e.touches.length !== 1){ x0 = null; return; } x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
+      modal.addEventListener('touchend', e => {
+        if(x0 === null || !isPhone()) return;
+        const t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0; x0 = null;
+        const img = document.getElementById('modalImage');
+        if(Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5 && !img.classList.contains('is-zoomed')){ if(dx < 0) showNextImage(); else showPreviousImage(); lastTap = 0; return; }
+        if(Math.abs(dx) < 10 && Math.abs(dy) < 10 && e.target === img){
+          const now = Date.now();
+          if(now - lastTap < 320){
+            const r = img.getBoundingClientRect();
+            if(!img.classList.contains('is-zoomed')) img.style.transformOrigin = `${((t.clientX - r.left) / r.width * 100).toFixed(1)}% ${((t.clientY - r.top) / r.height * 100).toFixed(1)}%`;
+            img.classList.toggle('is-zoomed'); lastTap = 0; e.preventDefault();
+          } else lastTap = now;
+        }
+      });
+    })();
+
+    // 跨过 820px（转屏、拉窗口）：收掉手机上的各种面板，挪回原位，按新宽度重画工具栏
+    function onPhoneChange(){
+      historyBack(closeAllLayers());
+      hideFloat();
+      syncScrollRestoration();
+      placePhoneChrome();
+      const gen = document.getElementById('generateAudioBtn');
+      if(!gen.disabled) updateAudioButton(!!currentAudioInfo);
+      syncAudioUi();
+    }
+    if(phoneMQ.addEventListener) phoneMQ.addEventListener('change', onPhoneChange); else if(phoneMQ.addListener) phoneMQ.addListener(onPhoneChange);
+    if(isPhone()) updateAudioButton(false);
+
   </script>
 </body>
 </html>
