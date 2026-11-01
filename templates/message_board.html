@@ -330,24 +330,167 @@
       .mb-composer__row > .mb-tools { margin-left: 48px; }
     }
 
-    /* ==================== 手机 ==================== */
+    /* ⋯ 面板（手机上删帖、删评论）：只在手机上打开，样式放在外面，跨过断点也不走样 */
+    .mb-acts { padding-top: 6px; padding-bottom: 6px; gap: 2px; }
+    .mb-acts__btn { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 0 12px; border: none; border-radius: var(--w-r-inner); background: transparent; color: var(--w-ink); font-size: var(--w-fs-ui); text-align: left; cursor: pointer; }
+    .mb-acts__btn:hover, .mb-acts__btn:active { background: var(--w-sunken); }
+    .mb-acts__btn svg { color: var(--w-ink3); }
+    .mb-acts__btn--danger, .mb-acts__btn--danger svg { color: var(--w-err); }
+    .mb-sheet-sub { margin-top: 2px; font-size: var(--w-fs-meta); color: var(--w-ink3); overflow-wrap: anywhere; }
+    /* 只在手机上出现的按钮和文字：桌面一律不显示 */
+    .mb-only-phone, .mb-only-phone-text, .mb-recent-strip, .mb-reply__head, .mb-desc-toggle { display: none; }
+
+    /* ==================== 手机（≤820px） ====================
+       顺序：等你完成 → 最近的挑战（一行，点开是详情和排名）→ 发帖框 → 帖子；算分说明挪进排名面板的脚注。
+       发帖是整屏面板（发布在顶栏、工具条贴在键盘上面），评论是贴底的回复条；删帖、删评论走 ⋯ 面板。
+       弹窗是底部面板（plain.css），键盘弹出时跟着可见区域往上收；返回键先关最上面一层 */
     @media (max-width: 820px) {
-      .mb-page { width: auto; margin: 0 16px; }
-      .mb-head { padding: 18px 0 14px 0; display: block; }
+      .mb-page { width: auto; margin: 0 16px; padding-bottom: calc(var(--ui-bottom-bar-h, 0px) + 16px); }
+      .mb-head { padding: 16px 0 12px 0; display: block; }
+      .mb-head__title { font-size: 20px; }
       .mb-layout { display: flex; flex-direction: column; align-items: stretch; gap: var(--gap-12); padding-top: 14px; }
-      /* 侧栏拆开：「等你完成」放最上面，「最近的挑战」和算分说明排到帖子后面 */
       .mb-aside { display: contents; }
-      #pendingCard { order: -1; }
+      #pendingCard { order: -2; }
       #pendingCard.is-empty { display: none; }
-      #recentCard { order: 1; }
-      #howtoCard { order: 2; }
-      .mb-post { padding: 16px; }
-      .mb-composer { padding: 14px 16px; }
-      .mb-composer__row { flex-wrap: wrap; }
+      #recentCard { order: -1; padding: 0; overflow: hidden; }
+      #recentCard > :not(.mb-recent-strip) { display: none; }
+      #howtoCard { display: none; }
+      .mb-recent-strip {
+        display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 10px 12px 10px 16px;
+        border: none; background: transparent; color: inherit; text-align: left; cursor: pointer;
+      }
+      .mb-recent-strip:active { background: var(--w-sunken); }
+      .mb-recent-strip__ico { width: 32px; height: 32px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--w-big-soft); color: var(--w-big); }
+      .mb-recent-strip__main { flex: 1 1 auto; min-width: 0; }
+      .mb-recent-strip__label { font-size: var(--w-fs-meta); color: var(--w-ink3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .mb-recent-strip__title { font-size: var(--w-fs-ui); font-weight: 600; color: var(--w-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .mb-recent-strip > svg { color: var(--w-ink3); }
+
+      /* 等你完成：整行都能点（跳到那个挑战），「开始」单独一个 44px 按钮 */
+      .mb-side { padding: 14px 16px; }
+      .mb-pending { position: relative; min-height: 56px; }
+      .mb-pending__title::after { content: ''; position: absolute; inset: 0; }
+      .mb-pending .ui-btn { position: relative; z-index: 1; height: 44px; padding: 0 18px; }
+
+      /* 发帖框（收起）：假输入框一行，四个附件按钮一行平分，不会有「挑战」单独掉到第二行 */
+      .mb-composer { padding: 12px; }
+      .mb-composer__row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
       .mb-composer__row > .mb-avatar, .mb-composer__top > .mb-avatar { display: none; }
-      .mb-composer__fake { flex-basis: 100%; }
-      .mb-composer__bar, .mb-composer__atts { padding-left: 0; }
+      .mb-composer__fake { grid-column: 1 / -1; height: 44px; }
+      .mb-composer__row > .mb-tools { display: contents; }
+      .mb-composer__row .ui-btn { min-width: 0; height: 44px; padding: 0 4px; gap: 6px; }
+      /* 发帖框（展开）：整屏。顶栏 取消 · 发帖 · 发布，中间写字和附件，工具条贴底（键盘弹出时贴在键盘上面） */
+      .mb-composer.is-open {
+        position: fixed; left: 0; right: 0; top: var(--mb-vv-top, 0px); bottom: var(--mb-kb, 0px); z-index: 1250;
+        display: flex; flex-direction: column; padding: 0; border: none; border-radius: 0; background: var(--w-surface);
+      }
+      .mb-composer.is-open > .mb-composer__body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; gap: 0; }
+      .mb-composer__body > .mb-composer__bar { display: contents; }
+      .mb-composer__body .mb-composer__send {
+        order: -1; position: sticky; top: 0; z-index: 2; flex-shrink: 0; margin: 0; gap: 8px;
+        padding: calc(env(safe-area-inset-top) + 6px) max(12px, env(safe-area-inset-right)) 6px max(12px, env(safe-area-inset-left));
+        background: var(--w-surface); border-bottom: 1px solid var(--w-line);
+      }
+      .mb-composer__body .mb-composer__send::before { content: '发帖'; order: 1; flex: 1 1 auto; text-align: center; font-size: var(--w-fs-en); font-weight: 600; color: var(--w-ink); }
+      .mb-composer__body .mb-composer__send > .ui-btn { order: 0; height: 40px; padding: 0 14px; }
+      .mb-composer__body .mb-composer__send > .ui-btn--primary { order: 2; padding: 0 20px; }
+      .mb-composer__top { padding: 14px 16px 10px 16px; }
+      .mb-composer__top .ui-textarea { min-height: 150px; padding: 4px 0; border-color: transparent; box-shadow: none; background: transparent; font-size: 16px; resize: none; overflow-y: hidden; }
+      .mb-composer__atts { padding: 0 16px 14px 16px; }
+      .mb-composer__body .mb-tools {
+        position: sticky; bottom: 0; z-index: 2; margin-top: auto; flex-shrink: 0;
+        display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px;
+        padding: 8px max(12px, env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+        background: var(--w-surface); border-top: 1px solid var(--w-line);
+      }
+      .mb-composer__body .mb-tools .ui-btn { min-width: 0; height: 44px; padding: 0 4px; gap: 6px; }
+      .mb-composer__hint { grid-column: 1 / -1; order: -1; font-size: 12px; text-align: center; }
+      .mb-thumb__x { width: 32px; height: 32px; top: -12px; right: -12px; }
+      .mb-thumb__x::after { content: ''; position: absolute; inset: -6px; }
+
+      /* 回复条：贴底，键盘弹出时贴在键盘上面；回复谁写在顶上，× 收起；四个附件按钮只留图标，右边「发表」 */
+      .mb-reply {
+        position: fixed; left: 0; right: 0; bottom: var(--mb-kb, 0px); z-index: 1240; margin: 0; gap: 8px;
+        max-height: 72vh; overflow-y: auto; overscroll-behavior: contain;
+        padding: 6px max(12px, env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+        background: var(--w-surface); border-top: 1px solid var(--w-line); box-shadow: 0 -6px 20px rgba(0, 0, 0, .08);
+      }
+      .mb-reply__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-right: -6px; font-size: var(--w-fs-meta); color: var(--w-ink3); }
+      .mb-reply__head span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .mb-reply__head .mb-iconbtn { width: 44px; height: 44px; }
+      .mb-reply .ui-textarea { min-height: 48px; max-height: 32vh; padding: 10px 12px; font-size: 16px; resize: none; }
+      .mb-reply__bar { flex-wrap: nowrap; gap: 8px; }
+      .mb-reply .mb-tools { flex-wrap: nowrap; gap: 4px; }
+      .mb-reply .mb-tools .ui-btn { width: 44px; height: 44px; padding: 0; }
+      .mb-reply .mb-tools .mb-btn-label { display: none; }
+      .mb-reply .mb-composer__send > .ui-btn:not(.ui-btn--primary) { display: none; }
+      .mb-reply .mb-composer__send > .ui-btn--primary { height: 44px; padding: 0 22px; }
+
+      /* 帖子和评论 */
+      .mb-post { padding: 14px 16px; }
+      .mb-post__head > .mb-iconbtn--danger, .mb-comment__del { display: none; }
+      .mb-only-phone { display: inline-flex; }
+      .mb-only-phone-text { display: inline; }
+      .mb-more { width: 44px; height: 44px; margin: -6px -10px -6px 0; }
+      .mb-comment__head .mb-more { margin: -8px -10px -8px auto; }
       .mb-att { padding: 10px 12px; }
+      .mb-play { width: 44px; height: 44px; }
+      .mb-att__desc.is-clamped { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+      .mb-desc-toggle { display: inline-flex; align-items: center; min-height: 32px; margin: 2px 0 -4px 0; padding: 0; border: none; background: none; color: var(--w-big); font-size: var(--w-fs-meta); cursor: pointer; }
+      .mb-ch__foot .mb-btns { flex: 1 1 100%; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; }
+      .mb-ch__foot .mb-btns > .ui-btn { height: 44px; padding: 0 8px; }
+      .mb-ch__foot > .ui-btn { height: 44px; }
+
+      /* 弹窗（底部面板）：键盘弹出来时整块收进可见区域，底下的按钮跟着上来 */
+      body.page-message-board .ui-dialog-backdrop { top: var(--mb-vv-top, 0px); bottom: var(--mb-kb, 0px); }
+      body.page-message-board .ui-dialog { max-height: 100%; }
+      body.page-message-board .ui-dialog__foot .ui-btn { height: 44px; }
+      /* 手机上提示条只留最新的一条：叠起来的旧提示会一路往上盖住帖子里的按钮 */
+      body.page-message-board .ielts-toast-host > .ielts-toast:not(:last-child) { display: none; }
+      .mb-dialog-foot-split { flex-wrap: wrap; row-gap: 8px; }
+      .mb-dialog-foot-split > .mb-meta { flex: 1 1 100%; font-size: 12px; }
+      .mb-dialog-foot-split > .ui-btn, .mb-dialog-foot-split > .mb-btns { flex: 1 1 100%; }
+      .mb-dialog-foot-split > .mb-btns > .ui-btn { flex: 1 1 0; }
+      /* 选录音 / 选文章：分类是一排分段按钮，列表不再单独滚一层 */
+      .mb-picker { grid-template-columns: minmax(0, 1fr); min-height: 0; gap: 12px; }
+      .mb-picker__rail { flex-direction: row; gap: 4px; padding: 4px; border: none; border-radius: var(--w-r-chip); background: var(--w-big-track); overflow: visible; }
+      .mb-picker__rail .ui-rail__item { flex: 1 1 0; width: auto; min-width: 0; min-height: 40px; justify-content: center; gap: 4px; padding: 0 6px; border-radius: var(--w-r-chip); }
+      .mb-picker__rail .ui-rail__item.is-active { background: var(--w-surface); box-shadow: 0 0 0 1px var(--w-line); }
+      .mb-picker__rail .ui-rail__name { flex-grow: 0; white-space: nowrap; }
+      .mb-topic__head { min-height: 48px; }
+      .mb-pick { min-height: 48px; }
+      /* 发起挑战：一层滚动；短的（名称、说明、邀请、题量）放前面，长长的文章列表放最后，不再框里套框 */
+      .mb-f-title { order: 1; }
+      .mb-f-desc { order: 2; }
+      .mb-f-people { order: 3; }
+      .mb-f-count { order: 4; }
+      .mb-f-articles { order: 5; }
+      .mb-dlg .mb-field-err { order: 6; }
+      .mb-checklist { max-height: none; overflow: visible; }
+      .mb-check { min-height: 48px; }
+      .mb-check__box { width: 22px; height: 22px; }
+      .mb-count-row .ui-seg { flex: 1 1 100%; }
+      .mb-count-row .ui-input { flex: 1 1 auto; width: auto; }
+      .mb-people .ui-chip { height: 44px; }
+      .mb-dlg .ui-input { font-size: 16px; }
+    }
+    @media (max-width: 640px) {
+      .mb-head__lede { display: none; }
+      /* 答题整屏：顶上 标题 · 退出，计时条，题目在上半屏，四个选项在下半屏，拇指够得着 */
+      body.page-message-board .mb-back-quiz { padding: 0; }
+      body.page-message-board .ui-dialog.mb-quiz { height: 100%; max-height: none; border: none; border-radius: 0; display: flex; flex-direction: column; }
+      .mb-quiz__head { padding: calc(env(safe-area-inset-top) + 10px) 12px 0 16px; }
+      .mb-quiz__head .ui-btn { height: 44px; padding: 0 16px; }
+      .mb-quiz__body { flex: 1 1 auto; padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
+      .mb-quiz__body > .mb-opts { margin-top: auto; }
+      .mb-opt { min-height: 60px; font-size: 16px; }
+      .mb-opt__key { display: none; }
+      /* 看大图：深色底，左右滑翻页，右上角 44px 关闭，计数在顶上 */
+      .mb-lightbox { touch-action: pan-y pinch-zoom; background: rgba(0, 0, 0, .94); padding: calc(env(safe-area-inset-top) + 56px) 0 calc(env(safe-area-inset-bottom) + 40px) 0; }
+      .mb-lightbox__img { max-height: calc(100vh - 140px); max-height: calc(100dvh - 140px); border: none; border-radius: 0; box-shadow: none; background: transparent; touch-action: pan-y pinch-zoom; user-select: none; -webkit-user-select: none; }
+      .mb-lightbox__close { top: calc(env(safe-area-inset-top) + 6px); right: 8px; border-color: transparent; background: rgba(255, 255, 255, .14); color: #fff; }
+      .mb-lightbox__nav { display: none; }
+      .mb-lightbox__count { top: calc(env(safe-area-inset-top) + 18px); bottom: auto; color: rgba(255, 255, 255, .85); }
     }
     @media (max-width: 560px) {
       .mb-att:not(.has-remove) { flex-wrap: wrap; }
@@ -360,26 +503,21 @@
       .mb-images--small { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       .mb-images--small .mb-images__img { height: 84px; }
       .mb-comments { padding: 2px 12px; }
-      body.page-message-board .ui-dialog-backdrop { padding: 12px; }
-      body.page-message-board .ui-dialog { max-height: calc(100vh - 24px); }
-      body.page-message-board .ui-dialog__head, .mb-quiz__head, .mb-quiz__progress { padding-left: 16px; padding-right: 16px; }
-      body.page-message-board .ui-dialog__body, .mb-quiz__body { padding-left: 16px; padding-right: 16px; }
-      body.page-message-board .ui-dialog__foot { padding-left: 16px; padding-right: 16px; flex-wrap: wrap; }
-      .mb-picker { grid-template-columns: minmax(0, 1fr); min-height: 0; }
-      .mb-picker__rail { flex-direction: row; overflow-x: auto; padding: 0 0 10px 0; border-right: none; border-bottom: 1px solid var(--w-line); }
-      .mb-picker__rail .ui-rail__item { width: auto; flex-shrink: 0; }
+      .mb-quiz__head, .mb-quiz__progress, .mb-quiz__body { padding-left: 16px; padding-right: 16px; }
       .mb-opts { grid-template-columns: minmax(0, 1fr); }
-      .mb-opt { min-height: 48px; }
       .mb-question { padding: 16px 14px; }
       .mb-stats3 { gap: 8px; }
       .mb-stats3 .ui-stat { padding: 12px; }
       .mb-missed__row { flex-wrap: wrap; gap: 4px 12px; }
       .mb-missed__word { min-width: 0; }
-      .mb-rank__sub { display: none; }
-      .mb-lightbox { padding: 64px 12px; }
-      .mb-lightbox__close { top: 12px; right: 12px; }
-      .mb-lightbox__nav { top: auto; bottom: 12px; margin-top: 0; }
-      .mb-lightbox__count { bottom: 26px; }
+      /* 排名：分数一栏两行，上面总分，下面答对数和完成时间，不再把后者藏掉 */
+      .mb-rank { display: grid; grid-template-columns: 18px auto minmax(0, 1fr) auto; grid-template-areas: "no av name score" "no av name sub"; column-gap: 10px; row-gap: 0; }
+      .mb-rank__no { grid-area: no; }
+      .mb-rank > .mb-avatar { grid-area: av; }
+      .mb-rank__name { grid-area: name; }
+      .mb-rank__score { grid-area: score; text-align: right; }
+      .mb-rank__sub { grid-area: sub; text-align: right; font-size: 12px; }
+      .mb-rank > .ui-tag { grid-area: score / score / sub / sub; justify-self: end; }
     }
   </style>
 </head>
@@ -429,7 +567,8 @@
       left: '<path d="M10 3.5 5.5 8 10 12.5"></path>',
       down: '<path d="M3.5 6 8 10.5 12.5 6"></path>',
       check: '<path d="M3.5 8.5 6.5 11.5 12.5 4.5"></path>',
-      speaker: '<path d="M3 6.2h2.2L8.5 3.5v9L5.2 9.8H3z"></path><path d="M11 5.8a3 3 0 0 1 0 4.4M12.8 4.2a5.2 5.2 0 0 1 0 7.6"></path>'
+      speaker: '<path d="M3 6.2h2.2L8.5 3.5v9L5.2 9.8H3z"></path><path d="M11 5.8a3 3 0 0 1 0 4.4M12.8 4.2a5.2 5.2 0 0 1 0 7.6"></path>',
+      more: '<circle cx="3.5" cy="8" r="1.15" fill="currentColor" stroke="none"></circle><circle cx="8" cy="8" r="1.15" fill="currentColor" stroke="none"></circle><circle cx="12.5" cy="8" r="1.15" fill="currentColor" stroke="none"></circle>'
     };
 
     function icon(name, size, stroke) {
@@ -473,8 +612,9 @@
       opts = opts || {};
       var cls = 'ui-btn ' + (opts.size === 'md' ? 'ui-btn--md' : 'ui-btn--sm');
       if (opts.kind) cls += ' ' + opts.kind;
-      return el('button', { class: cls, type: 'button', onclick: opts.onclick, disabled: opts.disabled, title: opts.title, 'data-autofocus': opts.autofocus },
-        opts.icon ? icon(opts.icon) : null, label);
+      // 带图标的按钮把文字包一层：手机回复条里只留图标（文字藏掉，读屏仍读 aria-label）
+      return el('button', { class: cls, type: 'button', onclick: opts.onclick, disabled: opts.disabled, title: opts.title, 'data-autofocus': opts.autofocus, 'aria-label': opts.icon ? label : null },
+        opts.icon ? icon(opts.icon) : null, opts.icon ? el('span', { class: 'mb-btn-label', text: label }) : label);
     }
 
     function toast(message, type) {
@@ -608,26 +748,143 @@
         .catch(keep);
     }
 
+    // ==================== 手机：返回键先关最上面一层 ====================
+    // 手机（≤820px）上每打开一层（弹窗、⋯ 面板、发帖面板、回复条、看大图）就压一条同网址的历史记录，
+    // 按返回键 / 右滑返回只关这一层、不离开页面；用界面上的按钮关掉时，再把那条记录退掉。
+    // 桌面不压历史，和以前一样。记录条数始终等于打开的层数（syncHistory 负责对齐）
+    var PHONE = window.matchMedia('(max-width: 820px)');
+    var layers = [];        // [{ key, back }]，最上面的在最后
+    var histEntries = 0;    // 已经替这些层压进历史的条数
+    var histSkip = 0;       // 自己 history.go 引起、要忽略的 popstate
+    var histWaiters = [];
+    function openLayer(key, back) {
+      layers.push({ key: key, back: back });
+      return syncHistory();
+    }
+    function closeLayer(key) {
+      for (var i = layers.length - 1; i >= 0; i--) {
+        if (layers[i].key === key) { layers.splice(i, 1); break; }
+      }
+      return syncHistory();
+    }
+    function setScrollRestore(mode) {
+      try { if ('scrollRestoration' in history) history.scrollRestoration = mode; } catch (e) { /* 不支持就算了 */ }
+    }
+    function flushHistWaiters() {
+      var waiting = histWaiters;
+      histWaiters = [];
+      waiting.forEach(function (fn) { fn(); });
+    }
+    // 返回的 Promise 在历史记录退好之后才完成：关完一层紧接着要滚动页面的，等它再滚
+    function syncHistory() {
+      // 上一次退记录还没退完：等它退完再对齐，免得新压进去的记录被那次后退一起退掉
+      if (histSkip) return new Promise(function (resolve) { histWaiters.push(function () { syncHistory().then(resolve); }); });
+      var want = PHONE.matches ? layers.length : 0;
+      if (want > histEntries) {
+        // 退回这几条记录时别让浏览器把页面滚回压记录那一刻的位置
+        setScrollRestore('manual');
+        while (histEntries < want) {
+          histEntries++;
+          history.pushState({ mbLayer: histEntries }, '', window.location.href);
+        }
+      } else if (want < histEntries) {
+        var n = histEntries - want;
+        histEntries = want;
+        histSkip++;
+        var done = new Promise(function (resolve) { histWaiters.push(resolve); });
+        history.go(-n);
+        // 万一等不到 popstate，也别把后面的操作卡住
+        setTimeout(function () { if (histSkip) { histSkip = 0; flushHistWaiters(); } }, 800);
+        return done;
+      }
+      return Promise.resolve();
+    }
+    window.addEventListener('popstate', function () {
+      if (histSkip) {
+        histSkip--;
+        if (!histSkip) flushHistWaiters();
+        if (!histEntries) setScrollRestore('auto');
+        return;
+      }
+      if (!histEntries) return;
+      histEntries--;
+      var top = layers[layers.length - 1];
+      if (top) top.back();
+      // 这一层没关掉（比如先问「放弃这篇草稿？」），把记录补回去，下次返回还是先关它
+      syncHistory();
+      if (!histEntries) setScrollRestore('auto');
+    });
+
+    // 手机键盘：iOS / 新版安卓弹键盘时不缩布局视口，贴底的东西会被键盘挡住。把可见区域的上沿和键盘高度
+    // 写进 CSS 变量（--mb-vv-top / --mb-kb），弹窗、发帖面板、回复条跟着可见区域走。双指放大时不算
+    function syncViewport() {
+      var root = document.documentElement, vv = window.visualViewport;
+      if (!vv || !PHONE.matches || Math.abs(vv.scale - 1) > 0.01) {
+        root.style.removeProperty('--mb-vv-top');
+        root.style.removeProperty('--mb-kb');
+      } else {
+        root.style.setProperty('--mb-vv-top', Math.max(0, Math.round(vv.offsetTop)) + 'px');
+        root.style.setProperty('--mb-kb', Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)) + 'px');
+      }
+      syncBottomBar();
+    }
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', syncViewport);
+      window.visualViewport.addEventListener('scroll', syncViewport);
+    }
+    // 底部有回复条 / 发帖面板的工具条时，把它的高度写进 --ui-bottom-bar-h：提示条浮在它上面，页面底部也留出这么高
+    function syncBottomBar() {
+      var bar = null;
+      if (PHONE.matches) {
+        if (composer.isOpen()) bar = document.querySelector('#composer .mb-composer__body .mb-tools');
+        else Object.keys(S.openReplies).forEach(function (k) { if (!bar && S.openReplies[k].root.isConnected) bar = S.openReplies[k].root; });
+      }
+      if (bar) document.body.style.setProperty('--ui-bottom-bar-h', Math.round(window.innerHeight - bar.getBoundingClientRect().top) + 'px');
+      else document.body.style.removeProperty('--ui-bottom-bar-h');
+    }
+
+    // ⋯ 面板：手机上删帖、删评论先点 ⋯，再在面板里选「删除」，最后还要确认一次
+    function actionSheet(title, sub, items) {
+      var d = openDialog({
+        title: title, cls: 'mb-dialog-small',
+        content: [
+          sub ? el('div', { class: 'mb-sheet-sub', style: 'padding: 2px 16px 0 16px;', text: sub }) : null,
+          el('div', { class: 'ui-dialog__body mb-acts' }, items.map(function (it) {
+            return el('button', { class: 'mb-acts__btn' + (it.danger ? ' mb-acts__btn--danger' : ''), type: 'button', 'data-autofocus': true, onclick: function () {
+              // 先把面板（和它的历史记录）收掉，再开下一层
+              d.close().then(it.onclick);
+            } }, icon(it.icon, 18), it.label);
+          })),
+          el('div', { class: 'ui-dialog__foot' }, btn('取消', { size: 'md', onclick: function () { d.close(); } }))
+        ]
+      });
+      return d;
+    }
+    function moreButton(label, onclick) {
+      return el('button', { class: 'mb-iconbtn mb-more mb-only-phone', type: 'button', 'aria-label': label, 'aria-haspopup': 'dialog', onclick: onclick }, icon('more', 20));
+    }
+
     // ==================== 弹窗 ====================
     var dialogs = [];
     function syncScrollLock() {
       document.documentElement.style.overflow = (dialogs.length || lightbox) ? 'hidden' : '';
     }
     function openDialog(opts) {
-      var back = el('div', { class: 'ui-dialog-backdrop' });
+      var back = el('div', { class: 'ui-dialog-backdrop' + (opts.backCls ? ' ' + opts.backCls : '') });
       var titleId = 'dlg' + Date.now() + Math.floor(Math.random() * 1000);
       var box = el('section', { class: 'ui-dialog mb-dlg ' + (opts.cls || ''), role: opts.role || 'dialog', 'aria-modal': 'true', 'aria-labelledby': opts.title ? titleId : null, 'aria-label': opts.title ? null : opts.label });
       var d = {
         back: back, box: box, closed: false,
         close: function () {
-          if (d.closed) return;
+          if (d.closed) return Promise.resolve();
           d.closed = true;
           back.remove();
           var i = dialogs.indexOf(d);
           if (i >= 0) dialogs.splice(i, 1);
           syncScrollLock();
           if (opts.onClose) opts.onClose();
-          if (d.returnFocus && document.contains(d.returnFocus)) d.returnFocus.focus();
+          if (d.returnFocus && document.contains(d.returnFocus)) d.returnFocus.focus({ preventScroll: PHONE.matches });
+          return closeLayer(d);
         },
         onEsc: opts.onEsc,
         onKey: opts.onKey
@@ -649,6 +906,7 @@
       document.body.appendChild(back);
       dialogs.push(d);
       syncScrollLock();
+      openLayer(d, function () { (d.onEsc || d.close)(); });
       // 答题框聚焦在框本身：数字键直接作答，「退出」按钮也不会一打开就带着焦点框
       if (opts.focusBox) box.setAttribute('tabindex', '-1');
       var focusTarget = opts.focusBox ? box : box.querySelector('[data-autofocus]') || box.querySelector('input, textarea, button:not(.ui-dialog__close)');
@@ -658,7 +916,8 @@
     function confirmDialog(opts) {
       return new Promise(function (resolve) {
         var done = false;
-        var finish = function (value) { if (done) return; done = true; d.close(); resolve(value); };
+        // 手机上等这一层的历史记录退掉再往下走（后面常常紧接着开下一层）
+        var finish = function (value) { if (done) return; done = true; d.close().then(function () { resolve(value); }); };
         var d = openDialog({
           title: opts.title, cls: 'mb-dialog-small', role: 'alertdialog',
           content: [
@@ -700,17 +959,32 @@
       }
       box.appendChild(count);
       box.addEventListener('click', function (e) { if (e.target === box) closeLightbox(); });
+      // 手机上左右滑翻页（只认横着滑得够远、竖着没怎么动的手势，双指缩放不算）
+      var swipe = null;
+      box.addEventListener('touchstart', function (e) {
+        swipe = e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null;
+      }, { passive: true });
+      box.addEventListener('touchend', function (e) {
+        if (!swipe || !lightbox || !e.changedTouches.length) return;
+        var dx = e.changedTouches[0].clientX - swipe.x, dy = e.changedTouches[0].clientY - swipe.y;
+        swipe = null;
+        if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) stepLightbox(dx < 0 ? 1 : -1);
+      });
       lightbox = { box: box, img: img, count: count, urls: urls, index: index, multi: multi, returnFocus: document.activeElement };
       document.body.appendChild(box);
       showLightbox();
       syncScrollLock();
       box.querySelector('.mb-lightbox__close').focus({ preventScroll: true });
+      openLayer('lightbox', closeLightbox);
     }
     function showLightbox() {
       lightbox.img.src = lightbox.urls[lightbox.index];
-      lightbox.count.textContent = lightbox.multi
-        ? (lightbox.index + 1) + ' / ' + lightbox.urls.length + ' · Esc 或点空白处关闭，← → 翻页'
-        : 'Esc 或点空白处关闭';
+      // 手机上没有键盘：只写第几张，翻页靠左右滑
+      lightbox.count.textContent = PHONE.matches
+        ? (lightbox.multi ? (lightbox.index + 1) + ' / ' + lightbox.urls.length + ' · 左右滑动翻页' : '')
+        : lightbox.multi
+          ? (lightbox.index + 1) + ' / ' + lightbox.urls.length + ' · Esc 或点空白处关闭，← → 翻页'
+          : 'Esc 或点空白处关闭';
     }
     function stepLightbox(step) {
       if (!lightbox || !lightbox.multi) return;
@@ -724,6 +998,7 @@
       lightbox = null;
       syncScrollLock();
       if (back && document.contains(back)) back.focus({ preventScroll: true });
+      closeLayer('lightbox');
     }
 
     // ==================== 帖子里直接播放录音 ====================
@@ -814,12 +1089,24 @@
     // opts: compact / onRemove（编辑器里）
     function attBlock(v, opts) {
       opts = opts || {};
+      // 口语题卡（6 行左右）在手机上先收成 3 行，点「展开」看全
+      var desc = v.desc ? el('div', { class: 'mb-att__desc', text: v.desc }) : null;
+      var longDesc = !!v.desc && (v.desc.split('\n').length > 3 || v.desc.length > 140);
+      var descToggle = null;
+      if (longDesc) {
+        desc.classList.add('is-clamped');
+        descToggle = el('button', { class: 'mb-desc-toggle', type: 'button', 'aria-expanded': 'false', text: '展开题目', onclick: function () {
+          var open = desc.classList.toggle('is-clamped') === false;
+          descToggle.textContent = open ? '收起' : '展开题目';
+          descToggle.setAttribute('aria-expanded', String(open));
+        } });
+      }
       var att = el('div', { class: 'mb-att' + (opts.compact ? ' mb-att--compact' : '') + (opts.onRemove ? ' has-remove' : '') },
         el('span', { class: 'mb-att__ico' }, icon(v.ico, opts.compact ? 14 : 16)),
         el('div', { class: 'mb-att__body' },
           el('div', { class: 'mb-att__kind', text: v.kind }),
           el('div', { class: 'mb-att__title', text: v.title }),
-          v.desc ? el('div', { class: 'mb-att__desc', text: v.desc }) : null));
+          desc, descToggle));
       if (opts.onRemove) {
         att.appendChild(el('button', { class: 'mb-iconbtn mb-att__remove', type: 'button', 'aria-label': v.removeLabel, title: '移除', onclick: opts.onRemove }, icon('x', 14)));
         return att;
@@ -1004,7 +1291,11 @@
         el('div', { class: 'mb-post__who' },
           el('span', { class: 'mb-post__name', text: user.display_name || user.username || '同学' }),
           el('span', { class: 'mb-meta', text: relTime(post.timestamp), title: new Date(post.timestamp).toLocaleString() })),
-        mine ? el('button', { class: 'mb-iconbtn mb-iconbtn--danger', type: 'button', 'aria-label': '删除帖子', title: '删除帖子', onclick: function () { deletePost(post, parts); } }, icon('trash')) : null));
+        mine ? el('button', { class: 'mb-iconbtn mb-iconbtn--danger', type: 'button', 'aria-label': '删除帖子', title: '删除帖子', onclick: function () { deletePost(post, parts); } }, icon('trash')) : null,
+        // 手机：垃圾桶换成 ⋯，删除收进面板里
+        mine ? moreButton('帖子的更多操作', function () {
+          actionSheet('这篇帖子', relTime(post.timestamp) + '发的', [{ label: '删除帖子', icon: 'trash', danger: true, onclick: function () { deletePost(post, parts); } }]);
+        }) : null));
       if (parts.text) card.appendChild(el('p', { class: 'mb-post__text', text: parts.text }));
       var atts = attachmentList(parts, { postId: post.id, ts: post.timestamp, author: user.username });
       if (atts.length) card.appendChild(el('div', { class: 'mb-post__atts' }, atts));
@@ -1056,7 +1347,7 @@
           S.posts = S.posts.filter(function (p) { return p.id !== post.id; });
           S.refs = S.refs.filter(function (r) { return r.postId !== post.id; });
           delete S.comments[post.id];
-          delete S.openReplies[post.id];
+          closeReply(post.id, false);
           var card = findPost(post.id);
           if (card) {
             if (player.att && card.contains(player.att)) stopPlayer();
@@ -1110,7 +1401,11 @@
         el('div', { class: 'mb-comment__head' },
           el('span', { class: 'mb-comment__name', text: user.display_name || user.username || '同学' }),
           el('span', { class: 'mb-meta', text: relTime(c.timestamp), title: new Date(c.timestamp).toLocaleString() }),
-          mine ? el('button', { class: 'mb-iconbtn mb-iconbtn--danger mb-comment__del', type: 'button', 'aria-label': '删除评论', title: '删除评论', onclick: function () { deleteComment(postId, c); } }, icon('x', 14)) : null));
+          mine ? el('button', { class: 'mb-iconbtn mb-iconbtn--danger mb-comment__del', type: 'button', 'aria-label': '删除评论', title: '删除评论', onclick: function () { deleteComment(postId, c); } }, icon('x', 14)) : null,
+          // 手机：右上角的 × 看着像「关闭」，换成 ⋯ 面板里的「删除评论」
+          mine ? moreButton('评论的更多操作', function () {
+            actionSheet('这条评论', parts.text ? parts.text.slice(0, 40) + (parts.text.length > 40 ? '…' : '') : relTime(c.timestamp) + '发的', [{ label: '删除评论', icon: 'trash', danger: true, onclick: function () { deleteComment(postId, c); } }]);
+          }) : null));
       if (parts.text) main.appendChild(el('p', { class: 'mb-comment__text', text: parts.text }));
       var atts = attachmentList(parts, { postId: postId, commentId: c.id, ts: c.timestamp, author: user.username });
       if (atts.length) main.appendChild(el('div', { class: 'mb-comment__atts' }, atts));
@@ -1146,13 +1441,33 @@
         return;
       }
       if (ed) { ed.textarea.focus(); return; }
-      ed = createEditor({ kind: 'reply', postId: postId });
+      // 手机上回复条贴在屏幕底部，一次只开一条：别的帖子还开着空的回复条就先收掉，写了字的先问一句
+      if (PHONE.matches) {
+        var others = Object.keys(S.openReplies);
+        if (others.length) {
+          var other = others[0];
+          if (!S.openReplies[other].isEmpty()) {
+            closeReply(other, true, function () { toggleReply(postId); });
+            return;
+          }
+          closeReply(other, false);
+        }
+      }
+      ed = createEditor({ kind: 'reply', postId: postId, replyTo: card.querySelector('.mb-post__name').textContent });
       S.openReplies[postId] = ed;
       card.appendChild(ed.root);
       setReplyButton(card, true);
-      ed.textarea.focus();
+      ed.textarea.focus({ preventScroll: PHONE.matches });
+      if (PHONE.matches) {
+        openLayer(ed, function () { closeReply(postId, true); });
+        ed.grow();
+        // 帖子底部（评论按钮那一行）露在回复条上面，看得到在回复哪一篇
+        var foot = card.querySelector('.mb-post__foot').getBoundingClientRect();
+        var barTop = ed.root.getBoundingClientRect().top;
+        if (foot.bottom > barTop - 8) window.scrollBy(0, foot.bottom - barTop + 8);
+      }
     }
-    function closeReply(postId, ask) {
+    function closeReply(postId, ask, then) {
       var ed = S.openReplies[postId];
       if (!ed) return;
       var doClose = function () {
@@ -1160,6 +1475,9 @@
         delete S.openReplies[postId];
         var card = findPost(postId);
         if (card) setReplyButton(card, false);
+        syncBottomBar();
+        var popped = closeLayer(ed);
+        if (then) popped.then(then);
       };
       if (ask && !ed.isEmpty()) {
         confirmDialog({ title: '放弃这条评论？', text: '写的字和加的附件都会清掉。', ok: '放弃', cancel: '接着写', danger: true })
@@ -1179,7 +1497,8 @@
         audios: [], articles: [], images: [], challenge: null,
         sending: false
       };
-      ed.textarea = el('textarea', { class: 'ui-textarea', placeholder: isPost ? '分享你的学习心得、录音或笔记…' : '写评论…' });
+      // rows=1：手机回复条一开始只有一行高（桌面靠 min-height 撑高，看起来不变）
+      ed.textarea = el('textarea', { class: 'ui-textarea', rows: 1, placeholder: isPost ? '分享你的学习心得、录音或笔记…' : '写评论…' });
       ed.attsEl = el('div', { class: isPost ? 'mb-composer__atts' : 'mb-comment__atts' });
       ed.chBtn = btn('挑战', { icon: 'flag', onclick: function () { openChallengeCreator(ed); } });
       ed.sendBtn = el('button', { class: 'ui-btn ui-btn--primary ' + (isPost ? 'ui-btn--md' : 'ui-btn--sm'), type: 'button', onclick: function () { submitEditor(ed); } });
@@ -1199,11 +1518,24 @@
           ed.attsEl,
           el('div', { class: 'mb-composer__bar' }, tools, send));
       } else {
-        ed.root = el('div', { class: 'mb-reply' }, label, ed.attsEl, el('div', { class: 'mb-reply__bar' }, tools, send));
+        // 手机回复条顶上一行：回复谁 + ×（桌面不显示，用下面的「取消」）
+        var head = el('div', { class: 'mb-reply__head' }, el('span', { text: '回复 ' + (opts.replyTo || '这篇帖子') }),
+          el('button', { class: 'mb-iconbtn', type: 'button', 'aria-label': '收起回复', onclick: function () { closeReply(ed.postId, true); } }, icon('x')));
+        ed.root = el('div', { class: 'mb-reply' }, head, label, ed.attsEl, el('div', { class: 'mb-reply__bar' }, tools, send));
       }
       ed.textarea.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); submitEditor(ed); }
       });
+      // 手机：输入框跟着字数长高（回复条里最多长到约三分之一屏，再多就在框里滚）
+      ed.grow = function () {
+        var ta = ed.textarea;
+        if (!PHONE.matches) { ta.style.height = ''; return; }
+        if (!ta.isConnected || ta.offsetParent === null) return;
+        ta.style.height = 'auto';
+        ta.style.height = (ta.scrollHeight + 2) + 'px';
+        syncBottomBar();
+      };
+      ed.textarea.addEventListener('input', ed.grow);
       ed.isEmpty = function () {
         return !ed.textarea.value.trim() && !ed.audios.length && !ed.articles.length && !ed.images.length && !ed.challenge;
       };
@@ -1262,6 +1594,8 @@
       var busy = ed.uploading();
       ed.sendBtn.disabled = busy || ed.sending;
       ed.sendBtn.textContent = busy ? '上传中…' : ed.sending ? '正在发送…' : (ed.kind === 'post' ? '发布' : '发表');
+      // 附件变了，贴底的回复条 / 工具条高度跟着变
+      if (ed.root && ed.root.isConnected) syncBottomBar();
     }
     function editorContent(ed) {
       return {
@@ -1335,10 +1669,17 @@
       }
       function expand() {
         if (!ed) return;
+        var was = box.classList.contains('is-open');
         row.hidden = true;
         ed.root.hidden = false;
         box.classList.add('is-open');
-        if (document.activeElement === document.body) ed.textarea.focus();
+        if (document.activeElement === document.body) ed.textarea.focus({ preventScroll: PHONE.matches });
+        // 手机上展开就是整屏的发帖面板：返回键先收它；发布在顶栏，工具条贴底
+        if (!was && PHONE.matches) {
+          openLayer('composer', function () { collapse(false); });
+          ed.grow();
+          syncBottomBar();
+        }
       }
       function collapse(force) {
         var doIt = function () {
@@ -1346,6 +1687,9 @@
           ed.root.hidden = true;
           row.hidden = false;
           box.classList.remove('is-open');
+          ed.textarea.style.height = '';
+          closeLayer('composer');
+          syncBottomBar();
         };
         if (!force && !ed.isEmpty()) {
           confirmDialog({ title: '放弃这篇草稿？', text: ed.challenge ? '写的字和加的附件都会清掉，已创建的挑战也不会出现在帖子里。' : '写的字和加的附件都会清掉。', ok: '放弃', cancel: '接着写', danger: true })
@@ -1354,7 +1698,8 @@
           doIt();
         }
       }
-      return { build: build, expand: function () { expand(); ed.textarea.focus(); }, collapse: collapse };
+      return { build: build, expand: function () { expand(); ed.textarea.focus(); }, collapse: collapse,
+        isOpen: function () { return box.classList.contains('is-open'); } };
     })();
 
     // ==================== 图片上传 ====================
@@ -1517,6 +1862,9 @@
 
     // ==================== 选文章 ====================
     var ARTICLE_CATS = ['Reading', 'Listening', 'Writing'];
+    // 手机上分类写中文，和全站一致（桌面仍是英文，不动）
+    var ARTICLE_CAT_CN = { Reading: '阅读', Listening: '听力', Writing: '写作' };
+    function catLabel(cat) { return PHONE.matches ? (ARTICLE_CAT_CN[cat] || cat) : cat; }
     function loadArticleData() {
       if (S.articleData) return Promise.resolve(S.articleData);
       return api('/api/get_articles_list').then(function (d) { S.articleData = d.categories || {}; return S.articleData; });
@@ -1542,7 +1890,7 @@
         fill(rail);
         ARTICLE_CATS.forEach(function (cat) {
           rail.appendChild(el('button', { class: 'ui-rail__item' + (state.cat === cat ? ' is-active' : ''), type: 'button', onclick: function () { state.cat = cat; render(); } },
-            el('span', { class: 'ui-rail__name', text: cat }), el('span', { class: 'ui-rail__count', text: filtered(cat).length })));
+            el('span', { class: 'ui-rail__name', text: catLabel(cat) }), el('span', { class: 'ui-rail__count', text: filtered(cat).length })));
         });
         fill(list);
         var items = filtered(state.cat);
@@ -1586,12 +1934,13 @@
         title: '发起单词挑战', cls: 'mb-dialog-mid',
         content: [
           el('div', { class: 'ui-dialog__body' },
-            el('label', { class: 'ui-field' }, el('span', { class: 'ui-field__label', text: '挑战名称' }), title),
-            el('label', { class: 'ui-field' }, el('span', { class: 'ui-field__label', text: '说明（可选）' }), desc),
-            el('div', { class: 'ui-field' }, el('span', { class: 'ui-field__label', text: '出题文章' }), search, checklist, artHint),
-            el('div', { class: 'ui-field' }, el('span', { class: 'ui-field__label', text: '题量' }),
+            // mb-f-*：手机上按「名称 → 说明 → 邀请 → 题量 → 文章」排，长长的文章列表放最后
+            el('label', { class: 'ui-field mb-f-title' }, el('span', { class: 'ui-field__label', text: '挑战名称' }), title),
+            el('label', { class: 'ui-field mb-f-desc' }, el('span', { class: 'ui-field__label', text: '说明（可选）' }), desc),
+            el('div', { class: 'ui-field mb-f-articles' }, el('span', { class: 'ui-field__label', text: '出题文章' }), search, checklist, artHint),
+            el('div', { class: 'ui-field mb-f-count' }, el('span', { class: 'ui-field__label', text: '题量' }),
               el('div', { class: 'mb-count-row' }, seg, el('span', { class: 'mb-meta', text: '或' }), custom, el('span', { class: 'mb-meta', text: '1–50 题' }))),
-            el('div', { class: 'ui-field' }, el('span', { class: 'ui-field__label', text: '邀请同伴（可选）' }), people,
+            el('div', { class: 'ui-field mb-f-people' }, el('span', { class: 'ui-field__label', text: '邀请同伴（可选）' }), people,
               el('span', { class: 'ui-field__hint', text: '被邀请的人打开交流页会看到提醒。没邀请的人也能参加。' })),
             err),
           el('div', { class: 'ui-dialog__foot mb-dialog-foot-split' },
@@ -1615,7 +1964,7 @@
           var items = (data[cat] || []).filter(function (a) { return !q || String(a.title || '').toLowerCase().indexOf(q) >= 0; });
           if (!items.length) return;
           any = true;
-          checklist.appendChild(el('div', { class: 'mb-checklist__group', text: cat.toUpperCase() }));
+          checklist.appendChild(el('div', { class: 'mb-checklist__group', text: PHONE.matches ? catLabel(cat) : cat.toUpperCase() }));
           items.forEach(function (a) {
             var on = state.articles.indexOf(a.id) >= 0;
             checklist.appendChild(el('button', { class: 'mb-check' + (on ? ' is-on' : ''), type: 'button', 'aria-pressed': on ? 'true' : 'false', onclick: function () {
@@ -1650,9 +1999,15 @@
         err.textContent = '';
         var t = title.value.trim();
         var count = custom.value ? parseInt(custom.value, 10) : state.count;
-        if (!t) { err.textContent = '给挑战起个名字'; title.focus(); return; }
-        if (!state.articles.length) { err.textContent = '至少选一篇出题文章'; return; }
-        if (!(count >= 1 && count <= 50)) { err.textContent = '题量要在 1–50 之间'; custom.focus(); return; }
+        // 手机上错误提示排在长列表后面，滚过去让人看到
+        var showErr = function (text, field) {
+          err.textContent = text;
+          if (field) field.focus({ preventScroll: PHONE.matches });
+          if (PHONE.matches) (field || err).scrollIntoView({ block: 'center' });
+        };
+        if (!t) { showErr('给挑战起个名字', title); return; }
+        if (!state.articles.length) { showErr('至少选一篇出题文章', null); return; }
+        if (!(count >= 1 && count <= 50)) { showErr('题量要在 1–50 之间', custom); return; }
         state.busy = true;
         createBtn.disabled = true;
         createBtn.textContent = '正在创建…';
@@ -1681,11 +2036,24 @@
 
     // ==================== 答题 ====================
     var Q = null;
+    // 单词发音共用一个 <audio>：iPhone 只让「在点按里出过声」的那个元素之后自己出声。点「开始挑战」时先用
+    // 一小段静音把它解锁，之后自动读词才不会被拦（以前每次 new 一个 Audio，在 iPhone 上自动读一遍没有声音）
+    var wordAudio = null;
+    var SILENT_WAV = 'data:audio/wav;base64,UklGRnQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVAAAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==';
+    function unlockWordAudio() {
+      try {
+        if (!wordAudio) wordAudio = new Audio();
+        wordAudio.src = SILENT_WAV;
+        var p = wordAudio.play();
+        if (p && p.catch) p.catch(function () {});
+      } catch (e) {}
+    }
     function playWord(word, challengeId) {
       if (!word || !challengeId) return;
       try {
-        var a = new Audio('/vocab_audio/challenge_' + enc(challengeId) + '/' + enc(word.trim().toLowerCase()));
-        a.play().catch(function () {}); // 发音没生成好就不出声，不打断答题
+        if (!wordAudio) wordAudio = new Audio();
+        wordAudio.src = '/vocab_audio/challenge_' + enc(challengeId) + '/' + enc(word.trim().toLowerCase());
+        wordAudio.play().catch(function () {}); // 发音没生成好就不出声，不打断答题
       } catch (e) {}
     }
     function shuffle(arr) {
@@ -1696,6 +2064,7 @@
       return arr;
     }
     function startQuiz(id) {
+      unlockWordAudio();   // 必须在点按的同一拍里做，不能等接口回来
       api('/api/get_challenge/' + enc(id)).then(function (d) {
         var ch = d.challenge;
         S.ch[id] = ch;
@@ -1715,7 +2084,7 @@
       Q.progressNum = el('span', { class: 'ui-progress__num' });
       Q.body = el('div', { class: 'mb-quiz__body' });
       Q.dlg = openDialog({
-        label: '单词挑战：' + ch.title, cls: 'mb-quiz', backdropClose: false, focusBox: true,
+        label: '单词挑战：' + ch.title, cls: 'mb-quiz', backCls: 'mb-back-quiz', backdropClose: false, focusBox: true,
         content: [
           el('div', { class: 'mb-quiz__head' }, el('h2', { class: 'ui-dialog__title', text: ch.title }), btn('退出', { onclick: askQuit })),
           el('div', { class: 'mb-quiz__progress' }, el('div', { class: 'ui-progress' }, el('div', { class: 'ui-progress__bar' }, Q.progressBar), Q.progressNum)),
@@ -1770,7 +2139,7 @@
           el('span', { class: 'mb-opt__text' + (showWord ? '' : ' mb-opt__text--en'), text: opt }));
       });
       Q.notice = el('div', { class: 'mb-notice', hidden: true, text: '时间到，这题算答错。' });
-      Q.note = el('div', { class: 'mb-quiz__note', text: '点选项或按数字键 1–' + Q.options.length });
+      Q.note = el('div', { class: 'mb-quiz__note', text: PHONE.matches ? '点选项作答' : '点选项或按数字键 1–' + Q.options.length });
       fill(Q.body, Q.timerBox, question, Q.notice, el('div', { class: 'mb-opts' }, Q.optEls), Q.note);
       if (showWord) setTimeout(function () { if (Q && Q.vocab === vocab) playWord(vocab.word, ch.id); }, 100);
       runTimer();
@@ -1935,7 +2304,9 @@
       var done = Object.keys(ch.participants || {}).length;
       return everyone.length + ' 人里 ' + done + ' 人完成';
     }
-    function showRanking(id) {
+    // opts.goto：从手机上「最近的挑战」那一行打开时，面板底部多一个「去帖子」（桌面侧栏卡片上本来就有）
+    function showRanking(id, opts) {
+      opts = opts || {};
       Promise.all([api('/api/get_challenge_ranking/' + enc(id)), loadChallenge(id, true)]).then(function (res) {
         var ch = S.ch[id];
         if (!ch || ch.missing || ch.error) ch = null;
@@ -1951,13 +2322,17 @@
             el('div', { class: 'mb-meta', style: 'margin-top: 2px;', text: meta.join(' · ') })),
           el('div', { class: 'mb-ranklist mb-rank-body' },
             ch ? rankRows(ch) : res[0].ranking.length ? null : el('p', { class: 'mb-side__empty', text: '还没有人完成。' })),
-          el('p', { class: 'mb-howto', style: 'color: var(--w-ink3);', text: '总分 = 答对得分（满分 70）+ 速度分（满分 30）。每题 10 秒，答对且越快，速度分越高。' }));
+          el('p', { class: 'mb-howto', style: 'color: var(--w-ink3);' }, '总分 = 答对得分（满分 70）+ 速度分（满分 30）。每题 10 秒，答对且越快，速度分越高。',
+            // 手机上没有侧栏的「单词挑战怎么算分」卡片，把它剩下的那两句放进这条脚注
+            el('span', { class: 'mb-only-phone-text', text: '题目从精读文章里标过释义的生词出；被 @ 的人打开这一页会看到提醒。' })));
         if (ch && !rankedParticipants(ch).length && !expectedPeople(ch).length) {
           body.querySelector('.mb-ranklist').appendChild(el('p', { class: 'mb-side__empty', text: '还没有人完成。' }));
         }
         var dlg = openDialog({
           title: '排名', cls: 'mb-dialog-result',
-          content: [body, el('div', { class: 'ui-dialog__foot' }, btn('关闭', { size: 'md', onclick: function () { dlg.close(); } }))]
+          content: [body, el('div', { class: 'ui-dialog__foot' },
+            opts.goto ? btn('去帖子', { size: 'md', onclick: function () { dlg.close().then(function () { goToRef(opts.goto); }); } }) : null,
+            btn('关闭', { size: 'md', onclick: function () { dlg.close(); } }))]
         });
       }).catch(function (e) {
         if (e.status === 404) { S.ch[id] = { missing: true }; refreshChallenge(id); toast('这个挑战的题目已经不在了', 'err'); }
@@ -2022,7 +2397,14 @@
       var ch = S.ch[recent.id];
       var rows = rankRows(ch, { small: true });
       var more = rows.length > 6 ? rows.length - 6 : 0;
-      fill(rCard,
+      // 手机上整张卡收成一行，点开是这个挑战的详情和完整排名（桌面不显示这一行）
+      var strip = el('button', { class: 'mb-recent-strip', type: 'button', 'aria-haspopup': 'dialog', onclick: function () { showRanking(recent.id, { goto: recent }); } },
+        el('span', { class: 'mb-recent-strip__ico' }, icon('flag')),
+        el('span', { class: 'mb-recent-strip__main' },
+          el('span', { class: 'mb-recent-strip__label', style: 'display: block;', text: '最近的挑战 · ' + doneSummary(ch) }),
+          el('span', { class: 'mb-recent-strip__title', style: 'display: block;', text: ch.title })),
+        icon('right'));
+      fill(rCard, strip,
         el('div', { class: 'ui-card__head' }, el('h2', { class: 'ui-card__title', text: '最近的挑战' }), el('span', { class: 'ui-card__note', text: doneSummary(ch) })),
         el('div', { class: 'mb-side__sub', text: ch.title }),
         el('div', { class: 'mb-ranklist' }, rows.slice(0, 6), rows.length ? null : el('p', { class: 'mb-side__empty', text: '还没有人完成。' })),
@@ -2064,6 +2446,16 @@
         renderSidebar();
       });
     }
+
+    // 跨过 820px（转屏、拖窗口）时：键盘变量、历史记录、底部条高度跟着换；侧栏重画（手机上是一行）
+    function onPhoneChange() {
+      syncViewport();
+      syncHistory();
+      if (S.loaded) renderSidebar();
+    }
+    if (PHONE.addEventListener) PHONE.addEventListener('change', onPhoneChange);
+    else if (PHONE.addListener) PHONE.addListener(onPhoneChange);
+    syncViewport();
 
     function start() {
       checkStoredToken().then(function (valid) {
