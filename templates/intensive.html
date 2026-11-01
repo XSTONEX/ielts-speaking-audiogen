@@ -1040,6 +1040,8 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
     // 手机上关面板走的是 history.back()，浏览器默认会把整页滚回打开面板时的位置，「定位原文」刚滚到的地方就丢了
     function syncScrollRestoration(){ try{ history.scrollRestoration = isPhone() ? 'manual' : 'auto'; }catch(e){} }
     syncScrollRestoration();
+    // 刷新页面后，历史里留着上次打开的面板那一条：这一页已经没有那一层了，清掉，免得返回键对不上
+    if(history.state && history.state.irLayer){ try{ history.replaceState(history.state.irReader ? { irReader: history.state.irReader } : null, ''); }catch(e){} }
     // 工具栏按钮 = 图标 + 文字。手机上只留图标，但「生成中…」这类进度文字照常显示
     function btnLabel(icon, text){ return `${IC[icon]}<span class="${icon === 'spin' ? 'ir-busy' : 'ir-lbl'}">${text}</span>`; }
 
@@ -1081,7 +1083,8 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
     }
     // 手机上是开关，点完面板不收起，看得见现在的状态
     function menuToggleJiufenMarks(){ if(!isPhone()) closeMoreMenu(); toggleJiufenMarks(); }
-    function menuDownloadAudio(){ closeMoreMenu(); if(!currentAudioUrl && currentAudioInfo) currentAudioUrl = currentAudioInfo.audio_url; downloadAudio(); }
+    // 下载要等收面板退历史那一下做完（WebKit 里开始下载会把还没做完的 history.go 取消掉）
+    function menuDownloadAudio(){ if(!currentAudioUrl && currentAudioInfo) currentAudioUrl = currentAudioInfo.audio_url; hideMoreMenu(); closeLayer('more', downloadAudio); }
     function menuRegenerateAudio(){ closeMoreMenu(); regenerateAudioPhone(); }
     function postCategory(id, cat){ return fetch('/intensive_update_category',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id, category: cat})}).then(r=>r.json()); }
     document.getElementById('menuCatSeg').addEventListener('click', function(e){

@@ -18,7 +18,7 @@ module.exports = async function suitePhone({ cfg, browser, engine, t, lib }) {
   const shotDir = path.join(cfg.out, 'phone');
   fs.mkdirSync(shotDir, { recursive: true });
 
-  const ctx = await lib.newContext(cfg, browser, device);
+  const ctx = await lib.newContext(cfg, browser, Object.assign({ acceptDownloads: true }, device));
   const p = await lib.newPage(ctx, 10000);
   const errs = []; const dialogs = []; let acceptNext = false;
   // 预期内的：发音文件不存在（404）、沙盒没有翻译 key（502）
@@ -283,6 +283,12 @@ module.exports = async function suitePhone({ cfg, browser, engine, t, lib }) {
       const n1 = dialogs.length;
       await p.tap('#menuRegenBtn'); await sleep(400);
       ok(!regenInBar && dialogs.length === n1 + 1 && /重新生成/.test(dialogs[dialogs.length - 1]) && paid.length === 0, `重新生成 lives only in ⋯, confirms first, cancel sends nothing ${JSON.stringify({ regenInBar, paid })}`);
+      // 下载也在 ⋯ 里；下载完返回键还对得上（WebKit 里下载会取消还没做完的退历史）
+      await p.tap('#moreBtn'); await sleep(350);
+      const [dl] = await Promise.all([p.waitForEvent('download', { timeout: 8000 }), p.tap('#menuDownloadBtn')]);
+      await sleep(500);
+      const afterDl = await p.evaluate(() => ({ menu: document.getElementById('moreMenu').classList.contains('open'), layer: !!(history.state && history.state.irLayer), reader: !!(history.state && history.state.irReader) }));
+      ok(/\.mp3$/.test(dl.suggestedFilename()) && !afterDl.menu && !afterDl.layer && afterDl.reader, `⋯ → 下载朗读音频 downloads the mp3 and leaves history in step ${JSON.stringify({ name: dl.suggestedFilename(), ...afterDl })}`);
     });
 
     // ==================== 图片 ====================
@@ -379,6 +385,9 @@ module.exports = async function suitePhone({ cfg, browser, engine, t, lib }) {
       await sleep(200);
       const imp = await rect('#importBtn');
       ok(imp.vis && imp.b <= H && imp.h >= 44 && imp.w >= W * 0.8, `导入 is a full-width bar at the bottom, visible right after pasting ${JSON.stringify(imp)}`);
+      await p.evaluate(() => window.scrollTo(0, 99999)); await sleep(150);
+      const chk = await rect('#pane-json .ir-check'), bar = await rect('#pane-json .ir-actions');
+      ok(chk.b <= bar.y, `翻到底，最后一个开关不被底部导入栏挡住 (${chk.b} ≤ ${bar.y})`);
       const sw = await rect('#pane-json .ir-check');
       ok(sw.h >= 44, `逐句翻译 is a ≥ 44px switch row (${sw.h})`);
       await p.tap('#pane-json .ir-segs [data-cat="Listening"]');

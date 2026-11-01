@@ -308,6 +308,127 @@
       .vs-dlg__foot { flex-wrap: wrap; }
       .vs-pick__cat { display: none; }
     }
+
+    /* 只在手机上出现的元素 */
+    .vs-phone { display: none !important; }
+
+    /* ==================== 手机（≤820px） ====================
+       先列文章（一行两张），点一篇进到它的词（一行两张），系统返回回到文章列表；
+       「开始挑战」钉在屏幕底部；挑战记录和导出收进右上角 ⋯；四个弹窗都是几乎占满屏幕的底部面板，系统返回先关它们。 */
+    @media (max-width: 820px) {
+      .vs-phone { display: revert !important; }
+      .vs-desk { display: none !important; }
+      .vs-main { padding: 6px 0 calc(96px + env(safe-area-inset-bottom)) 0; }
+      .vs-back { min-height: 44px; margin: 0 0 2px -6px; padding-right: 8px; font-size: 15px; }
+      .vs-head { flex-direction: row; align-items: center; gap: 12px; padding-bottom: 0; margin-bottom: 12px; border-bottom: none; }
+      .vs-head__title { font-size: 20px; }
+      .vs-head__desc, .vs-head__tools { display: none; }
+      .vs-more-btn { width: 44px; height: 44px; margin-right: -8px; border: none; border-radius: var(--w-r-chip); background: transparent; color: var(--w-ink2); cursor: pointer; }
+      .vs-more-btn.vs-phone { display: inline-flex !important; align-items: center; justify-content: center; }
+      .vs-rail { gap: 12px; }
+      .vs-seg { position: sticky; top: calc(var(--app-shell-h, 56px) + 8px); z-index: 20; height: 48px; box-shadow: 0 0 0 8px var(--w-paper); }
+      .vs-seg button { font-size: 15px; }
+      /* 文章：一行两张 */
+      .vs-arts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; max-height: none; overflow: visible; margin: 0; padding: 0; }
+      .vs-art { min-height: 100px; justify-content: space-between; gap: 8px; padding: 12px; border-color: var(--w-line); background: var(--w-surface); }
+      .vs-art__title { font-size: 15px; line-height: 1.4; -webkit-line-clamp: 3; }
+      .vs-art__meta { font-size: 13px; }
+      .vs-art:hover { background: var(--w-surface); }
+      .vs-rail__note { margin: 4px 2px 0; font-size: 13px; }
+      /* 第二屏：这一篇的词 */
+      .vs-pane { display: none; }
+      body.vs-detail .vs-rail, body.vs-detail .vs-head, body.vs-detail .vs-back { display: none; }
+      body.vs-detail .vs-pane { display: grid; grid-template-columns: 44px auto minmax(0, 1fr); align-items: center; column-gap: 4px; }
+      .vs-pane__head { display: contents; }
+      .vs-pane-back { grid-column: 1; grid-row: 1 / 3; align-self: start; width: 44px; height: 44px; margin-left: -10px; border: none; background: transparent; color: var(--w-ink2); }
+      .vs-pane-back.vs-phone { display: inline-flex !important; align-items: center; justify-content: center; }
+      .vs-pane__title { grid-column: 2 / 4; grid-row: 1; padding-top: 9px; font-size: 18px; line-height: 1.4; white-space: normal; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+      .vs-pane__count { grid-column: 2; grid-row: 2; font-size: 13px; }
+      .vs-pane__open { grid-column: 3; grid-row: 2; justify-self: start; min-height: 40px; margin-left: 10px; font-size: 14px; }
+      .vs-search { grid-column: 1 / -1; grid-row: 3; position: sticky; top: calc(var(--app-shell-h, 56px) + 8px); z-index: 5; width: auto; margin: 6px 0 10px; box-shadow: 0 0 0 8px var(--w-paper); border-radius: var(--w-r-inner); }
+      .vs-search .ui-input { height: 44px; font-size: 16px; }
+      .vs-search svg { top: 14px; }
+      .vs-words { grid-column: 1 / -1; grid-row: 4; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+      .vs-pane__tip { grid-column: 1 / -1; grid-row: 5; font-size: 13px; }
+      .vs-word { padding: 10px 6px 12px 12px; gap: 2px; }
+      .vs-word__top { align-items: flex-start; gap: 0; }
+      .vs-word__en { padding-top: 8px; font-size: 16px; }
+      .vs-word__zh { padding-right: 6px; font-size: 14px; }
+      .vs-word .vs-play { display: none; }
+      .vs-word .vs-jump { width: 44px; height: 44px; margin: -2px -2px 0 0; border: none; background: transparent; }
+      .vs-word .vs-jump svg { width: 18px; height: 18px; }
+      /* 底部：开始挑战 */
+      .vs-bar.vs-phone {
+        display: block !important; position: fixed; left: 0; right: 0; bottom: 0; z-index: 1100;
+        padding: 10px max(16px, env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+        background: var(--w-surface); border-top: 1px solid var(--w-line);
+      }
+      html.vs-lock .vs-bar.vs-phone { display: none !important; }
+      .vs-bar .ui-btn { width: 100%; height: 48px; font-size: 16px; }
+      .vs-toasts { bottom: calc(16px + var(--ui-bottom-bar-h, 0px)); }
+      /* ⋯ 面板 */
+      .vs-sheet-row { width: 100%; min-height: 56px; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 2px; padding: 8px 4px; border: none; border-top: 1px solid var(--w-line); background: transparent; text-align: left; cursor: pointer; }
+      .vs-sheet-row:first-child { border-top: none; }
+      .vs-sheet-row b { font-size: 16px; font-weight: 500; color: var(--w-ink); }
+      .vs-sheet-row span { font-size: 13px; color: var(--w-ink3); }
+      .vs-sheet-row:disabled { opacity: .5; }
+      .vs-sheet-label { margin: 14px 4px 2px; font-size: 13px; color: var(--w-ink3); }
+      /* 弹窗：几乎占满屏幕的底部面板 */
+      .vs-dlg--setup, .vs-dlg--game, .vs-dlg--history, .vs-dlg--result { height: calc(100vh - 24px); height: calc(100dvh - env(safe-area-inset-top) - 24px); }
+      .vs-dlg__head { padding: 16px 12px 12px 16px; }
+      .vs-dlg__sub { white-space: normal; overflow: visible; font-size: 13px; line-height: 1.55; }
+      .vs-close { width: 44px; height: 44px; border: none; background: transparent; }
+      .vs-close svg { width: 18px; height: 18px; }
+      .vs-dlg__foot { flex-wrap: wrap; gap: 8px; padding: 10px 16px 12px; }
+      .vs-dlg__foot .ui-btn { flex: 1 1 0; height: 48px; font-size: 16px; }
+      .vs-dlg__foot [data-close] { display: none; }
+      .vs-dlg__summary { flex: 1 0 100%; font-size: 14px; }
+      .vs-dlg__foot .vs-grow { display: none; }
+      /* 开始挑战 */
+      .vs-filter { gap: 8px; }
+      .vs-check { flex: 1 0 100%; min-height: 48px; margin-left: 0; font-size: 15px; }
+      .vs-check input, .vs-pick input { width: 20px; height: 20px; }
+      .vs-pick { max-height: none; }
+      .vs-pick__row { min-height: 52px; }
+      .vs-pick__title { font-size: 15px; }
+      .vs-count { gap: 8px; }
+      .vs-count .ui-input { width: 64px; height: 44px; font-size: 16px; text-align: center; }
+      .vs-step.vs-phone { display: inline-flex !important; flex: none; width: 44px; height: 44px; align-items: center; justify-content: center; border: 1px solid var(--w-line-strong); border-radius: var(--w-r-inner); background: var(--w-surface); color: var(--w-ink); font-size: 20px; cursor: pointer; }
+      .vs-count input[type="range"] { height: 44px; margin-left: 4px; }
+      /* 答题：题目在上半屏，选项和「跳过」在拇指够得着的下半屏 */
+      .vs-dlg--game { display: flex; flex-direction: column; }
+      .vs-game__head { padding: 8px 16px 10px 6px; }
+      .vs-game__quit.vs-phone { display: inline-flex !important; width: 44px; height: 44px; align-items: center; justify-content: center; border: none; background: transparent; color: var(--w-ink2); }
+      .vs-game__head .vs-dlg__title { display: none; }
+      .vs-game__progress, .vs-game__score { font-size: 15px; }
+      .vs-q { flex: 1 1 auto; justify-content: center; padding: 20px 16px; }
+      .vs-q__word, .vs-q__meaning { font-size: 26px; }
+      .vs-q .vs-ibtn { width: 44px; height: 44px; }
+      .vs-opts { gap: 10px; }
+      .vs-opt { min-height: 64px; font-size: 16px; }
+      .vs-opt.is-en { font-size: 18px; }
+      .vs-dlg--game .vs-dlg__foot { margin-top: 8px; border-top: none; }
+      .vs-dlg--game #quitBtn { display: none; }
+      /* 结果 */
+      .vs-list__row { flex-wrap: wrap; gap: 2px 10px; padding: 10px 14px; }
+      .vs-list__word { flex: 0 1 auto; font-size: 16px; }
+      .vs-list__meaning { flex: 1 1 auto; font-size: 15px; }
+      .vs-list__pick { flex: 1 0 100%; max-width: none; text-align: left; font-size: 14px; }
+      /* 挑战记录 */
+      .vs-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; padding: 3px; margin-bottom: 12px; border: 1px solid var(--w-line); border-radius: 10px; background: var(--w-sunken); }
+      .vs-tabs button { height: 40px; margin: 0; padding: 0; border: none; border-radius: 8px; font-size: 15px; }
+      .vs-tabs button.active { background: var(--w-surface); border: none; box-shadow: 0 0 0 1px var(--w-line); }
+      .vs-dlg--history .vs-dlg__head { padding-bottom: 0; border-bottom: 1px solid var(--w-line); }
+      .vs-rec__bottom { flex-wrap: wrap; gap: 8px; }
+      .vs-rec__line { flex: 1 0 100%; font-size: 14px; }
+      .vs-rec .ui-btn--sm { flex: 1 1 0; height: 44px; font-size: 15px; }
+      .vs-ww { flex-wrap: wrap; gap: 4px 8px; padding: 12px 14px; }
+      .vs-ww__main { flex: 1 0 100%; }
+      .vs-ww__word, .vs-ww__meaning { font-size: 16px; }
+      .vs-ww__times { width: auto; margin-right: auto; text-align: left; font-size: 14px; }
+      .vs-ww .vs-ibtn { width: 44px; height: 44px; }
+      .vs-ww .ui-btn--sm { height: 44px; padding: 0 16px; font-size: 15px; }
+    }
   </style>
 </head>
 <body class="theme-page page-vocab-summary ui-plain">
@@ -332,6 +453,7 @@
         </div>
         <button type="button" class="ui-btn ui-btn--md ui-btn--primary" id="challengeBtn">开始挑战</button>
       </div>
+      <button type="button" class="vs-more-btn vs-phone" id="vsMoreBtn" aria-label="挑战记录、导出"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg></button>
     </header>
 
     <div class="vs-body">
@@ -347,6 +469,7 @@
 
       <section class="vs-pane" aria-labelledby="vocabTitle">
         <div class="vs-pane__head">
+          <button type="button" class="vs-pane-back vs-phone" id="vsPaneBack" aria-label="回到文章列表"><svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5L5.5 8 10 12.5"/></svg></button>
           <h2 class="vs-pane__title" id="vocabTitle">词汇</h2>
           <span class="vs-pane__count" id="vocabSubtitle"></span>
           <a class="vs-pane__open" id="openArticle" href="/intensive" target="_blank" rel="noopener" hidden>打开原文<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 10.5l5-5M6.5 5.5h4v4"/></svg></a>
@@ -357,10 +480,26 @@
           </label>
         </div>
         <div class="vs-words" id="vocabList"></div>
-        <p class="vs-pane__tip" id="vocabTip" hidden>点卡片听发音；右上角的箭头在新标签页打开原文，并滚到这个词。</p>
+        <p class="vs-pane__tip" id="vocabTip" hidden><span class="vs-desk">点卡片听发音；右上角的箭头在新标签页打开原文，并滚到这个词。</span><span class="vs-phone">点卡片听发音；右上角的箭头打开原文，并滚到这个词。</span></p>
       </section>
     </div>
   </main>
+
+  <!-- 手机：底部的「开始挑战」 -->
+  <div class="vs-bar vs-phone" id="vsBar"><button type="button" class="ui-btn ui-btn--md ui-btn--primary" id="vsBarStart">开始挑战</button></div>
+
+  <!-- 手机：右上角 ⋯ 面板（挑战记录、导出） -->
+  <div class="ui-dialog-backdrop" id="vsMoreSheet" hidden>
+    <div class="ui-dialog vs-dlg" role="dialog" aria-modal="true" aria-label="更多" tabindex="-1">
+      <div class="vs-dlg__body" style="gap: 0; padding-top: 8px;">
+        <button type="button" class="vs-sheet-row" data-more="history"><b>挑战记录</b><span>最近挑战、错词本、统计</span></button>
+        <div class="vs-sheet-label">导出成表格（可以导进单词本）</div>
+        <button type="button" class="vs-sheet-row" data-more="current"><b>导出当前文章</b><span id="moreCurrentDesc"></span></button>
+        <button type="button" class="vs-sheet-row" data-more="category"><b>导出当前分类</b><span id="moreCategoryDesc"></span></button>
+        <button type="button" class="vs-sheet-row" data-more="all"><b>导出全部文章</b><span id="moreAllDesc"></span></button>
+      </div>
+    </div>
+  </div>
 
   <!-- 开始挑战 -->
   <div class="ui-dialog-backdrop" id="challengeSetupModal" hidden>
@@ -385,7 +524,9 @@
         <div class="vs-block">
           <label class="vs-label" for="challengeWordCount">题数</label>
           <div class="vs-count">
+            <button type="button" class="vs-step vs-phone" data-step="-1" aria-label="少一题">−</button>
             <input type="number" class="ui-input" id="challengeWordCount" min="5" max="50" value="20" inputmode="numeric">
+            <button type="button" class="vs-step vs-phone" data-step="1" aria-label="多一题">＋</button>
             <input type="range" id="wordCountSlider" min="5" max="50" value="20" aria-label="拖动调题数">
             <span>5–50</span>
           </div>
@@ -404,6 +545,7 @@
   <div class="ui-dialog-backdrop" id="challengeGameModal" hidden>
     <div class="ui-dialog vs-dlg vs-dlg--game" role="dialog" aria-modal="true" aria-labelledby="challengeGameTitle" tabindex="-1">
       <div class="vs-game__head">
+        <button type="button" class="vs-game__quit vs-phone" id="quitBtnTop" aria-label="退出挑战"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
         <h3 class="vs-dlg__title" id="challengeGameTitle">词汇挑战</h3>
         <span class="vs-game__progress" id="challengeProgress"></span>
         <span class="vs-game__score">已答对 <b id="challengeCorrect">0</b></span>
@@ -540,6 +682,82 @@
     function storeGet(key, fallback) { try { return localStorage.getItem(key) || fallback; } catch (e) { return fallback; } }
     function storeSet(key, value) { try { localStorage.setItem(key, value); } catch (e) {} }
 
+    // ==================== 手机（≤820px）：文章 → 词两屏、弹窗和系统返回 ====================
+    // 手机上进到一篇文章的词、打开任何一个弹窗，都往历史里压一条：系统返回 / iOS 侧滑先退出这一层，
+    // 答题中按返回先问一句。界面自己关掉一层时同步收起，再 history.go(-n) 把条目退掉（那次 popstate 由 skipPops 吃掉）；
+    // 退的途中又要压新条目（关「开始挑战」、马上开答题）就先排队。
+    const phoneMQ = window.matchMedia ? window.matchMedia('(max-width: 820px)') : { matches: false };
+    function isPhone() { return !!phoneMQ.matches; }
+    const layers = [];
+    let skipPops = 0;
+    const queuedHistory = [];
+    function pushLayer(name) {
+      if (!isPhone() || layers.includes(name)) return;
+      layers.push(name);
+      const state = { vsLayer: name, vsDepth: layers.length };
+      if (skipPops) queuedHistory.push(() => history.pushState(state, '')); else history.pushState(state, '');
+    }
+    function popLayer(name) {
+      const i = layers.lastIndexOf(name);
+      if (i < 0) return;
+      const n = layers.length - i;
+      layers.splice(i);
+      skipPops++;
+      history.go(-n);
+    }
+    window.addEventListener('popstate', e => {
+      if (skipPops) {
+        skipPops--;
+        if (!skipPops) queuedHistory.splice(0).forEach(fn => fn());
+        return;
+      }
+      const depth = (e.state && e.state.vsDepth) || 0;
+      while (layers.length > depth) {
+        const name = layers[layers.length - 1];
+        // 答题中按了返回：先问一句，不想退就把这条历史补回去
+        if (name === 'challengeGameModal' && game.phase !== 'idle') {
+          if (!confirm('退出这次挑战？已经答的题不算成绩，答错的词还留在错词本里。')) {
+            history.pushState({ vsLayer: name, vsDepth: layers.length }, '');
+            return;
+          }
+          endGame();
+        }
+        layers.pop();
+        if (name === 'detail') leaveDetailUi(); else closeDialog(name, true);
+      }
+    });
+    // 等退历史那一下做完再做（WebKit 里下载文件会把还没做完的 history.go 取消掉）
+    function afterHistory(fn) { if (skipPops) queuedHistory.push(fn); else fn(); }
+    function syncScrollRestoration() { try { history.scrollRestoration = isPhone() ? 'manual' : 'auto'; } catch (e) {} }
+    syncScrollRestoration();
+    // 刷新页面后，历史里留着上次打开的弹窗那一条：这一页已经没有那一层了，清掉，免得返回键对不上
+    if (history.state && history.state.vsLayer) { try { history.replaceState(null, ''); } catch (e) {} }
+
+    // 第二屏：这一篇的词
+    let masterScroll = 0;
+    function enterDetail() {
+      if (!isPhone() || document.body.classList.contains('vs-detail')) return;
+      masterScroll = window.scrollY;
+      document.body.classList.add('vs-detail');
+      window.scrollTo(0, 0);
+      paintBar();
+      pushLayer('detail');
+    }
+    function leaveDetailUi() {
+      if (!document.body.classList.contains('vs-detail')) return;
+      document.body.classList.remove('vs-detail');
+      window.scrollTo(0, masterScroll);
+      paintBar();
+    }
+    function leaveDetail() { leaveDetailUi(); popLayer('detail'); }
+    // 底栏：文章列表上是「开始挑战」，进到一篇里是只挑这一篇
+    function paintBar() {
+      const detail = document.body.classList.contains('vs-detail') && currentArticle;
+      $('vsBarStart').textContent = detail ? '用这篇开始挑战' : '开始挑战';
+      if (isPhone()) document.body.style.setProperty('--ui-bottom-bar-h', $('vsBar').offsetHeight + 'px');
+      else document.body.style.removeProperty('--ui-bottom-bar-h');
+    }
+
     function toast(message, kind) {
       const item = h('div', { class: 'ui-toast' + (kind ? ' ui-toast--' + kind : ''), role: kind === 'err' ? 'alert' : 'status', text: message });
       $('toasts').appendChild(item);
@@ -634,7 +852,7 @@
       } else {
         box.replaceChildren(...list.map(a => h('button', {
           type: 'button', class: 'vs-art', 'data-id': a.id,
-          onclick: () => selectArticle(a)
+          onclick: () => { selectArticle(a); enterDetail(); }
         },
           h('span', { class: 'vs-art__title', text: a.title || '未命名' }),
           h('span', { class: 'vs-art__meta', text: `${wordCount(a)} 个词` + (shortDate(a.created_at) ? ` · ${shortDate(a.created_at)}` : '') })
@@ -717,6 +935,8 @@
     // 这边稍后删掉，免得这个标签页以后打开精读还自动滚
     function jumpToArticle(articleId, vocabId) {
       try { sessionStorage.setItem('jumpToHighlight', vocabId || ''); } catch (e) {}
+      // 手机：同一个标签页打开（新标签页在手机上越开越多，返回也回不来）；精读页打开后自己删掉标记
+      if (isPhone()) { location.href = '/intensive#article-' + encodeURIComponent(articleId); return; }
       window.open('/intensive#article-' + encodeURIComponent(articleId), '_blank');
       setTimeout(() => { try { sessionStorage.removeItem('jumpToHighlight'); } catch (e) {} }, 1500);
     }
@@ -790,11 +1010,14 @@
       openStack.push({ id, opener: document.activeElement });
       document.documentElement.classList.add('vs-lock');
       box.querySelector('.vs-dlg').focus();
+      pushLayer(id);
     }
-    function closeDialog(id) {
+    // fromHistory：系统返回关的，历史已经退过了
+    function closeDialog(id, fromHistory) {
       const box = $(id);
       if (box.hidden) return;
       box.hidden = true;
+      if (!fromHistory) popLayer(id);
       const at = openStack.findIndex(x => x.id === id);
       const entry = at >= 0 ? openStack.splice(at, 1)[0] : null;
       if (!openStack.length) document.documentElement.classList.remove('vs-lock');
@@ -884,6 +1107,12 @@
       $('questionCount').textContent = String(Math.min(count, words));
       const btn = $('startChallengeBtn');
       btn.disabled = !picked.size || challengeBusy;
+      // 手机：按钮上直接写这次出几题
+      // 只在文字真的变了时才改：iOS 上点按钮的同一下如果按钮内容变了（输入框失焦触发 change），这次点击会被吞掉
+      if (isPhone() && !challengeBusy) {
+        const label = picked.size ? `开始挑战 · ${Math.min(count, words)} 题` : '开始挑战';
+        if (btn.textContent !== label) btn.textContent = label;
+      }
     }
 
     async function startVocabChallenge() {
@@ -1074,10 +1303,13 @@
     function quitChallenge() {
       if (game.phase === 'idle') return;
       if (!confirm('退出这次挑战？已经答的题不算成绩，答错的词还留在错词本里。')) return;
+      endGame();
+      closeDialog('challengeGameModal');
+    }
+    function endGame() {
       game.seq++;
       game.phase = 'idle';
       stopTimer();
-      closeDialog('challengeGameModal');
     }
 
     function finishChallenge() {
@@ -1389,6 +1621,43 @@
     $('startChallengeBtn').addEventListener('click', startVocabChallenge);
     $('skipBtn').addEventListener('click', () => skipQuestion(false));
     $('quitBtn').addEventListener('click', quitChallenge);
+    // 手机
+    $('quitBtnTop').addEventListener('click', quitChallenge);
+    $('vsPaneBack').addEventListener('click', leaveDetail);
+    $('vsBarStart').addEventListener('click', () => {
+      const detail = document.body.classList.contains('vs-detail') && currentArticle;
+      openChallengeSetup(detail ? [currentArticle.id] : undefined);
+    });
+    $('vsMoreBtn').addEventListener('click', () => { refreshMoreSheet(); openDialog('vsMoreSheet'); });
+    function refreshMoreSheet() {
+      refreshExportMenu();
+      const src = $('exportMenu').querySelectorAll('button');
+      ['current', 'category', 'all'].forEach((type, i) => {
+        const row = $('vsMoreSheet').querySelector(`[data-more="${type}"]`);
+        row.disabled = src[i].disabled;
+        row.querySelector('span').textContent = src[i].querySelector('span').textContent;
+      });
+    }
+    $('vsMoreSheet').addEventListener('click', e => {
+      const row = e.target.closest('[data-more]');
+      if (!row || row.disabled) return;
+      closeDialog('vsMoreSheet');
+      if (row.dataset.more === 'history') openChallengeHistory(); else afterHistory(() => exportVocab(row.dataset.more));
+    });
+    // 「打开原文」：手机上同一个标签页打开，返回能回来
+    $('openArticle').addEventListener('click', e => { if (isPhone()) { e.preventDefault(); location.href = $('openArticle').getAttribute('href'); } });
+    document.querySelectorAll('.vs-step').forEach(b => b.addEventListener('click', () => {
+      const input = $('challengeWordCount');
+      input.value = clampCount(clampCount(input.value) + Number(b.dataset.step));
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    }));
+    function onPhoneChange() {
+      // 跨过 820px（转屏、拉窗口）：从第二屏退回来，手机上的历史条目退掉
+      if (!isPhone()) { document.body.classList.remove('vs-detail'); if (layers.length) { const n = layers.length; layers.splice(0); skipPops++; history.go(-n); } }
+      syncScrollRestoration(); paintBar(); updateChallengeStats();
+    }
+    if (phoneMQ.addEventListener) phoneMQ.addEventListener('change', onPhoneChange); else if (phoneMQ.addListener) phoneMQ.addListener(onPhoneChange);
+    paintBar();
     $('reviewWrongBtn').addEventListener('click', () => { if (lastResult) reviewWrongOf(lastResult); });
     $('restartBtn').addEventListener('click', () => {
       const ids = lastResult ? lastResult.article_ids : null;
