@@ -1203,6 +1203,11 @@ html {
   .ielts-toast-host > * {
     pointer-events: none;
   }
+
+  /* 手机上一次只留最新一条，免得几条叠起来盖住半个屏幕 */
+  .ielts-toast-host > :not(:last-child) {
+    display: none;
+  }
 }
 
 @media (max-width: 640px) {
