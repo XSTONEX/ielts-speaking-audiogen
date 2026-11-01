@@ -364,7 +364,7 @@ html[data-theme="dark"] body.ui-plain.theme-page .ui-select {
   .ui-dialog__close { width: 40px; height: 40px; margin-right: -8px; }
   .ui-dialog__body { padding: 16px; }
   .ui-dialog__foot { position: sticky; bottom: 0; padding: 12px 16px 16px 16px; background: var(--w-surface); }
-  .ui-dialog__foot > .ui-btn { flex: 1 1 0; }
+  .ui-dialog__foot > .ui-btn { flex: 1 1 0; min-height: 44px; }
 }
 @keyframes ui-sheet-in { from { transform: translateY(32px); opacity: .4; } to { transform: none; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .ui-dialog { animation: none; } }

@@ -1194,6 +1194,12 @@ html {
     bottom: calc(16px + env(safe-area-inset-bottom) + var(--ui-bottom-bar-h, 0px));
     max-width: none;
     justify-items: center;
+    /* 提示条只是文字，手指点到它时让点击穿过去，别挡住下面的按钮 */
+    pointer-events: none;
+  }
+
+  .ielts-toast-host > * {
+    pointer-events: none;
   }
 }
 
