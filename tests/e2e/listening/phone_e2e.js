@@ -40,7 +40,18 @@ const shot = async (page, name) => { await sleep(300); await page.screenshot({ p
 const overflow = (page) => page.evaluate(() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - innerWidth);
 const rect = (page, sel) => page.evaluate((s) => { const e = document.querySelector(s); if (!e) return null; const r = e.getBoundingClientRect(); const cs = getComputedStyle(e); return { t: Math.round(r.top), b: Math.round(r.bottom), l: Math.round(r.left), r: Math.round(r.right), w: Math.round(r.width), h: Math.round(r.height), shown: r.width > 0 && r.height > 0 && cs.visibility !== 'hidden' && cs.display !== 'none' }; }, sel);
 const shown = async (page, sel) => !!(await rect(page, sel) || {}).shown;
+// 一段检查出错（比如对着改版前的页面跑、元素不存在）只记一项失败，接着跑下一段
+async function section(name, fn) {
+  try { await fn(); } catch (e) { check(`${name}: ran to the end`, false, String(e && e.message || e).split('\n')[0]); }
+}
+async function ensureListening(page) {
+  const ok = await page.evaluate(() => location.pathname === '/listening_review' && typeof state !== 'undefined' && state.projects.length > 0).catch(() => false);
+  if (ok) return;
+  await page.goto(`${BASE}/listening_review`);
+  await page.waitForFunction(() => typeof state !== 'undefined' && state.projects.length > 0);
+}
 async function openByTitle(page, re) {
+  await ensureListening(page);
   await page.evaluate(async (src) => {
     if (state.view === 'detail') backToList();
     await loadProjects();
@@ -82,6 +93,7 @@ async function openByTitle(page, re) {
     const { ctx, page } = await newPage(browser, theme);
 
     // ================= 列表 =================
+    await section(`${T} list`, async () => {
     await page.goto(`${BASE}/listening_review`);
     await page.waitForSelector('.lr-proj');
     await sleep(300);
@@ -122,6 +134,14 @@ async function openByTitle(page, re) {
       check('upload: three 44px source tabs with short phone labels', tabs.length === 3 && tabs.every(t => t.h >= 44) && tabs.map(t => t.t).join('|') === '文件|链接|九分学长', tabs);
       const fsz = await page.evaluate(() => ['fileTitle', 'urlInput', 'jsonPaste'].map(id => parseFloat(getComputedStyle(document.getElementById(id)).fontSize)));
       check('upload: typed fields are 16px', fsz.every(s => s >= 16), fsz);
+      await page.evaluate(() => switchTab('url'));
+      await tryTap(page, '#urlInput');
+      await page.setViewportSize({ width: W, height: 470 });
+      await sleep(400);
+      const kb = await page.evaluate(() => { const i = document.getElementById('urlInput').getBoundingClientRect(); const b = document.getElementById('uploadUrlBtn').getBoundingClientRect(); return { it: Math.round(i.top), ib: Math.round(i.bottom), bt: Math.round(b.top), bb: Math.round(b.bottom), vh: innerHeight, hint: document.getElementById('urlInput').getAttribute('enterkeyhint') }; });
+      check('upload: link field and 下载并转录 both visible with the keyboard up (470px)', kb.it >= 0 && kb.ib <= kb.vh && kb.bt >= kb.ib && kb.bb <= kb.vh && kb.hint === 'go', kb);
+      await page.evaluate(() => document.activeElement.blur());
+      await page.setViewportSize({ width: W, height: H });
       await page.evaluate(async () => {
         switchTab('json');
         const text = await (await fetch('/static/e2e/e2e_mixed.json')).text();
@@ -146,7 +166,12 @@ async function openByTitle(page, re) {
       await page.evaluate(() => closeUploadModal());
     }
 
+    });
+
     // ================= 精听页（没有题的篇） =================
+    await section(`${T} detail`, async () => {
+    await ensureListening(page);
+    if (await page.evaluate(() => state.view === 'detail')) await page.evaluate(() => backToList());
     await tryTap(page, `[data-act="open"][data-id="${HALL}"] .lr-proj__title`);
     await page.waitForSelector('.lr-line');
     await sleep(500);
@@ -324,7 +349,10 @@ async function openByTitle(page, re) {
       check('history: back from the article goes to the project list', bl.view === 'list' && bl.path === '/listening_review' && !bl.search, bl);
     }
 
+    });
+
     // ================= 导入的篇：题目页签、题号 ↔ 出处 =================
+    await section(`${T} exam`, async () => {
     await openByTitle(page, /Riverside Bike Hire/);
     await page.evaluate(() => setMode('answers'));
     const et = await page.$$eval('.ptab-btn', els => els.filter(e => !e.hidden).map(e => e.innerText.replace(/\s+/g, '')));
@@ -350,7 +378,11 @@ async function openByTitle(page, re) {
     const qtagHit = await page.evaluate(() => { const t = document.querySelector('.lr-qtag'); const cs = getComputedStyle(t, '::before'); const r = t.getBoundingClientRect(); return { h: Math.round(r.height - parseFloat(cs.top) - parseFloat(cs.bottom)) }; });
     check(`${T} exam: Q tags have a ≥44px tap area`, qtagHit.h >= 44, qtagHit);
 
+    });
+
     // ================= 重做 =================
+    await section(`${T} redo`, async () => {
+    await openByTitle(page, /Riverside Bike Hire/);
     await page.evaluate(() => localStorage.setItem('listening-redo-script', '0'));
     await page.evaluate(() => { state.showScript = false; setMode('redo'); });
     await sleep(400);
@@ -398,7 +430,10 @@ async function openByTitle(page, re) {
     check(`${T} more: 显示原文 brings the transcript back`, shownScript.lyrics && shownScript.aria === 'true', shownScript);
     await page.evaluate(() => { closeMoreSheet(); toggleScript(false); setMode('answers'); });
 
+    });
+
     // 字母槽：手机是底部面板；返回键先关它
+    await section(`${T} slot + map`, async () => {
     await openByTitle(page, /^Part 2$/);
     await page.evaluate(() => setMode('redo'));
     await sleep(300);
@@ -424,7 +459,10 @@ async function openByTitle(page, re) {
     await page.evaluate(() => setMode('answers'));
     check(`${T} detail screens: no horizontal overflow at the end`, await overflow(page) <= 0, await overflow(page));
 
+    });
+
     // ================= 听力笔记本 =================
+    await section(`${T} notebook`, async () => {
     await page.goto(`${BASE}/listening_review/notes`);
     await page.waitForSelector('.np-card');
     await sleep(300);
@@ -491,6 +529,7 @@ async function openByTitle(page, re) {
       const fb3 = await page.evaluate(() => ({ mode: typeof state !== 'undefined' && state.mode, path: location.pathname }));
       check('review: back again leaves review for browse (stays on the notebook)', fb3.mode === 'browse' && fb3.path === '/listening_review/notes', fb3);
     }
+    });
     await ctx.close();
   }
 
