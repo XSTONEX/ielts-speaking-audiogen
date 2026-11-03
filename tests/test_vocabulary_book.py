@@ -161,6 +161,132 @@ class VocabularyBookTest(AppTestBase):
             self.assertEqual(self.add("deposit").status_code, 500)
         self.assertEqual([w["word"] for w in self.words()], ["refund"])
 
+    # ---------- 编辑单词（以前只能删了重加，收藏和挑战记录跟着丢） ----------
+
+    def edit(self, word_id, **fields):
+        return self.client.put(f"/api/vocabulary/{word_id}", headers=self.auth(), json=fields)
+
+    def word_by_id(self, word_id, category="listening"):
+        data = self.read_json(os.path.join(self.core.VOCABULARY_CATEGORIES_DIR, f"{category}.json"))
+        for sub in data["subcategories"].values():
+            for w in sub["words"]:
+                if w["id"] == word_id:
+                    return w
+        return None
+
+    def test_editing_keeps_the_id_favourite_and_date(self):
+        word = self.add("accomodation").get_json()["data"]
+        self.client.put(f"/api/vocabulary/{word['id']}/favorite", headers=self.auth(), json={"is_favorited": True})
+        response = self.edit(word["id"], word="  accommodation ", meaning="  n. 住处 ")
+        self.assertEqual(response.status_code, 200, response.get_json())
+        body = response.get_json()["data"]
+        self.assertEqual((body["id"], body["word"], body["meaning"]), (word["id"], "accommodation", "n. 住处"))
+        stored = self.word_by_id(word["id"])
+        self.assertEqual(stored["word"], "accommodation")
+        self.assertEqual(stored["meaning"], "n. 住处")
+        self.assertTrue(stored["is_favorited"])
+        self.assertEqual(stored["created_at"], word["created_at"])
+        self.assertEqual(len(self.words()), 1)
+
+    def test_only_the_fields_sent_are_changed(self):
+        word_id = self.add("seminar").get_json()["data"]["id"]
+        self.assertEqual(self.edit(word_id, meaning="n. 研讨会").status_code, 200)
+        self.assertEqual(self.word_by_id(word_id)["word"], "seminar")
+        self.assertEqual(self.edit(word_id, word="seminars").status_code, 200)
+        self.assertEqual(self.word_by_id(word_id)["meaning"], "n. 研讨会")
+        # 释义可以清空（加词时也可以不填）
+        self.assertEqual(self.edit(word_id, meaning="").status_code, 200)
+        self.assertEqual(self.word_by_id(word_id)["meaning"], "")
+        response = self.edit(word_id)
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("没有要修改", response.get_json()["error"])
+
+    def test_empty_or_non_text_word_is_rejected_and_nothing_changes(self):
+        word_id = self.add("deposit").get_json()["data"]["id"]
+        for bad in ("", "   ", None, 42):
+            with self.subTest(word=bad):
+                response = self.edit(word_id, word=bad, meaning="被拒绝的释义")
+                self.assertEqual(response.status_code, 400)
+                self.assertEqual(response.get_json()["error"], "单词不能为空")
+        self.assertEqual(self.edit(word_id, meaning=["x"]).status_code, 400)
+        stored = self.word_by_id(word_id)
+        self.assertEqual((stored["word"], stored["meaning"]), ("deposit", "示例释义"))
+
+    def test_duplicates_are_refused_only_inside_the_same_subcategory(self):
+        refund = self.add("refund").get_json()["data"]["id"]
+        deposit = self.add("deposit").get_json()["data"]["id"]
+        response = self.edit(deposit, word="Refund")
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"], "单词在该子分类中已存在")
+        self.assertEqual(self.word_by_id(deposit)["word"], "deposit")
+        # 只改自己的大小写不算重复
+        self.assertEqual(self.edit(refund, word="Refund").status_code, 200)
+        # 别的子分类里有同一个词没关系（加词也是这样）
+        other = self.client.post("/api/vocabulary/subcategories", headers=self.auth(),
+                                 json={"category": "listening", "name": "第二组"}).get_json()["data"]["id"]
+        moved = self.client.post("/api/vocabulary/add", headers=self.auth(),
+                                 json={"category": "listening", "subcategory_id": other,
+                                       "word": "rebate", "meaning": ""}).get_json()["data"]["id"]
+        self.assertEqual(self.edit(moved, word="deposit").status_code, 200)
+
+    def test_unknown_word_is_404(self):
+        response = self.edit("no-such-id", word="anything")
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.get_json()["error"], "单词不存在")
+
+    def test_new_spelling_drops_the_old_tts_audio_but_meaning_or_case_edits_keep_it(self):
+        word_id = self.add("questionaire").get_json()["data"]["id"]
+        # 旧数据：以前加词时用 TTS 生成过音频，还可能留着一个没跑完的生成任务
+        path = os.path.join(self.core.VOCABULARY_CATEGORIES_DIR, "listening.json")
+        data = self.read_json(path)
+        data["subcategories"]["default"]["words"][0]["audio_generated"] = True
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False)
+        audio_dir = os.path.join(self.core.VOCABULARY_AUDIO_DIR, "listening")
+        os.makedirs(audio_dir, exist_ok=True)
+        audio_path = os.path.join(audio_dir, f"{word_id}.mp3")
+        with open(audio_path, "wb") as f:
+            f.write(b"ID3old-word")
+        os.makedirs(self.core.VOCABULARY_TASKS_DIR, exist_ok=True)
+        with open(os.path.join(self.core.VOCABULARY_TASKS_DIR, "t1.json"), "w", encoding="utf-8") as f:
+            json.dump({"id": "t1", "word_id": word_id, "word": "questionaire", "status": "pending"}, f)
+        with open(os.path.join(self.core.VOCABULARY_TASKS_DIR, "t2.json"), "w", encoding="utf-8") as f:
+            json.dump({"id": "t2", "word_id": "someone-else", "word": "other", "status": "pending"}, f)
+
+        # 只改释义、只改大小写或空白：读音不变，旧音频留着
+        self.assertEqual(self.edit(word_id, meaning="n. 问卷").status_code, 200)
+        self.assertEqual(self.edit(word_id, word=" Questionaire ").status_code, 200)
+        self.assertTrue(os.path.exists(audio_path))
+        self.assertTrue(self.word_by_id(word_id)["audio_generated"])
+        self.assertEqual(sorted(self.task_files()), ["t1.json", "t2.json"])
+
+        # 拼写改了：旧音频读的是错词，删掉；页面以后只用有道按新拼写读
+        response = self.edit(word_id, word="questionnaire")
+        self.assertEqual(response.status_code, 200, response.get_json())
+        self.assertFalse(response.get_json()["data"]["audio_generated"])
+        self.assertFalse(os.path.exists(audio_path))
+        self.assertFalse(self.word_by_id(word_id)["audio_generated"])
+        self.assertEqual(self.task_files(), ["t2.json"])
+        response = self.client.get(f"/vocabulary_audio/{word_id}")
+        self.assertEqual(response.status_code, 404)
+        response.close()
+
+    def test_challenge_coverage_stays_attached_after_editing(self):
+        word_id = self.add("itinerary").get_json()["data"]["id"]
+        response = self.client.post("/api/vocabulary/challenge/record", headers={**self.auth(), "X-Current-User": "tester"},
+                                    json={"results": [{"word_id": word_id, "is_correct": True}]})
+        self.assertEqual(response.status_code, 200, response.get_json())
+        self.assertEqual(self.edit(word_id, word="itineraries", meaning="n. 行程").status_code, 200)
+        coverage = self.client.get("/api/vocabulary/challenge/coverage",
+                                   headers={**self.auth(), "X-Current-User": "tester"}).get_json()["data"]
+        self.assertEqual(coverage[word_id]["appear_count"], 1)
+
+    def test_editing_needs_login(self):
+        word_id = self.add("ferry").get_json()["data"]["id"]
+        response = self.client.put(f"/api/vocabulary/{word_id}", json={"word": "ferries"})
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(self.word_by_id(word_id)["word"], "ferry")
+
 
 if __name__ == "__main__":
     unittest.main()
