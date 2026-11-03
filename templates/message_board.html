@@ -35,7 +35,7 @@
 
   <link rel="stylesheet" href="/static/theme.css?v=20261101z">
   <link rel="stylesheet" href="/static/plain.css?v=20261101z">
-  <script src="/static/theme.js?v=20261101z" defer></script>
+  <script src="/static/theme.js?v=20261101z"></script>
   <script src="/static/api-client.js?v=20260919" defer></script>
   <script src="/static/auth.js?v=20260927" defer></script>
   <script src="/static/ui-feedback.js?v=20260919" defer></script>
@@ -323,7 +323,7 @@
     .mb-btn-danger:hover { border-color: var(--w-err); color: var(--w-err); }
 
     /* ==================== 窄一点的电脑屏幕 ==================== */
-    @media (min-width: 821px) and (max-width: 1080px) {
+    @media (min-width: 821px) and (max-width: 1080px) and (min-height: 541px), (min-width: 821px) and (max-width: 1080px) and (pointer: fine), (min-width: 821px) and (max-width: 1080px) and (pointer: none) {
       .mb-layout { grid-template-columns: minmax(0, 1fr) 280px; }
       .mb-composer__row { flex-wrap: wrap; }
       .mb-composer__fake { flex-basis: calc(100% - 48px); }
@@ -344,7 +344,7 @@
        顺序：等你完成 → 最近的挑战（一行，点开是详情和排名）→ 发帖框 → 帖子；算分说明挪进排名面板的脚注。
        发帖是整屏面板（发布在顶栏、工具条贴在键盘上面），评论是贴底的回复条；删帖、删评论走 ⋯ 面板。
        弹窗是底部面板（plain.css），键盘弹出时跟着可见区域往上收；返回键先关最上面一层 */
-    @media (max-width: 820px) {
+    @media (max-width: 820px), (max-height: 540px) and (pointer: coarse) {
       .mb-page { width: auto; margin: 0 16px; padding-bottom: calc(var(--ui-bottom-bar-h, 0px) + 16px); }
       .mb-head { padding: 16px 0 12px 0; display: block; }
       .mb-head__title { font-size: 20px; }
@@ -752,7 +752,7 @@
     // 手机（≤820px）上每打开一层（弹窗、⋯ 面板、发帖面板、回复条、看大图）就压一条同网址的历史记录，
     // 按返回键 / 右滑返回只关这一层、不离开页面；用界面上的按钮关掉时，再把那条记录退掉。
     // 桌面不压历史，和以前一样。记录条数始终等于打开的层数（syncHistory 负责对齐）
-    var PHONE = window.matchMedia('(max-width: 820px)');
+    var PHONE = window.IELTSPhone.mq; // 窄屏或横着拿的手机，见 static/theme.js
     var layers = [];        // [{ key, back }]，最上面的在最后
     var histEntries = 0;    // 已经替这些层压进历史的条数
     var histSkip = 0;       // 自己 history.go 引起、要忽略的 popstate

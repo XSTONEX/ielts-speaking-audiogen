@@ -11,6 +11,29 @@
 })();
 
 (function () {
+  // 什么时候用手机布局：窄屏（≤820px，手机、竖着拿的平板），或者矮的触摸屏（横着拿的手机，宽 844–932、高不到 540）。
+  // 带鼠标的电脑窗口拉得再矮也不算（pointer 是 fine）；iPad 横竖都够高，也不算。
+  // CSS 里每个手机媒体查询写的是同一句；页面脚本一律用这里的 IELTSPhone.mq，不再各写一遍。
+  // 这个文件不加 defer（页面里的内联脚本一解析就要读它）。
+  var QUERY = '(max-width: 820px), (max-height: 540px) and (pointer: coarse)';
+  var noop = function () {};
+  var mq = window.matchMedia ? window.matchMedia(QUERY) : {
+    matches: false, media: QUERY,
+    addEventListener: noop, removeEventListener: noop, addListener: noop, removeListener: noop
+  };
+  window.IELTSPhone = {
+    query: QUERY,
+    mq: mq,
+    matches: function () { return !!mq.matches; },
+    // 跨过手机 / 桌面的分界（转屏、拖窗口）时调用 fn(event)，event.matches 是新的状态
+    onChange: function (fn) {
+      if (typeof mq.addEventListener === 'function') mq.addEventListener('change', fn);
+      else if (typeof mq.addListener === 'function') mq.addListener(fn);
+    }
+  };
+})();
+
+(function () {
   var STORAGE_KEY = 'ui-theme';
   var VALID_PREFERENCES = ['system', 'light', 'dark'];
   var mediaQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;

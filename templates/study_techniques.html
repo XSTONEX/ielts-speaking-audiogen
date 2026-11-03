@@ -232,7 +232,7 @@
        列表：科目和类型两排吸顶（往下翻收起、往上翻出来），卡片右上角 ⋯ 收着编辑 / 改名 / 删除，
        全屏 / 导入 / 新建放在底部操作条；技巧详情和编辑器整屏显示，自带顶栏（‹ 返回、目录、保存），
        目录改成从底部升起的面板；弹窗是底部面板（plain.css），键盘弹出时跟着可见区域往上收 */
-    @media (max-width: 820px) {
+    @media (max-width: 820px), (max-height: 540px) and (pointer: coarse) {
       .st-page { width: auto; margin: 0; padding-bottom: calc(var(--ui-bottom-bar-h, 0px) + 24px); }
       body.st-view-list { --ui-bottom-bar-h: calc(64px + env(safe-area-inset-bottom)); }
       #viewList, #readerBody, #readerState, #editorForm, #editorState { padding-left: 16px; padding-right: 16px; }
@@ -372,7 +372,7 @@
       .st-grid, .st-grid--3 { grid-template-columns: minmax(0, 1fr); }
     }
   </style>
-  <script src="/static/theme.js?v=20261101z" defer></script>
+  <script src="/static/theme.js?v=20261101z"></script>
   <script src="/static/api-client.js?v=20260919" defer></script>
   <script src="/static/auth.js?v=20260927" defer></script>
   <script src="/static/ui-feedback.js?v=20260919" defer></script>
@@ -737,7 +737,7 @@
     var act = null;          // ⋯ 面板对应的那一条：{cat, type, id}
     var renameJob = null;    // 手机上的改名面板
     // 手机（≤820px）：底部操作条、⋯ 菜单、整屏阅读和编辑、返回键先关面板。桌面不受影响
-    var PHONE = window.matchMedia('(max-width: 820px)');
+    var PHONE = window.IELTSPhone.mq; // 窄屏或横着拿的手机，见 static/theme.js
 
     // ---------- 小工具 ----------
     function $(id) { return document.getElementById(id); }

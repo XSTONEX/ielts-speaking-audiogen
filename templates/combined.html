@@ -587,8 +587,8 @@
            返回口语音频库、Part 横向一排、每个话题一行两个 44px 按钮、播放器从底部升起（列表停在原处）。
            cb-ph 只在手机出现，cb-dt 只在桌面出现。
            ============================================================ */
-        @media (min-width: 821px) { body.page-combined .cb-ph { display: none !important; } }
-        @media (max-width: 820px) {
+        @media (min-width: 821px) and (min-height: 541px), (min-width: 821px) and (pointer: fine), (min-width: 821px) and (pointer: none) { body.page-combined .cb-ph { display: none !important; } }
+        @media (max-width: 820px), (max-height: 540px) and (pointer: coarse) {
             body.page-combined .cb-dt { display: none !important; }
             body.page-combined { background: var(--bg-page, #f4f6fa); }
             body.page-combined .container {
@@ -689,7 +689,7 @@
         }
         @keyframes cb-sheet-in { from { transform: translateY(40px); opacity: .4; } to { transform: none; opacity: 1; } }
     </style>
-    <script src="/static/theme.js?v=20261101z" defer></script>
+    <script src="/static/theme.js?v=20261101z"></script>
   <script src="/static/api-client.js?v=20260919" defer></script>
   <script src="/static/auth.js?v=20260927" defer></script>
   <script src="/static/ui-feedback.js?v=20260919" defer></script>
@@ -767,7 +767,7 @@ function escapeHtml(value) {
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
-function isPhone() { return window.matchMedia('(max-width: 820px)').matches; }
+function isPhone() { return window.IELTSPhone.matches(); } // 窄屏或横着拿的手机，见 static/theme.js
 // 某个话题在页面上的所有卡片（「全部」和各 Part 里各有一张）。按 data-folder 精确比较，
 // 以前用 id 前缀匹配，「P1 - Art」会连「P1 - Art and design」一起改
 function cardsFor(folder) {

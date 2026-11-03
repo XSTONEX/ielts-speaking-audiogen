@@ -206,7 +206,7 @@ html[data-theme="dark"] body.ui-plain.theme-page .ui-select {
 .ui-seg__btn.is-on { font-weight: 600; background: var(--w-surface); color: var(--w-ink); box-shadow: 0 0 0 1px var(--w-line); }
 .ui-seg__count { font-variant-numeric: tabular-nums; font-size: var(--w-fs-meta); opacity: .65; margin-left: 4px; }
 /* 手机上分段按钮至少 40px 高，好点 */
-@media (max-width: 820px) { .ui-seg__btn { min-height: 40px; padding: 0 16px; } }
+@media (max-width: 820px), (max-height: 540px) and (pointer: coarse) { .ui-seg__btn { min-height: 40px; padding: 0 16px; } }
 
 /* ==================== 卡片 ==================== */
 .ui-card {
@@ -381,3 +381,25 @@ html[data-theme="dark"] body.ui-plain.theme-page .ui-select {
 .ui-toast--ok::before { background: var(--w-ok); }
 .ui-toast--err { border-color: var(--w-err-line); background: var(--w-err-soft); color: var(--w-err-ink); }
 .ui-toast--err::before { background: var(--w-err); }
+
+/* ==================== 横着拿的手机（矮触摸屏，高 ≤ 540px） ====================
+   宽度过了 640，上面「弹窗改成底部面板」那条不生效，弹窗会是屏幕中间一个整体滚动的框，
+   主按钮常常在框底下看不见。这里改成贴底升起、不超过 640 宽的面板：标题和底部按钮固定，只滚中间的内容。 */
+@media (max-height: 540px) and (pointer: coarse) {
+  .ui-dialog-backdrop { align-items: flex-end; padding: calc(env(safe-area-inset-top) + 8px) max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left)); }
+  .ui-dialog {
+    width: min(640px, 100%); max-height: calc(100vh - 8px); max-height: calc(100dvh - env(safe-area-inset-top) - 8px);
+    border-width: 1px 1px 0 1px; border-radius: 14px 14px 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    animation: ui-sheet-in .22s ease-out;
+  }
+  .ui-dialog:has(> .ui-dialog__body) { display: flex; flex-direction: column; overflow: hidden; }
+  .ui-dialog:has(> .ui-dialog__body) > .ui-dialog__head, .ui-dialog:has(> .ui-dialog__body) > .ui-dialog__foot { flex: none; }
+  .ui-dialog > .ui-dialog__body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+  .ui-dialog__head { padding: 12px 16px 0 16px; }
+  .ui-dialog__close { width: 40px; height: 40px; margin-right: -8px; }
+  .ui-dialog__body { padding: 12px 16px; gap: 12px; }
+  .ui-dialog__foot { position: sticky; bottom: 0; padding: 8px 16px 12px 16px; background: var(--w-surface); }
+  .ui-dialog__foot > .ui-btn { min-height: 44px; }
+}
+@media (max-height: 540px) and (pointer: coarse) and (prefers-reduced-motion: reduce) { .ui-dialog { animation: none; } }
