@@ -5,7 +5,7 @@
 //   VOCAB_E2E_OUT       截图、下载文件放哪，默认系统临时目录下的 vocab-e2e（别放进仓库）
 //   VOCAB_E2E_USER / VOCAB_E2E_PASSWORD  沙盒里的假账号，默认 demo / not-a-real-password（make_fake_data.py 写的）
 //   VOCAB_E2E_OFFLINE=1 不连有道：有道发音请求换成本地生成的一小段提示音，其余检查照跑
-//   VOCAB_E2E_SUITES    只跑其中几组（desktop,prefs,missing,phone），默认全跑
+//   VOCAB_E2E_SUITES    只跑其中几组（desktop,prefs,missing,phone,edit），默认全跑
 //   PLAYWRIGHT_CORE     playwright-core 的路径（仓库没装 node 依赖时指到别处装好的那份）
 // 命令行参数是要跑的浏览器内核，默认 chromium webkit。
 const fs = require('fs');
@@ -22,8 +22,8 @@ const BASE = (process.env.VOCAB_E2E_BASE || 'http://localhost:5174').replace(/\/
 const USER = process.env.VOCAB_E2E_USER || 'demo';
 const PASSWORD = process.env.VOCAB_E2E_PASSWORD || 'not-a-real-password';
 const OFFLINE = process.env.VOCAB_E2E_OFFLINE === '1';
-// 只跑其中几组：VOCAB_E2E_SUITES=phone（逗号分隔：desktop,prefs,missing,phone），默认全跑
-const SUITES = (process.env.VOCAB_E2E_SUITES || 'desktop,prefs,missing,phone').split(',').map(s => s.trim());
+// 只跑其中几组：VOCAB_E2E_SUITES=phone（逗号分隔：desktop,prefs,missing,phone,edit），默认全跑
+const SUITES = (process.env.VOCAB_E2E_SUITES || 'desktop,prefs,missing,phone,edit').split(',').map(s => s.trim());
 const OUT_ROOT = path.resolve(process.env.VOCAB_E2E_OUT || path.join(os.tmpdir(), 'vocab-e2e'));
 const OUT = path.join(OUT_ROOT, 'shots');
 const DL = path.join(OUT_ROOT, 'downloads');
@@ -780,7 +780,7 @@ async function phoneFlows(page, P, vw, vh) {
     await card.locator('.vb-act--more').tap();
     await waitShown(page, '#dlgActions');
     const items = await page.$$eval('#actList .vb-actitem', els => els.map(e => e.textContent.trim()));
-    check(P('card ⋯ → play / star / delete'), (await text(page, '#actTitle')) === word && items.join('|') === '播放发音|取消收藏|删除这个单词', { title: await text(page, '#actTitle'), items });
+    check(P('card ⋯ → play / star / edit / delete'), (await text(page, '#actTitle')) === word && items.join('|') === '播放发音|取消收藏|编辑|删除这个单词', { title: await text(page, '#actTitle'), items });
     check(P('action sheet is a bottom sheet'), await isBottomSheet(page, '#dlgActions .ui-dialog', vw, vh));
     const rowH = await page.$$eval('#actList .vb-actitem', els => els.map(e => e.getBoundingClientRect().height));
     check(P('action rows >= 44px'), rowH.every(h => h >= 44), rowH);
@@ -1180,6 +1180,389 @@ async function phoneLoadingAndError(browser, dev) {
   await ctx.close();
 }
 
+// ============================================================ edit a word: desktop 1280 + phone (WebKit 390×844 / Chromium 360×780)
+// 编辑单词：桌面是卡片上的铅笔（和删除一样悬停卡片才出现），手机是单词卡 ⋯ 里的「编辑」（在「删除」上面）。
+// 改单词和释义、保存后卡片原地更新（id 不变、位置和滚动不变、排序 / 查找 / 遮释义照旧）、刷新还在；
+// 单词清空报错不关面板；取消 / Esc / 返回键什么都不改。拼写改了以后旧 TTS 音频删掉（读的是旧词）。
+// 在 main 上跑时铅笔、「编辑」和编辑面板都不存在，每一段都记成 FAIL
+const EDIT_PREFS = () => ({ category: 'listening', subcategory: SUB.unfamiliar, sortType: 'newest', meaningsVisible: true });
+const cardById = (page, id) => page.locator(`#vbGrid .vb-card[data-id="${id}"]`);
+// 一张卡现在的样子：单词、释义、释义遮没遮、在列表里第几张
+const cardInfo = (page, id) => page.evaluate(id => {
+  const all = Array.from(document.querySelectorAll('#vbGrid .vb-card'));
+  const c = all.find(e => e.dataset.id === id);
+  if (!c) return { missing: true, count: all.length };
+  const m = c.querySelector('.vb-meaning');
+  return { word: c.querySelector('.vb-word').textContent.trim(), meaning: m.textContent.trim(), masked: m.classList.contains('is-masked'), index: all.indexOf(c), count: all.length };
+}, id);
+function storedWord(id) {
+  for (const cat of ['listening', 'speaking', 'reading', 'writing']) {
+    for (const s of Object.values(readCategory(cat).subcategories)) {
+      const w = s.words.find(x => x.id === id);
+      if (w) return w;
+    }
+  }
+  return null;
+}
+const audioFile = id => path.join(SANDBOX, 'vocabulary_book/audio/listening', id + '.mp3');
+const isAZ = list => JSON.stringify(list) === JSON.stringify([...list].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase())));
+const clearToasts = page => page.evaluate(() => document.querySelectorAll('.ielts-toast').forEach(t => t.remove()));
+const scrollY = page => page.evaluate(() => window.scrollY);
+const boxes = (page, ids) => page.evaluate(list => list.map(id => { const r = document.getElementById(id).getBoundingClientRect(); return [id, Math.round(r.top), Math.round(r.bottom)]; }), ids);
+// 记下编辑请求（PUT /api/vocabulary/<id>）的内容
+function trackEdits(page) {
+  const puts = [];
+  page.on('request', r => { if (r.method() === 'PUT' && /^\/api\/vocabulary\/[^/]+$/.test(new URL(r.url()).pathname)) puts.push(JSON.parse(r.postData() || '{}')); });
+  return puts;
+}
+const editorState = page => page.evaluate(() => ({
+  title: document.getElementById('edTitle').textContent.trim(), word: document.getElementById('edWord').value, meaning: document.getElementById('edMeaning').value,
+  focus: document.activeElement && document.activeElement.id, ok: document.getElementById('edOk').textContent.trim(),
+  hint: document.getElementById('edHint').textContent.trim(), warn: document.getElementById('edHint').classList.contains('is-warn')
+}));
+
+async function editSuite(browser) {
+  await desktopEdit(browser);
+  await phoneEdit(browser);
+}
+
+async function desktopEdit(browser) {
+  resetData();
+  let { ctx, page } = await newPage(browser, { prefs: EDIT_PREFS() });
+  const puts = trackEdits(page);
+  const P = n => 'edit 1280: ' + n;
+  await open(page);
+  const words0 = readCategory('listening').subcategories[SUB.unfamiliar].words;
+  const before = words0.find(w => w.word === 'canteen');
+  const id = before.id;
+  const card = cardById(page, id);
+  const openEditor = async () => {
+    await card.scrollIntoViewIfNeeded();
+    await card.hover();
+    await card.locator('.vb-act--edit').click();
+    await waitShown(page, '#dlgEdit');
+  };
+
+  await section(P('pencil'), async () => {
+    await card.scrollIntoViewIfNeeded();
+    await page.mouse.move(5, 5);
+    await page.waitForTimeout(250);
+    const hiddenOp = await card.locator('.vb-act--edit').evaluate(e => getComputedStyle(e).opacity);
+    await card.hover();
+    await page.waitForTimeout(250);
+    const shownOp = await card.locator('.vb-act--edit').evaluate(e => getComputedStyle(e).opacity);
+    check(P('pencil hidden until the card is hovered, like delete'), hiddenOp === '0' && shownOp === '1', { hiddenOp, shownOp });
+    const e = await card.locator('.vb-act--edit').boundingBox();
+    const d = await card.locator('.vb-act--del').boundingBox();
+    check(P('pencil sits left of delete, same size and row'), e.x + e.width <= d.x + 0.5 && Math.abs(e.y - d.y) < 1 && Math.abs(e.width - d.width) < 1 && Math.abs(e.height - d.height) < 1, { e, d });
+    check(P('pencil is labelled'), (await card.locator('.vb-act--edit').getAttribute('aria-label')) === '编辑 canteen');
+    await shot(page, 'light-1280-edit-hover');
+  });
+
+  await section(P('editor'), async () => {
+    await openEditor();
+    const s = await editorState(page);
+    check(P('pencil opens 编辑单词 prefilled, word focused, 保存'), s.title === '编辑单词' && s.word === 'canteen' && s.meaning === 'n. 食堂' && s.focus === 'edWord' && s.ok === '保存' && !s.warn, s);
+    const dlg = await rect(page, '#dlgEdit .ui-dialog');
+    check(P('desktop editor is a centred dialog'), !!dlg && dlg.w <= 521 && Math.abs((dlg.x + dlg.w / 2) - 640) <= 2 && dlg.b < 900 - 20, dlg);
+    await shot(page, 'light-1280-edit');
+    await page.fill('#edWord', '');
+    await page.click('#edOk');
+    await page.waitForTimeout(200);
+    let t = await editorState(page);
+    check(P('empty word: error under the field, dialog stays, nothing sent'), t.hint === '单词不能为空' && t.warn && await shown(page, '#dlgEdit') && puts.length === 0, t);
+    await shot(page, 'light-1280-edit-empty');
+    await page.fill('#edWord', 'Biodiversity');
+    t = await editorState(page);
+    check(P('duplicate in the same sub warned while typing'), t.warn && t.hint.includes('已经在这个子分类里了'), t);
+    await page.click('#edOk');
+    await page.waitForTimeout(200);
+    check(P('duplicate is not saved'), await shown(page, '#dlgEdit') && puts.length === 0);
+    await page.fill('#edWord', 'cantina');
+    await page.click('#dlgEdit .ui-dialog__foot [data-close]');
+    await waitHidden(page, '#dlgEdit');
+    check(P('取消 leaves the card unchanged'), (await cardInfo(page, id)).word === 'canteen' && storedWord(id).word === 'canteen' && puts.length === 0);
+    await openEditor();
+    t = await editorState(page);
+    check(P('reopening starts from the stored text, no stale error'), t.word === 'canteen' && t.meaning === 'n. 食堂' && !t.warn, t);
+    await page.fill('#edWord', 'cantina');
+    await page.keyboard.press('Escape');
+    await waitHidden(page, '#dlgEdit');
+    check(P('Esc leaves the card unchanged'), (await cardInfo(page, id)).word === 'canteen' && puts.length === 0);
+  });
+
+  await section(P('save'), async () => {
+    await openEditor();
+    const y0 = await scrollY(page);
+    const info0 = await cardInfo(page, id);
+    await page.fill('#edWord', 'cafeteria');
+    await page.fill('#edMeaning', 'n. 自助餐厅');
+    await clearToasts(page);
+    await page.click('#edOk');
+    check(P('save shows a toast'), await toastSeen(page, '已保存「cafeteria」'));
+    await waitHidden(page, '#dlgEdit');
+    const info1 = await cardInfo(page, id);
+    check(P('card updates in place: same card, same position, new text'), info1.word === 'cafeteria' && info1.meaning === 'n. 自助餐厅' && info1.index === info0.index && info1.count === info0.count, { info0, info1 });
+    check(P('scroll position kept'), Math.abs((await scrollY(page)) - y0) <= 1, { y0, y1: await scrollY(page) });
+    check(P('focus back on that card\'s pencil'), await page.evaluate(id => { const a = document.activeElement; return !!a && a.classList.contains('vb-act--edit') && a.closest('.vb-card').dataset.id === id; }, id));
+    const after = storedWord(id);
+    check(P('saved on the server: same id, favourite and date kept'), after && after.word === 'cafeteria' && after.meaning === 'n. 自助餐厅' && after.is_favorited === before.is_favorited && after.created_at === before.created_at, after);
+    check(P('one request with the new word and meaning'), puts.length === 1 && puts[0].word === 'cafeteria' && puts[0].meaning === 'n. 自助餐厅', puts);
+    check(P('new spelling drops the old TTS file'), before.audio_generated === true && after.audio_generated === false && !fs.existsSync(audioFile(id)), after);
+    // 有道取不到时不再退回旧音频（读的是 canteen），直接提示
+    await page.route('**/dictvoice**', route => route.fulfill({ status: 500, contentType: 'application/json', body: '{"msg":"null audio"}' }));
+    page.fallback = [];
+    page.youdao = [];
+    await card.locator('.vb-word').click();
+    check(P('renamed word plays the new spelling, never the old TTS file'), await toastSeen(page, '没取到「cafeteria」的发音') && page.youdao.includes('cafeteria') && page.fallback.length === 0, { youdao: page.youdao, fallback: page.fallback });
+    await page.unroute('**/dictvoice**');
+  });
+
+  await section(P('meaning only'), async () => {
+    const other = words0.find(w => w.audio_generated && w.id !== id);
+    await cardById(page, other.id).scrollIntoViewIfNeeded();
+    await cardById(page, other.id).hover();
+    await cardById(page, other.id).locator('.vb-act--edit').click();
+    await waitShown(page, '#dlgEdit');
+    await page.fill('#edMeaning', '改过的释义');
+    await clearToasts(page);
+    await page.press('#edMeaning', 'Enter');
+    check(P('Enter saves'), await toastSeen(page, '已保存「' + other.word + '」'));
+    const s = storedWord(other.id);
+    check(P('meaning-only edit sends only the meaning, keeps word and TTS file'), JSON.stringify(puts[puts.length - 1]) === JSON.stringify({ meaning: '改过的释义' }) && s.word === other.word && s.meaning === '改过的释义' && s.audio_generated === true && fs.existsSync(audioFile(other.id)), { put: puts[puts.length - 1], s });
+  });
+
+  await section(P('masked'), async () => {
+    await page.click('#vbHide');
+    await openEditor();
+    check(P('editor shows the meaning while cards are masked'), (await editorState(page)).meaning === 'n. 自助餐厅');
+    await page.fill('#edMeaning', 'n. 自助餐厅，食堂');
+    await clearToasts(page);
+    await page.click('#edOk');
+    await toastSeen(page, '已保存「cafeteria」');
+    await page.mouse.move(5, 5);
+    const i = await cardInfo(page, id);
+    check(P('after saving, meanings stay masked'), i.masked && i.meaning === 'n. 自助餐厅，食堂' && await page.$$eval('#vbGrid .vb-meaning', els => els.every(e => e.classList.contains('is-masked'))), i);
+    await page.click('#vbHide');
+  });
+
+  await section(P('search'), async () => {
+    await page.fill('#vbSearch', '自助');
+    check(P('search finds the edited meaning'), JSON.stringify(await cards(page)) === JSON.stringify(['cafeteria']), await cards(page));
+    await openEditor();
+    await page.fill('#edWord', 'cafeterias');
+    await clearToasts(page);
+    await page.click('#edOk');
+    await toastSeen(page, '已保存「cafeterias」');
+    check(P('edited word stays in the results, count line consistent'), JSON.stringify(await cards(page)) === JSON.stringify(['cafeterias']) && (await text(page, '#vbCountLine')) === '找到 1 个', { cards: await cards(page), line: await text(page, '#vbCountLine') });
+    await openEditor();
+    await page.fill('#edMeaning', 'n. 食堂');
+    await clearToasts(page);
+    await page.click('#edOk');
+    await toastSeen(page, '已保存「cafeterias」');
+    check(P('an edit that no longer matches leaves the results'), (await cards(page)).length === 0 && (await text(page, '#vbCountLine')).includes('没有包含「自助」'), { cards: await cards(page), line: await text(page, '#vbCountLine') });
+    await page.fill('#vbSearch', '');
+  });
+
+  await section(P('sort'), async () => {
+    await page.selectOption('#vbSort', 'alphabetical');
+    await page.click('#vbFavFirst');   // 纯 A→Z
+    const order0 = await cards(page);
+    const firstId = await page.$eval('#vbGrid .vb-card', e => e.dataset.id);
+    const c = cardById(page, firstId);
+    await c.hover();
+    await c.locator('.vb-act--edit').click();
+    await waitShown(page, '#dlgEdit');
+    await page.fill('#edWord', 'zygote');
+    await clearToasts(page);
+    await page.click('#edOk');
+    await toastSeen(page, '已保存「zygote」');
+    const order1 = await cards(page);
+    check(P('A→Z order re-sorted after renaming'), isAZ(order1) && order1[order1.length - 1] === 'zygote' && order1.length === order0.length && !order1.includes(order0[0]), order1.slice(-3));
+    await page.selectOption('#vbSort', 'newest');
+    await page.click('#vbFavFirst');
+  });
+
+  await section(P('reload'), async () => {
+    await page.reload();
+    await page.waitForSelector('#vbContent:not([hidden])');
+    const i = await cardInfo(page, id);
+    const list = await cards(page);
+    check(P('edits survive a reload'), i.word === 'cafeterias' && i.meaning === 'n. 食堂' && list.includes('zygote') && !list.includes('canteen'), { i, zygote: list.includes('zygote') });
+  });
+  check(P('no page errors'), page.errors.length === 0, page.errors);
+  await ctx.close();
+
+  ({ ctx, page } = await newPage(browser, { theme: 'dark', prefs: EDIT_PREFS() }));
+  await open(page);
+  await section(P('dark'), async () => {
+    const c = page.locator('#vbGrid .vb-card').first();
+    await c.hover();
+    await c.locator('.vb-act--edit').click();
+    await waitShown(page, '#dlgEdit');
+    const bgs = await page.evaluate(() => ['#dlgEdit .ui-dialog', '#edWord'].map(s => getComputedStyle(document.querySelector(s)).backgroundColor));
+    check(P('dark: editor and fields are dark'), bgs.every(isDark), bgs);
+    await shot(page, 'dark-1280-edit');
+    await page.keyboard.press('Escape');
+  });
+  check(P('no page errors (dark)'), page.errors.length === 0, page.errors);
+  await ctx.close();
+}
+
+async function phoneEdit(browser) {
+  const dev = PHONE[engine] || PHONE.webkit;
+  const vw = dev.width, vh = dev.height;
+  const P = n => `edit phone ${vw}: ${n}`;
+  resetData();
+  let { ctx, page } = await newPage(browser, { width: vw, height: vh, mobile: true, isMobile: dev.isMobile, prefs: EDIT_PREFS() });
+  const puts = trackEdits(page);
+  await open(page);
+  let id = null, word0 = '', before = null;
+  const openEditor = async () => {
+    await cardById(page, id).locator('.vb-act--more').tap();
+    await waitShown(page, '#dlgActions');
+    await page.locator('#actList .vb-actitem', { hasText: /^编辑$/ }).tap();
+    await waitShown(page, '#dlgEdit');
+  };
+
+  await section(P('menu'), async () => {
+    check(P('no pencil on phone cards (it lives in ⋯)'), !(await shown(page, '#vbGrid .vb-act--edit')));
+    // 在列表中间编辑，好查滚动位置有没有跳
+    await page.evaluate(() => window.scrollTo(0, 1500));
+    await page.waitForTimeout(200);
+    const pick = await page.evaluate(() => {
+      let best = null;
+      document.querySelectorAll('#vbGrid .vb-card').forEach(c => {
+        const r = c.getBoundingClientRect();
+        const d = Math.abs(r.top + r.height / 2 - innerHeight / 2);
+        if (!best || d < best.d) best = { d: d, id: c.dataset.id, word: c.querySelector('.vb-word').textContent.trim() };
+      });
+      return best;
+    });
+    id = pick.id;
+    word0 = pick.word;
+    before = storedWord(id);
+    await cardById(page, id).locator('.vb-act--more').tap();
+    await waitShown(page, '#dlgActions');
+    const items = await page.$$eval('#actList .vb-actitem', els => els.map(e => { const r = e.getBoundingClientRect(); return { t: e.textContent.trim(), y: Math.round(r.top), h: Math.round(r.height) }; }));
+    const names = items.map(i => i.t);
+    const iEdit = names.indexOf('编辑');
+    const iDel = names.indexOf('删除这个单词');
+    check(P('card ⋯ has 编辑 right above 删除, row >= 44px'), iEdit !== -1 && iDel === iEdit + 1 && items[iEdit].y < items[iDel].y && items[iEdit].h >= 44, items);
+    await shot(page, 'phone-edit-menu');
+    await page.tap('#dlgActions .ui-dialog__close');
+    await waitHidden(page, '#dlgActions');
+  });
+
+  await section(P('editor sheet'), async () => {
+    const y0 = await scrollY(page);
+    await openEditor();
+    const s = await editorState(page);
+    check(P('编辑 opens 编辑单词 prefilled, word focused, 保存'), s.title === '编辑单词' && s.word === word0 && s.meaning === before.meaning && s.focus === 'edWord' && s.ok === '保存', s);
+    check(P('editor is a bottom sheet'), await isBottomSheet(page, '#dlgEdit .ui-dialog', vw, vh));
+    const sz = await page.evaluate(() => ({
+      fields: ['edWord', 'edMeaning'].map(id => { const e = document.getElementById(id); return [parseFloat(getComputedStyle(e).fontSize), Math.round(e.getBoundingClientRect().height)]; }),
+      btns: Array.from(document.querySelectorAll('#dlgEdit .ui-dialog__foot .ui-btn')).map(b => Math.round(b.getBoundingClientRect().height))
+    }));
+    check(P('fields >= 16px text and >= 44px tall; 取消 / 保存 >= 44px'), sz.fields.every(([f, h]) => f >= 16 && h >= 44) && sz.btns.length === 2 && sz.btns.every(h => h >= 44), sz);
+    check(P('no horizontal overflow with the editor open'), (await overflow(page)) <= 0);
+    await shot(page, 'phone-edit');
+    await page.press('#edWord', 'Enter');
+    await page.waitForTimeout(150);
+    check(P('Return in the word field moves to the meaning, saves nothing'), (await activeId(page)) === 'edMeaning' && puts.length === 0 && await shown(page, '#dlgEdit'));
+    await page.fill('#edWord', word0 + 'x');
+    check(P('back closes the editor, card unchanged, page stays'), (await pressBack(page)) && !(await shown(page, '#dlgEdit')) && (await cardInfo(page, id)).word === word0 && puts.length === 0);
+    check(P('scroll position kept after back'), Math.abs((await scrollY(page)) - y0) <= 2, { y0, y: await scrollY(page) });
+    await openEditor();
+    check(P('reopening starts from the stored text'), (await editorState(page)).word === word0);
+    await page.fill('#edWord', word0 + 'x');
+    await page.tap('#dlgEdit .ui-dialog__foot [data-close]');
+    await waitHidden(page, '#dlgEdit');
+    check(P('取消 leaves the card unchanged'), (await cardInfo(page, id)).word === word0 && storedWord(id).word === word0 && puts.length === 0);
+  });
+
+  await section(P('empty + save'), async () => {
+    await openEditor();
+    await page.fill('#edWord', '');
+    await page.tap('#edOk');
+    await page.waitForTimeout(200);
+    const t = await editorState(page);
+    check(P('empty word: error shown in the sheet, sheet stays open'), t.hint === '单词不能为空' && t.warn && await shown(page, '#dlgEdit') && puts.length === 0, t);
+    await shot(page, 'phone-edit-empty');
+    await page.fill('#edWord', 'serendipity');
+    await page.fill('#edMeaning', 'n. 意外发现好东西的运气');
+    const y0 = await scrollY(page);
+    const info0 = await cardInfo(page, id);
+    await clearToasts(page);
+    await page.press('#edMeaning', 'Enter');
+    check(P('Return in the meaning saves, toast confirms'), await toastSeen(page, '已保存「serendipity」'));
+    await waitHidden(page, '#dlgEdit');
+    await page.waitForTimeout(400);
+    const info1 = await cardInfo(page, id);
+    check(P('card updates in place, same position'), info1.word === 'serendipity' && info1.meaning === 'n. 意外发现好东西的运气' && info1.index === info0.index && info1.count === info0.count, { info0, info1 });
+    check(P('scroll position kept after saving'), Math.abs((await scrollY(page)) - y0) <= 2, { y0, y: await scrollY(page) });
+    const t2 = await rect(page, '.ielts-toast');
+    const bar = await rect(page, '#vbPbar');
+    check(P('toast floats above the bottom bar'), !!t2 && !!bar && t2.b <= bar.y, { t2, bar });
+    const after = storedWord(id);
+    check(P('saved: same id, favourite and date kept'), after && after.word === 'serendipity' && after.meaning === 'n. 意外发现好东西的运气' && after.is_favorited === before.is_favorited && after.created_at === before.created_at, after);
+    check(P('no horizontal overflow after saving'), (await overflow(page)) <= 0);
+    await shot(page, 'phone-edit-saved');
+  });
+
+  await section(P('masked'), async () => {
+    await page.tap('#vbPHide');
+    await openEditor();
+    check(P('editor shows the meaning while 遮释义 is on'), (await editorState(page)).meaning === 'n. 意外发现好东西的运气');
+    await page.fill('#edMeaning', 'n. 好运');
+    await clearToasts(page);
+    await page.tap('#edOk');
+    await toastSeen(page, '已保存「serendipity」');
+    await waitHidden(page, '#dlgEdit');
+    const i = await cardInfo(page, id);
+    check(P('after saving, 遮释义 still masks every meaning'), i.masked && i.meaning === 'n. 好运' && await page.$$eval('#vbGrid .vb-meaning', els => els.every(e => e.classList.contains('is-masked'))), i);
+    await page.tap('#vbPHide');
+  });
+
+  await section(P('keyboard-height viewport'), async () => {
+    await page.setViewportSize({ width: vw, height: KB_HEIGHT });
+    await page.waitForTimeout(200);
+    await clearToasts(page);
+    await cardById(page, id).scrollIntoViewIfNeeded();
+    await openEditor();
+    const b = await boxes(page, ['edTitle', 'edWord', 'edMeaning', 'edOk']);
+    check(P(`keyboard ${KB_HEIGHT}px: title, both fields and 保存 visible`), b.every(([, t, bt]) => t >= 0 && bt <= KB_HEIGHT), b);
+    await shot(page, 'phone-edit-kb');
+    await page.tap('#dlgEdit .ui-dialog__close');
+    await waitHidden(page, '#dlgEdit');
+    await page.setViewportSize({ width: vw, height: vh });
+  });
+
+  await section(P('reload'), async () => {
+    // 关面板时页面自己退掉那条历史记录（history.back），等它退完再刷新，不然刷新会被打断
+    await page.waitForTimeout(400);
+    await page.reload();
+    await page.waitForSelector('#vbContent:not([hidden])');
+    const i = await cardInfo(page, id);
+    check(P('edit survives a reload'), i.word === 'serendipity' && i.meaning === 'n. 好运', i);
+  });
+  check(P('no page errors'), page.errors.length === 0, page.errors);
+  await ctx.close();
+
+  ({ ctx, page } = await newPage(browser, { width: vw, height: vh, mobile: true, isMobile: dev.isMobile, theme: 'dark', prefs: EDIT_PREFS() }));
+  await open(page);
+  await section(P('dark'), async () => {
+    id = await page.$eval('#vbGrid .vb-card', e => e.dataset.id);
+    await openEditor();
+    const bgs = await page.evaluate(() => ['#dlgEdit .ui-dialog', '#edWord', '#edMeaning'].map(s => getComputedStyle(document.querySelector(s)).backgroundColor));
+    check(P('dark: editor sheet and fields are dark'), bgs.every(isDark), bgs);
+    await shot(page, 'phone-dark-edit');
+    await page.tap('#dlgEdit .ui-dialog__close');
+  });
+  check(P('no page errors (dark)'), page.errors.length === 0, page.errors);
+  await ctx.close();
+}
+
 (async () => {
   const engines = process.argv.slice(2).length ? process.argv.slice(2) : ['chromium', 'webkit'];
   resetData();
@@ -1189,7 +1572,7 @@ async function phoneLoadingAndError(browser, dev) {
     engine = name;
     const browser = await pw[name].launch();
     // 每一组单独兜底：一组崩了不影响后面几组
-    for (const [key, suite] of [['desktop', desktopSuite], ['prefs', prefsAndThemes], ['missing', missingCategoryFile], ['phone', phoneSuite]]) {
+    for (const [key, suite] of [['desktop', desktopSuite], ['prefs', prefsAndThemes], ['missing', missingCategoryFile], ['phone', phoneSuite], ['edit', editSuite]]) {
       if (!SUITES.includes(key)) continue;
       try {
         await suite(browser);
