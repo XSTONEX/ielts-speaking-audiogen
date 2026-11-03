@@ -1863,6 +1863,13 @@ def template_big_detail(type_id):
         return jsonify({'error': str(e)}), 503
     if t is None:
         return jsonify({'error': '题型不存在'}), 404
+    # 导入脚本只把总结构这类参考资料挂在大作文顶层，题型自己没有 references；
+    # 页面的「打开总结构」读的是题型上的，这里补上，名字带「总结构」的排第一
+    if not t.get('references'):
+        refs = [{'id': r['id'], 'name': r['name'], 'kind': r.get('kind', '')}
+                for r in _load_template_corpus()['big'].get('references', [])]
+        refs.sort(key=lambda r: '总结构' not in r['name'])
+        t = {**t, 'references': refs}
     return jsonify(t)
 
 
@@ -2202,7 +2209,10 @@ def template_progress():
     if username is None:
         return jsonify({'error': '未登录'}), 401
     progress = {}
+    # 和另外两个进度接口一样：移出复习中心的记录不算练过
     for r in _load_template_practice(username):
+        if not r.get('in_review', True):
+            continue
         type_id = r.get('type_id') or 'unknown'
         question_id = r.get('question_id') or 'custom'
         section_id = r.get('section_id') or ''

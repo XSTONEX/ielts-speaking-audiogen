@@ -1312,8 +1312,8 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
     }
 
     function loadArticle(id){
-      // 手机上前进 / 后退会直接从一篇换到另一篇：上一篇的播放条先收掉
-      if(isPhone() && currentArticle && currentArticle.id !== id){ closeAudioPanel(); currentAudioInfo = null; }
+      // 前进 / 后退会直接从一篇换到另一篇：上一篇的播放条和「继续生成」先收掉
+      if(currentArticle && currentArticle.id !== id){ closeAudioPanel(); currentAudioInfo = null; document.getElementById('resumeAudioBtn').style.display = 'none'; }
       fetch(`/intensive_article/${id}`).then(r=>r.json()).then(d=>{ if(!d.success){ alert(d.error||'加载失败'); return; } const art=d.article; currentArticle=art; highlights = art.highlights||[]; currentImages = art.images||[]; document.getElementById('vTitle').textContent = `${art.title||'未命名'}`; document.getElementById('vCategory').value = art.category||'Reading'; const contentDiv=document.getElementById('vContent'); contentDiv.innerHTML = `<div id="articleImages" class="ir-images" style="display: none;"><div class="ir-images-head">文章图片</div><div class="images-grid" id="imagesGrid"></div></div><div class=\"reader\"></div>`; renderReader(contentDiv.querySelector('.reader'), art); setupExam(art); document.getElementById('viewer').classList.add('active'); enterReader(); loadArticleImages(); restoreHighlights(contentDiv, art); closeHighlightsPanel(); checkForJumpHighlight();
       
       // 检查音频文件状态并更新按钮
@@ -2416,7 +2416,8 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
     
     function resetAudioButton(btn, originalContent) {
       btn.disabled = false;
-      btn.innerHTML = originalContent;
+      // 生成成功时 updateAudioButton(true) 已经换成「重新生成」；只有还停在「生成中…」时才换回原样
+      if (btn.querySelector('.ir-busy')) btn.innerHTML = originalContent;
       btn.style.opacity = '1';
       btn.style.cursor = 'pointer';
     }
@@ -3070,9 +3071,9 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       const editBtn = document.getElementById('editTitleBtn');
       const editContainer = document.getElementById('titleEditContainer');
       
-      // 恢复显示
-      titleElement.style.display = 'block';
-      editBtn.style.display = 'block';
+      // 恢复显示：去掉行内 display，交回样式表（写成 block 会让铅笔按钮的图标错位）
+      titleElement.style.display = '';
+      editBtn.style.display = '';
       editContainer.style.display = 'none';
       editContainer.classList.remove('is-sheet');
     }

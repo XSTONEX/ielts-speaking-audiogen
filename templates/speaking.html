@@ -364,6 +364,12 @@ body.page-speaking .sp-sort {
   -webkit-appearance: none;
   cursor: pointer;
 }
+/* theme.css 深色下给所有 select 换了偏蓝的底色（background 简写，把下拉箭头也冲掉了），这里换回本页的暖色和箭头 */
+html[data-theme="dark"] body.page-speaking .sp-sort {
+  background: var(--sp-surface) url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 16 16' fill='none' stroke='%23A9A294' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 6 8 10.5 12.5 6'/%3E%3C/svg%3E") no-repeat right 11px center;
+  border-color: var(--sp-line);
+  color: var(--sp-ink);
+}
 .sp-chips { display: flex; align-items: center; gap: 8px; margin-top: 12px; overflow-x: auto; scrollbar-width: none; }
 .sp-chips::-webkit-scrollbar { display: none; }
 
@@ -591,6 +597,10 @@ html[data-theme="dark"] .sp-done { color: #86D6C4; }
   gap: 14px;
 }
 .sp-player[hidden] { display: none; }
+/* theme.css 深色下给 #playerBar 套了偏蓝的面板色和大投影，这一页用自己的暖色 */
+html[data-theme="dark"] body.page-speaking #playerBar {
+  background: var(--sp-surface); color: var(--sp-ink); border-color: var(--sp-line); box-shadow: none;
+}
 .sp-player__title { font-size: 13.5px; font-weight: 500; color: var(--sp-ink); }
 .sp-player__sub { font-size: 12px; color: var(--sp-ink-3); margin-top: 1px; }
 .sp-player__time { font-size: 12.5px; color: var(--sp-ink-3); }
@@ -936,9 +946,7 @@ body.page-speaking.on-topic .sp-fab { display: none; }
   .sp-player .sp-seek__track { height: 2px; border-radius: 0; background: transparent; }
   .sp-player .sp-seek__fill { height: 2px; border-radius: 0; }
   .sp-player #prevBtn, .sp-player #rateBtn, .sp-player #closePlayer { display: none; }
-  html[data-theme="dark"] body.page-speaking #playerBar {
-    background: var(--sp-surface); border-color: var(--sp-line); box-shadow: 0 -6px 18px -12px rgba(0, 0, 0, 0.6);
-  }
+  html[data-theme="dark"] body.page-speaking #playerBar { box-shadow: 0 -6px 18px -12px rgba(0, 0, 0, 0.6); }
   .sp-player #toggleBtn { order: 0; width: 44px; height: 44px; }
   .sp-player > .sp-grow {
     order: 1; flex: 1 1 auto; max-width: none !important; min-height: 44px;

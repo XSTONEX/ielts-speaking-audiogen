@@ -336,6 +336,21 @@ async function templates(page) {
     await page.waitForTimeout(500);
     await noOverflow(page, '范文列表');
     ok(await sideBySide(page, '#tplBigSamplesBody .tbs-card'), '范文卡两张一行');
+    await step('「打开总结构」打得开', async () => {
+      // 线上语料的总结构只挂在大作文顶层；以前题型上找不到，按钮退成「回题型列表」、侧栏链接弹「没有配参考资料」
+      let alerted = '';
+      const onDialog = d => { alerted = d.message(); };
+      page.on('dialog', onDialog);
+      const btn = page.locator('#tplBigSamplesBody .tbs-foot .tbs-btn');
+      ok((await btn.textContent()).trim() === '打开总结构', '范文页底部是「打开总结构」');
+      await btn.tap();
+      await page.waitForFunction(() => /总结构/.test(document.getElementById('tplRefTitle').textContent), null, { timeout: 4000 }).catch(() => {});
+      ok((await view(page)) === 'tplRefView' && /总结构/.test(await page.textContent('#tplRefTitle')), '打开的是总结构');
+      ok(!alerted, '没有弹「没有配参考资料」');
+      await back(page);
+      ok((await view(page)) === 'tplBigSamplesView', '返回回到范文列表');
+      page.off('dialog', onDialog);
+    });
     await step('「只看骨架」收在 ⋯ 里', async () => {
       await page.tap('#tplBigSamplesView .wp-head-btn[aria-label="工具"]');
       await page.waitForTimeout(400);

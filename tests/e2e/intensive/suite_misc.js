@@ -1,5 +1,7 @@
 // 文章页上的其它操作，桌面和手机各一遍：删除前要确认、图片条和大图、改标题（取消）、改分类（再改回来）、
-// 已有朗读音频时的底部音频条、手机上「生成中」的进度文字。截图放到 --out / E2E_OUT 目录，方便人眼看一遍。
+// 已有朗读音频时的底部音频条、手机上「生成中」的进度文字、从有音频的文章换到没音频的文章时播放条收掉。
+// 桌面另外：取消改标题后铅笔按钮回到原样；生成音频成功后按钮是「重新生成」（生成接口在浏览器里拦下，不调付费接口）。
+// 截图放到 --out / E2E_OUT 目录，方便人眼看一遍。
 module.exports = async function suiteMisc({ cfg, browser, engine, t, lib }) {
   const { IDS } = lib;
   const ok = (c, w) => t.ok(c, w);
@@ -37,6 +39,8 @@ module.exports = async function suiteMisc({ cfg, browser, engine, t, lib }) {
       ok((await p.evaluate(() => document.getElementById('imageModal').style.display)) === 'none', `${tag} Esc closes image viewer`);
 
       // 改标题：桌面点标题旁的铅笔，手机走 ⋯ 菜单；Esc 取消
+      const pencil = () => p.evaluate(() => { const b = document.getElementById('editTitleBtn'); const r = b.getBoundingClientRect(); const i = b.querySelector('svg').getBoundingClientRect(); return { inline: b.style.display, display: getComputedStyle(b).display, x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height), iy: Math.round(i.y) }; });
+      const pen0 = await pencil();
       if (tag === 'desk') { await p.hover('.ir-title-wrap'); await p.click('#editTitleBtn'); } else { await p.click('#moreBtn'); await p.click('.ir-menu-item:has-text("修改标题")'); }
       await p.waitForTimeout(150);
       const te = await p.evaluate(() => ({ edit: document.getElementById('titleEditContainer').style.display, val: document.getElementById('titleEditInput').value, focus: document.activeElement.id, menu: document.getElementById('moreMenu').classList.contains('open') }));
@@ -45,6 +49,25 @@ module.exports = async function suiteMisc({ cfg, browser, engine, t, lib }) {
       await p.keyboard.press('Escape'); await p.waitForTimeout(100);
       const te2 = await p.evaluate(() => ({ edit: document.getElementById('titleEditContainer').style.display, title: document.getElementById('vTitle').textContent, id: currentArticle.id }));
       ok(te2.edit === 'none' && te2.title === 'Task1-饼图-城市用电来源' && te2.id === IDS.chart, `${tag} Esc cancels title edit ${JSON.stringify(te2)}`);
+      // 以前取消后铅笔被写成行内 display:block，图标往下错位
+      if (tag === 'desk') { const pen1 = await pencil(); ok(JSON.stringify(pen1) === JSON.stringify(pen0), `${tag} pencil back in place after cancel ${JSON.stringify([pen0, pen1])}`); }
+
+      // 桌面生成音频：成功后按钮要变成「重新生成」（以前被「生成中」结束时换回了「音频」）。生成接口在浏览器里拦下
+      if (tag === 'desk') {
+        const audioUrl = await p.evaluate(id => fetch('/check_article_audio/' + encodeURIComponent(id)).then(r => r.json()).then(d => d.audio_url), IDS.saltMarsh);
+        const gen = [];
+        for (const api of ['generate_article_audio', 'prepare_article_audio', 'generate_audio_segment', 'combine_audio_segments', 'cleanup_article_audio']) {
+          await p.route(`**/${api}`, r => { gen.push(api); return r.fulfill({ json: api === 'generate_article_audio' ? { success: true, audio_url: audioUrl, filename: 'mock.mp3' } : { success: false, error: 'mocked' } }); });
+        }
+        const lbl0 = await p.evaluate(() => document.getElementById('generateAudioBtn').textContent.trim());
+        await p.click('#generateAudioBtn');
+        await p.waitForFunction(() => { const b = document.getElementById('generateAudioBtn'); return !b.disabled && !b.querySelector('.ir-busy'); }, null, { timeout: 5000 }).catch(() => {});
+        await p.waitForTimeout(150);
+        const ga = await p.evaluate(() => ({ lbl: document.getElementById('generateAudioBtn').textContent.trim(), title: document.getElementById('generateAudioBtn').title, bar: document.getElementById('audioPanel').style.display }));
+        ok(lbl0 === '音频' && gen.join() === 'generate_article_audio' && ga.lbl === '重新生成' && /重新生成/.test(ga.title) && ga.bar === 'block', `${tag} button says 重新生成 after generating ${JSON.stringify([lbl0, gen, ga])}`);
+        await p.unrouteAll({ behavior: 'ignoreErrors' });
+        await p.evaluate(() => closeAudioPanel());
+      }
 
       // ⋯ 菜单改分类：Writing → Listening → Writing，列表上的分类计数跟着变（手机上是分段按钮）
       const counts = () => p.evaluate(() => [document.getElementById('count-Writing').textContent, document.getElementById('count-Listening').textContent, document.getElementById('moreMenu').classList.contains('open')]);
@@ -79,6 +102,12 @@ module.exports = async function suiteMisc({ cfg, browser, engine, t, lib }) {
       // 手机上工具栏按钮图标下面带字，进度文字是工具栏上面的一整条
       ok(busy.busy && busy.lbl !== 'none', `${tag} progress text visible while generating ${JSON.stringify(busy)}`);
       await shot('busy');
+      // 不回列表直接换一篇（前进 / 后退、桌面上从别处跳过来）：上一篇的播放条要收掉，不能挂在没音频的文章底下
+      await p.evaluate(() => { const b = document.getElementById('generateAudioBtn'); b.disabled = false; b.innerHTML = btnLabel('volume', '音频'); });
+      await lib.openArticle(p, IDS.chart);
+      await p.waitForTimeout(500);
+      const sw = await p.evaluate(() => ({ bar: document.getElementById('audioPanel').style.display, src: document.getElementById('articleAudio').getAttribute('src') || '', playing: !document.getElementById('articleAudio').paused }));
+      ok(sw.bar === 'none' && !/article_audio_/.test(sw.src) && !sw.playing, `${tag} switching to an article without audio hides the old bar ${JSON.stringify(sw)}`);
       ok(errs.length === 0, `${tag} page errors ${errs.join(' | ')}`);
     } catch (e) {
       await shot('crash').catch(() => {});

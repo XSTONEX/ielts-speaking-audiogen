@@ -660,8 +660,7 @@ opinion = {
     ])],
     'samples': [],
     'sample_url': fake_url('opinion-samples'),
-    # 线上语料没有这个字段；这里给观点型配上，讨论型不配，两条路都能测到
-    'references': [{'id': 'ref_big_structure', 'name': '大作文总结构', 'kind': '总结构'}],
+    # 和线上语料一样，题型上不挂 references：总结构只在 big 顶层，由题型详情接口补上
 }
 
 discuss = {

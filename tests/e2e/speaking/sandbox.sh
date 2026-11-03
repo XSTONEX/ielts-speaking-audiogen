@@ -15,7 +15,8 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 REPO="$(git -C "$HERE" rev-parse --show-toplevel)"
 SRC="${CODE_FROM:-$REPO}"
 # 在 git worktree 里没有 .venv，退回主仓库的
-COMMON="$(cd "$(git -C "$HERE" rev-parse --git-common-dir)/.." && pwd)"
+# --git-common-dir 在主仓库里给的是相对 HERE 的路径，先进 HERE 再解析
+COMMON="$(cd "$HERE" && cd "$(git rev-parse --git-common-dir)/.." && pwd)"
 PY="${PYTHON:-$( [ -x "$REPO/.venv/bin/python" ] && echo "$REPO/.venv/bin/python" || echo "$COMMON/.venv/bin/python")}"
 cmd="${1:-}"
 dir="${2:-}"

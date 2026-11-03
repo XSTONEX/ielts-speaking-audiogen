@@ -677,13 +677,31 @@ async function desktopTouchSeek(browser) {
   await ctx.close();
 }
 
+// ==================== 桌面宽度：深色（老 bug）====================
+// theme.css 深色下给 #playerBar 和所有 select 套了偏蓝的底色，排序框的下拉箭头也被 background 简写冲掉了
+async function desktopDark(browser) {
+  const { ctx, page } = await newPage(browser, { viewport: { width: 1280, height: 800 }, desktop: true, dark: true });
+  await open(page, '/speaking');
+  const surface = await page.evaluate(() => { const d = document.createElement('div'); d.style.background = 'var(--sp-surface)'; document.body.appendChild(d); const c = getComputedStyle(d).backgroundColor; d.remove(); return c; });
+  const sort = await page.evaluate(() => { const s = getComputedStyle(document.getElementById('sortSelect')); return { bg: s.backgroundColor, img: s.backgroundImage, pos: s.backgroundPositionX, color: s.color }; });
+  ok(sort.bg === surface && /^url\(/.test(sort.img) && sort.color !== 'rgba(0, 0, 0, 0)', '桌面深色：排序框是本页的暖色底，带下拉箭头、看得见字', { surface, sort });
+  await open(page, topicUrl(HOMETOWN));
+  await page.click('.sp-clip [data-action=play-clip]');
+  await page.waitForTimeout(800);
+  const bar = await page.evaluate(() => { const s = getComputedStyle(document.getElementById('playerBar')); return { bg: s.backgroundColor, shadow: s.boxShadow }; });
+  ok(bar.bg === surface && bar.shadow === 'none', '桌面深色：播放条是本页的暖色底（不是 theme.css 的蓝灰）', { surface, bar });
+  await shot(page, '22-desktop-dark-player');
+  ok(!page.errors.length, '桌面深色：没有脚本报错', page.errors);
+  await ctx.close();
+}
+
 (async () => {
   const which = process.argv[2] || 'all';
   const engines = which === 'all' ? ['webkit', 'chromium'] : [which];
   for (const name of engines) {
     engine = name;
     const browser = await pw[name].launch();
-    for (const suite of [library, scrollRestore, search, topic, cueAndReader, composer, states, dark, combined, desktopTouchSeek]) {
+    for (const suite of [library, scrollRestore, search, topic, cueAndReader, composer, states, dark, combined, desktopTouchSeek, desktopDark]) {
       try { await suite(browser); } catch (e) { ok(false, suite.name + ' 跑崩了', e.message.split('\n')[0]); }
     }
     await browser.close();
