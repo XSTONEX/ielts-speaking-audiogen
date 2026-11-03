@@ -524,6 +524,80 @@ def delete_vocabulary_word(word_id):
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+def _spoken_text(word):
+    """发音按什么文字取：页面去有道时也是去掉首尾空白、把连续空白并成一个（大小写不影响读音）"""
+    return ' '.join(str(word or '').split()).lower()
+
+@vocabulary_bp.route('/api/vocabulary/<word_id>', methods=['PUT'])
+def update_vocabulary_word(word_id):
+    """编辑单词：改单词本身和释义（只改请求里带了的字段）。
+    id 不变，所以收藏、挑战覆盖率（按 id 记）都还连着；判重和加词一样，只在同一个子分类里、不分大小写"""
+    try:
+        data = request.json or {}
+        if not isinstance(data, dict):
+            return jsonify({'success': False, 'error': '请求格式不对'}), 400
+
+        new_word = None
+        if 'word' in data:
+            new_word = data['word'].strip() if isinstance(data['word'], str) else ''
+            if not new_word:
+                return jsonify({'success': False, 'error': '单词不能为空'}), 400
+        new_meaning = None
+        if 'meaning' in data:
+            if data['meaning'] is not None and not isinstance(data['meaning'], str):
+                return jsonify({'success': False, 'error': '释义格式不对'}), 400
+            new_meaning = (data['meaning'] or '').strip()
+        if new_word is None and new_meaning is None:
+            return jsonify({'success': False, 'error': '没有要修改的内容'}), 400
+
+        # 在所有分类和子分类中查找
+        for category in ['listening', 'speaking', 'reading', 'writing']:
+            category_data = load_category_data(category)
+
+            for subcategory_id in category_data['subcategories']:
+                words = category_data['subcategories'][subcategory_id]['words']
+                word = next((w for w in words if w['id'] == word_id), None)
+                if word is None:
+                    continue
+
+                if new_word is not None:
+                    for other in words:
+                        if other is not word and other['word'].lower() == new_word.lower():
+                            return jsonify({'success': False, 'error': '单词在该子分类中已存在'}), 400
+
+                # 拼写改了（不只是大小写）：以前用 TTS 生成的音频读的是旧单词，删掉，免得有道取不到时退回去读错的词
+                spelling_changed = new_word is not None and _spoken_text(new_word) != _spoken_text(word['word'])
+                if new_word is not None:
+                    word['word'] = new_word
+                if new_meaning is not None:
+                    word['meaning'] = new_meaning
+                if spelling_changed:
+                    word['audio_generated'] = False
+                save_category_data(category, category_data)
+
+                if spelling_changed:
+                    audio_path = os.path.join(VOCABULARY_AUDIO_DIR, category, f"{word_id}.mp3")
+                    if os.path.exists(audio_path):
+                        os.remove(audio_path)
+                    # 还没跑完的旧音频生成任务也是按旧单词生成的
+                    if os.path.exists(VOCABULARY_TASKS_DIR):
+                        for task_file in os.listdir(VOCABULARY_TASKS_DIR):
+                            if task_file.endswith('.json'):
+                                try:
+                                    task_path = os.path.join(VOCABULARY_TASKS_DIR, task_file)
+                                    with open(task_path, 'r', encoding='utf-8') as f:
+                                        task = json.load(f)
+                                    if task.get('word_id') == word_id:
+                                        os.remove(task_path)
+                                except:
+                                    continue
+
+                return jsonify({'success': True, 'data': word})
+
+        return jsonify({'success': False, 'error': '单词不存在'}), 404
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @vocabulary_bp.route('/api/vocabulary/<word_id>/favorite', methods=['PUT'])
 def toggle_word_favorite(word_id):
     """切换单词收藏状态"""
