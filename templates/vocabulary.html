@@ -145,11 +145,11 @@
         }
         .vb-act:hover { background: var(--w-sunken); color: var(--w-ink); }
         .vb-act.is-on { color: var(--w-big); }
-        /* 删除按钮在星标左边，平时透明但占着位置，星标一直在右下角不挪动 */
-        .vb-act--del { opacity: 0; }
-        .vb-card:hover .vb-act--del, .vb-act--del:focus-visible { opacity: 1; }
+        /* 编辑、删除按钮在星标左边，平时透明但占着位置，星标一直在右下角不挪动 */
+        .vb-act--del, .vb-act--edit { opacity: 0; }
+        .vb-card:hover .vb-act--del, .vb-act--del:focus-visible, .vb-card:hover .vb-act--edit, .vb-act--edit:focus-visible { opacity: 1; }
         .vb-act--del:hover { background: var(--w-err-soft); color: var(--w-err); }
-        @media (hover: none) { .vb-act--del, .vb-word svg { opacity: 1; } }
+        @media (hover: none) { .vb-act--del, .vb-act--edit, .vb-word svg { opacity: 1; } }
 
         /* ---------- 弹窗里的表单块 ---------- */
         .vb-row2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
@@ -179,6 +179,9 @@
         .vb-btn-danger:hover { background: var(--w-err); border-color: transparent; color: var(--w-surface); opacity: .9; }
         .ui-dialog__title { overflow-wrap: anywhere; }
         .vb-dialog--wide { width: min(640px, 100%); }
+        /* 编辑单词：单词框下面的提示，重复 / 空着 / 没存上时变成警告色 */
+        .vb-edit .ui-field__hint { overflow-wrap: anywhere; }
+        .vb-edit .ui-field__hint.is-warn { color: var(--w-warn); }
 
         /* ---------- 挑战：答题 ---------- */
         #qDialog:focus { outline: none; }
@@ -350,7 +353,8 @@
                 display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden;
             }
             .vb-card__foot { min-height: 0; margin: 0; padding: 0; }
-            .vb-date, .vb-act--del { display: none; }
+            /* 编辑和删除一样收进 ⋯ */
+            .vb-date, .vb-act--del, .vb-act--edit { display: none; }
             .vb-act--more, .vb-act--fav { position: absolute; right: 0; width: 44px; height: 40px; justify-content: flex-end; padding-right: 11px; border-radius: var(--w-r-card); }
             .vb-act--more { display: inline-flex; top: 0; }
             .vb-act--fav { bottom: 0; }
@@ -379,8 +383,9 @@
             .vb-add__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; order: 0; }
             .vb-add__title { margin: 0; min-width: 0; font-size: var(--w-fs-en); font-weight: 600; color: var(--w-ink); overflow-wrap: anywhere; }
             .vb-add__head .ui-dialog__close { width: 40px; height: 40px; margin-right: -8px; flex-shrink: 0; }
-            .vb-add .ui-input { height: 48px; font-size: 16px; }
-            .vb-add .ui-input.ui-en { font-size: var(--w-fs-en); }
+            /* 编辑单词面板的输入框和加词面板一样大 */
+            .vb-add .ui-input, .vb-edit .ui-input { height: 48px; font-size: 16px; }
+            .vb-add .ui-input.ui-en, .vb-edit .ui-input.ui-en { font-size: var(--w-fs-en); }
             #vbWord { order: 1; }
             #vbMeaning { order: 2; }
             .vb-add__hint { order: 3; margin: 0; min-height: 20px; }
@@ -602,6 +607,25 @@
         </form>
     </div>
 
+    <!-- 编辑单词：桌面是卡片上的铅笔，手机是单词卡 ⋯ 里的「编辑」；字段和加词表单一样（单词 + 释义） -->
+    <div class="ui-dialog-backdrop" id="dlgEdit" hidden>
+        <form class="ui-dialog vb-edit" role="dialog" aria-modal="true" aria-labelledby="edTitle" id="edForm" autocomplete="off" novalidate>
+            <div class="ui-dialog__head"><h3 class="ui-dialog__title" id="edTitle">编辑单词</h3><button type="button" class="ui-dialog__close" data-close aria-label="关闭">×</button></div>
+            <div class="ui-dialog__body">
+                <div class="ui-field">
+                    <label class="ui-field__label" for="edWord">单词</label>
+                    <input id="edWord" class="ui-input ui-en" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="200" enterkeyhint="next" aria-describedby="edHint">
+                    <span class="ui-field__hint" id="edHint" aria-live="polite"></span>
+                </div>
+                <div class="ui-field">
+                    <label class="ui-field__label" for="edMeaning">释义</label>
+                    <input id="edMeaning" class="ui-input" placeholder="释义（可以不填）" autocomplete="off" maxlength="500" enterkeyhint="done">
+                </div>
+            </div>
+            <div class="ui-dialog__foot"><button type="button" class="ui-btn ui-btn--md" data-close>取消</button><button type="submit" class="ui-btn ui-btn--md ui-btn--primary" id="edOk">保存</button></div>
+        </form>
+    </div>
+
     <!-- 导入 -->
     <div class="ui-dialog-backdrop" id="dlgImport" hidden>
         <form class="ui-dialog" role="dialog" aria-modal="true" aria-labelledby="impTitle" id="impForm" novalidate>
@@ -797,6 +821,7 @@ acquire,v. 获得，习得</pre>
         const ICON_CHECK = '<svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5 6.5 12 13 4.5"></path></svg>';
         const ICON_PLUS = '<svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M8 3v10M3 8h10"></path></svg>';
         const ICON_EDIT = '<svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 2.8l2.7 2.7-7.7 7.7H2.8v-2.7z"></path></svg>';
+        const ICON_EDIT_SM = ICON_EDIT.replace('width="18" height="18"', 'width="16" height="16"');   // 卡片上和垃圾桶一样 16px
         const ICON_UPLOAD = '<svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 10.5V2.5M4.8 5.5 8 2.3l3.2 3.2M2.5 10.5v2.8h11v-2.8"></path></svg>';
         const ICON_DOWNLOAD = '<svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2.5v8M4.8 7.5 8 10.7l3.2-3.2M2.5 10.5v2.8h11v-2.8"></path></svg>';
 
@@ -1206,6 +1231,7 @@ acquire,v. 获得，习得</pre>
                 '<div class="vb-card__foot"><span class="vb-date">' + esc(shortDate(w.created_at)) + '</span><span class="vb-acts">' +
                 // 手机上没有悬停：删除等不常用的操作收进右上角的 ⋯（桌面不显示）
                 '<button type="button" class="vb-act vb-act--more" data-act="more" aria-haspopup="dialog" aria-label="更多操作：' + esc(w.word) + '">' + ICON_MORE + '</button>' +
+                '<button type="button" class="vb-act vb-act--edit" data-act="edit" aria-haspopup="dialog" aria-label="编辑 ' + esc(w.word) + '" title="编辑">' + ICON_EDIT_SM + '</button>' +
                 '<button type="button" class="vb-act vb-act--del" data-act="delete" aria-label="删除 ' + esc(w.word) + '" title="删除">' + ICON_TRASH + '</button>' +
                 '<button type="button" class="vb-act vb-act--fav' + (fav ? ' is-on' : '') + '" data-act="fav" aria-pressed="' + fav + '" aria-label="' + (fav ? '取消收藏 ' : '收藏 ') + esc(w.word) + '" title="' + (fav ? '取消收藏' : '收藏') + '">' + (fav ? ICON_STAR_ON : ICON_STAR_OFF) + '</button>' +
                 '</span></div></article>';
@@ -1666,6 +1692,7 @@ acquire,v. 获得，习得</pre>
                 items: [
                     { label: '播放发音', icon: ICON_SPEAKER_LG, run: () => { audioUnlocked = true; playWord(w); } },
                     { label: fav ? '取消收藏' : '收藏', icon: fav ? ICON_STAR_ON : ICON_STAR_OFF, run: () => toggleFavorite(id) },
+                    { label: '编辑', icon: ICON_EDIT, run: () => openEditWord(id, opener) },
                     { label: '删除这个单词', icon: ICON_TRASH, danger: true, run: () => deleteWord(id) }
                 ]
             });
@@ -1932,6 +1959,7 @@ acquire,v. 获得，习得</pre>
             const actEl = e.target.closest('[data-act]');
             const act = actEl ? actEl.dataset.act : 'play';
             if (act === 'delete') { deleteWord(id); return; }
+            if (act === 'edit') { openEditWord(id, actEl); return; }
             if (act === 'fav') { toggleFavorite(id); return; }
             if (act === 'more') { openWordActions(id, actEl); return; }
             if (act === 'peek' && actEl.classList.contains('is-masked') && (touchOnly.matches || lastPointer === 'touch' || lastPointer === 'pen')) {
@@ -1976,6 +2004,91 @@ acquire,v. 获得，习得</pre>
                 toast(error.message, 'error');
             }
         }
+
+        // ==================== 编辑单词 ====================
+        // 以前拼错一个字母只能删了重加，收藏和挑战记录跟着丢。现在原地改：id 不变，卡片就地刷新、页面不跳
+
+        const ed = { back: $('dlgEdit'), form: $('edForm'), word: $('edWord'), meaning: $('edMeaning'), hint: $('edHint'), ok: $('edOk'), id: null, initialMeaning: '', error: '' };
+
+        // CSV 导进来的释义可能有换行，单行输入框放不下：显示成空格；没改释义就不提交，原文原样留着
+        const oneLine = s => String(s || '').replace(/\s*[\r\n]+\s*/g, ' ').trim();
+
+        // 改成同一个子分类里别的词（不分大小写）：和加词一样不让重复
+        function editDup() {
+            const hit = ed.id ? findWord(ed.id) : null;
+            const typed = ed.word.value.trim().toLowerCase();
+            return !!(hit && typed && hit.list.some(w => w.id !== ed.id && w.word.toLowerCase() === typed));
+        }
+
+        function updateEditHint() {
+            const typed = ed.word.value.trim();
+            const dup = editDup();
+            const warn = dup || !!ed.error;
+            ed.hint.textContent = dup ? '「' + typed + '」已经在这个子分类里了，不能重复' : (ed.error || '改拼写不影响收藏和挑战记录');
+            ed.hint.classList.toggle('is-warn', warn);
+            ed.word.setAttribute('aria-invalid', warn ? 'true' : 'false');
+        }
+
+        function openEditWord(id, opener) {
+            const hit = findWord(id);
+            if (!hit) return;
+            ed.id = id;
+            ed.error = '';
+            ed.initialMeaning = oneLine(hit.word.meaning);
+            ed.word.value = hit.word.word;
+            ed.meaning.value = ed.initialMeaning;
+            updateEditHint();
+            openDialog(ed.back, { focus: ed.word, returnFocus: opener });
+            // 光标放到单词末尾，改错字不用先点一下
+            try { ed.word.setSelectionRange(ed.word.value.length, ed.word.value.length); } catch (error) { /* 不支持就算了 */ }
+        }
+
+        ed.word.addEventListener('input', () => { ed.error = ''; updateEditHint(); });
+
+        // 手机：单词框里按键盘的「下一项」跳到释义框，释义框里按「完成」才保存（和加词面板一样）；桌面上回车直接保存
+        ed.form.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && e.target === ed.word && isPhone() && !e.isComposing && e.keyCode !== 229) {
+                e.preventDefault();
+                ed.meaning.focus();
+            }
+        });
+
+        ed.form.addEventListener('submit', async e => {
+            e.preventDefault();
+            const id = ed.id;
+            const hit = findWord(id);
+            if (!hit) { closeDialog(ed.back); return; }
+            const word = ed.word.value.trim();
+            const meaning = ed.meaning.value.trim();
+            if (!word || editDup()) {
+                if (!word) ed.error = '单词不能为空';
+                updateEditHint();
+                ed.word.focus();
+                return;
+            }
+            const payload = {};
+            if (word !== hit.word.word) payload.word = word;
+            if (meaning !== ed.initialMeaning) payload.meaning = meaning;
+            // 什么都没改：直接关，不发请求
+            if (!Object.keys(payload).length) { closeDialog(ed.back); return; }
+            setBusy(ed.ok, true, '保存中…');
+            try {
+                const result = await api('/api/vocabulary/' + encodeURIComponent(id), jsonOptions('PUT', payload));
+                const again = findWord(id);
+                if (again) Object.assign(again.word, result.data);
+                closeDialog(ed.back);
+                // 按当前的排序、查找、遮释义重新排一遍卡片（滚动位置不动），焦点回到这张卡上
+                renderMain();
+                refocus(id, isPhone() ? '.vb-act--more' : '.vb-act--edit');
+                toast('已保存「' + result.data.word + '」', 'success');
+            } catch (error) {
+                // 重复、没存上：写在单词框下面，面板不关，改完再点保存
+                ed.error = error.message;
+                updateEditHint();
+            } finally {
+                setBusy(ed.ok, false);
+            }
+        });
 
         function toggleMeanings() {
             meaningsVisible = !meaningsVisible;
