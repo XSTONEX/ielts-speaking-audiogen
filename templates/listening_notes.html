@@ -32,7 +32,7 @@
   <link rel="stylesheet" href="/static/theme.css?v=20261101z">
   <link rel="stylesheet" href="/static/plain.css?v=20261101z">
   <link rel="stylesheet" href="/static/listening.css?v=20261101p">
-  <script src="/static/theme.js?v=20261101z" defer></script>
+  <script src="/static/theme.js?v=20261101z"></script>
   <script src="/static/api-client.js?v=20260919" defer></script>
   <script src="/static/auth.js?v=20260927" defer></script>
   <script src="/static/ui-feedback.js?v=20260919" defer></script>
@@ -621,7 +621,7 @@ function masterCard() {
 // ===================================================================
 //  手机（≤820px）：吸顶筛选条、放大镜展开搜索、复习时的筛选面板、点卡片翻面 / 左右滑换卡、返回键
 // ===================================================================
-const phoneMQ = window.matchMedia('(max-width: 820px)');
+const phoneMQ = window.IELTSPhone.mq; // 窄屏或横着拿的手机，见 static/theme.js
 function isPhone() { return phoneMQ.matches; }
 
 // 返回键 / 侧滑返回：先关最上面那层（删除确认、筛选面板），再退出复习，最后才离开这页

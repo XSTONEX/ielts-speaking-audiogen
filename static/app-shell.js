@@ -156,12 +156,9 @@
     document.addEventListener('keydown', function (event) {
       if (event.key === 'Escape' && !panel.hidden) setPanel(false);
     });
-    // 转到宽屏时面板没有位置可放，直接收掉
-    if (window.matchMedia) {
-      var wide = window.matchMedia('(min-width: 821px)');
-      var onWide = function (e) { if (e.matches) setPanel(false); };
-      if (typeof wide.addEventListener === 'function') wide.addEventListener('change', onWide);
-      else if (typeof wide.addListener === 'function') wide.addListener(onWide);
+    // 转到桌面布局时面板没有位置可放，直接收掉（手机布局 = 窄屏或横着拿的手机，见 theme.js）
+    if (window.IELTSPhone) {
+      window.IELTSPhone.onChange(function (e) { if (!e.matches) setPanel(false); });
     }
 
     nav.querySelectorAll('.app-shell-logout').forEach(function (btn) {

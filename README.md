@@ -102,12 +102,13 @@
 
 ### 手机端（2026-11）
 
-宽度 ≤ 820px 的屏幕（手机、竖着拿的平板）用单独的手机布局，宽屏的样子完全不变。各页面共用的约定写在 `static/theme.css` 末尾「手机端公共约定」一节：
+宽度 ≤ 820px 的屏幕（手机、竖着拿的平板）和横着拿的手机（高 ≤ 540px 的触摸屏）用单独的手机布局，电脑和 iPad 的样子完全不变。CSS 里写 `@media (max-width: 820px), (max-height: 540px) and (pointer: coarse)`，脚本里用 `static/theme.js` 的 `IELTSPhone.mq`。各页面共用的约定写在 `static/theme.css` 末尾「手机端公共约定」一节：
 
 * 导航栏仍是顶部的「模块 ▾」菜单，屏幕底部留给本页的主操作（播放条、提交、添加）。固定在底部的条要让开 Home 条（`env(safe-area-inset-bottom)`），并把自己的高度写进 `--ui-bottom-bar-h`，提示条会浮在它上面。
 * `.ui-dialog` 在手机上是从底部升起的面板；返回手势先关最上面的面板 / 全屏页，再离开页面。
 * iOS 点小字号输入框会整页放大，`static/theme.js` 统一处理了，页面里不用为这个改字号。
-* 每个页面的手机检查在 `tests/e2e/<模块>/` 里（Safari 内核 390×844、Chrome 360×780）。
+* 横屏（矮屏）再收紧一点：全站导航跟着页面滚走、弹窗只滚中间、播放条一行，见 `theme.css` / `plain.css` 末尾和各页样式表里「横着拿的手机」一段。
+* 每个页面的手机检查在 `tests/e2e/<模块>/` 里（Safari 内核 390×844、Chrome 360×780），横屏的检查在 `tests/e2e/landscape/`。
 
 各页面的浏览器测试和造假数据的脚本在 `tests/e2e/`，跑法见那里的 README。
 

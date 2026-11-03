@@ -1144,7 +1144,7 @@ body.page-writing-practice textarea.tpl-textarea { font-family: var(--w-en); }
 .entry-column { display: flex; flex-direction: column; gap: 12px; }
 /* 宽屏：两列拆成同一张 3 行网格（标题 / 卡片 / 卡片），
    左右两张卡片落在同一行，高度自然一致 */
-@media (min-width: 901px) {
+@media (min-width: 901px) and (min-height: 541px), (min-width: 901px) and (pointer: fine), (min-width: 901px) and (pointer: none) {
   .home-grid {
     grid-template-rows: auto auto auto; grid-auto-flow: column;
     column-gap: 22px; row-gap: 12px;
@@ -1278,7 +1278,7 @@ body.page-writing-practice textarea.tpl-textarea { font-family: var(--w-en); }
 .sub-prog .num { font-family: var(--w-display); font-size: var(--w-fs-meta); color: var(--w-big); }
 .sub-prog .num.is-full { color: var(--w-ok); }
 
-@media (max-width: 860px) {
+@media (max-width: 860px), (max-height: 540px) and (pointer: coarse) {
   .dir-layout { grid-template-columns: minmax(0, 1fr); }
   .dir-rail {
     border-right: none; border-bottom: 1px solid var(--w-line);
@@ -2778,7 +2778,7 @@ html[data-theme="dark"] body.page-writing-practice .tpl-btn.ghost {
    窄屏单列布局因此一直不生效 */
 
 /* ==================== 响应式 ==================== */
-@media (max-width: 900px) {
+@media (max-width: 900px), (max-height: 540px) and (pointer: coarse) {
   /* 两栏布局（正文 + 右侧栏 / 分数栏）在这里全部收成单列，原先漏了这几处 */
   .sp-main, .tpl-prac-main, #tplSmallPracticeView .tpl-prac-main,
   .sl-top, .fb-grid, .tpl-fb-cards, .home-grid { grid-template-columns: minmax(0, 1fr); }
@@ -2857,7 +2857,7 @@ html[data-theme="dark"] body.page-writing-practice .tpl-btn.ghost {
 .wp-fig-thumb, .wp-sort-btn, .rv-del-m, .np-header-actions button.np-rename { display: none; }
 .wp-sheet[hidden] { display: none !important; }
 
-@media (max-width: 820px) {
+@media (max-width: 820px), (max-height: 540px) and (pointer: coarse) {
   .wp-desk-only { display: none !important; }
   .wp-phone-only { display: inline; }
 
@@ -3383,8 +3383,24 @@ html[data-theme="dark"] body.page-writing-practice .tpl-btn.ghost {
   .wp-sheet .prac-chip { background: var(--w-sunken); }
 }
 @keyframes wpSheetIn { from { transform: translateY(28px); opacity: .5; } to { transform: none; opacity: 1; } }
-@media (max-width: 820px) and (prefers-reduced-motion: reduce) {
+@media (max-width: 820px) and (prefers-reduced-motion: reduce), (max-height: 540px) and (pointer: coarse) and (prefers-reduced-motion: reduce) {
   .wp-sheet-panel, .np-window.open, .ai-chat-window.open { animation: none; }
+}
+/* ---------- 横着拿的手机（矮触摸屏，高 ≤ 540px）：上面的手机规则照样生效，这里只为「矮」再收一收 ----------
+   全站导航跟着页面滚走（theme.css）；页头的学习 / 实战切换放回标题那一行，「这一句」和输入框收小一点，
+   一进实战页输入框就在屏幕里。 */
+@media (max-height: 540px) and (pointer: coarse) {
+  .view-head { padding-top: 6px; padding-bottom: 8px; }
+  .view-head-main { order: 1; }
+  .view-head > .seg-switch { order: 2; width: auto; flex: 0 0 auto; flex-basis: auto; }
+  .view-head .seg-btn { flex: none; padding: 0 18px; }
+  .wp-head-tools { order: 3; }
+  .task-card, #smallPracticeView .task-card, .tpl-answer-card { padding: 12px 16px; }
+  .task-cn, #practiceView .task-cn, #smallPracticeView .task-cn,
+  #tplBigPracticeView .task-cn, #tplSmallPracticeView .task-cn { font-size: 17px; line-height: 1.5; margin-bottom: 10px; }
+  .editor-input, .tpl-textarea { min-height: 88px; }
+  body.wp-typing .editor-input { min-height: 72px; }
+  .wp-fig-thumb { height: 72px; }
 }
 @media (max-width: 640px) {
   /* 600px 那条把列表收成一栏；手机上两张卡并排放得下 */
@@ -3393,7 +3409,7 @@ html[data-theme="dark"] body.page-writing-practice .tpl-btn.ghost {
 }
 </style>
 <link rel="stylesheet" href="/static/theme.css?v=20261101z">
-<script src="/static/theme.js?v=20261101z" defer></script>
+<script src="/static/theme.js?v=20261101z"></script>
   <script src="/static/api-client.js?v=20260919" defer></script>
   <script src="/static/auth.js?v=20260927" defer></script>
   <script src="/static/ui-feedback.js?v=20260919" defer></script>
@@ -8008,7 +8024,7 @@ var Notepad = {
      页面一有变化（MutationObserver）就重画，批改中、已批改、看历史各种状态都不用另外维护。
    - 实战页页头下面的进度行：第几句 + 圆点，点开是句子列表；「题干」点开是题目和提示。 */
 var Phone = {
-  mq: window.matchMedia ? window.matchMedia('(max-width: 820px)') : null,
+  mq: window.IELTSPhone.mq, // 窄屏或横着拿的手机，见 static/theme.js
   PRACTICE_VIEWS: ['practiceView', 'smallPracticeView', 'tplBigPracticeView', 'tplSmallPracticeView'],
   layers: [], skipPops: 0, pendingBack: 0,
   lbSwap: '', sheetActs: [], barItems: [], barSig: '',

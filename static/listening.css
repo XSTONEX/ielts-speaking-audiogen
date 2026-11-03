@@ -6,7 +6,7 @@
    ============================================================ */
 
 /* ---------- 页面骨架 ---------- */
-@media (max-width: 820px) {
+@media (max-width: 820px), (max-height: 540px) and (pointer: coarse) {
   body.ui-plain { --gutter: 16px; }
 }
 .lr-body { padding: 22px var(--gutter) 48px var(--gutter); }
@@ -28,7 +28,7 @@
 
 /* 页头在窄屏换行：标题一行、按钮一行 */
 .lr-title-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-@media (max-width: 820px) {
+@media (max-width: 820px), (max-height: 540px) and (pointer: coarse) {
   .ui-head.lr-head { flex-wrap: wrap; padding-top: 18px; padding-bottom: 14px; gap: 12px; }
   .lr-head .ui-head__lead { width: 100%; gap: 10px; }
   .lr-head .ui-head__title { font-size: var(--w-fs-en); min-width: 0; }
@@ -172,7 +172,7 @@
   .lr-side__close { display: inline-flex; }
   .lr-detail.is-side-open .lr-side-mask { display: block; position: fixed; inset: 0; z-index: 1255; background: var(--w-mask); }
 }
-@media (max-width: 820px) {
+@media (max-width: 820px), (max-height: 540px) and (pointer: coarse) {
   .lr-detail-body { padding-left: 10px; padding-right: 10px; padding-top: 12px; }
   .lr-script { padding: 6px; }
   .lr-line { grid-template-columns: 38px 26px minmax(0, 1fr); padding: 10px 8px 10px 2px; column-gap: 4px; }
@@ -193,7 +193,7 @@
 .lr-kbd { display: inline-block; min-width: 20px; padding: 0 5px; margin: 0 2px; border: 1px solid var(--w-line-strong); border-bottom-width: 2px; border-radius: 4px; font-size: 12px; line-height: 18px; text-align: center; color: var(--w-ink2); background: var(--w-surface); font-family: var(--font-cn); }
 .lr-detail-body { padding-bottom: 120px; }
 @media (max-width: 1180px) { .lr-keys { display: none; } }
-@media (max-width: 820px) {
+@media (max-width: 820px), (max-height: 540px) and (pointer: coarse) {
   .lr-player { padding: 10px 16px 14px 16px; }
   .lr-player__inner { flex-wrap: wrap; gap: 10px 12px; }
   .lr-time { min-width: 0; }
@@ -249,7 +249,7 @@
 .lr-review__nav { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
 .lr-review__keys { text-align: center; margin-top: 14px; }
 
-@media (max-width: 820px) {
+@media (max-width: 820px), (max-height: 540px) and (pointer: coarse) {
   .lr-nb { grid-template-columns: minmax(0, 1fr); }
   .lr-nb .ui-rail { display: none; }
   .lr-nb__main { padding: 16px 16px 40px 16px; border-left: none; min-height: 0; }
@@ -389,7 +389,7 @@
 .lr-qtag { user-select: none; -webkit-user-select: none; }
 .lr-evi .lr-line:hover { background: color-mix(in srgb, var(--w-warn-soft) 60%, var(--w-surface)); }
 .lr-evi .lr-line.is-active { background: var(--w-big-soft); }
-@media (max-width: 820px) {
+@media (max-width: 820px), (max-height: 540px) and (pointer: coarse) {
   .lr-gap { padding-left: 74px; }
   .lr-evi__head { padding-left: 74px; flex-wrap: wrap; gap: 4px 12px; }
 }
@@ -475,7 +475,7 @@ body.lr-resizing, body.lr-resizing * { cursor: col-resize !important; user-selec
 .lr-paper .lr-qs__inst { font-size: var(--w-fs-ui); }
 .lr-paper .lr-qs__img { max-width: min(100%, 640px); }
 .lr-paper .lr-qs__group + .lr-qs__group { margin-top: 26px; padding-top: 22px; }
-@media (max-width: 820px) {
+@media (max-width: 820px), (max-height: 540px) and (pointer: coarse) {
   .lr-paper { padding: 14px 14px 20px 14px; }
 }
 
@@ -493,7 +493,7 @@ body.lr-resizing, body.lr-resizing * { cursor: col-resize !important; user-selec
 .lr-submit__nums .lr-side__num { font-size: var(--w-fs-en); }
 .lr-submit__note { margin: 0; font-size: var(--w-fs-meta); line-height: 1.6; color: var(--w-ink3); }
 /* 窄屏页头：两档开关单独占一行，下面一行放「显示原文 / 显示译文 / 本篇笔记」 */
-@media (max-width: 820px) {
+@media (max-width: 820px), (max-height: 540px) and (pointer: coarse) {
   .lr-head .ui-head__tools { flex-wrap: wrap; }
   .lr-head .ui-head__tools > .lr-mode { flex: 1 1 100%; }
   .lr-head .lr-mode .ui-seg__btn { font-size: var(--w-fs-meta); padding-top: 7px; padding-bottom: 7px; }
@@ -716,7 +716,7 @@ button.lq-cell.is-on:focus-visible { box-shadow: var(--w-ring); }
 /* 手机才有的东西：宽屏不显示 */
 .lr-ptabs, .lr-qhead, .lr-script-off, .lr-qchip, .lr-ponly, .lr-acts, .lr-endcard, .lr-follow, .lr-scrim, .lr-proj__more { display: none; }
 
-@media (max-width: 820px) {
+@media (max-width: 820px), (max-height: 540px) and (pointer: coarse) {
   :root { --lr-player-h: 113px; --lr-ptabs-h: 57px; }
   .lr-ponly { display: inline-flex; }
   /* 打字的地方 16px，看得清，iOS 也不会放大 */
@@ -973,7 +973,7 @@ button.lq-cell.is-on:focus-visible { box-shadow: var(--w-ring); }
 /* ---------- 听力笔记本 · 手机 ---------- */
 .lr-nb__filters { display: contents; }
 .lr-nb__sheethead, .lr-nb__searchbtn, .lr-nb__searchx, .lr-review__sum, .lr-review__flipbtn { display: none; }
-@media (max-width: 820px) {
+@media (max-width: 820px), (max-height: 540px) and (pointer: coarse) {
   body.page-listening-notes .ui-input, body.page-listening-notes .ui-select { font-size: 16px; }
   /* 浏览：文章、类型、放大镜挤成一行，吸在导航栏下面 */
   .lr-nb__filters { display: flex; align-items: center; gap: 8px; position: sticky; top: var(--app-shell-h); z-index: 50; margin: -16px -16px 14px -16px; padding: 8px 16px; background: var(--w-paper); border-bottom: 1px solid var(--w-line); }
@@ -1030,4 +1030,29 @@ button.lq-cell.is-on:focus-visible { box-shadow: var(--w-ring); }
   .lr-review__nav > .ui-btn--primary { grid-column: 2; grid-row: 1; }
   .lr-review__nav > :last-child { grid-column: 3; grid-row: 1; }
   .lr-review__flipbtn { display: inline-flex; }
+}
+
+/* ---------- 横着拿的手机（矮触摸屏，高 ≤ 540px）：上面的手机规则照样生效，这里只为「矮」再收一收 ----------
+   精听页：全站导航跟着页面滚走（theme.css），页签条贴着屏幕顶；播放条从两行收成一行
+   （倍速 · 上一句 · 播放 · 下一句 · 时间 · 进度 · 总长 · 单句循环），原文能看的高度从 ~150px 变成 ~270px。
+   列表卡片和手机一样用「⋯」，不放 30px 的垃圾桶。 */
+@media (max-height: 540px) and (pointer: coarse) {
+  :root { --lr-player-h: 64px; --lr-ptabs-h: 52px; }
+  .lr-player { padding: 4px max(12px, env(safe-area-inset-right)) calc(4px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); }
+  .lr-player__inner { max-width: 1100px; grid-template-columns: 56px 48px 56px 48px auto minmax(0, 1fr) auto 48px; grid-template-rows: 56px; column-gap: 6px; }
+  .lr-pbtn--speed, .lr-pbtn--prev, .lr-play, .lr-pbtn--next, .lr-time, .lr-seek, .lr-time--end, .lr-pbtn--loop { grid-row: 1; }
+  .lr-pbtn--speed { grid-column: 1; }
+  .lr-pbtn--prev { grid-column: 2; }
+  .lr-play { grid-column: 3; width: 52px; height: 52px; }
+  .lr-pbtn--next { grid-column: 4; }
+  .lr-time { grid-column: 5; justify-self: end; padding: 0 12px 0 4px; }   /* 两头留出圆点的半径，0:00 不和圆点叠在一起 */
+  .lr-seek { grid-column: 6; }
+  .lr-time--end { grid-column: 7; justify-self: start; padding: 0 4px 0 12px; }
+  .lr-pbtn--loop { grid-column: 8; }
+  .lr-ptabs { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+  #detailView .lr-head { padding-top: 8px; padding-bottom: 8px; }
+  .lr-detail-body { padding-top: 8px; }
+
+  .lr-proj__head .lr-proj__del { display: none; }
+  .lr-proj__head .lr-proj__more { display: inline-flex; width: 44px; height: 44px; margin: -12px -10px -8px 0; }
 }

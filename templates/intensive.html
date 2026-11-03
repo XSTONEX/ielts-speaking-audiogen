@@ -456,7 +456,7 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
 .ir-exam.only-wrong.no-wrong .ir-exam-empty { display: block; }
 
 /* 821–900px 还是桌面版式，只是题目栏放不下，改用「原文 / 题目」切换。≤820px 是手机版式，见下面 */
-@media (min-width: 821px) and (max-width: 900px) {
+@media (min-width: 821px) and (max-width: 900px) and (min-height: 541px), (min-width: 821px) and (max-width: 900px) and (pointer: fine), (min-width: 821px) and (max-width: 900px) and (pointer: none) {
   .ir-body.has-exam .ir-exam { position: absolute; inset: 0; flex: none; border-left: none; display: none; padding: 20px 18px 120px; }
   .ir-body.has-exam.show-q .ir-exam { display: block; }
   .ir-body.has-exam.show-q .ir-content { visibility: hidden; }
@@ -485,7 +485,7 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
    阅读：正文就是整页滚动（Safari 的地址栏能收起，点状态栏回顶部）；顶栏只留 ‹ 标题 ⋯，
    译文 / 朗读 / 词汇 / 题目放到底部工具栏，朗读的迷你播放条贴在工具栏上面。
    划词、写释义、看词、⋯ 菜单、改标题、题目都是从底部升起的面板；系统返回键先关最上面一层。 */
-@media (max-width: 820px) {
+@media (max-width: 820px), (max-height: 540px) and (pointer: coarse) {
   .ir-desk { display: none !important; }
 
   /* ---- 文章列表 ---- */
@@ -746,7 +746,7 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
   /* ---- 九分学长导入的文章：题目从底部升起，平时只露当前这道题，原文和题目同时看得见 ---- */
   .ir-body.has-exam .ir-exam {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 1460; display: none;
-    max-height: min(54vh, 460px); overflow-y: auto; overscroll-behavior: contain; padding: 0 16px;
+    max-height: min(54vh, 460px); overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; padding: 0 16px;   /* ✕ 的负边距会伸出 4px，别让面板能横着拖 */
     border: none; border-top: 1px solid var(--w-line); border-radius: 14px 14px 0 0;
     box-shadow: 0 -8px 24px rgba(0, 0, 0, .14);
   }
@@ -808,14 +808,36 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
   .ir-blank { min-width: 32px; height: 32px; padding: 0 8px; font: 600 14px/30px var(--w-cn); }
   .ir-layout summary { min-height: 44px; display: flex; align-items: center; font-size: 14px; }
 }
-@media (max-width: 820px) and (prefers-reduced-motion: reduce) {
+/* ---- 横着拿的手机（矮触摸屏，高 ≤ 540px）：上面的手机规则照样生效，这里只为「矮」再收一收 ----
+   列表一行三张。阅读页：顶栏跟着正文滚走（返回靠侧滑或翻回顶上），底部工具栏图标和字排成一行、44px 高，
+   正文一行不超过 ~80 个字母；九分学长的题目面板放到右边一栏，原文和题目左右并排，不再上下挤。 */
+@media (max-height: 540px) and (pointer: coarse) {
+  .ir-home { padding-top: 8px; }
+  .ir-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+  .ir-bar { position: relative; min-height: calc(44px + env(safe-area-inset-top)); }
+  .ir-content .reader, .ir-body.has-exam .ir-content .reader { max-width: 760px; margin: 0 auto; padding: 12px 24px 32px; }
+  .ir-images { max-width: 760px; margin: 0 auto; }
+  body.page-intensive .ir-tools { height: calc(45px + env(safe-area-inset-bottom)); }   /* 44px 的按钮 + 1px 顶边 */
+  .ir-tools .ir-icon-btn { grid-template-columns: none; grid-auto-flow: column; align-items: center; gap: 0 6px; }
+  .ir-tools .ir-icon-btn > svg, .ir-tools .ir-icon-btn > .ir-spin, .ir-tools .ir-lbl:last-child { grid-column: auto; }
+  .ir-tools .ir-lbl { font-size: 14px; }
+  body.page-intensive .ir-audio { bottom: calc(45px + env(safe-area-inset-bottom)); height: 48px; }
+  #generateAudioBtn .ir-busy { bottom: calc(45px + env(safe-area-inset-bottom)); }
+
+  .ir-body.has-exam .ir-exam { left: auto; width: min(420px, 46%); max-height: calc(100dvh - env(safe-area-inset-top) - 8px); border-left: 1px solid var(--w-line); border-radius: 14px 0 0 0; padding-right: max(16px, env(safe-area-inset-right)); }
+  .ir-body.has-exam .ir-exam.is-full { height: calc(100dvh - env(safe-area-inset-top) - 8px); }
+  .ir-body.has-exam:has(.ir-exam.is-open) .ir-content { padding-right: min(420px, 46%) !important; }
+  .ir-viewer:has(#examPane.is-open) .ir-tools, body:has(#examPane.is-open) .floating#floatBox { right: min(420px, 46%); }
+}
+@media (max-width: 820px) and (prefers-reduced-motion: reduce), (max-height: 540px) and (pointer: coarse) and (prefers-reduced-motion: reduce) {
   .ir-sheet, body.page-intensive .ir-menu.open, #titleEditContainer.is-sheet, .floating#floatBox, .floating#meaningBox, .ir-body.has-exam .ir-exam.is-open { animation: none; }
 }
   </style>
   <!-- 词汇发音管理器 -->
   <script src="/static/word-pronunciation.js?v=20260919"></script>
   <link rel="stylesheet" href="/static/theme.css?v=20261101z">
-  <script src="/static/theme.js?v=20261101z" defer></script>
+  <script src="/static/theme.js?v=20261101z"></script>
   <script src="/static/api-client.js?v=20260919" defer></script>
   <script src="/static/auth.js?v=20260927" defer></script>
   <script src="/static/ui-feedback.js?v=20260919" defer></script>
@@ -985,7 +1007,7 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
     };
 
     // ===== 手机（≤820px）：判断、弹层和系统返回键 =====
-    const phoneMQ = window.matchMedia ? window.matchMedia('(max-width: 820px)') : { matches: false };
+    const phoneMQ = window.IELTSPhone.mq; // 窄屏或横着拿的手机，见 static/theme.js
     function isPhone(){ return !!phoneMQ.matches; }
     const $id = id => document.getElementById(id);
     // 手机上每打开一层（底部面板、大图、题目面板）就往历史里压一条：系统返回 / iOS 侧滑先关最上面这一层，
@@ -1806,9 +1828,10 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
     // 把证据句滚到「顶栏以下、题目面板以上」那块的中间；太长就让开头贴着顶栏
     function scrollPassageTo(ps){
       const top = ps[0].getBoundingClientRect().top, bottom = ps[ps.length - 1].getBoundingClientRect().bottom;
-      const barH = document.querySelector('#viewer .ir-bar').getBoundingClientRect().bottom;
+      // 横屏时顶栏会跟着滚走（bottom 变成负数），题目面板在右边一栏、不挡正文（这时底部只有工具栏）
+      const barH = Math.max(0, document.querySelector('#viewer .ir-bar').getBoundingClientRect().bottom);
       const pane = document.getElementById('examPane');
-      const dock = pane.classList.contains('is-open') ? pane.offsetHeight : (parseFloat(getComputedStyle(document.body).getPropertyValue('--ir-dock-h')) || 0);
+      const dock = pane.classList.contains('is-open') && !examPaneBeside() ? pane.offsetHeight : (parseFloat(getComputedStyle(document.body).getPropertyValue('--ir-dock-h')) || 0);
       const visTop = barH + 12, visH = Math.max(80, window.innerHeight - dock - 12 - visTop);
       const h = bottom - top;
       const delta = h <= visH ? top - visTop - (visH - h) / 2 : top - visTop;
@@ -3240,13 +3263,15 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       paint();
     })();
 
+    // 横着拿的手机上题目面板在右边一栏（见样式表「横着拿的手机」），不压在正文下面
+    function examPaneBeside(){ const r = document.getElementById('examPane').getBoundingClientRect(); return r.width > 0 && r.left > 1; }
     // ===== 手机：底部占了多高（工具栏 + 播放条，或者题目面板），正文留出这么多、划词操作栏贴在它上面 =====
     function updateDock(){
       const b = document.body;
       if(!isPhone() || !document.getElementById('viewer').classList.contains('active')){ b.style.removeProperty('--ir-dock-h'); b.style.removeProperty('--ui-bottom-bar-h'); return; }
       const tools = document.querySelector('#viewer .ir-tools'), ap = document.getElementById('audioPanel'), qs = document.getElementById('examPane');
       let h = (tools ? tools.offsetHeight : 0) + (ap.offsetHeight || 0);
-      if(qs.classList.contains('is-peek')) h = qs.offsetHeight;
+      if(qs.classList.contains('is-peek') && !examPaneBeside()) h = qs.offsetHeight;
       b.style.setProperty('--ir-dock-h', h + 'px');
       b.style.setProperty('--ui-bottom-bar-h', h + 'px');
     }

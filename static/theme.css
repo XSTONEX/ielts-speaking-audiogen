@@ -756,14 +756,14 @@ body.has-app-shell.page-writing-practice .review-overlay { z-index: 1300; }
   padding: 0 13px;
 }
 
-@media (min-width: 821px) {
+@media (min-width: 821px) and (min-height: 541px), (min-width: 821px) and (pointer: fine), (min-width: 821px) and (pointer: none) {
   .app-shell-scrim,
   .app-shell-panel {
     display: none !important;
   }
 }
 
-@media (max-width: 820px) {
+@media (max-width: 820px), (max-height: 540px) and (pointer: coarse) {
   :root {
     /* 刘海屏的状态栏高度加进来，否则字标会被系统 UI 压住 */
     --app-shell-h: calc(52px + env(safe-area-inset-top));
@@ -1162,7 +1162,7 @@ html[data-theme="dark"] body.page-intensive #articleAudio {
 
 /* ============================================================
    手机端公共约定（2026-11 手机端适配）。各页面的手机样式都建立在这几条上：
-   - 断点：≤820px 是手机/竖屏平板（导航栏收成「模块 ▾」），≤640px 是手机。桌面（>820px）一律不动。
+   - 断点：≤820px 是手机/竖屏平板（导航栏收成「模块 ▾」），横着拿的手机（高 ≤540px 的触摸屏）也算，≤640px 是手机。桌面和 iPad 一律不动。
    - 页面左右留白 16px，卡片内边距 16px（下面改了令牌，用令牌的组件自动跟上）。
    - 能点的东西至少 40px 高，主要按钮 44px 以上；屏幕底部留给本页的主操作（播放条、提交、添加）。
    - 固定在底部的东西要加 env(safe-area-inset-bottom)，并把自己的高度写进 --ui-bottom-bar-h，
@@ -1177,7 +1177,7 @@ html {
   padding-right: env(safe-area-inset-right);
 }
 
-@media (max-width: 820px) {
+@media (max-width: 820px), (max-height: 540px) and (pointer: coarse) {
   :root {
     --h-sm: 40px;
   }
@@ -1215,5 +1215,45 @@ html {
     --pad-card-y: 18px;
     --pad-card-x: 16px;
     --gutter: 16px;
+  }
+}
+
+/* ============================================================
+   横着拿的手机（2026-11）：宽 844–932、高只有 350–430 的触摸屏也用上面的手机布局
+   （各处手机媒体查询都写成「(max-width: 820px), (max-height: 540px) and (pointer: coarse)」，
+   脚本里用 theme.js 的 IELTSPhone.mq）。≤640px 的规则只看宽度，所以横屏拿到的是各页 641–820 的那一档。
+   带鼠标的电脑窗口再矮也不进来（pointer 是 fine），iPad 横竖都够高，也不进来。
+   这里只为「矮」再收一收：
+   - 全站导航不钉在顶上，跟着页面一起滚走，把高度让给内容。--app-shell-h 变成 0，
+     各页吸顶的条（用 top: var(--app-shell-h) 的）就直接贴着屏幕顶；导航自己占的那 52px 由 body 的上边距留出来。
+   - 模块面板一排四个，矮屏上不用滚。
+   ============================================================ */
+@media (max-height: 540px) and (pointer: coarse) {
+  :root {
+    --app-shell-h: 0px;
+  }
+
+  body.has-app-shell {
+    padding-top: calc(52px + env(safe-area-inset-top)) !important;
+  }
+
+  .app-shell-nav {
+    position: absolute;
+    height: calc(52px + env(safe-area-inset-top));
+  }
+
+  .app-shell-scrim {
+    top: 0;
+  }
+
+  .app-shell-panel {
+    position: absolute;
+    top: calc(52px + env(safe-area-inset-top) + 8px);
+    left: max(10px, env(safe-area-inset-left));
+    right: max(10px, env(safe-area-inset-right));
+  }
+
+  .app-shell-panel__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
