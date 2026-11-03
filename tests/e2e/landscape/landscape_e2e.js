@@ -413,6 +413,12 @@ async function listening(browser, dev) {
   await section('听力转屏', async () => {
     await page.setViewportSize(dev.portrait);
     await openHall();
+    // 正在放的时候转屏：接着放，还停在这篇
+    await page.evaluate(() => { const l = document.querySelectorAll('.lr-line')[2]; l.click(); }); await sleep(800);
+    if (await rotate(page, dev, () => page.evaluate(() => state.view === 'detail' && !document.getElementById('audioEl').paused && document.getElementById('lrPlayer').getBoundingClientRect().height > 40), '精听播放中')) {
+      ok(await page.evaluate(() => document.getElementById('audioEl').currentTime > 0.5), '听力：转屏以后音频接着往下放');
+    }
+    await page.evaluate(() => { const a = document.getElementById('audioEl'); a.pause(); });
     await page.evaluate(() => openMoreSheet()); await sleep(400);
     if (await rotate(page, dev, () => page.evaluate(() => { const d = document.querySelector('#moreSheet .ui-dialog'); return !document.getElementById('moreSheet').hidden && !!d && d.getBoundingClientRect().height > 60 && state.view === 'detail'; }), '精听 ⋯ 面板')) {
       await page.goBack(); await sleep(500);

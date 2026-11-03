@@ -43,6 +43,6 @@ PLAYWRIGHT_CORE=/path/to/node_modules/playwright-core NODE=~/.nvm/versions/node/
 - 最后一行是「横屏检查：通过 N 项，失败 M 项」，有失败时列出失败项、退出码 1。
 - 已经有起好的沙盒时，可以直接跑 `LS_CONFIG=<config.json> node landscape_e2e.js`，config 的格式见 `run.sh` 写出的 `<工作目录>/config.json`（每个模块的 `base` 和 `sandbox`，沙盒里要有 `e2e_token.txt`）。
 
-2026-11-03：改动后的代码 WebKit + Chromium 共 367 项全过；同一份脚本对着 `main`（11fd016）跑，通过 169 项、失败 147 项（手机布局、导航滚走、矮屏收紧那些都失败；能过的是不溢出、不报错、转屏历史条数这类本来就对的项）。
+2026-11-03：改动后的代码 WebKit + Chromium 共 376 项全过（每个横屏设备 124 项，外加四项反例）；同一份脚本对着 `main`（11fd016）跑，通过 175 项、失败 150 项（手机布局、导航滚走、矮屏收紧那些都失败；能过的是不溢出、不报错、转屏历史条数这类本来就对的项）。
 
 真机才看得到的：Safari 横屏时自己的地址栏 / 标签栏占多少高、横屏弹键盘以后还剩多少高（模拟器里只能把视口压矮）、刘海在左右两边时的安全区。

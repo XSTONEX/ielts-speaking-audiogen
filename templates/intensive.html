@@ -746,7 +746,7 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
   /* ---- 九分学长导入的文章：题目从底部升起，平时只露当前这道题，原文和题目同时看得见 ---- */
   .ir-body.has-exam .ir-exam {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 1460; display: none;
-    max-height: min(54vh, 460px); overflow-y: auto; overscroll-behavior: contain; padding: 0 16px;
+    max-height: min(54vh, 460px); overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; padding: 0 16px;   /* ✕ 的负边距会伸出 4px，别让面板能横着拖 */
     border: none; border-top: 1px solid var(--w-line); border-radius: 14px 14px 0 0;
     box-shadow: 0 -8px 24px rgba(0, 0, 0, .14);
   }
