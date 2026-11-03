@@ -456,9 +456,18 @@ async function vocabulary(browser, dev) {
     const add = await R(page, '#vbAddBtn');
     ok(inView(add, 44), '单词本加词：「添加」在屏幕里', add);
     await page.goBack(); await sleep(400);
+    // 弹窗是贴底的面板：底边就是屏幕底边（单词本竖屏平板那条 16px 留白不能带到横屏上）
+    const sheetBottom = sel => page.$eval(sel, e => ({ b: Math.round(e.closest('.ui-dialog').getBoundingClientRect().bottom), vh: innerHeight }));
+    await page.locator('#vbGrid .vb-card').nth(1).locator('.vb-act--more').tap(); await sleep(400);
+    await page.locator('#actList .vb-actitem', { hasText: /^编辑$/ }).tap(); await sleep(500);
+    const save = await R(page, '#edOk'), edWord = await R(page, '#edWord');
+    const edSheet = await sheetBottom('#edOk');
+    ok(inView(save, 44) && inView(edWord, 44) && Math.abs(edSheet.b - edSheet.vh) <= 1, '单词本编辑：输入框和「保存」在屏幕里，面板贴着屏幕底边', { save, edWord, edSheet });
+    await page.goBack(); await sleep(400);
     await page.tap('#vbPChallenge'); await sleep(400);
     const go = await R(page, '#chOk');
-    ok(inView(go, 44), '单词挑战设置：「开始挑战」在屏幕里', go);
+    const chSheet = await sheetBottom('#chOk');
+    ok(inView(go, 44) && Math.abs(chSheet.b - chSheet.vh) <= 1, '单词挑战设置：「开始挑战」在屏幕里，面板贴着屏幕底边', { go, chSheet });
     await page.tap('#chOk'); await sleep(900);
     const opts = await page.$$eval('#qOptions .vb-option', os => os.map(o => { const r = o.getBoundingClientRect(); return { t: Math.round(r.top), b: Math.round(r.bottom), h: Math.round(r.height), vh: innerHeight }; }));
     ok(opts.length >= 2 && opts.every(o => o.t >= 0 && o.b <= o.vh && o.h >= 44), '单词挑战：所有选项一屏看全、≥ 44px', opts);
