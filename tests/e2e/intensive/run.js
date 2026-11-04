@@ -8,6 +8,7 @@ const SUITE_FILES = {
   import: './suite_import',   // /intensive/new 导入九分学长 JSON → 原文 + 题目 + 作答 + 做题划线
   misc: './suite_misc',       // 删除确认、图片条和大图、改标题、改分类、朗读音频条
   phone: './suite_phone',     // 手机版式：列表、阅读页、划词、单词卡、各种底部面板、题目面板、添加文章，系统返回关最上面一层
+  question: './suite_question', // 题目栏划词（桌面 / 手机）、原文和题目栏之间的分割条、单词发音走有道
 };
 
 (async () => {

@@ -1,103 +1,74 @@
 /**
- * 词汇发音管理器
- * 直接从后端获取预生成的音频文件
+ * 词汇发音管理器（文章精读）
+ * 和单词本一样，点的时候实时取有道词典的发音，不再预先生成、存储 TTS 音频。
+ * 有道没有的词（拼错的、生造的）退回以前划词时生成过的 /vocab_audio/<文章>/<词>（有的话）。
  */
 class WordPronunciationManager {
   constructor() {
-    this.currentAudio = null; // 当前播放的音频
-    this.loadingSet = new Set(); // 正在加载的词汇集合
+    this.audio = null;    // 只用一个 Audio，换词时直接换 src
+    this.playing = null;  // { text, sources, index, resolve }
+  }
+
+  static youdaoUrl(text) {
+    return 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(text) + '&type=2';
   }
 
   /**
    * 播放单词发音
-   * @param {string} word - 要发音的单词
-   * @param {string} articleId - 文章ID（必需，用于定位音频文件）
+   * @param {string} word - 要发音的单词或短语
+   * @param {string} [articleId] - 文章ID（只用来找以前存过的音频，没有也能播）
    * @returns {Promise<boolean>} - 是否播放成功
    */
-  async playWord(word, articleId) {
-    if (!word || typeof word !== 'string') {
+  playWord(word, articleId) {
+    const text = typeof word === 'string' ? word.trim().replace(/\s+/g, ' ') : '';
+    if (!text) {
       console.warn('Invalid word provided:', word);
-      return false;
+      return Promise.resolve(false);
     }
-
-    if (!articleId) {
-      console.warn('Article ID is required for audio playback');
-      return false;
+    this.stopCurrentAudio();
+    if (!this.audio) {
+      this.audio = new Audio();
+      this.audio.addEventListener('error', () => { if (this.playing) this.nextSource(this.playing); });
+      this.audio.addEventListener('ended', () => this.finish(this.playing, true));
     }
-
-    const normalizedWord = word.trim().toLowerCase();
-    const playKey = `${articleId}-${normalizedWord}`;
-    
-    // 如果已经在加载，避免重复请求
-    if (this.loadingSet.has(playKey)) {
-      return false;
-    }
-
-    try {
-      // 停止当前播放的音频
-      this.stopCurrentAudio();
-
-      this.loadingSet.add(playKey);
-      
-      // 直接从后端获取预生成的音频文件
-      const audioUrl = `/vocab_audio/${encodeURIComponent(articleId)}/${encodeURIComponent(normalizedWord)}`;
-      
-      // 播放音频
-      await this.playAudioFromUrl(audioUrl);
-      return true;
-    } catch (error) {
-      console.error('Error playing word pronunciation:', error);
-      return false;
-    } finally {
-      this.loadingSet.delete(playKey);
-    }
-  }
-
-  /**
-   * 直接播放URL音频
-   * @param {string} audioUrl - 音频文件URL
-   * @returns {Promise<void>}
-   */
-  async playAudioFromUrl(audioUrl) {
-    return new Promise((resolve, reject) => {
-      const audio = new Audio(audioUrl);
-
-      // 设置音量放大（尝试超过1.0以获得更大音量）
-      try {
-        audio.volume = 2.0;
-      } catch (e) {
-        // 如果不支持高音量，回退到最大音量1.0
-        audio.volume = 1.0;
-      }
-
-      this.currentAudio = audio;
-
-      audio.onended = () => {
-        this.currentAudio = null;
-        resolve();
-      };
-
-      audio.onerror = (error) => {
-        this.currentAudio = null;
-        console.error('Audio playback error:', error);
-        reject(new Error('音频文件不存在或播放失败'));
-      };
-
-      audio.play().catch(reject);
+    const sources = [WordPronunciationManager.youdaoUrl(text)];
+    if (articleId) sources.push(`/vocab_audio/${encodeURIComponent(articleId)}/${encodeURIComponent(text.toLowerCase())}`);
+    return new Promise(resolve => {
+      const current = { text, sources, index: 0, resolve };
+      this.playing = current;
+      this.nextSource(current);
     });
   }
 
+  nextSource(current) {
+    if (this.playing !== current) return;
+    if (current.index >= current.sources.length) {
+      console.warn(`没取到「${current.text}」的发音`);
+      this.finish(current, false);
+      return;
+    }
+    this.audio.src = current.sources[current.index++];
+    const p = this.audio.play();
+    if (p && p.catch) {
+      p.catch(err => {
+        // 加载失败由 error 事件换下一个来源；浏览器不让自动播放时安静地停下
+        if (this.playing === current && err && err.name === 'NotAllowedError') this.finish(current, false);
+      });
+    }
+  }
 
+  finish(current, ok) {
+    if (!current || this.playing !== current) return;
+    this.playing = null;
+    current.resolve(ok);
+  }
 
   /**
    * 停止当前播放的音频
    */
   stopCurrentAudio() {
-    if (this.currentAudio) {
-      this.currentAudio.pause();
-      this.currentAudio.currentTime = 0;
-      this.currentAudio = null;
-    }
+    if (this.playing) this.finish(this.playing, false);
+    if (this.audio) this.audio.pause();
   }
 
   /**
@@ -105,14 +76,9 @@ class WordPronunciationManager {
    * @returns {Object} 状态统计
    */
   getStats() {
-    return {
-      loadingWords: this.loadingSet.size,
-      isPlaying: this.currentAudio !== null
-    };
+    return { isPlaying: this.playing !== null };
   }
 }
-
-
 
 // 创建全局实例
 const wordPronunciation = new WordPronunciationManager();
@@ -123,13 +89,9 @@ window.wordPronunciation = wordPronunciation;
 /**
  * 便捷函数：播放单词发音
  * @param {string} word - 要发音的单词
- * @param {string} articleId - 文章ID（必需）
+ * @param {string} [articleId] - 文章ID
  * @returns {Promise<boolean>} - 是否播放成功
  */
 window.playWordPronunciation = function(word, articleId) {
-  if (!articleId) {
-    console.warn('Article ID is required for word pronunciation');
-    return Promise.resolve(false);
-  }
   return wordPronunciation.playWord(word, articleId);
 };

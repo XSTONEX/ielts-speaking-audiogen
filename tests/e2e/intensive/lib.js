@@ -22,7 +22,7 @@ const FAKE_USER = 'reader01';
 const TEST_TITLE = /（(chromium|webkit)）$|^Plain (chromium|webkit)$/;
 const TEST_MEANING = /e2e/;
 
-const SUITES = ['select', 'touch', 'import', 'misc', 'phone'];
+const SUITES = ['select', 'touch', 'import', 'misc', 'phone', 'question'];
 const ENGINES = ['chromium', 'webkit'];
 
 function usage(msg) {
@@ -80,6 +80,9 @@ async function newContext(cfg, browser, options = {}) {
   const origin = new URL(cfg.baseUrl).origin;
   // 兜底：页面只该请求本机服务器，别的一律掐掉（页面本来也没有外链）
   await ctx.route(url => /^https?:$/.test(url.protocol) && url.origin !== origin, route => route.abort());
+  // 单词发音先取有道词典（页面点的时候实时取）。测试不连外网：当作「有道没有这个词」（有道真遇到生词也是回错误码），
+  // 页面接着去找以前存过的 /vocab_audio
+  await ctx.route(/dict\.youdao\.com\/dictvoice/, route => route.fulfill({ status: 404, contentType: 'text/plain', body: '' }));
   await ctx.addInitScript(t => {
     if (location.protocol === 'about:') return;
     try { localStorage.setItem('authToken', t); } catch (e) {}

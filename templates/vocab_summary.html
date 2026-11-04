@@ -772,7 +772,7 @@
     }
 
     // ==================== 发音 ====================
-    // 先放精读划词时生成好的发音（/vocab_audio/<文章>/<词>），没有就用有道词典的发音，都不再调付费 TTS
+    // 和单词本一样先放有道词典的发音（点的时候实时取）；有道没有的词退回以前精读划词时生成过的 /vocab_audio/<文章>/<词>
     const player = new Audio();
     let playing = null;
     player.addEventListener('error', () => { if (playing) nextSource(playing); });
@@ -782,8 +782,8 @@
       if (!text) return;
       stopPlaying();
       const sources = [];
-      if (articleId) sources.push(`/vocab_audio/${encodeURIComponent(articleId)}/${encodeURIComponent(text.toLowerCase())}`);
       sources.push('https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(text) + '&type=2');
+      if (articleId) sources.push(`/vocab_audio/${encodeURIComponent(articleId)}/${encodeURIComponent(text.toLowerCase())}`);
       playing = { text, sources, index: 0, quiet: !!(options && options.quiet), card: options && options.card };
       if (playing.card) playing.card.classList.add('is-playing');
       nextSource(playing);
@@ -887,7 +887,8 @@
         .then(d => {
           if (seq !== vocabSeq) return;   // 已经点了别的文章
           if (!d.success) throw new Error(d.error || '加载失败');
-          currentVocab = (d.article.highlights || []).slice().sort((a, b) => (a.start || 0) - (b.start || 0));
+          // 正文里的词按出现顺序在前，题目里划的（带 qk）排在后面
+          currentVocab = (d.article.highlights || []).slice().sort((a, b) => (a.qk ? 1 : 0) - (b.qk ? 1 : 0) || (a.start || 0) - (b.start || 0));
           renderVocab();
         })
         .catch(() => {

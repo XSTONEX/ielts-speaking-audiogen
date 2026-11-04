@@ -275,15 +275,15 @@ body.page-intensive .ir-menu select.ir-select {
 .reader p:first-child.hd { margin-top: 0; }
 .ir-viewer.hide-zh .reader p.zh { display: none; }
 
-.reader mark.hl {
+.reader mark.hl, .ir-exam mark.hl {
   position: relative; padding: 1px 0; border-radius: 3px;
   background: var(--w-hl); color: inherit; cursor: pointer;
   -webkit-box-decoration-break: clone; box-decoration-break: clone;
   transition: background .15s, box-shadow .15s;
 }
-.reader mark.hl:hover { background: var(--w-hl-hover); }
-.reader mark.hl.active { box-shadow: 0 0 0 2px var(--w-accent); }
-.reader mark.hl .tooltip {
+.reader mark.hl:hover, .ir-exam mark.hl:hover { background: var(--w-hl-hover); }
+.reader mark.hl.active, .ir-exam mark.hl.active { box-shadow: 0 0 0 2px var(--w-accent); }
+.reader mark.hl .tooltip, .ir-exam mark.hl .tooltip {
   display: none; position: absolute; left: 50%; bottom: calc(100% + 8px); z-index: 20;
   width: max-content; max-width: 260px; padding: 6px 10px; border-radius: var(--w-r-sm);
   background: var(--w-tip-bg); color: var(--w-tip-ink);
@@ -291,9 +291,9 @@ body.page-intensive .ir-menu select.ir-select {
   transform: translateX(calc(-50% + var(--tip-dx, 0px)));
   pointer-events: none; user-select: none; -webkit-user-select: none;
 }
-.reader mark.hl.tip-below .tooltip { bottom: auto; top: calc(100% + 8px); }
-.reader mark.hl:hover .tooltip, .reader mark.hl.tip-on .tooltip { display: block; }
-.reader mark.hl .tooltip:empty { display: none !important; }
+.reader mark.hl.tip-below .tooltip, .ir-exam mark.hl.tip-below .tooltip { bottom: auto; top: calc(100% + 8px); }
+.reader mark.hl:hover .tooltip, .reader mark.hl.tip-on .tooltip, .ir-exam mark.hl:hover .tooltip, .ir-exam mark.hl.tip-on .tooltip { display: block; }
+.reader mark.hl .tooltip:empty, .ir-exam mark.hl .tooltip:empty { display: none !important; }
 
 /* 划词浮层：白底小卡片，浮在选区上方（手机放在下方，让开系统的复制菜单） */
 .floating {
@@ -348,6 +348,7 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
 .ir-vi:hover { background: var(--w-sunken); }
 .ir-vi-text { flex: 1; min-width: 0; }
 .ir-vi-word { font: 600 15px/1.4 var(--w-en); color: var(--w-ink); }
+.ir-vi-tag { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 4px; background: var(--w-sunken); font: 500 11px/18px var(--w-cn); color: var(--w-ink3); vertical-align: 2px; }
 .ir-vi-mean { margin-top: 2px; font-size: 13px; line-height: 1.5; color: var(--w-ink2); }
 .ir-vi-actions { flex: none; display: flex; }
 .ir-vi-actions .ir-icon-btn { height: 28px; min-width: 28px; padding: 0 5px; color: var(--w-ink3); }
@@ -394,9 +395,27 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
 ::highlight(jiufen) { text-decoration-line: underline; text-decoration-color: var(--w-accent); text-decoration-thickness: 2px; text-decoration-style: solid; }
 
 .ir-seg { display: none; }
-.ir-exam { display: none; flex: 0 0 min(46%, 540px); min-width: 0; overflow-y: auto; padding: 28px 28px 120px; background: var(--w-surface); border-left: 1px solid var(--w-line); }
+.ir-exam { display: none; flex: 0 0 var(--exam-w, min(46%, 540px)); min-width: 0; overflow-y: auto; padding: 28px 28px 120px; background: var(--w-surface); border-left: 1px solid var(--w-line); }
 .ir-body.has-exam .ir-exam { display: block; }
 .ir-body.has-exam .ir-content.panel-open { margin-right: 0; }
+/* 原文和题目栏之间的分割条：拖动改宽度（记在本机），双击恢复默认，键盘 ← → 也能调。
+   平时只是题目栏的左边线 + 中间一个小把手；指上去 / 拖动时线和把手变成主题色 */
+.ir-split { display: none; }
+.ir-body.has-exam .ir-split { display: block; position: relative; z-index: 4; flex: none; width: 0; outline: none; touch-action: none; }
+.ir-split::before { content: ''; position: absolute; top: 0; bottom: 0; left: -3px; width: 10px; cursor: col-resize; }
+.ir-split::after { content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 1px; background: transparent; transition: background .15s, width .15s; pointer-events: none; }
+.ir-split-grip {
+  position: absolute; top: 50%; left: -4px; width: 9px; height: 36px; margin-top: -18px; pointer-events: none;
+  border: 1px solid var(--w-line-strong); border-radius: 5px; background: var(--w-surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .06); transition: border-color .15s, background .15s;
+}
+.ir-split-grip::before { content: ''; position: absolute; left: 3px; top: 11px; width: 1px; height: 12px; border-left: 1px solid var(--w-ink3); }
+.ir-split:hover::after, .ir-split:focus-visible::after, .ir-split.is-dragging::after { background: var(--w-accent); }
+.ir-split.is-dragging::after { width: 2px; left: -1px; }
+.ir-split:hover .ir-split-grip, .ir-split:focus-visible .ir-split-grip, .ir-split.is-dragging .ir-split-grip { border-color: var(--w-accent); background: var(--w-accent-soft); }
+.ir-split:hover .ir-split-grip::before, .ir-split:focus-visible .ir-split-grip::before, .ir-split.is-dragging .ir-split-grip::before { border-color: var(--w-accent); }
+body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-user-select: none !important; user-select: none !important; }
+@media (pointer: coarse) { .ir-split::before { left: -12px; width: 24px; } }
 .ir-body.has-exam .ir-content .reader { padding: 40px 44px 48px; }
 
 .ir-exam-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding-bottom: 16px; border-bottom: 1px solid var(--w-line); }
@@ -460,6 +479,7 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
   .ir-body.has-exam .ir-exam { position: absolute; inset: 0; flex: none; border-left: none; display: none; padding: 20px 18px 120px; }
   .ir-body.has-exam.show-q .ir-exam { display: block; }
   .ir-body.has-exam.show-q .ir-content { visibility: hidden; }
+  .ir-body.has-exam .ir-split { display: none; }
   .ir-viewer.has-exam .ir-seg { display: flex; flex: none; gap: 4px; padding: 6px 12px; background: var(--w-surface); border-bottom: 1px solid var(--w-line); }
   .ir-seg button { flex: 1; height: 32px; border: none; border-radius: var(--w-r-sm); background: transparent; color: var(--w-ink3); font: 500 14px/1 var(--w-cn); cursor: pointer; }
   .ir-seg button.active { background: var(--w-sunken); color: var(--w-ink); }
@@ -569,12 +589,13 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
   .ir-viewer { position: static; z-index: auto; min-height: 100vh; background: var(--w-surface); }
   .ir-viewer.active { display: block; }
   .ir-body { display: block; }
+  .ir-body.has-exam .ir-split { display: none; }
   .ir-content { overflow: visible; padding: 0 0 calc(var(--ir-dock-h, 72px) + 40px) !important; background: var(--w-surface); }
   .ir-content.panel-open { margin-right: 0; }
   .ir-content .reader { max-width: none; padding: 18px 18px 32px; border: none; border-radius: 0; }
   .ir-body.has-exam .ir-content .reader { padding: 18px 18px 32px; }
-  .reader mark.hl .tooltip { display: none !important; }
-  .reader mark.hl:hover { background: var(--w-hl); }
+  .reader mark.hl .tooltip, .ir-exam mark.hl .tooltip { display: none !important; }
+  .reader mark.hl:hover, .ir-exam mark.hl:hover { background: var(--w-hl); }
 
   /* 顶栏：‹ 返回、标题（点一下看全）、⋯ */
   .ir-bar {
@@ -835,7 +856,7 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
 }
   </style>
   <!-- 词汇发音管理器 -->
-  <script src="/static/word-pronunciation.js?v=20260919"></script>
+  <script src="/static/word-pronunciation.js?v=20261103b"></script>
   <link rel="stylesheet" href="/static/theme.css?v=20261103a">
   <script src="/static/theme.js?v=20261103a"></script>
   <script src="/static/api-client.js?v=20260919" defer></script>
@@ -913,6 +934,7 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
     </div>
     <div class="ir-body">
       <div class="ir-content" id="vContent"></div>
+      <div class="ir-split" id="examSplit" role="separator" aria-orientation="vertical" aria-controls="examPane" aria-label="拖动调整原文和题目的宽度" tabindex="0" title="拖动调整宽度，双击恢复默认"><span class="ir-split-grip"></span></div>
       <section class="ir-exam" id="examPane" aria-label="题目"></section>
       <aside class="ir-panel" id="highlightsPanel">
         <div class="resize-handle" id="resizeHandle"></div>
@@ -1121,7 +1143,9 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       }).catch(() => { alert('保存失败'); paintSegs('menuCatSeg', old); });
     });
     function toggleFullTitle(){ if(isPhone()) document.getElementById('vTitle').classList.toggle('is-full'); }
-    function updateVocabCount(){ const el=document.getElementById('vocabCount'); if(el) el.textContent = new Set((highlights||[]).map(h=>h.start+'-'+h.end)).size || ''; }
+    function updateVocabCount(){ const el=document.getElementById('vocabCount'); if(el) el.textContent = new Set((highlights||[]).map(hlKey)).size || ''; }
+    // 一条高亮的位置：正文里的只有 start-end，题目栏里的前面加上是哪一段题目文字（qk）
+    function hlKey(h){ return (h.qk ? h.qk + ':' : '') + h.start + '-' + h.end; }
     function checkStoredToken(){
       const tk=localStorage.getItem('authToken');
       if(!tk) return Promise.resolve(false);
@@ -1132,7 +1156,7 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
         .then(d=>{ if(d && d.valid===false){ localStorage.removeItem('authToken'); return false; } return keep(); })
         .catch(keep);
     }
-    window.onload=function(){ checkStoredToken().then(valid=>{ if(valid){ applyTranslationPref(); bindSelection(document.getElementById('vContent')); loadList(); initPageState(); initResizeHandle(); } else { window.location.href='/login'; } }); }
+    window.onload=function(){ checkStoredToken().then(valid=>{ if(valid){ applyTranslationPref(); bindSelection(document.getElementById('vContent')); loadList(); initPageState(); initResizeHandle(); initExamSplit(); } else { window.location.href='/login'; } }); }
     function initPageState(){
       const hash = window.location.hash;
 
@@ -1322,7 +1346,7 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       if(!b.classList.contains('ir-reading')){ listScrollY = window.scrollY; b.classList.add('ir-reading'); }
       document.getElementById('vTitle').classList.remove('is-full');
       if(isPhone()) window.scrollTo(0, 0);
-      updateDock();
+      updateDock(); applyExamWidth();
     }
     // 网址和阅读页对不上时（系统返回、前进）把阅读页跟过去
     function syncReaderWithUrl(){
@@ -1362,21 +1386,24 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
     function checkForJumpHighlight(){ const targetHighlightId = sessionStorage.getItem('jumpToHighlight'); if(targetHighlightId){ sessionStorage.removeItem('jumpToHighlight'); setTimeout(()=>{ scrollToHighlight(targetHighlightId); }, 300); } }
     function renderHighlightsPanel(){
       const searchVal=(document.getElementById('hpSearch').value||'').toLowerCase(); const body=document.getElementById('hpBody'); body.innerHTML='';
-      const wordOf = h => h.text || (currentArticle.content_text||'').substring(h.start, h.end);
+      const wordOf = h => h.text || (h.qk ? '' : (currentArticle.content_text||'').substring(h.start, h.end));
       const say = h => { const w = wordOf(h); if(w && window.playWordPronunciation){ window.playWordPronunciation(w.trim(), currentArticle?.id); } };
-      // 同一个范围存了两条（旧版本留下的）只列一次，和正文、词数一致
-      let list=(highlights||[]).filter((h,i,all)=>all.findIndex(x=>x.start===h.start&&x.end===h.end)===i).sort((a,b)=>a.start-b.start);
+      // 同一个范围存了两条（旧版本留下的）只列一次，和正文、词数一致。正文里的词在前，题目里的按题目顺序排在后面
+      const qOrder = examBlockOrder();
+      const rank = h => h.qk ? 1e9 + (qOrder.has(h.qk) ? qOrder.get(h.qk) : qOrder.size) * 1e5 + h.start : h.start;
+      let list=(highlights||[]).filter((h,i,all)=>all.findIndex(x=>hlKey(x)===hlKey(h))===i).sort((a,b)=>rank(a)-rank(b));
       if(searchVal){ list=list.filter(h=> wordOf(h).toLowerCase().includes(searchVal) || (h.meaning||'').toLowerCase().includes(searchVal)); }
       if(!list.length){ body.innerHTML=`<div class="ir-panel-empty">${searchVal?'没有匹配的词':'还没有高亮。在正文里选中单词或短语，就能记下释义。'}</div>`; return; }
       list.forEach(h=>{
         const item=document.createElement('div'); item.className='ir-vi'; item.dataset.hid=h.id;
         item.innerHTML=`<div class="ir-vi-text"><div class="ir-vi-word"></div><div class="ir-vi-mean"></div></div><div class="ir-vi-actions"><button class="ir-icon-btn" title="播放发音" aria-label="播放发音">${IC.volume}</button><button class="ir-icon-btn" title="跳到原文" aria-label="跳到原文">${IC.jump}</button></div>`;
         item.querySelector('.ir-vi-word').textContent = wordOf(h);
+        if(h.qk){ const tag=document.createElement('span'); tag.className='ir-vi-tag'; tag.textContent=qkLabel(h.qk); item.querySelector('.ir-vi-word').appendChild(tag); }
         item.querySelector('.ir-vi-mean').textContent = h.meaning || '';
         const [playBtn, jumpBtn] = item.querySelectorAll('button');
         playBtn.onclick=function(e){ e.stopPropagation(); say(h); };
         // 手机上面板会挡住正文，跳过去之前先收起
-        jumpBtn.onclick=function(e){ e.stopPropagation(); if(isPhone()) closeHighlightsPanel(); scrollToHighlight(h.id); };
+        jumpBtn.onclick=function(e){ e.stopPropagation(); if(isPhone()){ hideHighlightsPanel(); closeLayer('vocab', () => scrollToHighlight(h.id)); return; } scrollToHighlight(h.id); };
         item.onclick=function(){ say(h); };
         body.appendChild(item);
       });
@@ -1388,7 +1415,22 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
     function closeHighlightsPanel(){ hideHighlightsPanel(); closeLayer('vocab'); }
     // --panel-width 也写在 .ir-body 上：821–900px 的题目栏（正文的兄弟元素）要按它让位
     function updatePanelWidth(){ const panel=document.getElementById('highlightsPanel'); const content=document.getElementById('vContent'); if(panel && content){ panel.style.width = panelWidth + 'px'; content.style.setProperty('--panel-width', panelWidth + 'px'); content.parentNode.style.setProperty('--panel-width', panelWidth + 'px'); } }
-    function scrollToHighlight(hid){ try{ const container=document.getElementById('vContent'); const mark=container.querySelector(`mark.hl[data-hid="${hid}"]`); if(mark){ mark.scrollIntoView({behavior:'smooth', block:'center'}); mark.classList.add('active'); setTimeout(()=>{ mark.classList.remove('active'); }, 1200); } }catch(e){} }
+    function scrollToHighlight(hid){ try{ const container=document.getElementById('vContent'); const mark=container.querySelector(`mark.hl[data-hid="${CSS.escape(hid)}"]`); if(mark){ mark.scrollIntoView({behavior:'smooth', block:'center'}); flashMarks(container, hid); return; } scrollToExamHighlight(hid); }catch(e){} }
+    function flashMarks(root, hid){ const marks = root.querySelectorAll(`mark.hl[data-hid="${CSS.escape(hid)}"]`); marks.forEach(m => m.classList.add('active')); setTimeout(()=>{ marks.forEach(m => m.classList.remove('active')); }, 1200); }
+    // 题目里的词：把题目栏翻出来（窄屏切到「题目」，手机升起题目面板），再滚到这个词
+    function scrollToExamHighlight(hid){
+      const pane = document.getElementById('examPane');
+      const mark = pane.querySelector(`mark.hl[data-hid="${CSS.escape(hid)}"]`); if(!mark) return;
+      const qEl = mark.closest('.ir-q');
+      if(pane.classList.contains('only-wrong') && qEl && !qEl.classList.contains('is-wrong') && !qEl.classList.contains('is-blank')) setOnlyWrong(false);
+      const det = mark.closest('details'); if(det) det.open = true;
+      if(isPhone()){
+        if(qEl){ setCurrentQuestion(qEl); if(pane.classList.contains('is-full')) setQuestionsFull(false); else openQuestionsSheet(); }
+        else setQuestionsFull(true);
+      } else if(window.innerWidth <= 900) showExamTab('questions');
+      if(qEl && !isPhone()) markActiveQuestion(qEl);
+      requestAnimationFrame(() => { const r = mark.getBoundingClientRect(), pr = pane.getBoundingClientRect(); pane.scrollTop += (r.top + r.height / 2) - (pr.top + pr.height / 2); flashMarks(pane, hid); });
+    }
     // ‹ 返回：关掉阅读页。文章那条历史是我们压的就退回去（以前是再写一个空 hash，又多压一条，
     // 之后按系统返回「什么都没发生」）；是从链接直接进来的，就把网址里的 #article- 去掉
     function closeViewer(){
@@ -1472,6 +1514,62 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       });
     }
 
+    // 原文和题目栏之间的分割条（桌面 >900px）：拖动改题目栏宽度，记在本机；双击恢复默认；聚焦后 ← → 每次 24px
+    const EXAM_W_KEY = 'intensiveExamWidth';
+    let examWidth = null;   // 题目栏宽度（px），null = 默认 min(46%, 540px)
+    function clampExamWidth(w){
+      const total = document.querySelector('#viewer .ir-body').clientWidth;
+      if(!total) return Math.round(w);   // 阅读页还没打开，量不出来；打开文章时（enterReader）再算一次
+      return Math.round(Math.max(320, Math.min(Math.max(320, total - 400), w)));   // 原文至少留 400px，题目栏至少 320px
+    }
+    function applyExamWidth(){
+      const body = document.querySelector('#viewer .ir-body'), split = document.getElementById('examSplit');
+      if(examWidth == null) body.style.removeProperty('--exam-w'); else body.style.setProperty('--exam-w', clampExamWidth(examWidth) + 'px');
+      const pane = document.getElementById('examPane');
+      if(pane.offsetWidth) split.setAttribute('aria-valuenow', String(Math.round(pane.offsetWidth / body.clientWidth * 100)));
+    }
+    function initExamSplit(){
+      const split = document.getElementById('examSplit'), body = document.querySelector('#viewer .ir-body');
+      try{ const v = parseInt(localStorage.getItem(EXAM_W_KEY), 10); if(v > 0) examWidth = v; }catch(e){}
+      split.setAttribute('aria-valuemin', '0'); split.setAttribute('aria-valuemax', '100');
+      applyExamWidth();
+      const save = () => { try{ if(examWidth == null) localStorage.removeItem(EXAM_W_KEY); else localStorage.setItem(EXAM_W_KEY, String(examWidth)); }catch(e){} };
+      let dragging = null;   // { id, frame }
+      split.addEventListener('pointerdown', function(e){
+        if(e.button !== 0 || isPhone()) return;
+        e.preventDefault();
+        cancelFloat();
+        dragging = { id: e.pointerId, frame: 0 };
+        try{ split.setPointerCapture(e.pointerId); }catch(err){}
+        split.classList.add('is-dragging'); document.body.classList.add('ir-splitting');
+      });
+      split.addEventListener('pointermove', function(e){
+        if(!dragging || e.pointerId !== dragging.id) return;
+        const x = e.clientX;
+        cancelAnimationFrame(dragging.frame);
+        dragging.frame = requestAnimationFrame(() => { examWidth = clampExamWidth(body.getBoundingClientRect().right - x); applyExamWidth(); });
+      });
+      const end = function(e){
+        if(!dragging || e.pointerId !== dragging.id) return;
+        cancelAnimationFrame(dragging.frame);
+        if(e.type === 'pointerup'){ examWidth = clampExamWidth(body.getBoundingClientRect().right - e.clientX); applyExamWidth(); }
+        dragging = null;
+        split.classList.remove('is-dragging'); document.body.classList.remove('ir-splitting');
+        save();
+      };
+      split.addEventListener('pointerup', end);
+      split.addEventListener('pointercancel', end);
+      split.addEventListener('dblclick', function(){ examWidth = null; applyExamWidth(); save(); });
+      split.addEventListener('keydown', function(e){
+        if(e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+        e.preventDefault();
+        const cur = document.getElementById('examPane').offsetWidth;
+        examWidth = clampExamWidth(cur + (e.key === 'ArrowLeft' ? 24 : -24)); applyExamWidth(); save();
+      });
+      // 窗口变窄时题目栏跟着收，原文不会被挤没
+      window.addEventListener('resize', applyExamWidth);
+    }
+
     // 文本选择与悬浮操作
     // 只在页面初始化时绑定一次：#vContent 一直是同一个元素，换文章只换里面的内容。
     // 每打开一篇就再绑一个的话，旧监听会拿上一篇文章的原文去算，算不出来就把选区清掉，当前文章就划不出词。
@@ -1483,7 +1581,10 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       floatPressed = !!(e.target.closest && e.target.closest('.floating'));
     }, true);
     function bindSelection(container){
-      container.addEventListener('mouseup', function(){ if(lastPointerType === 'mouse') handleReaderSelection(container); });
+      const pane = document.getElementById('examPane');
+      // 写释义的框开着时别处的点击不算重新划词（不然选区被清掉，「保存」就没东西可存）
+      container.addEventListener('mouseup', function(){ if(lastPointerType === 'mouse' && !isVisible('meaningBox')) handleReaderSelection(container); });
+      pane.addEventListener('mouseup', function(){ if(lastPointerType === 'mouse' && !isVisible('meaningBox')) handleExamSelection(); });
       let timer = null;
       document.addEventListener('selectionchange', function(){
         if(lastPointerType === 'mouse') return;
@@ -1496,8 +1597,9 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
             if(isVisible('floatBox') && !floatPressed) cancelFloat();
             return;
           }
-          if(!container.contains(sel.getRangeAt(0).commonAncestorContainer)) return;
-          handleReaderSelection(container, true);
+          const anc = sel.getRangeAt(0).commonAncestorContainer;
+          if(container.contains(anc)) handleReaderSelection(container, true);
+          else if(pane.contains(anc)) handleExamSelection(true);
         }, 350);
       });
     }
@@ -1537,6 +1639,38 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
         selectionRange = { start, end, text, isDuplicate };
         lastSelectionRect = range.getBoundingClientRect();
         showFloatAtRect(lastSelectionRect, false, isDuplicate);
+    }
+
+    // 题目栏里划词：只能在同一段题目文字（题干、一个选项、原题版式）里划，存的是这段文字里的下标
+    function handleExamSelection(soft){
+      const fail = soft ? hideFloat : cancelFloat;
+      const pane = document.getElementById('examPane');
+      const sel = window.getSelection(); if(!currentArticle || !currentArticle.exam || !sel || sel.isCollapsed || !sel.rangeCount){ fail(); return; }
+      const range = sel.getRangeAt(0); if(!pane.contains(range.commonAncestorContainer)){ fail(); return; }
+      const hits = [];
+      pane.querySelectorAll('[data-hk]').forEach(b => { if(range.intersectsNode(b)){ const c = hkSelection(b, range); if(c) hits.push({ b, c }); } });
+      if(!hits.length){ fail(); return; }
+      const mark = hits.map(x => x.c.mark).find(Boolean);
+      if(mark){
+        const hid = mark.getAttribute('data-hid');
+        selectionRange = { existingHighlight: hid, text: ((highlights||[]).find(h => h.id === hid) || {}).text || '' };
+        lastSelectionRect = range.getBoundingClientRect();
+        showFloatAtRect(lastSelectionRect, true);
+        return;
+      }
+      if(hits.length > 1){ showTempTooltip('请在同一句题目里划', range.getBoundingClientRect()); fail(); return; }
+      const { b, c } = hits[0];
+      const whole = hkText(b);
+      let start = c.start, end = c.end;
+      while(start < end && /\s/.test(whole[start])) start++;
+      while(end > start && /\s/.test(whole[end-1])) end--;
+      if(end <= start){ fail(); return; }
+      const text = whole.slice(start, end);
+      if(/\n/.test(text)){ showTempTooltip('请在同一句题目里划', range.getBoundingClientRect()); fail(); return; }
+      const isDuplicate = (highlights||[]).some(h => h.text && h.text.toLowerCase() === text.toLowerCase());
+      selectionRange = { qk: b.dataset.hk, start, end, text, isDuplicate };
+      lastSelectionRect = range.getBoundingClientRect();
+      showFloatAtRect(lastSelectionRect, false, isDuplicate);
     }
 
     function showFloatAtRect(rect, isExisting = false, isDuplicate = false){
@@ -1603,9 +1737,9 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
     function hideMeaning(){ document.getElementById('meaningBox').style.display='none'; cancelFloat(); }
     function cancelMeaning(){ hideMeaning(); closeLayer('meaning'); }
     function playSelectedWord(){ const w = selectionRange && selectionRange.text; if(w && window.playWordPronunciation && currentArticle) window.playWordPronunciation(w.trim(), currentArticle.id); }
-    function saveMeaning(){ const meaning=document.getElementById('meaningInput').value.trim(); if(!meaning){ alert('请先写下释义'); return; } const selTxt=(selectionRange&&selectionRange.text)?selectionRange.text:''; const body={ id: currentArticle.id, start: selectionRange.start, end: selectionRange.end, meaning, text: selTxt }; fetch('/intensive_add_highlight',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)}).then(r=>r.json()).then(d=>{ if(d.success){ const list=document.getElementById('vContent'); // 防重复：先清理并重绘
+    function saveMeaning(){ const meaning=document.getElementById('meaningInput').value.trim(); if(!meaning){ alert('请先写下释义'); return; } const selTxt=(selectionRange&&selectionRange.text)?selectionRange.text:''; const body={ id: currentArticle.id, start: selectionRange.start, end: selectionRange.end, meaning, text: selTxt }; if(selectionRange.qk) body.qk = selectionRange.qk; fetch('/intensive_add_highlight',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)}).then(r=>r.json()).then(d=>{ if(d.success){ const list=document.getElementById('vContent'); // 防重复：先清理并重绘
         restoreHighlights(list, {highlights: (function(){ const idx = (highlights||[]).findIndex(h=>h.id===d.highlight.id); if(idx>=0){ highlights[idx]=d.highlight; } else { // 若存在相同范围，替换
-            const sameIdx=(highlights||[]).findIndex(h=>h.start===d.highlight.start && h.end===d.highlight.end);
+            const sameIdx=(highlights||[]).findIndex(h=>hlKey(h)===hlKey(d.highlight));
             if(sameIdx>=0) highlights[sameIdx]=d.highlight; else highlights.push(d.highlight);
         } return highlights; })(), content_text: currentArticle.content_text}); cancelMeaning(); if(document.getElementById('highlightsPanel').classList.contains('active')) renderHighlightsPanel(); } else { alert(d.error||'保存失败'); } }); }
 
@@ -1640,7 +1774,9 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
     // 滚动/窗口变化时保持浮动框跟随选区
     function repositionFloating(){ if(!selectionRange || !currentArticle || (!isVisible('floatBox') && !isVisible('meaningBox'))) return; const rect = computeRectFromSelectionRange(); if(!rect) return; lastSelectionRect = rect; if(isVisible('floatBox')) positionBoxAtRect(document.getElementById('floatBox'), rect); if(isVisible('meaningBox')) positionBoxAtRect(document.getElementById('meaningBox'), rect); }
     function isVisible(id){ const el=document.getElementById(id); return el && el.style.display!== 'none'; }
-    function computeRectFromSelectionRange(){ try{ const reader=document.querySelector('#vContent .reader'); if(!reader || selectionRange.start==null) return null; const r=originalToDomRange(reader, selectionRange.start, selectionRange.end); return r ? r.getBoundingClientRect() : null; }catch(e){ return null; } }
+    function computeRectFromSelectionRange(){ try{ if(selectionRange.start==null) return null;
+      if(selectionRange.qk){ const b = hkBlock(selectionRange.qk); const r = b && hkDomRange(b, selectionRange.start, selectionRange.end); return r ? r.getBoundingClientRect() : null; }
+      const reader=document.querySelector('#vContent .reader'); if(!reader) return null; const r=originalToDomRange(reader, selectionRange.start, selectionRange.end); return r ? r.getBoundingClientRect() : null; }catch(e){ return null; } }
     window.addEventListener('scroll', function(){ repositionFloating(); }, true);
     window.addEventListener('resize', function(){ repositionFloating(); });
     
@@ -1658,15 +1794,13 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
 
     function restoreHighlights(container, art){ // 去重并清理已存在的 mark（释义气泡一起删掉，否则会作为孤儿节点留在段落里）
       container.querySelectorAll('mark.hl').forEach(function(n){ const p=n.parentNode; if(!p) return; n.querySelectorAll('.tooltip').forEach(t=>t.remove()); while(n.firstChild) p.insertBefore(n.firstChild, n); p.removeChild(n); p.normalize(); });
-      const uniq=[]; (art.highlights||[]).forEach(function(h){ const key=h.start+'-'+h.end; if(!uniq.some(x=>x.start===h.start&&x.end===h.end)){ uniq.push(h); } });
-      uniq.sort((a,b)=>a.start-b.start).forEach(h=>{ applyOneHighlight(container, h); }); updateVocabCount(); paintExamMarks(); }
+      const uniq=[]; (art.highlights||[]).forEach(function(h){ if(h.qk) return; if(!uniq.some(x=>x.start===h.start&&x.end===h.end)){ uniq.push(h); } });
+      uniq.sort((a,b)=>a.start-b.start).forEach(h=>{ applyOneHighlight(container, h); }); paintExamHighlights(art.highlights||[]); updateVocabCount(); paintExamMarks(); }
     function applyOneHighlight(container, h){ try{ const reader=container.querySelector('.reader'); if(!reader || !(h.end > h.start)) return; // 已存在则跳过
       if(container.querySelector(`mark.hl[data-hid="${h.id}"]`)) return; wrapOriginalRange(reader, h.start, h.end, h); }catch(e){} }
     function deleteHighlight(hid){ if(!currentArticle) return; fetch('/intensive_delete_highlight',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id: currentArticle.id, highlight_id: hid})}).then(r=>r.json()).then(d=>{ if(d.success){
-          // 手机：只把这一个高亮从页面上拿掉，不整篇重载（不然播放条、题目面板、读到的位置都会被重置）
-          if(isPhone()){ highlights = (highlights||[]).filter(h => h.id !== hid); restoreHighlights(document.getElementById('vContent'), { highlights, content_text: currentArticle.content_text }); if(document.getElementById('highlightsPanel').classList.contains('active')) renderHighlightsPanel(); return; }
-          // 重新加载文章以刷新 DOM
-          openArticle(currentArticle.id);
+          // 只把这一个高亮从页面上拿掉，不整篇重载（不然播放条、题目栏滚到的位置、读到的位置都会被重置）
+          highlights = (highlights||[]).filter(h => h.id !== hid); restoreHighlights(document.getElementById('vContent'), { highlights, content_text: currentArticle.content_text }); if(document.getElementById('highlightsPanel').classList.contains('active')) renderHighlightsPanel();
         } else { alert(d.error||'删除失败'); } }); }
 
     function escapeHtml(s){ return (s||'').replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c])); }
@@ -1708,35 +1842,38 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       h += `</div><div class="ir-exam-tools">`;
       if(a) h += `<button class="ir-icon-btn" data-act="only-wrong">只看错题${missed ? ' ' + missed : ''}</button>`;
       h += `<button class="ir-icon-btn is-on" data-act="answers" title="隐藏答案可以重新做一遍">答案</button></div></div>`;
-      (exam.groups || []).forEach(g => { h += groupHtml(g); });
+      (exam.groups || []).forEach((g, gi) => { h += groupHtml(g, gi); });
       h += `<div class="ir-exam-empty">这一篇没有错题</div>`;
       return h + `<div class="ir-qs-nav"><button type="button" data-act="qs-prev">‹ 上一题</button><button type="button" data-act="qs-locate">定位</button><button type="button" data-act="qs-analysis">解析</button><button type="button" data-act="qs-next">下一题 ›</button></div>`;
     }
-    function groupHtml(g){
+    // 能划词的题目文字都带 data-hk（块名），和 routers/intensive_reading.py 的 _exam_text_blocks 一一对应
+    const hkAttr = key => ` data-hk="${escapeHtml(key)}"`;
+    function groupHtml(g, gi){
       let h = `<section class="ir-group">`;
       if(g.range) h += `<h3 class="ir-group-range">${escapeHtml(g.range.replace(/(\d)\s*-\s*(\d)/, '$1–$2'))}</h3>`;
       if(g.instruction_html) h += `<div class="ir-group-inst">${g.instruction_html}</div>`;
       if(g.image) h += `<img class="ir-group-img" src="${escapeHtml(g.image)}" alt="" loading="lazy">`;
-      if((g.options || []).length) h += `<ul class="ir-gopts">` + g.options.map(o => `<li><b>${escapeHtml(o.key)}</b> ${escapeHtml(o.text)}${o.zh ? `<div class="ir-q-zh">${escapeHtml(o.zh)}</div>` : ''}</li>`).join('') + `</ul>`;
+      if((g.options || []).length) h += `<ul class="ir-gopts">` + g.options.map(o => `<li><b>${escapeHtml(o.key)}</b> ${o.text ? `<span${hkAttr(`g${gi}.o${o.key}`)}>${escapeHtml(o.text)}</span>` : ''}${o.zh ? `<div class="ir-q-zh">${escapeHtml(o.zh)}</div>` : ''}</li>`).join('') + `</ul>`;
       // 原题版式（表格 / 笔记 / 摘要）：每题都取到了像样的题干就先收起，不然展开
       if(g.content_html){
         const stemsOk = (g.questions || []).every(q => (q.text || '').replace(/_+/g, '').trim().length > 6);
-        h += `<details class="ir-layout"${stemsOk ? '' : ' open'}><summary>原题版式</summary><div class="ir-layout-body">${g.content_html}</div></details>`;
+        h += `<details class="ir-layout"${stemsOk ? '' : ' open'}><summary>原题版式</summary><div class="ir-layout-body"${hkAttr(`g${gi}.layout`)}>${g.content_html}</div></details>`;
       }
-      (g.questions || []).forEach(q => { h += questionHtml(g, q); });
+      (g.questions || []).forEach(q => { h += questionHtml(g, q, gi); });
       return h + `</section>`;
     }
-    function questionHtml(g, q){
+    function questionHtml(g, q, gi){
       const cls = { right: ' is-right', wrong: ' is-wrong', blank: ' is-blank' }[q.state] || '';
       const answers = (q.answer || '').split('|').map(x => x.trim()).filter(Boolean);
       let h = `<div class="ir-q${cls}" data-num="${escapeHtml(q.num)}" data-kind="${escapeHtml(g.kind || '')}"><span class="ir-q-num">${escapeHtml(q.num)}</span>`;
-      if(q.text) h += `<div class="ir-q-text">${escapeHtml(q.text)}</div>`;
+      if(q.text) h += `<div class="ir-q-text"${hkAttr(`g${gi}.q${q.num}`)}>${escapeHtml(q.text)}</div>`;
       if(q.zh) h += `<div class="ir-q-zh">${escapeHtml(q.zh)}</div>`;
       if((q.options || []).length){
         const list = g.kind === 'choice';
         h += `<ul class="ir-opts${list ? ' is-list' : ''}">` + q.options.map(o => {
           const c = (answers.includes(o.key) ? ' is-answer' : '') + (q.user_answer && q.user_answer === o.key ? ' is-mine' : '');
-          const body = list ? `<b>${escapeHtml(o.key)}</b><span>${escapeHtml(o.text)}${o.zh ? `<span class="ir-q-zh">${escapeHtml(o.zh)}</span>` : ''}</span>` : escapeHtml(o.text || o.key);
+          const txt = o.text ? `<span${hkAttr(`g${gi}.q${q.num}.${o.key}`)}>${escapeHtml(o.text)}</span>` : '';
+          const body = list ? `<b>${escapeHtml(o.key)}</b><span>${txt}${o.zh ? `<span class="ir-q-zh">${escapeHtml(o.zh)}</span>` : ''}</span>` : (txt || escapeHtml(o.key));
           return `<li class="ir-opt${c}">${body}</li>`;
         }).join('') + `</ul>`;
         if(q.state === 'blank') h += `<div class="ir-ans"><span class="mine">没有作答</span></div>`;
@@ -1935,6 +2072,44 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       if(ranges.length) CSS.highlights.set('jiufen', new Highlight(...ranges));
     }
 
+    // ===== 题目栏里的高亮：每段题目文字（data-hk）各自从 0 数下标 =====
+    function hkBlock(qk){ return document.querySelector(`#examPane [data-hk="${CSS.escape(qk)}"]`); }
+    function examBlockOrder(){ const m = new Map(); document.querySelectorAll('#examPane [data-hk]').forEach((b, i) => m.set(b.dataset.hk, i)); return m; }
+    function qkLabel(qk){ const m = /^g\d+\.q([^.]+)/.exec(qk); return m ? `第 ${m[1]} 题` : '题目'; }
+    // 一段题目文字里算下标的文本节点：跳过释义气泡和夹在里面的中文译文
+    function hkTextNodes(b){ const out=[]; const walker=document.createTreeWalker(b, NodeFilter.SHOW_TEXT, { acceptNode: n => n.parentNode.closest('.tooltip, .ir-q-zh') && b.contains(n.parentNode.closest('.tooltip, .ir-q-zh')) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT }); let n; while(n=walker.nextNode()) out.push(n); return out; }
+    function hkText(b){ return hkTextNodes(b).map(n => n.nodeValue).join(''); }
+    // 选区在这段文字里真正覆盖到的字符 -> {start, end, mark}，和正文的 selectionToOriginal 一个算法
+    function hkSelection(b, range){
+      let start=null, end=null, mark=null, o=0;
+      hkTextNodes(b).forEach(function(n){
+        const s = n === range.startContainer ? range.startOffset : 0;
+        const e = n === range.endContainer ? range.endOffset : n.length;
+        if(range.intersectsNode(n) && e > s){ if(start === null) start = o + s; end = o + e; if(!mark) mark = n.parentNode.closest('mark.hl'); }
+        o += n.length;
+      });
+      return start === null ? null : { start, end, mark };
+    }
+    // 下标 -> 每个文本节点里的一段 [{node, s, e}]（原题版式里一个词可能跨 <b> 之类的标签）
+    function hkPieces(b, start, end){ const out=[]; let o=0; hkTextNodes(b).forEach(n => { const s = Math.max(start, o), e = Math.min(end, o + n.length); if(e > s) out.push({ node: n, s: s - o, e: e - o }); o += n.length; }); return out; }
+    function hkDomRange(b, start, end){ const ps = hkPieces(b, start, end); if(!ps.length) return null; const r=document.createRange(); r.setStart(ps[0].node, ps[0].s); const last = ps[ps.length-1]; r.setEnd(last.node, last.e); return r; }
+    function paintExamHighlights(list){
+      const pane = document.getElementById('examPane');
+      pane.querySelectorAll('mark.hl').forEach(function(n){ const p=n.parentNode; if(!p) return; n.querySelectorAll('.tooltip').forEach(t=>t.remove()); while(n.firstChild) p.insertBefore(n.firstChild, n); p.removeChild(n); p.normalize(); });
+      if(!currentArticle || !currentArticle.exam) return;
+      const seen = new Set();
+      list.filter(h => h.qk && h.end > h.start).forEach(h => {
+        if(seen.has(hlKey(h))) return; seen.add(hlKey(h));
+        const b = hkBlock(h.qk); if(!b) return;
+        const pieces = hkPieces(b, h.start, h.end);
+        // 存下的词和这段文字对不上（题目改过）就不画，词汇表里照样有
+        if(!pieces.length || (h.text && pieces.map(p => p.node.nodeValue.slice(p.s, p.e)).join('').trim() !== h.text)) return;
+        const marks = pieces.reverse().map(p => { const r = document.createRange(); r.setStart(p.node, p.s); r.setEnd(p.node, p.e); const m = document.createElement('mark'); m.className = 'hl'; m.setAttribute('data-hid', h.id); r.surroundContents(m); return m; }).reverse();
+        const tip = document.createElement('span'); tip.className = 'tooltip'; tip.textContent = h.meaning || ''; marks[marks.length-1].appendChild(tip);
+        marks.forEach(m => bindMark(m, h, tip));
+      });
+    }
+
     // ===== 原文下标 <-> 页面位置 =====
     // 正文按 content_text 的行渲染：每个非空行一个 <p data-o>，data-o 是这一行在 content_text 里的起始下标，
     // 所以页面上任意位置都能精确换算成原文下标（行起点 + 行内偏移）。以前是把页面文字和原文逐字符模糊对齐，
@@ -2015,18 +2190,21 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
       return null;
     }
     function originalToDomRange(reader, start, end){ const s=originalToDomPoint(reader, start, false), e=originalToDomPoint(reader, end, true); if(!s || !e) return null; const r=document.createRange(); r.setStart(s.node, s.offset); r.setEnd(e.node, e.offset); return r; }
-    function wrapOriginalRange(reader, start, end, meta){ const r=originalToDomRange(reader, start, end); if(!r || r.collapsed) return; const mark=document.createElement('mark'); mark.className='hl'; mark.setAttribute('data-hid', meta.id); const tip=document.createElement('span'); tip.className='tooltip'; tip.textContent=meta.meaning||''; r.surroundContents(mark); mark.appendChild(tip);
-      mark.addEventListener('mouseenter', function(){ fitTip(mark); });
+    function wrapOriginalRange(reader, start, end, meta){ const r=originalToDomRange(reader, start, end); if(!r || r.collapsed) return; const mark=document.createElement('mark'); mark.className='hl'; mark.setAttribute('data-hid', meta.id); const tip=document.createElement('span'); tip.className='tooltip'; tip.textContent=meta.meaning||''; r.surroundContents(mark); mark.appendChild(tip); bindMark(mark, meta, tip); }
+    // 高亮上的交互（正文、题目栏一样）：桌面悬停看释义、右键删除；手机点开单词卡；点一下都会读出来
+    function bindMark(mark, meta, tip){
+      const tipMark = tip.parentNode;
+      mark.addEventListener('mouseenter', function(){ fitTip(tipMark); });
       // 手机长按是在选词，安卓还会顺带触发 contextmenu，这时不能弹删除确认
       mark.addEventListener('contextmenu', function(ev){ if(lastPointerType !== 'mouse') return; ev.preventDefault(); if(confirm('删除该高亮/笔记？')){ deleteHighlight(meta.id); } });
       mark.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation();
         // 手机：底部弹出单词卡（释义、发音、删除）；平板等触屏宽屏：点一下显示释义气泡，再点一下收起
         if(isPhone()){ openWordCard(meta.id); }
-        else if(lastPointerType !== 'mouse'){ document.querySelectorAll('#vContent mark.hl.tip-on').forEach(m => { if(m !== mark) m.classList.remove('tip-on'); }); fitTip(mark); mark.classList.toggle('tip-on'); }
+        else if(lastPointerType !== 'mouse'){ document.querySelectorAll('mark.hl.tip-on').forEach(m => { if(m !== tipMark) m.classList.remove('tip-on'); }); fitTip(tipMark); tipMark.classList.toggle('tip-on'); }
         const word = meta.text || mark.textContent.replace(tip.textContent, '').trim(); if(word && window.playWordPronunciation){ window.playWordPronunciation(word, currentArticle?.id); } }); }
     // 释义气泡默认在高亮正上方居中；靠近正文左右边缘时往里挪，上方被顶栏挡住时翻到下面
     function fitTip(mark){
-      const tip = mark.querySelector('.tooltip'); const box = document.getElementById('vContent');
+      const tip = mark.querySelector('.tooltip'); const box = mark.closest('#vContent, #examPane');
       if(!tip || !tip.textContent || !box) return;
       mark.style.setProperty('--tip-dx', '0px'); mark.classList.remove('tip-below');
       const prev = tip.style.display; tip.style.display = 'block';

@@ -143,17 +143,17 @@ async function summary(eng, browser) {
   await p.fill('#vocabSearch', '');
   check(`${tag} 清空搜索回到 9 个`, (await p.locator('.vs-word').count()) === 9);
 
-  // ---- 发音：先放精读划词时生成的，再试有道，都不行才提示；不再请求付费 TTS ----
+  // ---- 发音：和单词本一样先试有道，再放精读以前划词时生成的，都不行才提示；不再请求付费 TTS ----
   audio.length = 0;
   await p.locator('.vs-word', { hasText: 'treacherous' }).click();
   check(`${tag} 两个来源都不行时提示`, await toastSeen(p, '没取到「treacherous」的发音'));
   const sources = [...new Set(audio)];   // WebKit 会对同一个音频地址发好几次分段请求
-  check(`${tag} 先取精读里存好的发音`, (sources[0] || '').includes(`/vocab_audio/${DATA.LIGHTHOUSE}/treacherous`), sources);
-  check(`${tag} 再取有道的`, sources.length === 2 && sources[1].startsWith('https://dict.youdao.com/dictvoice?audio=treacherous'), sources);
+  check(`${tag} 先取有道的`, (sources[0] || '').startsWith('https://dict.youdao.com/dictvoice?audio=treacherous'), sources);
+  check(`${tag} 再取精读里以前存过的发音`, sources.length === 2 && sources[1].includes(`/vocab_audio/${DATA.LIGHTHOUSE}/treacherous`), sources);
   audio.length = 0;
   await p.locator('.vs-word', { hasText: "one's post" }).locator('.vs-play').click();
   check(`${tag} 带撇号的词也能点发音`, await toastSeen(p, "没取到「one's post」的发音"));
-  check(`${tag} 带撇号的词请求的地址对`, decodeURIComponent(audio[0] || '').includes("/one's post"), audio);
+  check(`${tag} 带撇号的词请求的地址对`, decodeURIComponent(audio[0] || '').includes("audio=one's post&") && audio.some(u => decodeURIComponent(u).includes("/one's post")), audio);
 
   // ---- 连点两篇：只认最后一篇 ----
   await p.route(`**/intensive_article/${DATA.FERRY}`, async r => { await sleep(1200); r.continue(); });

@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, send_file, send_from_directory
-import os, json, re, uuid, shutil, time, requests
+import os, json, re, uuid, shutil, time, requests, html
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from pydub import AudioSegment
@@ -9,9 +9,9 @@ from concurrent.futures import ThreadPoolExecutor
 from core import (
     INTENSIVE_DIR, INTENSIVE_IMAGES_DIR, VOCAB_AUDIO_DIR,
     generate_tts, generate_token, get_vocab_audio_path,
-    generate_and_save_vocab_audio, delete_vocab_audio,
+    delete_vocab_audio,
     delete_article_vocab_audio, delete_article_audio_files,
-    generate_vocab_audio_async, is_safe_path_segment,
+    is_safe_path_segment,
     load_prompt, call_gemini_llm
 )
 from utils import jiufen_import
@@ -36,6 +36,48 @@ def _article_path(article_id: str) -> str:
     if not _valid_article_id(article_id):
         raise ValueError(f'无效的文章ID: {article_id!r}')
     return os.path.join(INTENSIVE_DIR, f"{article_id}.json")
+
+def _utf16_len(text):
+    return len(text.encode('utf-16-le')) // 2
+
+
+def _exam_text_blocks(exam):
+    """题目栏里能划词的每一段文字：{块名: (文字, 是不是 HTML)}。块名和页面上的 data-hk 一一对应：
+    g<组>.q<题号> 题干、g<组>.q<题号>.<选项> 选择题选项、g<组>.o<选项> 题组公共选项、g<组>.layout 原题版式"""
+    blocks = {}
+    for gi, g in enumerate((exam or {}).get('groups') or []):
+        if not isinstance(g, dict):
+            continue
+        for o in g.get('options') or []:
+            if isinstance(o, dict) and o.get('text'):
+                blocks[f"g{gi}.o{o.get('key')}"] = (o['text'], False)
+        if g.get('content_html'):
+            blocks[f"g{gi}.layout"] = (g['content_html'], True)
+        for q in g.get('questions') or []:
+            if not isinstance(q, dict):
+                continue
+            if q.get('text'):
+                blocks[f"g{gi}.q{q.get('num')}"] = (q['text'], False)
+            for o in q.get('options') or []:
+                if isinstance(o, dict) and o.get('text'):
+                    blocks[f"g{gi}.q{q.get('num')}.{o.get('key')}"] = (o['text'], False)
+    return blocks
+
+
+def _question_range_ok(exam, qk, start, end, text):
+    """题目里的高亮：块要存在，范围要在块里，存下的词要和那段文字对得上"""
+    block = _exam_text_blocks(exam).get(qk)
+    if not block or not text:
+        return False
+    body, is_html = block
+    if is_html:
+        # 原题版式是 HTML：去掉标签（和页面的 textContent 一样不补空格）再比，空白不计较
+        plain = html.unescape(re.sub(r'<[^>]*>', '', body))
+        return 0 <= start < end <= _utf16_len(plain) + 200 and ' '.join(text.split()) in ' '.join(plain.split())
+    if not (0 <= start < end <= _utf16_len(body)):
+        return False
+    return body.encode('utf-16-le')[start * 2:end * 2].decode('utf-16-le', errors='replace') == text
+
 
 def _content_html(content):
     """将简单换行转化为段落 HTML，保持只读展示友好"""
@@ -466,13 +508,18 @@ def intensive_article(article_id):
 
 @intensive_reading_bp.route('/intensive_add_highlight', methods=['POST'])
 def intensive_add_highlight():
+    """存一条高亮。正文里的按 content_text 下标存；题目栏里的多一个 qk（哪一段题目文字，见 _exam_text_blocks），
+    下标是那段文字里的。单词发音是页面点的时候去取有道词典的，这里不再生成音频。"""
     data = request.json or {}
     article_id = data.get('id')
     start = data.get('start')
     end = data.get('end')
     meaning = (data.get('meaning') or '').strip()
     sel_text = (data.get('text') or '').strip()
+    qk = data.get('qk')
     if article_id is None or start is None or end is None or not meaning:
+        return jsonify({'error': '参数不完整'}), 400
+    if qk is not None and (not isinstance(qk, str) or not qk):
         return jsonify({'error': '参数不完整'}), 400
     if not _valid_article_id(article_id):
         return jsonify({'error': '无效的文章ID'}), 400
@@ -480,17 +527,25 @@ def intensive_add_highlight():
     if not os.path.exists(path):
         return jsonify({'error': '文章不存在'}), 404
     try:
+        start, end = int(start), int(end)
+    except (TypeError, ValueError):
+        return jsonify({'error': '选择范围无效'}), 400
+    try:
         with open(path, 'r', encoding='utf-8') as f:
             obj = json.load(f)
-        # 页面按 JS 的 UTF-16 下标发 start/end；emoji 这类字符在 UTF-16 里占两个单位，
-        # 按 Python 字符数查的话，有 emoji 的文章最后几个字会被当成越界
-        text_len = len((obj.get('content_text') or '').encode('utf-16-le')) // 2
-        if not (0 <= int(start) < int(end) <= text_len):
-            return jsonify({'error': '选择范围无效'}), 400
+        if qk:
+            if not _question_range_ok(obj.get('exam'), qk, start, end, sel_text):
+                return jsonify({'error': '选择范围无效'}), 400
+        else:
+            # 页面按 JS 的 UTF-16 下标发 start/end；emoji 这类字符在 UTF-16 里占两个单位，
+            # 按 Python 字符数查的话，有 emoji 的文章最后几个字会被当成越界
+            text_len = _utf16_len(obj.get('content_text') or '')
+            if not (0 <= start < end <= text_len):
+                return jsonify({'error': '选择范围无效'}), 400
         highlights = obj.setdefault('highlights', [])
-        # 去重：如果同一范围已存在高亮，则更新释义并返回，不新增
+        # 去重：如果同一位置（正文 / 同一段题目里的同一范围）或同一个词已存在高亮，则更新释义并返回，不新增
         for existing in highlights:
-            same_range = int(existing.get('start', -1)) == int(start) and int(existing.get('end', -1)) == int(end)
+            same_range = existing.get('qk') == (qk or None) and int(existing.get('start', -1)) == start and int(existing.get('end', -1)) == end
             same_text = sel_text and sel_text == (existing.get('text') or '')
             if same_range or same_text:
                 existing['meaning'] = meaning
@@ -499,29 +554,22 @@ def intensive_add_highlight():
                     existing['text'] = sel_text
                 with open(path, 'w', encoding='utf-8') as f:
                     json.dump(obj, f, ensure_ascii=False, indent=2)
-
-                # 异步生成词汇音频
-                if sel_text:
-                    generate_vocab_audio_async(article_id, sel_text)
-
                 return jsonify({'success': True, 'highlight': existing, 'updated': True})
 
         hl_id = generate_token()
         hl = {
             'id': hl_id,
-            'start': int(start),
-            'end': int(end),
+            'start': start,
+            'end': end,
             'meaning': meaning,
             'created_at': datetime.now().isoformat(),
             'text': sel_text
         }
+        if qk:
+            hl['qk'] = qk
         highlights.append(hl)
         with open(path, 'w', encoding='utf-8') as f:
             json.dump(obj, f, ensure_ascii=False, indent=2)
-
-        # 异步生成词汇音频
-        if sel_text:
-            generate_vocab_audio_async(article_id, sel_text)
 
         return jsonify({'success': True, 'highlight': hl})
     except Exception as e:
