@@ -287,7 +287,7 @@ body.page-intensive .ir-menu select.ir-select {
   display: none; position: absolute; left: 50%; bottom: calc(100% + 8px); z-index: 20;
   width: max-content; max-width: 260px; padding: 6px 10px; border-radius: var(--w-r-sm);
   background: var(--w-tip-bg); color: var(--w-tip-ink);
-  font: 400 13px/1.5 var(--w-cn); letter-spacing: 0; white-space: normal; text-align: left;
+  font: 400 13px/1.5 var(--w-cn); letter-spacing: 0; white-space: pre-line; text-align: left;
   transform: translateX(calc(-50% + var(--tip-dx, 0px)));
   pointer-events: none; user-select: none; -webkit-user-select: none;
 }
@@ -312,12 +312,12 @@ body.page-intensive .ir-menu select.ir-select {
 .floating .ir-pop-danger:hover { background: var(--w-err-soft); color: var(--w-err); }
 .floating button:disabled { color: var(--w-ink3); background: transparent; cursor: not-allowed; }
 #meaningBox { padding: 6px; }
-body.page-intensive #meaningBox input {
-  width: 240px; height: 32px; padding: 0 10px; margin-right: 2px; vertical-align: middle;
-  border: 1px solid var(--w-line); border-radius: var(--w-r-sm);
-  background: var(--w-surface); color: var(--w-ink); font: 14px var(--w-cn); outline: none;
+body.page-intensive #meaningBox textarea {
+  display: inline-block; width: 240px; height: 32px; max-height: 140px; padding: 6px 10px; margin: 0 2px 0 0; vertical-align: middle;
+  border: 1px solid var(--w-line); border-radius: var(--w-r-sm); box-sizing: border-box; resize: none; overflow-y: auto;
+  background: var(--w-surface); color: var(--w-ink); font: 14px/18px var(--w-cn); outline: none;
 }
-body.page-intensive #meaningBox input:focus { border-color: var(--w-accent); box-shadow: var(--w-ring); }
+body.page-intensive #meaningBox textarea:focus { border-color: var(--w-accent); box-shadow: var(--w-ring); }
 .ir-toast {
   position: fixed; z-index: 1600; max-width: 280px; padding: 6px 10px; border-radius: var(--w-r-sm);
   background: var(--w-tip-bg); color: var(--w-tip-ink); font: 13px/1.5 var(--w-cn);
@@ -349,7 +349,7 @@ body.page-intensive .ir-panel-head input:focus { border-color: var(--w-accent); 
 .ir-vi-text { flex: 1; min-width: 0; }
 .ir-vi-word { font: 600 15px/1.4 var(--w-en); color: var(--w-ink); }
 .ir-vi-tag { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 4px; background: var(--w-sunken); font: 500 11px/18px var(--w-cn); color: var(--w-ink3); vertical-align: 2px; }
-.ir-vi-mean { margin-top: 2px; font-size: 13px; line-height: 1.5; color: var(--w-ink2); }
+.ir-vi-mean { margin-top: 2px; font-size: 13px; line-height: 1.5; color: var(--w-ink2); white-space: pre-line; }
 .ir-vi-actions { flex: none; display: flex; }
 .ir-vi-actions .ir-icon-btn { height: 28px; min-width: 28px; padding: 0 5px; color: var(--w-ink3); }
 .ir-vi-actions .ir-icon-btn svg { width: 16px; height: 16px; }
@@ -728,7 +728,7 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
   .ir-mb-head.ir-phone { display: flex; align-items: center; gap: 6px; min-height: 48px; }
   .ir-mb-word { flex: 1; min-width: 0; font: 600 18px/1.3 var(--w-en); color: var(--w-ink); overflow-wrap: anywhere; }
   .ir-mb-row { display: flex; align-items: center; gap: 8px; }
-  body.page-intensive #meaningBox input { flex: 1; width: auto; height: 48px; margin: 0; font-size: 16px; }
+  body.page-intensive #meaningBox textarea { flex: 1; width: auto; height: 48px; max-height: 160px; padding: 12px 10px; margin: 0; font-size: 16px; line-height: 22px; }
   #meaningBox .ir-pop-main { height: 48px; padding: 0 18px; background: var(--w-accent); color: var(--accent-contrast); font-size: 16px; }
   #meaningBox .ir-pop-cancel { display: none; }
   #meaningBox .ir-pill { padding: 0 14px; border: 1px solid var(--w-line); border-radius: 22px; color: var(--w-accent); }
@@ -741,7 +741,7 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
   #wordCard { z-index: 1480; padding-bottom: calc(10px + env(safe-area-inset-bottom)); box-shadow: 0 -8px 24px rgba(0, 0, 0, .14); }
   .ir-wc-head { display: flex; align-items: center; gap: 8px; }
   .ir-wc-word { flex: 1; min-width: 0; font: 600 20px/1.35 var(--w-en); color: var(--w-ink); overflow-wrap: anywhere; }
-  .ir-wc-mean { margin: 6px 0 12px; font: 16px/1.6 var(--w-cn); color: var(--w-ink2); overflow-wrap: anywhere; }
+  .ir-wc-mean { margin: 6px 0 12px; font: 16px/1.6 var(--w-cn); color: var(--w-ink2); overflow-wrap: anywhere; white-space: pre-line; }
   .ir-wc-mean:empty::before { content: '（没写释义）'; color: var(--w-ink3); }
   .ir-wc-actions { display: flex; gap: 8px; }
   .ir-wc-actions .ir-btn { flex: 1; justify-content: center; height: 44px; font-size: 15px; }
@@ -969,7 +969,7 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
   </div>
   <div class="floating" id="meaningBox" style="display: none;">
     <div class="ir-mb-head ir-phone"><span class="ir-mb-word" id="mbWord"></span><button type="button" class="ir-pill" onclick="playSelectedWord()" aria-label="听发音"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>发音</button><button type="button" class="ir-x" onclick="cancelMeaning()" aria-label="取消"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
-    <div class="ir-mb-row"><input id="meaningInput" type="text" placeholder="写下中文释义，回车保存" autocomplete="off" enterkeyhint="done" onkeydown="if(event.key==='Enter'){ event.preventDefault(); saveMeaning(); } else if(event.key==='Escape'){ event.preventDefault(); cancelMeaning(); }"><button class="ir-pop-main" onclick="saveMeaning()">保存</button><button class="ir-pop-cancel" onclick="cancelMeaning()">取消</button></div>
+    <div class="ir-mb-row"><textarea id="meaningInput" rows="1" placeholder="写下中文释义，回车保存" title="回车保存，Shift+回车换行" autocomplete="off" enterkeyhint="done" oninput="fitMeaningInput()" onkeydown="if(event.key==='Enter' && !event.shiftKey && !event.isComposing && event.keyCode!==229){ event.preventDefault(); saveMeaning(); } else if(event.key==='Escape'){ event.preventDefault(); cancelMeaning(); }"></textarea><button class="ir-pop-main" onclick="saveMeaning()">保存</button><button class="ir-pop-cancel" onclick="cancelMeaning()">取消</button></div>
   </div>
 
   <!-- 手机：遮罩、点高亮弹出的单词卡、列表卡片的操作面板 -->
@@ -1727,12 +1727,18 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
       floatPressed = false;
       const mBox=document.getElementById('meaningBox');
       const mInput=document.getElementById('meaningInput');
-      mInput.value='';
+      mInput.value=''; mInput.style.height='';
       document.getElementById('floatBox').style.display='none';
       mBox.style.display='block';
       if(isPhone()){ document.getElementById('mbWord').textContent = selectionRange.text || ''; openLayer('meaning', hideMeaning, false); }
       else if(lastSelectionRect){ positionBoxAtRect(mBox, lastSelectionRect); }
       mInput.focus();
+    }
+    // 释义框随内容长高（贴进来的多行释义保留换行）；桌面上按新高度重新摆位，别盖住选中的词
+    function fitMeaningInput(){
+      const el=document.getElementById('meaningInput'); el.style.height='';
+      if(el.scrollHeight > el.clientHeight) el.style.height=(el.scrollHeight + el.offsetHeight - el.clientHeight)+'px';
+      if(lastSelectionRect) positionBoxAtRect(document.getElementById('meaningBox'), lastSelectionRect);
     }
     function hideMeaning(){ document.getElementById('meaningBox').style.display='none'; cancelFloat(); }
     function cancelMeaning(){ hideMeaning(); closeLayer('meaning'); }

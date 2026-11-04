@@ -196,6 +196,30 @@ module.exports = async function suiteQuestion({ cfg, browser, engine, t, lib }) 
       await p.waitForFunction(() => (highlights || []).some(h => h.meaning === 'e2e 水手'), null, { timeout: 3000 }).catch(() => {});
       ok(await p.evaluate(() => (highlights || []).some(h => h.text === 'sailors' && h.qk === 'g2.q6.B')), 'clicking elsewhere while writing the meaning does not lose the selection');
 
+      // ---- 多行释义：贴进来的换行留着，Shift+回车再加一行，回车保存；气泡里一行一行显示 ----
+      await p.evaluate(() => { try { cancelFloat(); cancelMeaning(); } catch (e) {} });
+      await p.mouse.click(5, 450);
+      const hr = await wordBox(p, /^g2\.q7\.A$/, 'complaints');
+      await p.mouse.dblclick(hr.x, hr.y); await sleep(150);
+      await p.click('#floatBox .ir-pop-main');
+      const h1 = await p.evaluate(() => document.getElementById('meaningInput').offsetHeight);
+      await p.fill('#meaningInput', 'n. e2e 扶手\n  v. e2e 装栏杆  ');
+      await p.press('#meaningInput', 'Meta+ArrowDown'); await p.press('#meaningInput', 'Shift+Enter'); await p.keyboard.type('adj. e2e 第三行');
+      const typed = await p.evaluate(() => { const el = document.getElementById('meaningInput'); return { v: el.value, h: el.offsetHeight, open: document.getElementById('meaningBox').style.display }; });
+      ok(typed.open === 'block' && typed.v.split('\n').length === 3 && typed.h > h1 * 1.8, `meaning box keeps line breaks and grows ${JSON.stringify({ ...typed, h1 })}`);
+      await p.press('#meaningInput', 'Enter');
+      await p.waitForFunction(() => (highlights || []).some(h => h.text === 'complaints'), null, { timeout: 3000 }).catch(() => {});
+      const mlSaved = (await serverHighlights()).find(h => h.text === 'complaints');
+      ok(mlSaved && mlSaved.meaning === 'n. e2e 扶手\nv. e2e 装栏杆\nadj. e2e 第三行', `multi-line meaning saved, lines trimmed ${JSON.stringify(mlSaved && mlSaved.meaning)}`);
+      const hrBox = await wordBox(p, /^g2\.q7\.A$/, 'complaints');
+      await p.mouse.move(hrBox.x, hrBox.y); await sleep(150);
+      const mlTip = await p.evaluate(() => { const m = [...document.querySelectorAll('#examPane mark.hl')].find(m => m.firstChild.nodeValue === 'complaints'); const t = m.querySelector('.tooltip'); const cs = getComputedStyle(t); return { display: cs.display, ws: cs.whiteSpace, lines: Math.round((t.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)) / parseFloat(cs.lineHeight)) }; });
+      ok(mlTip.display === 'block' && mlTip.ws === 'pre-line' && mlTip.lines === 3, `tooltip shows the meaning on 3 lines ${JSON.stringify(mlTip)}`);
+      await p.click('#vocabToggle'); await sleep(300);
+      const mlRow = await p.evaluate(() => { const r = [...document.querySelectorAll('#hpBody .ir-vi')].find(r => /complaints/.test(r.textContent)); const m = r && r.querySelector('.ir-vi-mean'); return m ? { ws: getComputedStyle(m).whiteSpace, lines: Math.round(m.clientHeight / parseFloat(getComputedStyle(m).lineHeight)) } : null; });
+      ok(mlRow && mlRow.ws === 'pre-line' && mlRow.lines === 3, `vocab panel row shows 3 lines ${JSON.stringify(mlRow)}`);
+      await p.click('#highlightsPanel .ir-panel-head .ir-icon-btn'); await sleep(250);
+
       // ==================== 分割条 ====================
       await p.evaluate(() => { try { cancelFloat(); cancelMeaning(); } catch (e) {} });
       const geo = () => p.evaluate(() => { const s = document.getElementById('examSplit').getBoundingClientRect(), e = document.getElementById('examPane').getBoundingClientRect(), c = document.getElementById('vContent').getBoundingClientRect(), b = document.querySelector('#viewer .ir-body').getBoundingClientRect(); return { split: s.left, exam: Math.round(e.width), examLeft: e.left, content: Math.round(c.width), body: Math.round(b.width), grip: getComputedStyle(document.querySelector('.ir-split-grip')).display, stored: localStorage.getItem('intensiveExamWidth') }; });
@@ -215,7 +239,7 @@ module.exports = async function suiteQuestion({ cfg, browser, engine, t, lib }) 
       ok(mid.dragging && mid.sel === '' && Math.abs(g1.exam - (g0.exam + 200)) <= 2 && Math.abs(g1.content - (g0.content - 200)) <= 2 && Number(g1.stored) === g1.exam, `drag left 200px widens the questions ${JSON.stringify({ mid, g1 })}`);
       await p.screenshot({ path: path.join(shotDir, `${engine}-split-wide.png`) });
       // 题目里的高亮跟着换行，位置还对
-      ok(JSON.stringify((await marks()).map(m => m.text).sort()) === JSON.stringify(['engineers', 'relocate', 'reluctant', 'sailors']), 'marks survive the resize');
+      ok(JSON.stringify((await marks()).map(m => m.text).sort()) === JSON.stringify(['complaints', 'engineers', 'relocate', 'reluctant', 'sailors']), 'marks survive the resize');
       // 刷新后还记得
       await lib.settle(p); await p.reload(); await p.waitForFunction(() => currentArticle && document.querySelector('#examPane .ir-q')); await sleep(300);
       const g2 = await geo();

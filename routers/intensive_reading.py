@@ -514,7 +514,8 @@ def intensive_add_highlight():
     article_id = data.get('id')
     start = data.get('start')
     end = data.get('end')
-    meaning = (data.get('meaning') or '').strip()
+    # 释义可以有多行（贴进来的词典释义），统一成 \n，去掉每行首尾空格和多余空行
+    meaning = '\n'.join(l.strip() for l in (data.get('meaning') or '').splitlines() if l.strip())
     sel_text = (data.get('text') or '').strip()
     qk = data.get('qk')
     if article_id is None or start is None or end is None or not meaning:

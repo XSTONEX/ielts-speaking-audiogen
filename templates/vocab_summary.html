@@ -129,7 +129,7 @@
     .vs-word.is-playing { border-color: var(--w-big-line); background: var(--w-big-soft); }
     .vs-word__top { display: flex; align-items: center; gap: 8px; }
     .vs-word__en { flex: 1 1 auto; min-width: 0; font-family: var(--font-en); font-size: var(--w-fs-en); font-weight: 600; line-height: 1.4; color: var(--w-ink); overflow-wrap: anywhere; }
-    .vs-word__zh { font-size: var(--w-fs-ui); line-height: 1.6; color: var(--w-ink2); overflow-wrap: anywhere; }
+    .vs-word__zh { font-size: var(--w-fs-ui); line-height: 1.6; color: var(--w-ink2); overflow-wrap: anywhere; white-space: pre-line; }
     .vs-word__zh.is-empty { color: var(--w-ink3); }
     .vs-words > .ui-empty { grid-column: 1 / -1; border: 1px dashed var(--w-line); border-radius: var(--w-r-card); }
     .vs-ibtn {
@@ -204,13 +204,13 @@
     .vs-q__hint { font-size: var(--w-fs-meta); color: var(--w-ink3); }
     .vs-q__main { display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 40px; }
     .vs-q__word { font-family: var(--font-en); font-size: var(--w-fs-title); font-weight: 600; line-height: 1.35; color: var(--w-ink); overflow-wrap: anywhere; }
-    .vs-q__meaning { font-size: var(--w-fs-title); font-weight: 600; line-height: 1.45; color: var(--w-ink); overflow-wrap: anywhere; }
+    .vs-q__meaning { font-size: var(--w-fs-title); font-weight: 600; line-height: 1.45; color: var(--w-ink); overflow-wrap: anywhere; white-space: pre-line; }
     .vs-q .vs-ibtn { width: 32px; height: 32px; }
     .vs-opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 0 24px; }
     .vs-opt {
       min-height: 58px; padding: 10px 14px; display: flex; align-items: center; justify-content: center; gap: 8px;
       border: 1px solid var(--w-line); border-radius: var(--w-r-card); background: var(--w-surface); color: var(--w-ink);
-      font-size: var(--w-fs-ui); line-height: 1.5; text-align: center; overflow-wrap: anywhere; cursor: pointer;
+      font-size: var(--w-fs-ui); line-height: 1.5; text-align: center; overflow-wrap: anywhere; white-space: pre-line; cursor: pointer;
       transition: border-color .15s, background .15s, color .15s, opacity .15s;
     }
     .vs-opt.is-en { font-family: var(--font-en); font-size: var(--w-fs-en); }
@@ -236,7 +236,7 @@
     .vs-list__row { min-height: 46px; display: flex; align-items: center; gap: 14px; padding: 8px 14px; }
     .vs-list__row + .vs-list__row { border-top: 1px solid var(--w-line); }
     .vs-list__word { flex: 0 0 150px; min-width: 0; font-family: var(--font-en); font-size: var(--w-fs-ui); font-weight: 600; color: var(--w-ink); overflow-wrap: anywhere; }
-    .vs-list__meaning { flex: 1 1 auto; min-width: 0; font-size: var(--w-fs-ui); color: var(--w-ink2); overflow-wrap: anywhere; }
+    .vs-list__meaning { flex: 1 1 auto; min-width: 0; font-size: var(--w-fs-ui); color: var(--w-ink2); overflow-wrap: anywhere; white-space: pre-line; }
     .vs-list__pick { flex-shrink: 0; max-width: 40%; font-size: var(--w-fs-meta); color: var(--w-err); overflow-wrap: anywhere; text-align: right; }
     .vs-list__pick.is-skip { color: var(--w-ink3); }
     .vs-allright { margin: 0; padding: 18px; border: 1px solid var(--w-ok-line); border-radius: var(--w-r-inner); background: var(--w-ok-soft); color: var(--w-ok); text-align: center; font-size: var(--w-fs-ui); }
