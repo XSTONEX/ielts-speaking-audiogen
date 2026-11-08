@@ -31,7 +31,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
   <link rel="stylesheet" href="/static/theme.css?v=20261103a">
   <link rel="stylesheet" href="/static/plain.css?v=20261103a">
-  <link rel="stylesheet" href="/static/listening.css?v=20261103a">
+  <link rel="stylesheet" href="/static/listening.css?v=20261108a">
   <script src="/static/theme.js?v=20261103a"></script>
   <script src="/static/api-client.js?v=20260919" defer></script>
   <script src="/static/auth.js?v=20260927" defer></script>
@@ -96,6 +96,7 @@
       <div class="ui-head__tools">
         <div id="modeSeg" class="ui-seg lr-mode" role="group" aria-label="答案" hidden>
           <button class="ui-seg__btn mode-btn is-on" type="button" data-mode="answers" aria-pressed="true">显示答案</button>
+          <button class="ui-seg__btn mode-btn" type="button" data-mode="flag" aria-pressed="false" title="只看题目，不显示答案；上次做错、没答的题框出来">标出错题</button>
           <button class="ui-seg__btn mode-btn" type="button" data-mode="redo" aria-pressed="false" title="隐藏答案，空格留空，可以重新做一遍">重做</button>
         </div>
         <button id="scriptBtn" class="ui-btn ui-btn--md" type="button" aria-pressed="false" onclick="toggleScript()" hidden>
@@ -132,14 +133,16 @@
         </section>
         <!-- 手机：从题目跳到原文看出处时，页签条下面挂着这道题 -->
         <div id="qChip" class="lr-qchip" role="group" aria-label="正在看的题" hidden></div>
-        <!-- 重做、原文隐藏时：题目搬到这里，像一张卷子 -->
+        <!-- 重做 / 标出错题、原文隐藏时：题目搬到这里，像一张卷子 -->
         <section id="paperPane" class="lr-paper" aria-label="题目" hidden>
           <div class="lr-paper__bar">
             <svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8s2.2-4.5 6-4.5S14 8 14 8s-2.2 4.5-6 4.5S2 8 2 8z"/><circle cx="8" cy="8" r="1.8"/><path d="M2.5 13.5 13.5 2.5"/></svg>
             <span class="lr-paper__msg">原文已隐藏：只听音频做题，交卷后再对着原文复盘。</span>
+            <span id="paperFlag" class="lr-paper__flag"></span>
             <span id="paperProg" class="lr-paper__prog ui-num"></span>
             <span class="lr-spacer"></span>
             <button class="lr-linkbtn lr-paper__script" type="button" onclick="toggleScript(true)">显示原文</button>
+            <span id="paperJump" class="lr-paper__jump" role="group" aria-label="错的题，点一题跳过去"></span>
             <button class="ui-btn ui-btn--sm lr-paper__card lr-ponly" type="button" onclick="setPtab('side')">答题卡</button>
             <button class="ui-btn ui-btn--sm ui-btn--primary lr-paper__submit" type="button" onclick="openSubmitDialog()">交卷</button>
           </div>
@@ -170,6 +173,19 @@
             </div>
             <p class="lr-sheet__note">交卷后才判分。你当时在九分学长上划的黄色关键词，重做时不显示。</p>
           </section>
+          <!-- 标出错题时顶上换成这张：错几题、那次答对几题、题号总览；做题记录和打卡 / 标熟从「本篇」卡搬过来 -->
+          <section id="flagCard" class="lr-side__card lr-flagcard" aria-label="标出错题" hidden>
+            <div class="lr-row"><h2 class="lr-side__title">标出错题</h2><span id="flagNth" class="ui-tag"></span><span class="lr-spacer"></span>
+              <button class="lr-icon lr-side__close" type="button" aria-label="收起" onclick="toggleSide(false)"><svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+            </div>
+            <div class="lr-flagcard__nums">
+              <div><div id="flagCount" class="lr-side__num ui-num">0</div><div class="lr-side__numlabel">错题（含没答）</div></div>
+              <div><div id="flagScore" class="lr-side__num ui-num">—</div><div class="lr-side__numlabel">那次答对</div></div>
+            </div>
+            <div id="flagMap" class="lr-qmap lr-sheet__map" role="group" aria-label="题号，点一题跳到那道题" hidden></div>
+            <div id="flagAttSlot"></div>
+            <div id="flagBtnSlot"></div>
+          </section>
           <section id="sideInfoCard" class="lr-side__card">
             <div class="lr-row"><h2 class="lr-side__title">本篇</h2><span class="lr-spacer"></span><span id="sideUploaded" class="lr-meta"></span>
               <button class="lr-icon lr-side__close" type="button" aria-label="收起本篇栏" onclick="toggleSide(false)"><svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
@@ -189,7 +205,7 @@
               <div id="attemptMenu" class="lr-att__menu" role="listbox" aria-label="做题记录" hidden></div>
               <p id="attemptHint" class="lr-att__hint" hidden>换一次记录，题目栏就显示那一次的答案和划线。本站做的可以删；九分学长导入的不能在这里删（再导入同一个 Part 还会回来）。笔记、生词、收藏句和听错原因不分次，一直都在。</p>
             </div>
-            <div class="lr-side__btns">
+            <div id="sideBtns" class="lr-side__btns">
               <button id="checkinBtn" class="ui-btn ui-btn--md" type="button" onclick="doCheckin()">
                 <svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5 6.5 12 13 4.5"/></svg>打卡
               </button>
@@ -398,7 +414,7 @@
       <div class="ui-dialog__head"><h3 class="ui-dialog__title" id="moreTitle">更多</h3><button class="ui-dialog__close" type="button" aria-label="关闭" onclick="closeMoreSheet()">×</button></div>
       <div class="ui-dialog__body lr-mlist">
         <button id="moreFollow" class="lr-mrow" type="button" role="switch" aria-checked="true" onclick="toggleFollowPref()"><span class="lr-mrow__main"><b>跟随播放</b><span>播放时字幕自动滚到正在播的那句</span></span><span class="lr-switch" aria-hidden="true"></span></button>
-        <button id="moreScript" class="lr-mrow" type="button" role="switch" aria-checked="false" onclick="toggleScript()" hidden><span class="lr-mrow__main"><b>显示原文</b><span>重做时边听边对着原文；关掉就只听音频做题</span></span><span class="lr-switch" aria-hidden="true"></span></button>
+        <button id="moreScript" class="lr-mrow" type="button" role="switch" aria-checked="false" onclick="toggleScript()" hidden><span class="lr-mrow__main"><b>显示原文</b><span>重做、标出错题时边听边对着原文；关掉就只听音频看题</span></span><span class="lr-switch" aria-hidden="true"></span></button>
         <a class="lr-mrow" href="/listening_review/notes"><span class="lr-mrow__main"><b>听力笔记本</b><span>所有文章的笔记和生词，可以翻卡复习</span></span><span class="lr-mrow__go" aria-hidden="true">›</span></a>
       </div>
     </div>
@@ -443,7 +459,7 @@ const state = {
   attemptIdx: -1,         // 正在看第几次做题记录
   selQ: null,             // 题目栏里选中的题号
   sideTab: 'questions',   // 导入的篇右栏：题目 / 本篇笔记
-  mode: 'answers',        // 导入的篇：answers 显示答案 / redo 重做（不显示答案）
+  mode: 'answers',        // 导入的篇：answers 显示答案 / flag 标出错题（只看题目，错的框出来）/ redo 重做（不显示答案）
   showScript: false,      // 重做时显示原文；不显示时题目搬到左边像一张卷子
   redo: null,             // 重做中的答卷 { answers: {题号: 填的}, elapsed: 秒 }；多选题一组的选择记在第一个题号上
   playUntil: null,        // 「播放这一段」播到这里自动停
@@ -490,7 +506,8 @@ const BUSY = ['downloading', 'processing', 'translating'];
 const GAP_SECONDS = 8;          // 两句之间空这么久就在字幕里画一条「没有声音」的分隔线
 const JSON_MAX = 25 * 1024 * 1024;
 const REDO_PREFIX = 'listening-redo:';       // 重做到一半的答卷，按篇存在这台设备的浏览器里
-const SCRIPT_KEY = 'listening-redo-script';  // 重做时显示原文（1）还是隐藏（0）
+const SCRIPT_KEY = 'listening-redo-script';  // 重做 / 标出错题时显示原文（1）还是隐藏（0）
+const FLAG_PREFIX = 'listening-flag:';       // 这篇上次停在「标出错题」，回来还是它
 const FOLLOW_KEY = 'listening-follow';       // 手机「更多」里的跟随播放：关掉（0）就不自动滚
 // 手机（≤820px）：页签代替右栏抽屉，播放条多了上一句 / 下一句 / 单句循环；821–1099 还是抽屉，宽屏不变
 const phoneMQ = window.IELTSPhone.mq; // 窄屏或横着拿的手机，见 static/theme.js
@@ -1248,7 +1265,7 @@ async function openProject(id, { fromHistory = false } = {}) {
   state.pickerSeg = null;
   // 上次重做到一半就离开的，回来接着做
   const draft = state.exam ? readDraft(id) : null;
-  state.mode = draft && draft.active ? 'redo' : 'answers';
+  state.mode = draft && draft.active ? 'redo' : state.exam && readFlagPref(id) ? 'flag' : 'answers';
   state.redo = draft ? { answers: draft.answers, elapsed: draft.elapsed } : null;
   state.showScript = readShowScript();
 
@@ -1270,8 +1287,8 @@ async function openProject(id, { fromHistory = false } = {}) {
   renderNotesView();
   updateNotesButton();
   syncLoopBtn();
-  // 手机：重做到一半回来、原文藏着的，直接打开题目页签
-  if (state.mode === 'redo' && !state.showScript) setPtab('questions');
+  // 手机：重做到一半 / 标出错题时回来、原文藏着的，直接打开题目页签
+  if (state.mode !== 'answers' && !state.showScript) setPtab('questions');
 }
 
 function renderDetailMeta() {
@@ -1450,10 +1467,11 @@ function renderLyrics() {
     return;
   }
   const segs = state.currentData.segments;
-  // 重做时字幕上不标题号、答案词和出处，不然一眼就看到答案
+  // 重做、标出错题时字幕上不标题号、答案词和出处，不然一眼就看到答案
+  const blind = state.mode !== 'answers';
   const redo = state.mode === 'redo';
-  const marks = redo ? null : questionMarks();
-  const ev = redo ? null : selectedEvidence();
+  const marks = blind ? null : questionMarks();
+  const ev = blind ? null : selectedEvidence();
   let html = '', prevEnd = null, inBand = false;
   segs.forEach(seg => {
     if (prevEnd !== null && seg.start - prevEnd >= GAP_SECONDS) {
@@ -2854,6 +2872,7 @@ function renderQuestions() {
   const pane = document.getElementById('questionsPane');
   if (!state.exam) { pane.innerHTML = ''; document.getElementById('paperQs').innerHTML = ''; return; }
   if (state.mode === 'redo') { renderRedoQuestions(); return; }
+  if (state.mode === 'flag') { renderFlagQuestions(); return; }
   document.getElementById('paperQs').innerHTML = '';
   const att = currentAttempt();
   const marks = (att && att.marks) || [];
@@ -2945,6 +2964,7 @@ function goToEvidence(num) {
 const questionsPaneEl = document.getElementById('questionsPane');
 questionsPaneEl.addEventListener('click', (e) => {
   if (state.mode === 'redo') return;   // 重做时的点击由 onRedoClick 管
+  if (state.mode === 'flag') { onFlagClick(e); return; }
   const act = e.target.closest('[data-act]');
   if (act && act.dataset.act === 'q-play') { playEvidence(act.dataset.q); return; }
   if (act && act.dataset.act === 'q-script') { goToEvidence(act.dataset.q); return; }
@@ -2954,7 +2974,7 @@ questionsPaneEl.addEventListener('click', (e) => {
   if (hit) selectQuestion(hit.dataset.q);
 });
 questionsPaneEl.addEventListener('keydown', (e) => {
-  if (state.mode === 'redo') return;
+  if (state.mode !== 'answers') return;
   if (e.key !== 'Enter' && e.key !== ' ') return;
   const hit = e.target.closest('[role="button"][data-q]');
   if (!hit || hit !== e.target) return;
@@ -2991,6 +3011,17 @@ function saveDraftSoon() {
   draftTimer = setTimeout(saveDraft, 400);
 }
 
+function readFlagPref(id) {
+  try { return localStorage.getItem(FLAG_PREFIX + id) === '1'; } catch { return false; }
+}
+function saveFlagPref() {
+  if (!state.currentProject) return;
+  try {
+    if (state.mode === 'flag') localStorage.setItem(FLAG_PREFIX + state.currentProject.id, '1');
+    else localStorage.removeItem(FLAG_PREFIX + state.currentProject.id);
+  } catch {}
+}
+
 function readShowScript() {
   try { return localStorage.getItem(SCRIPT_KEY) === '1'; } catch { return false; }
 }
@@ -3006,8 +3037,9 @@ function setMode(mode) {
   state.loopFrom = null;
   if (mode === 'redo' && !state.redo) state.redo = { answers: {}, elapsed: 0 };
   saveDraft();
+  saveFlagPref();
   renderMode();
-  if (mode === 'redo' && !state.showScript) {
+  if (mode !== 'answers' && !state.showScript) {
     if (isPhone()) setPtab('questions', { top: true });
     else window.scrollTo({ top: 0 });
   }
@@ -3021,10 +3053,14 @@ function toggleScript(force) {
   renderMoreSheet();
 }
 
-// 两档切换时整页跟着变：页头按钮、左边是字幕还是卷子、右栏顶上是「本篇」还是答题卡
+// 三档切换时整页跟着变：页头按钮、左边是字幕还是卷子、右栏顶上是「本篇」、错题卡还是答题卡
+const ATTEMPT_HINT = '换一次记录，题目栏就显示那一次的答案和划线。本站做的可以删；九分学长导入的不能在这里删（再导入同一个 Part 还会回来）。笔记、生词、收藏句和听错原因不分次，一直都在。';
+const ATTEMPT_HINT_FLAG = '换一次记录，就按那一次标出错题。本站做的可以删；九分学长导入的不能在这里删（再导入同一个 Part 还会回来）。';
 function renderMode() {
   const redo = state.mode === 'redo' && !!state.exam;
-  const paper = redo && !state.showScript;
+  const flag = state.mode === 'flag' && !!state.exam;
+  const blind = redo || flag;
+  const paper = blind && !state.showScript;
   document.getElementById('modeSeg').hidden = !state.exam;
   document.querySelectorAll('.mode-btn').forEach(b => {
     const on = b.dataset.mode === state.mode;
@@ -3032,20 +3068,24 @@ function renderMode() {
     b.setAttribute('aria-pressed', on ? 'true' : 'false');
   });
   const sb = document.getElementById('scriptBtn');
-  sb.hidden = !redo;
+  sb.hidden = !blind;
   sb.classList.toggle('ui-btn--soft', state.showScript);
   sb.setAttribute('aria-pressed', state.showScript ? 'true' : 'false');
   document.getElementById('scriptCheck').style.display = state.showScript ? '' : 'none';
   document.getElementById('toggleTransBtn').hidden = paper;
   const grid = document.getElementById('detailGrid');
   grid.classList.toggle('is-redo', redo);
+  grid.classList.toggle('is-flag', flag);
   grid.classList.toggle('is-paper', paper);
   document.getElementById('lyricsContainer').hidden = paper;
   document.getElementById('scriptHidden').hidden = !paper;
   document.getElementById('paperPane').hidden = !paper;
   document.getElementById('redoCard').hidden = !redo;
-  document.getElementById('sideInfoCard').hidden = redo;
+  document.getElementById('flagCard').hidden = !flag;
+  document.getElementById('sideInfoCard').hidden = blind;
   document.getElementById('sideMainCard').hidden = paper;
+  document.getElementById('attemptHint').textContent = flag ? ATTEMPT_HINT_FLAG : ATTEMPT_HINT;
+  placePhoneBits();
   renderQuestions();
   renderLyrics();
   renderRedoCard();
@@ -3306,6 +3346,196 @@ function renderRedoQuestions() {
   const gaps = host.querySelectorAll('.lq-gap__in');
   if (gaps.length) gaps[gaps.length - 1].setAttribute('enterkeyhint', 'done');   // 手机键盘：最后一个空是「完成」
   requestAnimationFrame(updateTableHints);
+}
+
+// ===================================================================
+//  标出错题：题目照原卷排、什么都不填、不显示答案和解析；
+//  这一次（默认最新一次）做错或没答的题，题号变红、整道题浅红底加红框，方便对着去听
+// ===================================================================
+function flaggedNums() {
+  const out = new Set();
+  examQuestions().forEach(({ q }) => {
+    const st = answerOf(q.num).state;
+    if (st === 'wrong' || st === 'blank') out.add(q.num);
+  });
+  return out;
+}
+
+const FLAG_SR = '<span class="lr-sr">（上次错了）</span>';
+function flagChipHtml(num, wrong) {
+  return `<span class="lq-n${wrong.has(num) ? ' is-flag' : ''}">${esc(num)}</span>`;
+}
+
+// 填空：空着的横线，错的框红
+function flagGapHtml(q, wrong, { nonum = false, block = false } = {}) {
+  const bad = wrong.has(q.num);
+  const cls = 'lq-gap is-look' + (bad ? ' is-flag' : '') + (nonum ? ' lq-gap--nonum' : '') + (block ? ' lq-gap--block' : '');
+  return `<span class="${cls}" data-nums="${esc(q.num)}">${nonum ? '' : flagChipHtml(q.num, wrong)}<span class="lq-gap__sp"></span>${bad ? FLAG_SR : ''}</span>`;
+}
+
+// 排版里要填字母的空：空槽，错的框红
+function flagSlotHtml(q, wrong, nonum) {
+  const bad = wrong.has(q.num);
+  return `<span class="lq-slot is-look${bad ? ' is-flag' : ''}${nonum ? ' lq-slot--nonum' : ''}" data-nums="${esc(q.num)}">${nonum ? '' : flagChipHtml(q.num, wrong)}<span class="lq-slot__sp"></span>${bad ? FLAG_SR : ''}</span>`;
+}
+
+// 单选 / 多选：选项卡片只是看的；这组里有错的就整道题框起来，错的那个题号红
+function flagPickHtml(nums, text, opts, multi, wrong) {
+  const bad = nums.some(n => wrong.has(n));
+  const chips = nums.length > 1 ? `<span class="lq-nums">${nums.map(n => flagChipHtml(n, wrong)).join('')}</span>` : flagChipHtml(nums[0], wrong);
+  const items = opts.map(o => `<li><div class="lq-opt"><span class="lq-opt__k">${esc(o.key)}</span><span class="lq-opt__t">${esc(o.text)}</span><span></span></div></li>`).join('');
+  return `<div class="lq-q${bad ? ' is-flag' : ''}" data-nums="${esc(nums.join(' '))}">${chips}
+    <div class="lq-q__stem">${esc(text)}${bad ? FLAG_SR : ''}</div>
+    <div class="lq-q__body"><ul class="lq-opts${multi ? ' lq-opts--multi' : ''} is-look">${items}</ul></div></div>`;
+}
+
+// 配对 / 地图：答题纸表格，格子都空着；错的那一行浅红
+function flagGridHtml(g, qs, wrong) {
+  const letters = gridLetters(g, qs);
+  if (!letters.length) return qs.map(q => flagTextRowHtml(q, wrong)).join('');
+  const head = `<tr><th scope="col">${g.kind === 'map' ? '位置' : '题目'}</th>${letters.map(o => `<th scope="col"${o.text ? ` title="${esc(o.text)}"` : ''}>${esc(o.key)}</th>`).join('')}</tr>`;
+  const rows = qs.map(q => {
+    const bad = wrong.has(q.num);
+    return `<tr${bad ? ' class="is-flag"' : ''} data-nums="${esc(q.num)}"><td><span class="lq-grid__item">${flagChipHtml(q.num, wrong)}<span>${esc(q.text)}${bad ? FLAG_SR : ''}</span></span></td>${letters.map(() => '<td><span class="lq-cell"></span></td>').join('')}</tr>`;
+  }).join('');
+  return `<div class="lq-grid is-look"><table>${head}${rows}</table></div>`;
+}
+
+function flagTextRowHtml(q, wrong) {
+  const text = String(q.text || '');
+  const m = /_{2,}/.exec(text);
+  if (m) return `<div class="lq-line" data-nums="${esc(q.num)}">${esc(text.slice(0, m.index))}${flagGapHtml(q, wrong)}${esc(text.slice(m.index + m[0].length))}</div>`;
+  if (/\?\s*$/.test(text)) {
+    const bad = wrong.has(q.num);
+    return `<div class="lq-q${bad ? ' is-flag' : ''}" data-nums="${esc(q.num)}">${flagChipHtml(q.num, wrong)}<div class="lq-q__stem">${esc(text)}</div><div class="lq-q__body">${flagGapHtml(q, wrong, { nonum: true, block: true })}</div></div>`;
+  }
+  return `<div class="lq-line" data-nums="${esc(q.num)}">${esc(text)} ${flagGapHtml(q, wrong)}</div>`;
+}
+
+function flagGroupHtml(g, gi, wrong) {
+  let html = `<div class="lr-qs__group" data-g="${gi}">`;
+  if (g.range) html += `<div class="lr-qs__range">${esc(g.range)}</div>`;
+  if (g.instruction_html) html += `<div class="lr-qs__inst">${g.instruction_html}</div>`;
+  const mapGrid = g.kind === 'map' && !g.content_html;
+  if (g.image && !mapGrid) html += groupImageHtml(g);
+  if (g.title) html += `<p class="lr-qs__title">${esc(g.title)}</p>`;
+  if (g.kind === 'match') html += bankHtml(g, gi);
+  if (g.content_html) html += `<div class="lr-qs__content" data-g="${gi}">${g.content_html}</div>`;
+  else if (g.kind === 'multi') html += multiUnits(g).map(u => {
+    const stemQ = u.qs.find(q => String(q.text || '').trim()) || u.qs[0];
+    return flagPickHtml(u.nums, stemQ.text, u.qs[0].options || [], true, wrong);
+  }).join('');
+  else if (g.kind === 'choice' || g.kind === 'judge') html += g.questions.map(q => {
+    const opts = q.options || [];
+    return flagPickHtml([q.num], q.text, opts, keysOf(q.answer, opts).size > 1, wrong);
+  }).join('');
+  else if (g.kind === 'match' || g.kind === 'map') html += mapWrapHtml(mapGrid ? g : {}, flagGridHtml(g, g.questions, wrong));
+  else html += g.questions.map(q => flagTextRowHtml(q, wrong)).join('');
+  return html + '</div>';
+}
+
+// 题目版式里的空格框：要写词的换成空横线，要选字母的换成空槽；错的在表格里那一格也浅红
+function fillFlagContent(box, g, wrong) {
+  const byNum = {};
+  g.questions.forEach(q => { byNum[q.num] = q; });
+  const letterKind = ['match', 'map', 'choice', 'multi'].includes(g.kind);
+  const placed = new Set();
+  const spans = [...box.querySelectorAll('.ir-blank')].map(span => ({ span, q: byNum[span.dataset.q], nonum: numberLeads(span, span.dataset.q) }));
+  spans.forEach(({ span, q, nonum }) => {
+    if (!q) return;
+    const t = document.createElement('template');
+    t.innerHTML = letterKind && letterOptions(g, q).length ? flagSlotHtml(q, wrong, nonum) : flagGapHtml(q, wrong, { nonum });
+    const el = t.content.firstElementChild;
+    span.replaceWith(el);
+    placed.add(q.num);
+    if (wrong.has(q.num)) { const cell = el.closest('td'); if (cell) cell.classList.add('is-flag'); }
+  });
+  const rest = g.questions.filter(q => !placed.has(q.num));
+  if (rest.length) box.insertAdjacentHTML('beforeend', letterKind ? flagGridHtml(g, rest, wrong) : rest.map(q => flagTextRowHtml(q, wrong)).join(''));
+  wrapTables(box);
+}
+
+function flagQmapHtml(wrong) {
+  return examQuestions().map(({ q }) => {
+    const bad = wrong.has(q.num);
+    return `<button class="lr-qnum ${bad ? 'is-flag' : 'is-plain'}" type="button" data-q="${esc(q.num)}" aria-label="第 ${esc(q.num)} 题${bad ? '，上次错了' : ''}">${esc(q.num)}</button>`;
+  }).join('');
+}
+
+// 按哪一次标：「第 2 次」+ 那次的日期
+function flagWhich() {
+  const att = currentAttempt();
+  const list = (state.exam && state.exam.attempts) || [];
+  if (!att) return null;
+  return { nth: list.indexOf(att) + 1, date: att.submitted_at ? formatDate(att.submitted_at) : '', att };
+}
+
+// 错题卡、卷子顶上那条：错几题、那次答对几题、题号总览（宽屏在卡上，抽屉 / 手机在卷子顶上）
+function renderFlagCard(wrong) {
+  const w = flagWhich();
+  const paper = !state.showScript;
+  document.getElementById('flagNth').textContent = w ? `按第 ${w.nth} 次` : '没有做题记录';
+  const count = document.getElementById('flagCount');
+  count.textContent = w ? wrong.size : '—';
+  count.classList.toggle('is-err', wrong.size > 0);
+  document.getElementById('flagScore').textContent = w && w.att.total ? `${w.att.correct}/${w.att.total}` : '—';
+  const map = document.getElementById('flagMap');
+  map.hidden = !paper;
+  map.innerHTML = paper ? flagQmapHtml(wrong) : '';
+  const when = w ? `第 ${w.nth} 次${w.date ? `（${esc(w.date)}）` : ''}` : '';
+  const key = '<span class="lr-flagkey"><i aria-hidden="true"></i>红框</span>';
+  let wide, short;
+  if (!w) { wide = '原文已隐藏 · 还没有做题记录，没有可标的错题'; short = '还没有做题记录'; }
+  else if (!wrong.size) { wide = `原文已隐藏 · ${when}全对，没有要标的题`; short = `${when}全对`; }
+  else { wide = `原文已隐藏 · ${key}是${when}错的 ${wrong.size} 题，没答的也算`; short = `${key} = 错的 ${wrong.size} 题`; }
+  document.getElementById('paperFlag').innerHTML = `<span class="lr-paper__fw">${wide}</span><span class="lr-paper__fp">${short}</span>`;
+  document.getElementById('paperJump').innerHTML = [...wrong].map(n => `<button class="lr-qnum is-flag" type="button" data-q="${esc(n)}" aria-label="跳到第 ${esc(n)} 题">${esc(n)}</button>`).join('');
+}
+
+// 原文显示时题目在右栏（顶上有题号总览）；原文隐藏时在左边的卷子里（题号总览在错题卡上）
+function renderFlagQuestions() {
+  const paper = !state.showScript;
+  const pane = document.getElementById('questionsPane'), paperQs = document.getElementById('paperQs');
+  const host = paper ? paperQs : pane;
+  (paper ? pane : paperQs).innerHTML = '';
+  const wrong = flaggedNums();
+  const w = flagWhich();
+  const legend = w ? `<div class="lr-qs__legend"><span class="lr-flagkey"><i aria-hidden="true"></i>${wrong.size ? `第 ${w.nth} 次错的题（没答的也算）` : `第 ${w.nth} 次全对`}</span></div>` : '';
+  const head = paper ? '' : `<div class="lr-qmap" role="group" aria-label="题号，点一题跳到那道题">${flagQmapHtml(wrong)}</div>${legend}`;
+  host.innerHTML = `${head}<div class="lr-qs lr-qs--flag">${state.exam.groups.map((g, gi) => flagGroupHtml(g, gi, wrong)).join('')}</div>`;
+  host.querySelectorAll('.lr-qs__content').forEach(box => fillFlagContent(box, state.exam.groups[+box.dataset.g], wrong));
+  renderFlagCard(wrong);
+  requestAnimationFrame(updateTableHints);
+}
+
+// 点题号跳到那道题（表格太宽时横着也滚过去），闪一下
+function focusFlagQuestion(num) {
+  const paper = !state.showScript;
+  const host = document.getElementById(paper ? 'paperQs' : 'questionsPane');
+  const el = [...host.querySelectorAll('[data-nums]')].find(x => x.dataset.nums.split(' ').includes(num));
+  if (!el) return;
+  if (isDrawerMode() && state.sideOpen && paper) toggleSide(false);
+  if (isPhone()) setPtab('questions');
+  else if (!paper) { setSideTab('questions'); if (!state.sideOpen) toggleSide(true); }
+  const wrap = el.closest('.lr-tblwrap, .lq-grid');
+  if (wrap) {
+    const wr = wrap.getBoundingClientRect(), r = el.getBoundingClientRect();
+    if (r.left < wr.left || r.right > wr.right) wrap.scrollLeft += r.left - wr.left - (wr.width - r.width) / 2;
+  }
+  if (paper || isPhone()) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  else scrollSideTo(el);
+  const ring = el.closest('.lq-q') || el;
+  ring.classList.remove('is-jump');
+  void ring.offsetWidth;
+  ring.classList.add('is-jump');
+  setTimeout(() => ring.classList.remove('is-jump'), 1300);
+}
+
+// 标出错题时题目上点了什么都不展开；只有题号会跳
+function onFlagClick(e) {
+  if (state.mode !== 'flag') return;
+  const num = e.target.closest('.lr-qnum[data-q]');
+  if (num) focusFlagQuestion(num.dataset.q);
 }
 
 function setRedoAnswer(num, value) {
@@ -3590,6 +3820,8 @@ function onRedoKeydown(e) {
   }
 }
 
+document.getElementById('paperQs').addEventListener('click', onFlagClick);
+['flagMap', 'paperJump'].forEach(id => document.getElementById(id).addEventListener('click', onFlagClick));
 [questionsPaneEl, document.getElementById('paperQs')].forEach(el => {
   el.addEventListener('click', onRedoClick);
   el.addEventListener('input', onRedoInput);
@@ -4106,12 +4338,17 @@ document.querySelectorAll('.ptab-btn').forEach(b => b.addEventListener('click', 
 
 // 手机上「显示答案 / 重做」和「做题记录」搬到题目页签顶上；回到宽屏放回原处
 const phoneHomes = {};
+// 标出错题时「本篇」卡收起来：做题记录（宽屏）和打卡 / 标熟搬进错题卡
 function placePhoneBits() {
   const head = document.getElementById('pQHead');
-  ['modeSeg', 'attemptBox'].forEach(id => {
+  const flag = state.mode === 'flag' && !!state.exam;
+  const slots = { attemptBox: 'flagAttSlot', sideBtns: 'flagBtnSlot' };
+  ['modeSeg', 'attemptBox', 'sideBtns'].forEach(id => {
     const el = document.getElementById(id);
     if (!phoneHomes[id]) { phoneHomes[id] = document.createComment(id); el.before(phoneHomes[id]); }
-    if (isPhone()) { if (el.parentElement !== head) head.appendChild(el); }
+    const slot = flag && slots[id] ? document.getElementById(slots[id]) : null;
+    if (isPhone() && id !== 'sideBtns') { if (el.parentElement !== head) head.appendChild(el); }
+    else if (slot) { if (el.parentElement !== slot) slot.appendChild(el); }
     else if (phoneHomes[id].nextSibling !== el) phoneHomes[id].after(el);
   });
 }
@@ -4128,7 +4365,7 @@ phoneMQ.addEventListener('change', () => {
 // --- 从题目跳到原文时挂在页签条下面的那道题 ---
 function syncQChip() {
   const chip = document.getElementById('qChip');
-  const item = state.selQ !== null && state.exam && state.mode !== 'redo' ? examQuestions().find(x => x.q.num === state.selQ) : null;
+  const item = state.selQ !== null && state.exam && state.mode === 'answers' ? examQuestions().find(x => x.q.num === state.selQ) : null;
   const show = isPhone() && !!item && state.ptab === 'script' && evidenceSegs(item.q).length > 0;
   chip.hidden = !show;
   if (!show) { chip.innerHTML = ''; return; }
@@ -4343,7 +4580,7 @@ function renderMoreSheet() {
   const f = document.getElementById('moreFollow');
   f.setAttribute('aria-checked', followPref() ? 'true' : 'false');
   const sc = document.getElementById('moreScript');
-  sc.hidden = !(state.mode === 'redo' && state.exam);
+  sc.hidden = !(state.mode !== 'answers' && state.exam);
   sc.setAttribute('aria-checked', state.showScript ? 'true' : 'false');
 }
 
