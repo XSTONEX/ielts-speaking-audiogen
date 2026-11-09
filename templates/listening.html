@@ -31,7 +31,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
   <link rel="stylesheet" href="/static/theme.css?v=20261103a">
   <link rel="stylesheet" href="/static/plain.css?v=20261103a">
-  <link rel="stylesheet" href="/static/listening.css?v=20261108b">
+  <link rel="stylesheet" href="/static/listening.css?v=20261108c">
   <script src="/static/theme.js?v=20261103a"></script>
   <script src="/static/api-client.js?v=20260919" defer></script>
   <script src="/static/auth.js?v=20260927" defer></script>
@@ -3342,7 +3342,7 @@ function renderRedoQuestions() {
 // ===================================================================
 //  错题标注：题目照原卷排、什么都不填、不显示答案和解析；
 //  这一次（默认最新一次）做错或没答的题，题号变红、整道题浅红底加红框；
-//  点框起来的题（或红题号），音频跳到这题的出处句子开始放，原文照样藏着
+//  点任意一道题（或题号），音频跳到这题的出处句子开始一直往下放，原文照样藏着
 // ===================================================================
 function flaggedNums() {
   const out = new Set();
@@ -3353,15 +3353,18 @@ function flaggedNums() {
   return out;
 }
 
-// 错的题里哪些能跳去听：要有出处句子（音频和字幕对不上、改成重新转录的就没有）
+// 哪些题能跳去听：对的错的都算，只要有出处句子（音频和字幕对不上、改成重新转录的就没有）
 let flagListen = new Set();
-function flagListenNums(wrong) {
+function flagListenNums() {
   const out = new Set();
-  examQuestions().forEach(({ q }) => { if (wrong.has(q.num) && evidenceSegs(q).length) out.add(q.num); });
+  examQuestions().forEach(({ q }) => { if (evidenceSegs(q).length) out.add(q.num); });
   return out;
 }
-function flagSr(num) {
-  return `<span class="lr-sr">（上次错了${flagListen.has(num) ? '，按一下从原文这里开始听' : ''}）</span>`;
+// 读屏：错的说「上次错了」，能点的说「按一下从原文这里开始听」
+function flagSr(num, bad) {
+  const ear = flagListen.has(num) ? '按一下从原文这里开始听' : '';
+  if (bad) return `<span class="lr-sr">（上次错了${ear ? '，' + ear : ''}）</span>`;
+  return ear ? `<span class="lr-sr">（${ear}）</span>` : '';
 }
 // 能点的那个元素：带 data-listen，键盘也能按
 function flagListenAttrs(num) {
@@ -3375,28 +3378,32 @@ function flagChipHtml(num, wrong) {
   return `<span class="lq-n${wrong.has(num) ? ' is-flag' : ''}">${esc(num)}</span>`;
 }
 
-// 填空：空着的横线，错的框红；能听的后面一个小三角，点了从原文那里听（listen: false 时外面那层管点）
+// 填空：空着的横线，错的框红；能听的后面一个小三角（错的红、对的灰），点了从原文那里听（listen: false 时外面那层管点）
 function flagGapHtml(q, wrong, { nonum = false, block = false, listen = true } = {}) {
   const bad = wrong.has(q.num);
   const cls = 'lq-gap is-look' + (bad ? ' is-flag' : '') + (nonum ? ' lq-gap--nonum' : '') + (block ? ' lq-gap--block' : '');
-  const ear = bad && listen && flagListen.has(q.num);
-  return `<span class="${cls}" data-nums="${esc(q.num)}"${ear ? flagListenAttrs(q.num) : ''}>${nonum ? '' : flagChipHtml(q.num, wrong)}<span class="lq-gap__sp"></span>${ear ? FLAG_PLAY : ''}${bad ? flagSr(q.num) : ''}</span>`;
+  const ear = listen && flagListen.has(q.num);
+  const sr = listen ? flagSr(q.num, bad) : bad ? '<span class="lr-sr">（上次错了）</span>' : '';
+  return `<span class="${cls}" data-nums="${esc(q.num)}"${ear ? flagListenAttrs(q.num) : ''}>${nonum ? '' : flagChipHtml(q.num, wrong)}<span class="lq-gap__sp"></span>${ear ? FLAG_PLAY : ''}${sr}</span>`;
 }
 
 // 排版里要填字母的空：空槽，错的框红
 function flagSlotHtml(q, wrong, nonum) {
   const bad = wrong.has(q.num);
-  return `<span class="lq-slot is-look${bad ? ' is-flag' : ''}${nonum ? ' lq-slot--nonum' : ''}" data-nums="${esc(q.num)}"${bad ? flagListenAttrs(q.num) : ''}>${nonum ? '' : flagChipHtml(q.num, wrong)}<span class="lq-slot__sp"></span>${bad && flagListen.has(q.num) ? FLAG_PLAY : ''}${bad ? flagSr(q.num) : ''}</span>`;
+  const ear = flagListen.has(q.num);
+  return `<span class="lq-slot is-look${bad ? ' is-flag' : ''}${nonum ? ' lq-slot--nonum' : ''}" data-nums="${esc(q.num)}"${ear ? flagListenAttrs(q.num) : ''}>${nonum ? '' : flagChipHtml(q.num, wrong)}<span class="lq-slot__sp"></span>${ear ? FLAG_PLAY : ''}${flagSr(q.num, bad)}</span>`;
 }
 
-// 单选 / 多选：选项卡片只是看的；这组里有错的就整道题框起来，错的那个题号红；点整道题从（第一道错的）原文那里听
+// 单选 / 多选：选项卡片只是看的；这组里有错的就整道题框起来，错的那个题号红；
+// 点整道题从原文那里听（一组里有错的从第一道错的听，没错的从第一道听）
 function flagPickHtml(nums, text, opts, multi, wrong) {
   const bad = nums.some(n => wrong.has(n));
-  const first = nums.find(n => wrong.has(n));
+  const target = nums.find(n => wrong.has(n) && flagListen.has(n)) || nums.find(n => flagListen.has(n));
   const chips = nums.length > 1 ? `<span class="lq-nums">${nums.map(n => flagChipHtml(n, wrong)).join('')}</span>` : flagChipHtml(nums[0], wrong);
   const items = opts.map(o => `<li><div class="lq-opt"><span class="lq-opt__k">${esc(o.key)}</span><span class="lq-opt__t">${esc(o.text)}</span><span></span></div></li>`).join('');
-  return `<div class="lq-q${bad ? ' is-flag' : ''}" data-nums="${esc(nums.join(' '))}"${bad ? flagListenAttrs(first) : ''}>${chips}
-    <div class="lq-q__stem">${esc(text)}${bad ? flagTagHtml(first) + flagSr(first) : ''}</div>
+  const sr = target ? flagSr(target, bad) : bad ? '<span class="lr-sr">（上次错了）</span>' : '';
+  return `<div class="lq-q${bad ? ' is-flag' : ''}" data-nums="${esc(nums.join(' '))}"${target ? flagListenAttrs(target) : ''}>${chips}
+    <div class="lq-q__stem">${esc(text)}${target ? flagTagHtml(target) : ''}${sr}</div>
     <div class="lq-q__body"><ul class="lq-opts${multi ? ' lq-opts--multi' : ''} is-look">${items}</ul></div></div>`;
 }
 
@@ -3407,8 +3414,8 @@ function flagGridHtml(g, qs, wrong) {
   const head = `<tr><th scope="col">${g.kind === 'map' ? '位置' : '题目'}</th>${letters.map(o => `<th scope="col"${o.text ? ` title="${esc(o.text)}"` : ''}>${esc(o.key)}</th>`).join('')}</tr>`;
   const rows = qs.map(q => {
     const bad = wrong.has(q.num);
-    const ear = bad && flagListen.has(q.num);
-    return `<tr${bad ? ' class="is-flag"' : ''} data-nums="${esc(q.num)}"${ear ? ` data-listen="${esc(q.num)}"` : ''}><td><span class="lq-grid__item"${ear ? flagListenAttrs(q.num) : ''}>${flagChipHtml(q.num, wrong)}<span>${esc(q.text)}${ear ? FLAG_PLAY : ''}${bad ? flagSr(q.num) : ''}</span></span></td>${letters.map(() => '<td><span class="lq-cell"></span></td>').join('')}</tr>`;
+    const ear = flagListen.has(q.num);
+    return `<tr${bad ? ' class="is-flag"' : ''} data-nums="${esc(q.num)}"${ear ? ` data-listen="${esc(q.num)}"` : ''}><td><span class="lq-grid__item"${ear ? flagListenAttrs(q.num) : ''}>${flagChipHtml(q.num, wrong)}<span>${esc(q.text)}${ear ? FLAG_PLAY : ''}${flagSr(q.num, bad)}</span></span></td>${letters.map(() => '<td><span class="lq-cell"></span></td>').join('')}</tr>`;
   }).join('');
   return `<div class="lq-grid is-look"><table>${head}${rows}</table></div>`;
 }
@@ -3419,7 +3426,7 @@ function flagTextRowHtml(q, wrong) {
   if (m) return `<div class="lq-line" data-nums="${esc(q.num)}">${esc(text.slice(0, m.index))}${flagGapHtml(q, wrong)}${esc(text.slice(m.index + m[0].length))}</div>`;
   if (/\?\s*$/.test(text)) {
     const bad = wrong.has(q.num);
-    return `<div class="lq-q${bad ? ' is-flag' : ''}" data-nums="${esc(q.num)}"${bad ? flagListenAttrs(q.num) : ''}>${flagChipHtml(q.num, wrong)}<div class="lq-q__stem">${esc(text)}${bad ? flagTagHtml(q.num) : ''}</div><div class="lq-q__body">${flagGapHtml(q, wrong, { nonum: true, block: true, listen: false })}</div></div>`;
+    return `<div class="lq-q${bad ? ' is-flag' : ''}" data-nums="${esc(q.num)}"${flagListenAttrs(q.num)}>${flagChipHtml(q.num, wrong)}<div class="lq-q__stem">${esc(text)}${flagTagHtml(q.num)}</div><div class="lq-q__body">${flagGapHtml(q, wrong, { nonum: true, block: true, listen: false })}</div></div>`;
   }
   return `<div class="lq-line" data-nums="${esc(q.num)}">${esc(text)} ${flagGapHtml(q, wrong)}</div>`;
 }
@@ -3470,8 +3477,8 @@ function fillFlagContent(box, g, wrong) {
 function flagQmapHtml(wrong) {
   return examQuestions().map(({ q }) => {
     const bad = wrong.has(q.num);
-    const ear = bad && flagListen.has(q.num) ? '，点了从原文那里听' : '';
-    return `<button class="lr-qnum ${bad ? 'is-flag' : 'is-plain'}" type="button" data-q="${esc(q.num)}" aria-label="第 ${esc(q.num)} 题${bad ? '，上次错了' + ear : ''}">${esc(q.num)}</button>`;
+    const ear = flagListen.has(q.num) ? '，点了从原文那里听' : '';
+    return `<button class="lr-qnum ${bad ? 'is-flag' : 'is-plain'}" type="button" data-q="${esc(q.num)}" aria-label="第 ${esc(q.num)} 题${bad ? '，上次错了' : ''}${ear}">${esc(q.num)}</button>`;
   }).join('');
 }
 
@@ -3498,15 +3505,16 @@ function renderFlagCard(wrong) {
   const when = w ? `第 ${w.nth} 次${w.date ? `（${esc(w.date)}）` : ''}` : '';
   const key = '<span class="lr-flagkey"><i aria-hidden="true"></i>红框</span>';
   const ear = flagListen.size > 0;
+  const hint = ear ? '；点任意一题从原文那里听' : '', hintP = ear ? '，点题听原文' : '';
   let wide, short;
-  if (!w) { wide = '原文已隐藏 · 还没有做题记录，没有可标的错题'; short = '还没有做题记录'; }
-  else if (!wrong.size) { wide = `原文已隐藏 · ${when}全对，没有要标的题`; short = `${when}全对`; }
-  else { wide = `原文已隐藏 · ${key}是${when}错的 ${wrong.size} 题，没答的也算${ear ? '；点一下从原文那里听' : ''}`; short = `${key} = 错的 ${wrong.size} 题${ear ? '，点了听' : ''}`; }
+  if (!w) { wide = `原文已隐藏 · 还没有做题记录，没有可标的错题${hint}`; short = `还没有做题记录${hintP}`; }
+  else if (!wrong.size) { wide = `原文已隐藏 · ${when}全对，没有要标的题${hint}`; short = `${when}全对${hintP}`; }
+  else { wide = `原文已隐藏 · ${key}是${when}错的 ${wrong.size} 题，没答的也算${hint}`; short = `${key} = 错的 ${wrong.size} 题${hintP}`; }
   document.getElementById('paperFlag').innerHTML = `<span class="lr-paper__fw">${wide}</span><span class="lr-paper__fp">${short}</span>`;
   document.getElementById('paperJump').innerHTML = [...wrong].map(n => `<button class="lr-qnum is-flag" type="button" data-q="${esc(n)}" aria-label="跳到第 ${esc(n)} 题${flagListen.has(n) ? '，从原文那里听' : ''}">${esc(n)}</button>`).join('');
   const note = document.getElementById('flagNote');
   note.hidden = !ear;
-  note.textContent = paper ? '点红框里的题或红题号，音频跳到那题的原文开始放，原文还是藏着。' : '点红框里的题或红题号，音频跳到那题的原文开始放。';
+  note.textContent = paper ? '点任意一题或题号，音频从那题的原文开始一直往下放，原文还是藏着。' : '点任意一题或题号，音频从那题的原文开始一直往下放。';
 }
 
 // 原文显示时题目在右栏（顶上有题号总览）；原文隐藏时在左边的卷子里（题号总览在错题卡上）
@@ -3516,9 +3524,11 @@ function renderFlagQuestions() {
   const host = paper ? paperQs : pane;
   (paper ? pane : paperQs).innerHTML = '';
   const wrong = flaggedNums();
-  flagListen = flagListenNums(wrong);
+  flagListen = flagListenNums();
   const w = flagWhich();
-  const legend = w ? `<div class="lr-qs__legend"><span class="lr-flagkey"><i aria-hidden="true"></i>${wrong.size ? `第 ${w.nth} 次错的题（没答的也算）${flagListen.size ? '，点一下从原文那里听' : ''}` : `第 ${w.nth} 次全对`}</span></div>` : '';
+  const key = w ? `<span class="lr-flagkey"><i aria-hidden="true"></i>${wrong.size ? `第 ${w.nth} 次错的题（没答的也算）` : `第 ${w.nth} 次全对`}</span>` : '';
+  const ear = flagListen.size ? '<span>点任意一题从原文那里听</span>' : '';
+  const legend = key || ear ? `<div class="lr-qs__legend">${key}${ear}</div>` : '';
   const head = paper ? '' : `<div class="lr-qmap" role="group" aria-label="题号，点一题跳到那道题">${flagQmapHtml(wrong)}</div>${legend}`;
   host.innerHTML = `${head}<div class="lr-qs lr-qs--flag">${state.exam.groups.map((g, gi) => flagGroupHtml(g, gi, wrong)).join('')}</div>`;
   host.querySelectorAll('.lr-qs__content').forEach(box => fillFlagContent(box, state.exam.groups[+box.dataset.g], wrong));
@@ -3550,7 +3560,7 @@ function focusFlagQuestion(num) {
   setTimeout(() => ring.classList.remove('is-jump'), 1300);
 }
 
-// 点错的题：音频跳到这题的出处句子开始放，一直往下放（开着单句循环就循环那句）；
+// 点一道题（对的错的都行）：音频跳到这题的出处句子开头，一直往下放，不在出处末尾停（开着单句循环就循环那句）；
 // 原文照样藏着，不切到原文、不滚字幕（自己开了「显示原文」的才跟着走）
 function listenFlag(num) {
   const item = examQuestions().find(x => x.q.num === num);
@@ -3576,17 +3586,17 @@ function markFlagOn() {
   document.querySelectorAll(`[data-listen="${CSS.escape(state.flagOn)}"]`).forEach(el => el.classList.add('is-on'));
 }
 
-// 错题标注时题目上点了什么都不展开：题号跳过去（红的顺便从原文那里听），框起来的题点了从原文那里听
+// 错题标注时题目上点了什么都不展开：题号跳到那道题并从原文那里听，点题目本身也从原文那里听
 function onFlagClick(e) {
   if (state.mode !== 'flag') return;
   const num = e.target.closest('.lr-qnum[data-q]');
   if (num) {
     focusFlagQuestion(num.dataset.q);
-    if (num.classList.contains('is-flag')) listenFlag(num.dataset.q);
+    listenFlag(num.dataset.q);
     return;
   }
-  // 一行一题的地方（题目行、笔记的一条、表格里框红的格子），点这一行的字也算点了这题
-  const row = e.target.closest('.lq-line, td.is-flag, .lr-qs__content li');
+  // 一行一题的地方（题目行、笔记的一条、表格里的格子），点这一行的字也算点了这题
+  const row = e.target.closest('.lq-line, td, .lr-qs__content li');
   const hit = e.target.closest('[data-listen]') || (row && row.querySelector('[data-listen]'));
   if (hit) listenFlag(hit.dataset.listen);
 }

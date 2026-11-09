@@ -1,7 +1,7 @@
 // 「错题标注」的浏览器检查（沙盒、编造数据）：
 // 导入三份 JSON（填空 + 单选；地图 + 多选；版式里选字母的配对 + 填空）→ 页头三档（错题标注 | 显示答案 | 重做），打开就是错题标注 →
 // 卷子 / 原文显示两种排法，不漏答案（正确答案、你填的、对错颜色、解析、出处、划线、字幕上的 Q 标签）→ 错的（含没答）框红、答对的不标 →
-// 点框起来的题 / 红题号：音频跳到那题的出处句子开始放，原文不露出来 → 错题卡（错几题、那次答对、题号总览、做题记录、打卡 / 标熟）→
+// 点任意一道题 / 题号（对的错的都行）：音频跳到那题的出处句子开始一直往下放，原文不露出来 → 错题卡（错几题、那次答对、题号总览、做题记录、打卡 / 标熟）→
 // 换一次记录就按那一次标 → 刷新、换篇回来还是错题标注；从笔记跳到某一句的开在显示答案 → 切回显示答案 / 重做都正常 →
 // 抽屉宽度、暗色、390 手机。
 // 用法见 README；每跑一次前先重灌 seed.py 和 jiufen_data.py。
@@ -48,7 +48,8 @@ function listenInfo(num) {
   const segs = it ? evidenceSegs(it.q) : [];
   const el = document.querySelector(`[data-listen="${num}"].is-on`);
   return {
-    t: Math.round(audioEl.currentTime * 100) / 100, want: segs.length ? Math.min(...segs.map(s => s.start)) : null, paused: audioEl.paused,
+    t: Math.round(audioEl.currentTime * 100) / 100, want: segs.length ? Math.min(...segs.map(s => s.start)) : null, end: segs.length ? Math.max(...segs.map(s => s.end)) : null,
+    paused: audioEl.paused, until: state.playUntil,
     on: state.flagOn, ring: !!el && getComputedStyle(el.matches('tr') ? el.querySelector('td') : el).boxShadow !== 'none',
     mode: state.mode, showScript: state.showScript, lyricsHidden: document.getElementById('lyricsContainer').hidden,
     paper: !document.getElementById('paperPane').hidden, qx: document.querySelectorAll('.lr-qx').length, selQ: state.selQ, ptab: state.ptab,
@@ -140,10 +141,12 @@ function readFlags([hostSel, LEAKS]) {
       const g = document.querySelector('#paperQs .lq-gap.is-flag'), plain = document.querySelector('#paperQs .lq-gap:not(.is-flag)');
       const note = document.getElementById('flagNote');
       return { listen: g.dataset.listen, role: g.getAttribute('role'), tab: g.tabIndex, icon: !!g.querySelector('.lq-listen'), cursor: getComputedStyle(g).cursor,
-        plain: plain.hasAttribute('data-listen') || !!plain.querySelector('.lq-listen'), plainCursor: getComputedStyle(plain).cursor, note: !note.hidden && note.textContent };
+        iconRed: getComputedStyle(g.querySelector('.lq-listen')).color,
+        plain: plain.dataset.listen, plainRole: plain.getAttribute('role'), plainIcon: plain.querySelector('.lq-listen') && getComputedStyle(plain.querySelector('.lq-listen')).color,
+        plainCursor: getComputedStyle(plain).cursor, all: [...document.querySelectorAll('#paperQs [data-listen]')].map(e => e.dataset.listen).join(','), note: !note.hidden && note.textContent };
     });
-    check('framed blanks have a play mark, pointer and keyboard focus; plain ones are not clickable', la.listen === '3' && la.role === 'button' && la.tab === 0 && la.icon && la.cursor === 'pointer' && !la.plain && la.plainCursor === 'default', la);
-    check('card note: tap a framed question or red number to hear it, transcript stays hidden', /点红框里的题或红题号/.test(la.note || '') && /原文还是藏着/.test(la.note || ''), la.note);
+    check('every question is tappable: red play mark on wrong ones, grey on right ones, pointer, keyboard focus', la.listen === '3' && la.role === 'button' && la.tab === 0 && la.icon && la.cursor === 'pointer' && la.plain === '1' && la.plainRole === 'button' && la.plainIcon && la.plainIcon !== la.iconRed && la.plainCursor === 'pointer' && la.all === '1,2,3,4,5', la);
+    check('card note: tap any question or number to hear it from there, transcript stays hidden', /点任意一题或题号/.test(la.note || '') && /一直往下放/.test(la.note || '') && /原文还是藏着/.test(la.note || ''), la.note);
     const c0 = await page.evaluate(() => ({
       nth: document.getElementById('flagNth').textContent,
       count: document.getElementById('flagCount').textContent,
@@ -158,7 +161,7 @@ function readFlags([hostSel, LEAKS]) {
     }));
     check('card: 按第 1 次, 2 wrong (red), that attempt 3/5, map marks 3 and 4', c0.nth === '按第 1 次' && c0.count === '2' && c0.countRed && c0.score === '3/5' && c0.map === '1 2 3! 4! 5' && c0.mapShown, c0);
     check('打卡 / 标熟 moved into the card', c0.btns, c0);
-    check('paper bar says which attempt and how many, and that a tap plays it; no submit / progress', /原文已隐藏/.test(c0.bar) && /红框是第 1 次/.test(c0.bar) && /错的 2 题/.test(c0.bar) && /点一下从原文那里听/.test(c0.bar) && c0.redoBits === 'none,none,none' && c0.jump === 'none', c0);
+    check('paper bar says which attempt and how many, and that a tap plays it; no submit / progress', /原文已隐藏/.test(c0.bar) && /红框是第 1 次/.test(c0.bar) && /错的 2 题/.test(c0.bar) && /点任意一题从原文那里听/.test(c0.bar) && c0.redoBits === 'none,none,none' && c0.jump === 'none', c0);
     // 点框红的 3：音频跳到 3 的出处开始放，原文还藏着，什么解析都不展开
     await parkAudio(page);
     await page.click('#paperQs .lq-gap.is-flag[data-nums="3"]');
@@ -174,12 +177,24 @@ function readFlags([hostSel, LEAKS]) {
     await page.waitForTimeout(400);
     const l4 = await page.evaluate(listenInfo, '4');
     check('tapping the words next to blank 4 plays 4 from its source', jumped(l4) && l4.on === '4' && l3.want !== l4.want, l4);
-    // 答对的 5 点了不跳
+    // 答对的 5 也能点：从 5 的出处听，外面一圈蓝的（错的是红的）
     await parkAudio(page);
     await page.click('#paperQs .lq-q__stem');
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(400);
     const l5 = await page.evaluate(listenInfo, '5');
-    check('tapping a question you got right does nothing', l5.t === 1 && l5.paused && l5.on === '4' && l5.qx === 0 && l5.selQ === null, l5);
+    const ring5 = await page.evaluate(() => { const q = document.querySelector('#paperQs .lq-q[data-listen="5"]'); return { framed: q.classList.contains('is-flag'), border: getComputedStyle(q).borderTopColor, red: getComputedStyle(document.querySelector('#paperQs .lq-n.is-flag')).backgroundColor }; });
+    check('tapping a question you got right (5) plays it from its source too, nothing opens', jumped(l5) && !l5.paused && l5.on === '5' && l5.ring && l5.qx === 0 && l5.selQ === null, l5);
+    check('…its ring is blue, not the red of a wrong one, and it stays unframed', !ring5.framed && ring5.border !== ring5.red && ring5.border !== 'rgba(0, 0, 0, 0)', ring5);
+    // 不只放出处那一句：一直往下放（4 倍速等它过了出处末尾）
+    await parkAudio(page);
+    await page.click('#paperQs .lq-gap[data-nums="1"]');
+    await page.waitForTimeout(300);
+    const p1 = await page.evaluate(listenInfo, '1');
+    await page.evaluate(() => { audioEl.playbackRate = 4; });
+    const passed = await page.waitForFunction(end => audioEl.currentTime > end + 1.5, p1.end, { timeout: 8000 }).then(() => true, () => false);
+    const p1b = await page.evaluate(listenInfo, '1');
+    await page.evaluate(() => { audioEl.pause(); audioEl.playbackRate = 1; });
+    check('it keeps playing past the end of the source sentence (no stop at the end)', jumped(p1) && p1.until === null && passed && !p1b.paused && p1b.t > p1.end + 1.5, { p1, p1b, passed });
     // 键盘：Tab 到框红的空格按回车
     await parkAudio(page);
     await page.focus('#paperQs .lq-gap.is-flag[data-nums="3"]');
@@ -202,10 +217,11 @@ function readFlags([hostSel, LEAKS]) {
     const m4 = await page.evaluate(listenInfo, '4');
     check('red number in the card: jumps to that question and plays its source', j0 && j0.nums === '4' && jumped(m4) && m4.lyricsHidden, { j0, m4 });
     await parkAudio(page);
-    await page.click('#flagMap .lr-qnum[data-q="1"]');
-    await page.waitForTimeout(300);
-    const m1 = await page.evaluate(listenInfo, '1');
-    check('plain number in the card only scrolls, no audio jump', m1.t === 1 && m1.paused, m1);
+    await page.click('#flagMap .lr-qnum[data-q="2"]');
+    await page.waitForTimeout(400);
+    const m2 = await page.evaluate(listenInfo, '2');
+    const j2 = await page.evaluate(() => (document.querySelector('#paperQs .is-jump') || {}).dataset);
+    check('plain number (2, right) in the card also jumps there and plays its source', j2 && j2.nums === '2' && jumped(m2) && m2.on === '2', { j2, m2 });
     await shot(page, 'paper');
   });
 
@@ -241,7 +257,7 @@ function readFlags([hostSel, LEAKS]) {
     }));
     const f = await page.evaluate(readFlags, ['#questionsPane', LEAKS]);
     check('show transcript: lines back, clean, questions move to the side', s0.lyrics && s0.lines === 10 && s0.end === 1 && s0.paper && s0.main && s0.trans && s0.mapHidden, s0);
-    check('side questions: map + legend + the same red frames, still no leaks', s0.pane === '1 2 3! 4! 5' && /第 1 次错的题（没答的也算），点一下从原文那里听/.test(s0.legend || '') && f.gaps === '1 2 3! 4!' && f.leaks === 0 && !f.explain, { s0, f: { gaps: f.gaps, leaks: f.leakList } });
+    check('side questions: map + legend + the same red frames, still no leaks', s0.pane === '1 2 3! 4! 5' && /第 1 次错的题（没答的也算）/.test(s0.legend || '') && /点任意一题从原文那里听/.test(s0.legend || '') && f.gaps === '1 2 3! 4!' && f.leaks === 0 && !f.explain, { s0, f: { gaps: f.gaps, leaks: f.leakList } });
     await parkAudio(page);
     await page.click('#questionsPane .lr-qmap .lr-qnum[data-q="3"]');
     await page.waitForTimeout(400);
@@ -319,6 +335,7 @@ function readFlags([hostSel, LEAKS]) {
     const m = await page.evaluate(() => ({
       mode: state.mode,
       rowListen: [...document.querySelectorAll('#paperQs .lq-grid tr[data-listen]')].map(r => r.dataset.listen).join(','),
+      qListen: [...document.querySelectorAll('#paperQs .lq-q[data-listen]')].map(q => q.dataset.listen).join(','),
       img: !!document.querySelector('#paperQs .lq-map img'),
       cells: [...document.querySelectorAll('#paperQs .lq-grid .lq-cell')].map(c => c.textContent).join(''),
       cellCount: document.querySelectorAll('#paperQs .lq-grid .lq-cell').length,
@@ -327,7 +344,7 @@ function readFlags([hostSel, LEAKS]) {
       rowBg: getComputedStyle(document.querySelector('#paperQs .lq-grid tr.is-flag td')).backgroundColor,
       plainBg: getComputedStyle(document.querySelector('#paperQs .lq-grid tr:not(.is-flag) td')).backgroundColor,
     }));
-    check('map: plan + empty answer grid, rows 2 and 3 tinted and tappable', m.mode === 'flag' && m.img && m.cellCount === 15 && m.cells === '' && f.rows === '1 2! 3!' && m.rowBg !== m.plainBg && m.rowListen === '2,3', { m, rows: f.rows });
+    check('map: plan + empty answer grid, rows 2 and 3 tinted, every row tappable', m.mode === 'flag' && m.img && m.cellCount === 15 && m.cells === '' && f.rows === '1 2! 3!' && m.rowBg !== m.plainBg && m.rowListen === '1,2,3', { m, rows: f.rows });
     check('multi: whole pair framed, only 5 red; right choice 6 plain', f.qs === '4 5! 6' && m.chips === '4 5!' && m.multi === 5, { qs: f.qs, chips: m.chips });
     check('no leaks on the map / multi paper', f.leaks === 0 && !f.explain, f.leakList);
     // 点地图表格里第 3 行的空格子：不填字母，从 3 的原文那里听
@@ -342,6 +359,11 @@ function readFlags([hostSel, LEAKS]) {
     await page.waitForTimeout(400);
     const r5 = await page.evaluate(listenInfo, '5');
     check('multi pair: tapping it plays the wrong one (5)', jumped(r5) && r5.on === '5', r5);
+    await parkAudio(page);
+    await page.click('#paperQs .lq-grid tr[data-listen="1"] td:nth-child(2)');
+    await page.waitForTimeout(400);
+    const r1 = await page.evaluate(listenInfo, '1');
+    check('right row 1 and right choice 6 are tappable too', jumped(r1) && r1.on === '1' && r1.ring && m.qListen === '5,6', { r1, q: m.qListen });
     await page.evaluate(() => audioEl.pause());
     await shot(page, 'map');
   });
@@ -351,13 +373,18 @@ function readFlags([hostSel, LEAKS]) {
     await openByTitle(page, /^Part 2$/);
     const f = await page.evaluate(readFlags, ['#paperQs', LEAKS]);
     const s = await page.evaluate(() => ({ nonum: [...document.querySelectorAll('#paperQs .lq-slot')].every(x => x.classList.contains('lq-slot--nonum')), text: [...document.querySelectorAll('#paperQs .lq-slot')].map(x => x.innerText.trim()).join('|'), bank: document.querySelectorAll('#paperQs .lq-bank__item').length, used: document.querySelectorAll('#paperQs .lq-bank__item.is-used').length }));
-    check('letter slots in the layout are empty, only 13 framed', f.slots === '12 13! 14' && s.nonum && s.text.replace(/（上次错了[^）]*）/g, '') === '||' && s.bank > 0 && s.used === 0, { slots: f.slots, s });
+    check('letter slots in the layout are empty, only 13 framed', f.slots === '12 13! 14' && s.nonum && s.text.replace(/（[^）]*）/g, '') === '||' && s.bank > 0 && s.used === 0, { slots: f.slots, s });
     await parkAudio(page);
     await page.click('#paperQs .lq-slot.is-flag');
     await page.waitForTimeout(400);
     const s13 = await page.evaluate(listenInfo, '13');
     const menu = await page.evaluate(() => !!document.querySelector('.lq-menu'));
     check('tapping framed slot 13 plays 13, no letter menu', jumped(s13) && s13.on === '13' && !menu, { s13, menu });
+    await parkAudio(page);
+    await page.click('#paperQs .lq-slot[data-nums="12"]');
+    await page.waitForTimeout(400);
+    const s12 = await page.evaluate(listenInfo, '12');
+    check('right slot 12 plays 12 too', jumped(s12) && s12.on === '12' && !(await page.evaluate(() => !!document.querySelector('.lq-menu'))), s12);
     await page.evaluate(() => audioEl.pause());
     check('choice 11 (wrong) framed', /11!/.test(f.qs), f.qs);
     check('no leaks on the matching paper', f.leaks === 0 && !f.explain, f.leakList);
@@ -373,7 +400,7 @@ function readFlags([hostSel, LEAKS]) {
       state.exam.aligned = true; renderQuestions();
       return r;
     });
-    check('no source sentences (re-transcribed audio): still framed, but no tap-to-listen and no hint', na.listen === 0 && na.icons === 0 && na.framed > 0 && !/点一下/.test(na.bar) && na.note, na);
+    check('no source sentences (re-transcribed audio): still framed, but nothing tappable and no hint', na.listen === 0 && na.icons === 0 && na.framed > 0 && !/听/.test(na.bar) && na.note, na);
     await shot(page, 'layout');
   });
 
@@ -433,7 +460,7 @@ function readFlags([hostSel, LEAKS]) {
     });
     check('phone: opens on 错题标注 in 题目; three tabs on one row, 错题标注 first, each 44px tall', p.mode === 'flag' && p.first === 'flag' && p.ptab === 'questions' && p.inQ && p.three && p.fits, p);
     check('phone: attempt switch stays under the tabs (two attempts now)', p.att, p);
-    check('phone: short bar 「红框 = 错的 1 题，点了听」 + 40px red numbers, no sideways scroll', p.short && !p.wide && /红框\s*= 错的 1 题，点了听/.test(p.shortText) && p.jump === 1 && p.jumpBig && !p.card && p.overflow <= 0, p);
+    check('phone: short bar 「红框 = 错的 1 题，点题听原文」 + 40px red numbers, no sideways scroll', p.short && !p.wide && /红框\s*= 错的 1 题，点题听原文/.test(p.shortText) && p.jump === 1 && p.jumpBig && !p.card && p.overflow <= 0, p);
     // 换回第 1 次（3 错、4 没答），看表格里的空也框红
     await pp.evaluate(() => { state.attemptIdx = 0; renderExamSide(); });
     const p2 = await pp.evaluate(() => ({ n: [...document.querySelectorAll('#paperJump .lr-qnum')].map(b => b.textContent).join(','), gaps: [...document.querySelectorAll('#paperQs .lq-gap.is-flag')].map(g => g.dataset.nums).join(',') }));
@@ -450,6 +477,11 @@ function readFlags([hostSel, LEAKS]) {
     await pp.waitForTimeout(400);
     const pt = await pp.evaluate(listenInfo, '3');
     check('phone: tapping framed 3 plays it, stays on 题目, transcript still hidden', jumped(pt) && pt.ptab === 'questions' && pt.lyricsHidden && !pt.showScript && pt.on === '3', pt);
+    await parkAudio(pp);
+    await pp.tap('#paperQs .lq-gap[data-nums="2"]');
+    await pp.waitForTimeout(400);
+    const p2t = await pp.evaluate(listenInfo, '2');
+    check('phone: tapping right blank 2 plays it too', jumped(p2t) && p2t.ptab === 'questions' && p2t.on === '2', p2t);
     await pp.evaluate(() => audioEl.pause());
     await pp.tap('.ptab-btn[data-ptab="side"]');
     const s = await pp.evaluate(() => ({ name: document.getElementById('ptabSideName').textContent, card: !document.getElementById('flagCard').hidden && getComputedStyle(document.getElementById('flagCard')).display !== 'none', btns: !!document.querySelector('#flagCard #checkinBtn') }));
