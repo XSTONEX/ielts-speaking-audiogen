@@ -58,7 +58,7 @@ async function openByTitle(page, re) {
   await page.waitForFunction(() => state.projects.filter(p => p.source_type === 'jiufen' && p.status === 'error' && p.error_phase === 'polish').length === 4, null, { timeout: 30000 });
   execFileSync('python3', [fake, sb]);
 
-  // ---------- 1. 填空 + 单选：默认显示答案，切到重做 ----------
+  // ---------- 1. 填空 + 单选：默认错题标注（2026-11-08 起），切到重做 ----------
   await openByTitle(page, /Riverside Bike Hire/);
   const a0 = await page.evaluate(() => ({
     seg: !document.getElementById('modeSeg').hidden,
@@ -66,7 +66,7 @@ async function openByTitle(page, re) {
     script: document.getElementById('scriptBtn').hidden,
     qtags: document.querySelectorAll('.lr-qtag').length,
   }));
-  check('switch shown on imported article, answers by default', a0.seg && a0.on === 'answers' && a0.script && a0.qtags === 5, a0);
+  check('switch shown on imported article, 错题标注 by default', a0.seg && a0.on === 'flag' && !a0.script && a0.qtags === 0, a0);
   await page.click('.mode-btn[data-mode="redo"]');
   const r0 = await page.evaluate(() => ({
     lyrics: document.getElementById('lyricsContainer').hidden,
@@ -215,6 +215,7 @@ async function openByTitle(page, re) {
 
   // ---------- 2. 地图 + 多选 ----------
   await openByTitle(page, /Greenfield Library Tour/);
+  await page.evaluate(() => setMode('answers'));
   const g0 = await page.evaluate(() => ({
     kinds: state.exam.groups.map(g => g.kind).join(','),
     img: !!document.querySelector('#questionsPane .lq-map .lr-qs__imglink img'),

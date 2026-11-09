@@ -40,7 +40,7 @@ const check = (name, ok, got) => { ok ? pass++ : fail++; console.log(`${ok ? 'PA
   const card = await page.evaluate(() => { const p = state.projects.find(p => p.source_type === 'jiufen'); return { title: p.title, phase: p.error_phase, err: p.error }; });
   check('downloaded, skipped ASR, stopped at translation (no key)', card.phase === 'polish' && /WILDAPI_API_KEY/.test(card.err), card);
   execFileSync('python3', [fake, sb]);
-  await page.evaluate(async () => { await loadProjects(); const p = state.projects.find(p => p.source_type === 'jiufen'); await openProject(p.id); });
+  await page.evaluate(async () => { await loadProjects(); const p = state.projects.find(p => p.source_type === 'jiufen'); await openProject(p.id); setMode('answers'); });
   await page.waitForSelector('#questionsPane .lq-gap');
   const d = await page.evaluate(() => ({
     meta: document.getElementById('detailMeta').textContent,
@@ -71,7 +71,7 @@ const check = (name, ok, got) => { ok ? pass++ : fail++; console.log(`${ok ? 'PA
   check('re-import offers update', /导入过/.test(again) && /更新那一篇/.test(again) && /第 2 次做/.test(again) && /上次 3 \/ 5/.test(again), again);
   await page.click('#uploadJsonBtn');
   await page.waitForFunction(() => document.getElementById('uploadModal').hidden, null, { timeout: 5000 });
-  await page.evaluate(async () => { await loadProjects(); const p = state.projects.find(p => p.source_type === 'jiufen'); await openProject(p.id); });
+  await page.evaluate(async () => { await loadProjects(); const p = state.projects.find(p => p.source_type === 'jiufen'); await openProject(p.id); setMode('answers'); });
   await page.waitForSelector('#attemptBox:not([hidden])');
   await page.click('#attemptBtn');
   await page.click('#attemptMenu [data-i="0"]');
@@ -122,7 +122,7 @@ const check = (name, ok, got) => { ok ? pass++ : fail++; console.log(`${ok ? 'PA
   await page.mouse.up();
   const dragged = await page.evaluate(() => ({ side: Math.round(document.getElementById('notesSide').getBoundingClientRect().width), saved: localStorage.getItem('listening-side-width') }));
   check('drag widens panel and remembers it', dragged.side === 560 && dragged.saved === '560' && /右栏 500 px · 双击恢复 440/.test(badge), { dragged, badge });
-  await page.evaluate(async () => { backToList(); await loadProjects(); const p = state.projects.find(p => p.source_type === 'jiufen'); await openProject(p.id); });
+  await page.evaluate(async () => { backToList(); await loadProjects(); const p = state.projects.find(p => p.source_type === 'jiufen'); await openProject(p.id); setMode('answers'); });
   check('width kept after reopening', await page.evaluate(() => Math.round(document.getElementById('notesSide').getBoundingClientRect().width)) === 560, null);
   const grip2 = await page.evaluate(() => { const r = document.querySelector('.lr-split__grip').getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
   await page.mouse.dblclick(grip2.x, grip2.y);

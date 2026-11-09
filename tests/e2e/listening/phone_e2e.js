@@ -354,7 +354,7 @@ async function openByTitle(page, re) {
     // ================= 导入的篇：题目页签、题号 ↔ 出处 =================
     await section(`${T} exam`, async () => {
     await openByTitle(page, /Riverside Bike Hire/);
-    await page.evaluate(() => setMode('answers'));
+    await page.evaluate(() => { setMode('answers'); setPtab('script'); });
     const et = await page.$$eval('.ptab-btn', els => els.filter(e => !e.hidden).map(e => e.innerText.replace(/\s+/g, '')));
     check(`${T} exam: tabs 原文 | 题目 5 | 本篇`, et.length === 3 && et[1] === '题目5', et);
     await page.evaluate(() => window.scrollTo(0, 0));

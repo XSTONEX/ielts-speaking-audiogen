@@ -717,7 +717,7 @@ button.lq-cell.is-on:focus-visible { box-shadow: var(--w-ring); }
 }
 
 /* ============================================================
-   标出错题（画布第 10 行「新增 · 标出错题」，对应画布里的 project/lr-flag.css）
+   错题标注（画布第 10 行「新增 · 标出错题」，对应画布里的 project/lr-flag.css）
    题目照原卷排、什么都不填、不显示答案；上次做错 / 没答的题号变红，整道题浅红底加红框；答对的不标绿
    ============================================================ */
 .lq-n.is-flag { background: var(--w-err); color: var(--w-surface); box-shadow: none; }
@@ -749,6 +749,25 @@ button.lq-cell.is-on:focus-visible { box-shadow: var(--w-ring); }
 .lq-slot.is-look:hover { border-color: var(--w-line-strong); }
 .lq-slot__sp { display: inline-block; width: 4em; height: 1px; }
 .lq-slot.is-flag, .lq-slot.is-flag:hover { border: 1.5px solid var(--w-err); background: var(--w-err-soft); }
+
+/* 点框起来的题，从原文那里听：小三角提示能点，悬停框加深；刚点的那道外面多一圈 */
+.lq-listen { flex-shrink: 0; width: 10px; height: 10px; color: var(--w-err); }
+.lq-gap .lq-listen, .lq-slot .lq-listen { margin-left: -2px; }
+.lq-grid__item .lq-listen { display: inline-block; margin-left: 6px; vertical-align: 0; }
+.lq-listen-tag { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; padding: 0 7px; height: 20px; border-radius: 10px; background: var(--w-surface); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--w-err) 35%, var(--w-surface)); font-family: var(--font-cn); font-size: 12px; font-weight: 600; line-height: 1; color: var(--w-err); white-space: nowrap; vertical-align: 1px; }
+.lq-listen-tag .lq-listen { width: 8px; height: 8px; }
+.lq-q[data-listen], .lq-q[data-listen] .lq-opt, .lq-gap.is-look[data-listen], .lq-slot.is-look[data-listen],
+.lq-grid tr[data-listen] td, .lq-grid.is-look tr[data-listen] .lq-cell, .lq-line:has([data-listen]), .lr-tbl td.is-flag:has([data-listen]), .lr-qs__content li:has([data-listen]) { cursor: pointer; }
+[data-listen][role="button"] { outline: none; }
+[data-listen][role="button"]:focus-visible { box-shadow: var(--w-ring); }
+.lq-q.is-flag[data-listen]:hover { border-color: var(--w-err); }
+.lq-gap.is-flag[data-listen]:hover, .lq-slot.is-flag[data-listen]:hover { background: color-mix(in srgb, var(--w-err) 14%, var(--w-surface)); }
+.lq-grid tr.is-flag[data-listen]:hover td { background: color-mix(in srgb, var(--w-err) 12%, var(--w-surface)); }
+.lq-q.is-flag.is-on { border-color: var(--w-err); box-shadow: 0 0 0 3px color-mix(in srgb, var(--w-err) 20%, transparent); }
+.lq-gap.is-flag.is-on, .lq-slot.is-flag.is-on { box-shadow: 0 0 0 3px color-mix(in srgb, var(--w-err) 20%, transparent); }
+.lq-grid tr.is-flag.is-on td { background: color-mix(in srgb, var(--w-err) 16%, var(--w-surface)); }
+.lq-grid tr.is-flag.is-on td:first-child { box-shadow: inset 3px 0 0 var(--w-err); }
+.lr-flagcard__note { margin: 0 0 12px 0; }
 
 /* 点题号跳过去时，那道题闪一圈 */
 .is-jump { animation: lr-jump 1.2s ease-out; }
@@ -904,7 +923,7 @@ tr.is-jump td { animation: lr-jump-bg 1.2s ease-out; }
   .lr-paper__bar > .lr-ico, .lr-paper__msg, .lr-paper__script { display: none; }
   .lr-paper__bar .ui-btn { height: 40px; }
   .lr-paper__prog { font-size: var(--w-fs-ui); white-space: nowrap; }
-  /* 标出错题：一行短的「红框 = 错的 4 题」，后面红题号 44px 好点 */
+  /* 错题标注：一行短的「红框 = 错的 4 题」，后面红题号 44px 好点 */
   .lr-detail.is-flag .lr-paper__fw { display: none; }
   .lr-detail.is-flag .lr-paper__fp { display: inline; white-space: nowrap; font-size: var(--w-fs-meta); }
   .lr-detail.is-flag .lr-paper__bar { min-height: 52px; }
