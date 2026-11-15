@@ -1,7 +1,7 @@
 // 「错题标注」的浏览器检查（沙盒、编造数据）：
 // 导入三份 JSON（填空 + 单选；地图 + 多选；版式里选字母的配对 + 填空）→ 页头三档（错题标注 | 显示答案 | 重做），打开就是错题标注 →
 // 卷子 / 原文显示两种排法，不漏答案（正确答案、你填的、对错颜色、解析、出处、划线、字幕上的 Q 标签）→ 错的（含没答）框红、答对的不标 →
-// 点任意一道题 / 题号（对的错的都行）：音频跳到那题的出处句子开始一直往下放，原文不露出来 → 错题卡（错几题、那次答对、题号总览、做题记录、打卡 / 标熟）→
+// 点任意一道题 / 题号（对的错的都行）：只放那题的出处那一段（出处开头到结尾，放完就停；开着单句循环就反复放这一段），原文不露出来 → 错题卡（错几题、那次答对、题号总览、做题记录、打卡 / 标熟）→
 // 换一次记录就按那一次标 → 刷新、换篇回来还是错题标注；从笔记跳到某一句的开在显示答案 → 切回显示答案 / 重做都正常 →
 // 抽屉宽度、暗色、390 手机。
 // 用法见 README；每跑一次前先重灌 seed.py 和 jiufen_data.py。
@@ -109,7 +109,7 @@ function readFlags([hostSel, LEAKS]) {
   await section('paper', async () => {
     await openByTitle(page, /Riverside Bike Hire/);
     const seg = await page.evaluate(() => [...document.querySelectorAll('#modeSeg .mode-btn')].map(b => b.dataset.mode + ':' + b.textContent.trim()).join(' '));
-    check('header switch: 错题标注 first, left of 显示答案', seg === 'flag:错题标注 answers:显示答案 redo:重做', seg);
+    check('header switch: 错题标注 first, left of 显示答案; all three are four characters', seg === 'flag:错题标注 answers:显示答案 redo:重新作答', seg);
     // 不点任何按钮：打开就是这一档
     const p0 = await page.evaluate(() => ({
       on: document.querySelector('.mode-btn.is-on').dataset.mode,
@@ -136,7 +136,7 @@ function readFlags([hostSel, LEAKS]) {
       return { bw: cs.borderTopWidth, bc: cs.borderTopColor, red: getComputedStyle(n).backgroundColor, plain: getComputedStyle(plain).backgroundColor, bg: cs.backgroundColor, sr: g.querySelector('.lr-sr') && g.querySelector('.lr-sr').textContent, empty: g.querySelector('.lq-gap__sp').textContent === '' };
     });
     // 1.5px 的框在 1 倍屏上 Chrome 画成 1px，视网膜屏上是 1.5px
-    check('framed blank: red border, red number chip, empty line, screen-reader note', parseFloat(st.bw) >= 1 && st.bc === st.red && st.red !== st.plain && st.bg !== 'rgba(0, 0, 0, 0)' && st.sr === '（上次错了，按一下从原文这里开始听）' && st.empty, st);
+    check('framed blank: red border, red number chip, empty line, screen-reader note', parseFloat(st.bw) >= 1 && st.bc === st.red && st.red !== st.plain && st.bg !== 'rgba(0, 0, 0, 0)' && st.sr === '（上次错了，按一下听这题的那段原文）' && st.empty, st);
     const la = await page.evaluate(() => {
       const g = document.querySelector('#paperQs .lq-gap.is-flag'), plain = document.querySelector('#paperQs .lq-gap:not(.is-flag)');
       const note = document.getElementById('flagNote');
@@ -146,7 +146,7 @@ function readFlags([hostSel, LEAKS]) {
         plainCursor: getComputedStyle(plain).cursor, all: [...document.querySelectorAll('#paperQs [data-listen]')].map(e => e.dataset.listen).join(','), note: !note.hidden && note.textContent };
     });
     check('every question is tappable: red play mark on wrong ones, grey on right ones, pointer, keyboard focus', la.listen === '3' && la.role === 'button' && la.tab === 0 && la.icon && la.cursor === 'pointer' && la.plain === '1' && la.plainRole === 'button' && la.plainIcon && la.plainIcon !== la.iconRed && la.plainCursor === 'pointer' && la.all === '1,2,3,4,5', la);
-    check('card note: tap any question or number to hear it from there, transcript stays hidden', /点任意一题或题号/.test(la.note || '') && /一直往下放/.test(la.note || '') && /原文还是藏着/.test(la.note || ''), la.note);
+    check('card note: tap any question or number to hear just its part of the transcript, stops at the end, transcript stays hidden', /点任意一题或题号/.test(la.note || '') && /只放那题的那段原文/.test(la.note || '') && /放完就停/.test(la.note || '') && /原文还是藏着/.test(la.note || ''), la.note);
     const c0 = await page.evaluate(() => ({
       nth: document.getElementById('flagNth').textContent,
       count: document.getElementById('flagCount').textContent,
@@ -185,16 +185,29 @@ function readFlags([hostSel, LEAKS]) {
     const ring5 = await page.evaluate(() => { const q = document.querySelector('#paperQs .lq-q[data-listen="5"]'); return { framed: q.classList.contains('is-flag'), border: getComputedStyle(q).borderTopColor, red: getComputedStyle(document.querySelector('#paperQs .lq-n.is-flag')).backgroundColor }; });
     check('tapping a question you got right (5) plays it from its source too, nothing opens', jumped(l5) && !l5.paused && l5.on === '5' && l5.ring && l5.qx === 0 && l5.selQ === null, l5);
     check('…its ring is blue, not the red of a wrong one, and it stays unframed', !ring5.framed && ring5.border !== ring5.red && ring5.border !== 'rgba(0, 0, 0, 0)', ring5);
-    // 不只放出处那一句：一直往下放（4 倍速等它过了出处末尾）
+    // 只放出处那一段：从出处开头放到出处末尾就停（4 倍速等它放完），不往下放下一句
     await parkAudio(page);
     await page.click('#paperQs .lq-gap[data-nums="1"]');
     await page.waitForTimeout(300);
     const p1 = await page.evaluate(listenInfo, '1');
+    check('tapping 1 plays from the start of its source with the end of its source as the stop point', jumped(p1) && !p1.paused && p1.until === p1.end && p1.end > p1.want, p1);
     await page.evaluate(() => { audioEl.playbackRate = 4; });
-    const passed = await page.waitForFunction(end => audioEl.currentTime > end + 1.5, p1.end, { timeout: 8000 }).then(() => true, () => false);
+    const stopped = await page.waitForFunction(() => audioEl.paused, null, { timeout: 8000 }).then(() => true, () => false);
+    await page.waitForTimeout(600);   // 停住以后别再自己走
     const p1b = await page.evaluate(listenInfo, '1');
-    await page.evaluate(() => { audioEl.pause(); audioEl.playbackRate = 1; });
-    check('it keeps playing past the end of the source sentence (no stop at the end)', jumped(p1) && p1.until === null && passed && !p1b.paused && p1b.t > p1.end + 1.5, { p1, p1b, passed });
+    await page.evaluate(() => { audioEl.playbackRate = 1; });
+    // 4 倍速下每帧也就多走 0.07 秒；只靠 timeupdate（一秒四次）会多放出 0.5–1 秒的下一句
+    check('…and stops right at the end of its source (not the next sentence), stays stopped', stopped && p1b.paused && p1b.until === null && p1b.t >= p1.end - 0.05 && p1b.t <= p1.end + 0.35, { p1, p1b, stopped });
+    // 停了以后再点同一题：又从出处开头放这一段
+    await page.click('#paperQs .lq-gap[data-nums="1"]');
+    await page.waitForTimeout(300);
+    const p1c = await page.evaluate(listenInfo, '1');
+    check('tapping the same question again replays its part from the start', jumped(p1c) && !p1c.paused && p1c.until === p1.end, p1c);
+    // 放到一半点另一题：换成那题的那一段，终点也跟着换
+    await page.click('#paperQs .lq-gap[data-nums="4"]');
+    await page.waitForTimeout(300);
+    const p4 = await page.evaluate(listenInfo, '4');
+    check('tapping another question mid-way switches to that question\'s part and its end', jumped(p4) && !p4.paused && p4.until === p4.end && p4.end !== p1.end, p4);
     // 键盘：Tab 到框红的空格按回车
     await parkAudio(page);
     await page.focus('#paperQs .lq-gap.is-flag[data-nums="3"]');
@@ -268,7 +281,7 @@ function readFlags([hostSel, LEAKS]) {
     await page.click('#questionsPane .lq-gap.is-flag[data-nums="4"]');
     await page.waitForTimeout(400);
     const s4 = await page.evaluate(listenInfo, '4');
-    check('framed blank in the side list plays too', jumped(s4) && s4.on === '4', s4);
+    check('framed blank in the side list plays too, only its part (stops at its end)', jumped(s4) && s4.on === '4' && s4.until === s4.end, s4);
     await page.evaluate(() => audioEl.pause());
     await shot(page, 'shown');
     await page.click('#scriptBtn');   // 关回卷子，后面都看卷子
@@ -482,6 +495,31 @@ function readFlags([hostSel, LEAKS]) {
     await pp.waitForTimeout(400);
     const p2t = await pp.evaluate(listenInfo, '2');
     check('phone: tapping right blank 2 plays it too', jumped(p2t) && p2t.ptab === 'questions' && p2t.on === '2', p2t);
+    // 手机上也是放到出处末尾就停
+    await pp.evaluate(() => { audioEl.playbackRate = 4; });
+    const pStop = await pp.waitForFunction(() => audioEl.paused, null, { timeout: 8000 }).then(() => true, () => false);
+    const p2s = await pp.evaluate(listenInfo, '2');
+    check('phone: …and stops at the end of its source', pStop && p2t.until === p2t.end && p2s.paused && p2s.t >= p2t.end - 0.05 && p2s.t <= p2t.end + 0.35, { p2t, p2s });
+    // 开着单句循环：点题就反复放这一段（放到出处末尾跳回出处开头，不停）
+    await pp.tap('#loopBtn');
+    await pp.tap('#paperQs .lq-gap.is-flag[data-nums="3"]');
+    await pp.waitForTimeout(200);
+    const l3 = await pp.evaluate(listenInfo, '3');
+    const lp = await pp.evaluate(async ({ want, end }) => {
+      let reached = false, back = false, maxT = 0;
+      const t0 = performance.now();
+      while (performance.now() - t0 < 8000) {
+        await new Promise(r => requestAnimationFrame(r));
+        const t = audioEl.currentTime;
+        maxT = Math.max(maxT, t);
+        if (t > end - 0.4) reached = true;
+        if (reached && t < want + 0.5) { back = true; break; }
+      }
+      return { reached, back, maxT, paused: audioEl.paused, until: state.playUntil, from: state.loopFrom, loop: state.loop };
+    }, l3);
+    check('phone: with 单句循环 on, tapping 3 repeats just its part (back to its start at its end)', jumped(l3) && lp.loop && lp.back && !lp.paused && lp.until === l3.end && lp.from === l3.want && lp.maxT <= l3.end + 0.35, { l3, lp });
+    await pp.tap('#loopBtn');
+    await pp.evaluate(() => { audioEl.pause(); audioEl.playbackRate = 1; });
     await pp.evaluate(() => audioEl.pause());
     await pp.tap('.ptab-btn[data-ptab="side"]');
     const s = await pp.evaluate(() => ({ name: document.getElementById('ptabSideName').textContent, card: !document.getElementById('flagCard').hidden && getComputedStyle(document.getElementById('flagCard')).display !== 'none', btns: !!document.querySelector('#flagCard #checkinBtn') }));

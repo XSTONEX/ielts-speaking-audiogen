@@ -95,9 +95,9 @@
       </div>
       <div class="ui-head__tools">
         <div id="modeSeg" class="ui-seg lr-mode" role="group" aria-label="答案" hidden>
-          <button class="ui-seg__btn mode-btn is-on" type="button" data-mode="flag" aria-pressed="true" title="只看题目，不显示答案和原文；上次做错、没答的题框出来，点一下从原文那里开始听">错题标注</button>
+          <button class="ui-seg__btn mode-btn is-on" type="button" data-mode="flag" aria-pressed="true" title="只看题目，不显示答案和原文；上次做错、没答的题框出来，点一下只放那题的那段原文">错题标注</button>
           <button class="ui-seg__btn mode-btn" type="button" data-mode="answers" aria-pressed="false">显示答案</button>
-          <button class="ui-seg__btn mode-btn" type="button" data-mode="redo" aria-pressed="false" title="隐藏答案，空格留空，可以重新做一遍">重做</button>
+          <button class="ui-seg__btn mode-btn" type="button" data-mode="redo" aria-pressed="false" title="隐藏答案，空格留空，可以重新做一遍">重新作答</button>
         </div>
         <button id="scriptBtn" class="ui-btn ui-btn--md" type="button" aria-pressed="false" onclick="toggleScript()" hidden>
           <svg id="scriptCheck" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8.5 6.5 11.5 12.5 4.5"/></svg>显示原文
@@ -158,7 +158,7 @@
         <aside id="notesSide" class="lr-side" aria-label="本篇">
           <!-- 重做时顶上换成答题卡 -->
           <section id="redoCard" class="lr-side__card" aria-label="答题卡" hidden>
-            <div class="lr-row"><h2 class="lr-side__title">重做</h2><span id="redoNth" class="ui-tag ui-tag--accent"></span><span class="lr-spacer"></span><span class="lr-meta">答案先存在这台设备上</span>
+            <div class="lr-row"><h2 class="lr-side__title">重新作答</h2><span id="redoNth" class="ui-tag ui-tag--accent"></span><span class="lr-spacer"></span><span class="lr-meta">答案先存在这台设备上</span>
               <button class="lr-icon lr-side__close" type="button" aria-label="收起答题卡" onclick="toggleSide(false)"><svg class="lr-ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
             </div>
             <div class="lr-sheet__nums">
@@ -171,7 +171,7 @@
               <button class="ui-btn ui-btn--md" type="button" onclick="clearRedo()">清空重来</button>
               <button class="ui-btn ui-btn--md ui-btn--primary" type="button" onclick="openSubmitDialog()">交卷</button>
             </div>
-            <p class="lr-sheet__note">交卷后才判分。你当时在九分学长上划的黄色关键词，重做时不显示。</p>
+            <p class="lr-sheet__note">交卷后才判分。你当时在九分学长上划的黄色关键词，重新作答时不显示。</p>
           </section>
           <!-- 错题标注时顶上换成这张：错几题、那次答对几题、题号总览；做题记录和打卡 / 标熟从「本篇」卡搬过来 -->
           <section id="flagCard" class="lr-side__card lr-flagcard" aria-label="错题标注" hidden>
@@ -415,7 +415,7 @@
       <div class="ui-dialog__head"><h3 class="ui-dialog__title" id="moreTitle">更多</h3><button class="ui-dialog__close" type="button" aria-label="关闭" onclick="closeMoreSheet()">×</button></div>
       <div class="ui-dialog__body lr-mlist">
         <button id="moreFollow" class="lr-mrow" type="button" role="switch" aria-checked="true" onclick="toggleFollowPref()"><span class="lr-mrow__main"><b>跟随播放</b><span>播放时字幕自动滚到正在播的那句</span></span><span class="lr-switch" aria-hidden="true"></span></button>
-        <button id="moreScript" class="lr-mrow" type="button" role="switch" aria-checked="false" onclick="toggleScript()" hidden><span class="lr-mrow__main"><b>显示原文</b><span>重做、错题标注时边听边对着原文；关掉就只听音频看题</span></span><span class="lr-switch" aria-hidden="true"></span></button>
+        <button id="moreScript" class="lr-mrow" type="button" role="switch" aria-checked="false" onclick="toggleScript()" hidden><span class="lr-mrow__main"><b>显示原文</b><span>错题标注、重新作答时边听边对着原文；关掉就只听音频看题</span></span><span class="lr-switch" aria-hidden="true"></span></button>
         <a class="lr-mrow" href="/listening_review/notes"><span class="lr-mrow__main"><b>听力笔记本</b><span>所有文章的笔记和生词，可以翻卡复习</span></span><span class="lr-mrow__go" aria-hidden="true">›</span></a>
       </div>
     </div>
@@ -3342,7 +3342,7 @@ function renderRedoQuestions() {
 // ===================================================================
 //  错题标注：题目照原卷排、什么都不填、不显示答案和解析；
 //  这一次（默认最新一次）做错或没答的题，题号变红、整道题浅红底加红框；
-//  点任意一道题（或题号），音频跳到这题的出处句子开始一直往下放，原文照样藏着
+//  点任意一道题（或题号），只放这题的出处那一段（出处开头到结尾，放完就停），原文照样藏着
 // ===================================================================
 function flaggedNums() {
   const out = new Set();
@@ -3360,15 +3360,15 @@ function flagListenNums() {
   examQuestions().forEach(({ q }) => { if (evidenceSegs(q).length) out.add(q.num); });
   return out;
 }
-// 读屏：错的说「上次错了」，能点的说「按一下从原文这里开始听」
+// 读屏：错的说「上次错了」，能点的说「按一下听这题的那段原文」
 function flagSr(num, bad) {
-  const ear = flagListen.has(num) ? '按一下从原文这里开始听' : '';
+  const ear = flagListen.has(num) ? '按一下听这题的那段原文' : '';
   if (bad) return `<span class="lr-sr">（上次错了${ear ? '，' + ear : ''}）</span>`;
   return ear ? `<span class="lr-sr">（${ear}）</span>` : '';
 }
 // 能点的那个元素：带 data-listen，键盘也能按
 function flagListenAttrs(num) {
-  return flagListen.has(num) ? ` data-listen="${esc(num)}" role="button" tabindex="0" title="从第 ${esc(num)} 题的原文开始听"` : '';
+  return flagListen.has(num) ? ` data-listen="${esc(num)}" role="button" tabindex="0" title="听第 ${esc(num)} 题的那段原文"` : '';
 }
 const FLAG_PLAY = '<svg class="lq-listen" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.2 1.8v8.4L10.2 6z" fill="currentColor"/></svg>';
 function flagTagHtml(num) {
@@ -3514,7 +3514,7 @@ function renderFlagCard(wrong) {
   document.getElementById('paperJump').innerHTML = [...wrong].map(n => `<button class="lr-qnum is-flag" type="button" data-q="${esc(n)}" aria-label="跳到第 ${esc(n)} 题${flagListen.has(n) ? '，从原文那里听' : ''}">${esc(n)}</button>`).join('');
   const note = document.getElementById('flagNote');
   note.hidden = !ear;
-  note.textContent = paper ? '点任意一题或题号，音频从那题的原文开始一直往下放，原文还是藏着。' : '点任意一题或题号，音频从那题的原文开始一直往下放。';
+  note.textContent = paper ? '点任意一题或题号，只放那题的那段原文，放完就停，原文还是藏着。' : '点任意一题或题号，只放那题的那段原文，放完就停。';
 }
 
 // 原文显示时题目在右栏（顶上有题号总览）；原文隐藏时在左边的卷子里（题号总览在错题卡上）
@@ -3560,19 +3560,22 @@ function focusFlagQuestion(num) {
   setTimeout(() => ring.classList.remove('is-jump'), 1300);
 }
 
-// 点一道题（对的错的都行）：音频跳到这题的出处句子开头，一直往下放，不在出处末尾停（开着单句循环就循环那句）；
-// 原文照样藏着，不切到原文、不滚字幕（自己开了「显示原文」的才跟着走）
+// 点一道题（对的错的都行）：只放这题的出处那一段——从出处第一句开头放到最后一句结尾就停（开着单句循环就反复放这一段）；
+// 原文照样藏着，不切到原文、不滚字幕（自己开了「显示原文」的才跟着走）。只有错题标注这样，显示答案的「▶ 出处」本来就是放完停
 function listenFlag(num) {
   const item = examQuestions().find(x => x.q.num === num);
   const segs = item ? evidenceSegs(item.q) : [];
   if (!segs.length) return false;
   markVocabAudioManualOverride();
   const from = Math.min(...segs.map(s => s.start));
+  const until = Math.max(...segs.map(s => s.end));
   state.flagOn = num;
   markFlagOn();
   state.follow = true;
   seekWhenReady(from, () => {
-    retargetLoop(from);
+    // 先跳过去再定终点：不然正在播的地方已经过了终点，下一次 timeupdate 会当成「放完了」直接停
+    state.playUntil = until;
+    state.loopFrom = state.loop ? from : null;
     if (audioEl.paused) audioEl.play().catch(() => {});
     else watchPlayRange();
   });
@@ -4544,9 +4547,10 @@ function checkPlayRange(t) {
   if (state.loopFrom !== null) audioEl.currentTime = state.loopFrom;
   else { state.playUntil = null; audioEl.pause(); }
 }
-// timeupdate 一秒才四次，循环时会多播出下一句的头；手机上播放期间每一帧查一次
+// timeupdate 一秒才四次，循环时会多播出下一句的头；手机上播放期间每一帧查一次。
+// 错题标注点题只放那一段，宽屏也每一帧查，停在出处末尾、不多放出下一句的头（显示答案 / 重做的宽屏照旧）
 function watchPlayRange() {
-  if (!isPhone()) return;
+  if (!isPhone() && state.mode !== 'flag') return;
   const tick = () => {
     if (audioEl.paused || state.playUntil === null) return;
     checkPlayRange(audioEl.currentTime);
