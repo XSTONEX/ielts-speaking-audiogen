@@ -1,7 +1,7 @@
 # 全局拖拽学习助手 - AI 聊天 Prompt
 # 路由: /api/writing/ai_chat (mode=global)
 
-model: gemini-3.8-flash
+# 模型不在这里设：统一看 routers/writing_logic.py 的 WRITING_MODEL（或 .env 的 WRITING_LLM_MODEL）
 temperature: 0.6
 timeout: 40   # 单次上限；失败会再重试一次，总预算约 80 秒
 

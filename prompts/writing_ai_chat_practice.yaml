@@ -3,7 +3,7 @@
 # 变量: target_chinese, user_translation, ai_feedback_summary, grammar_corrections
 # 注意：system_prompt 会经过 str.format，正文里不能出现单个花括号
 
-model: gemini-3.8-flash
+# 模型不在这里设：统一看 routers/writing_logic.py 的 WRITING_MODEL（或 .env 的 WRITING_LLM_MODEL）
 temperature: 0.5
 timeout: 40   # 单次上限；失败会再重试一次，总预算约 80 秒
 

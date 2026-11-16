@@ -2,7 +2,9 @@
 
 用法（在项目根目录）：
     uv run python script/bench_writing_llm.py --limit 1        # 先冒烟，确认两边 key 都能用
-    uv run python script/bench_writing_llm.py                  # 全量，默认 gemini-3.8-flash vs deepseek-flash
+    uv run python script/bench_writing_llm.py                  # 全量，默认 wild/claude-sonnet-5-5 vs gemini-3.8-flash
+    uv run python script/bench_writing_llm.py --models gemini-3.8-flash aihubmix/gemini-4-hydrogen@low
+    模型名写法和线上一样（见 docs/writing-llm.md）；批改按非流式调用，测的是整条耗时。
 
 题目来源：
 - script/bench_writing_cases.json：题库原句 + 故意写错的作答（planted 标了埋的错）、
@@ -45,7 +47,8 @@ T2_BANK = os.path.join(ROOT, core.WRITING_MD_FILE)
 T1_BANK = os.path.join(ROOT, core.WRITING_SMALL_MD_FILE)
 ERROR_TYPES = {'拼写', '时态', '主谓一致', '单复数', '冠词', '介词', '词性', '用词', '搭配',
                '缺成分', '多余', '非谓语', '句子结构', '漏译', '标点'}
-KEY_ENVS = {'gemini': 'WILDAPI_API_KEY', 'deepseek': 'DEEPSEEK_API_KEY'}
+KEY_ENVS = {'gemini': 'WILDAPI_API_KEY', 'wild': 'WILDAPI_API_KEY', 'deepseek': 'DEEPSEEK_API_KEY',
+            'aihubmix': 'AIHUBMIX_API_KEY'}
 
 
 # ---------- 题目 ----------
@@ -285,19 +288,22 @@ def blind_pairs(cases, results, models, seed):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--models', nargs='+', default=['gemini-3.8-flash', 'deepseek-flash'])
+    ap.add_argument('--models', nargs='+', default=['wild/claude-sonnet-5-5', 'gemini-3.8-flash'])
     ap.add_argument('--out', default=os.path.join('output', 'bench_writing_llm', datetime.now().strftime('%Y%m%d-%H%M%S')))
     ap.add_argument('--workers', type=int, default=4)
     ap.add_argument('--limit', type=int, default=0, help='批改、追问各只跑前 N 题（冒烟用）')
     ap.add_argument('--no-real', action='store_true', help='不读用户真实作答')
+    ap.add_argument('--data-dir', help='真实作答所在目录（*_practice.json），默认 writing_correction/data')
     ap.add_argument('--seed', type=int, default=7)
     args = ap.parse_args()
 
     for m in args.models:
-        env = KEY_ENVS['deepseek' if m.startswith('deepseek') else 'gemini']
+        env = KEY_ENVS[core._provider(m)]
         print(f"{m}: {env} {'已设置' if os.getenv(env) else '未设置！'}")
 
     cases = json.load(open(CASES_FILE, encoding='utf-8'))
+    if args.data_dir:
+        core.WRITING_DATA_DIR = os.path.abspath(args.data_dir)
     if not args.no_real:
         cases += real_cases()
     if args.limit:

@@ -4,7 +4,7 @@
 # 页面按 grammar_corrections 的 original/corrected 自动比对出划线、标错字母，
 # 所以 original 必须是学生原句里的原文片段，一处错误一条。
 
-model: gemini-3.8-flash
+# 模型不在这里设：统一看 routers/writing_logic.py 的 WRITING_MODEL（或 .env 的 WRITING_LLM_MODEL）
 temperature: 0.2
 timeout: 40   # 单次上限；失败会再重试一次，总预算约 80 秒
 response_format: json_object

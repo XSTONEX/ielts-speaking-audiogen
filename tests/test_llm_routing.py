@@ -82,8 +82,8 @@ class LlmRoutingTest(unittest.TestCase):
         self.assertEqual(call.call_args.args[0]['model'], 'deepseek-flash')
 
         with mock.patch.object(writing_logic, 'call_llm', return_value='ok') as call:
-            writing_logic._writing_llm({'model': 'gemini-3.8-flash'}, MESSAGES)
-        self.assertEqual(call.call_args.args[0]['model'], 'gemini-3.8-flash')
+            writing_logic._writing_llm({'temperature': 0.2}, MESSAGES)
+        self.assertEqual(call.call_args.args[0]['model'], writing_logic.WRITING_MODEL)
 
 
 if __name__ == '__main__':

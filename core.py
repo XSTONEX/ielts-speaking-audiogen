@@ -94,6 +94,14 @@ def load_prompt(name):
 WILDAPI_DEFAULT_BASE = 'https://api.gptsapi.net/v1'
 # deepseek-* 直连 DeepSeek 官方 API（OpenAI 兼容格式），国内机房可直连
 DEEPSEEK_DEFAULT_BASE = 'https://api.deepseek.com'
+# aihubmix/<模型>[@思考档位] 走 AIHubMix 的 OpenAI 兼容接口，如 aihubmix/gemini-4-hydrogen@low。
+# gemini-4-hydrogen 只开放 /v1/chat/completions；思考关不掉（low/medium/high/xhigh，
+# 传 thinking_budget 直接 400），temperature 会被忽略，所以这两样都不发。
+AIHUBMIX_DEFAULT_BASE = 'https://aihubmix.com/v1'
+AIHUBMIX_PREFIX = 'aihubmix/'
+# wild/<模型> 走 WildAPI 的 OpenAI 兼容接口（/v1/chat/completions，Bearer 同一个 WILDAPI_API_KEY），
+# 给 Claude / GPT 这类不走 Gemini 原生接口的模型用，如 wild/claude-sonnet-5-5。
+WILD_PREFIX = 'wild/'
 # 中转偶发 ReadTimeout，实测约一成，重试一次基本能救回来
 LLM_ATTEMPTS = 2
 LLM_RETRY_WAIT = 1
@@ -102,10 +110,53 @@ LLM_RETRY_WAIT = 1
 STREAM_STALL_SECONDS = 15
 
 
+def _provider(model):
+    model = model or ''
+    if model.startswith(AIHUBMIX_PREFIX):
+        return 'aihubmix'
+    if model.startswith(WILD_PREFIX):
+        return 'wild'
+    if model.startswith('deepseek'):
+        return 'deepseek'
+    return 'gemini'
+
+
+def _fallback_cfg(cfg, exc):
+    """主模型失败后改用的配置；没配 fallback_model 或和主模型相同就返回 None（照常抛错）。"""
+    fallback = cfg.get('fallback_model')
+    if not fallback or fallback == cfg.get('model'):
+        return None
+    logging.warning('%s 调用失败，改用 %s：%s', cfg.get('model'), fallback, exc)
+    return {**cfg, 'model': fallback, 'fallback_model': None}
+
+
 def call_llm(cfg, messages):
-    """按 cfg.model 选上游：deepseek-* 走 DeepSeek 官方 API，其余走 WildAPI 的 Gemini。"""
-    if (cfg.get('model') or '').startswith('deepseek'):
-        return call_deepseek_llm(cfg, messages)
+    """按 cfg.model 选上游：wild/* 走 WildAPI 的 OpenAI 兼容接口，aihubmix/* 走 AIHubMix，
+    deepseek-* 走 DeepSeek 官方 API，其余（gemini-*）走 WildAPI 的 Gemini 原生接口。
+
+    cfg.fallback_model：主模型连重试都失败（余额用完 403、key 没配、超时、5xx……）时
+    换这个模型再来一遍，免得一个中转出问题就整个批改不能用。
+    """
+    try:
+        return _call_llm_once(cfg, messages)
+    except Exception as exc:
+        fallback = _fallback_cfg(cfg, exc)
+        if fallback is None:
+            raise
+    return _call_llm_once(fallback, messages)
+
+
+def _call_llm_once(cfg, messages):
+    provider = _provider(cfg.get('model'))
+    if provider == 'wild':
+        # WildAPI 把 Claude 的非流式回复转成 OpenAI 格式时会把正文弄丢：content 是空串，
+        # usage 里却记着两百多个输出 token（2026-11-15 追问提示词上稳定复现）。
+        # 流式没这个问题，所以非流式调用也走流式再拼起来；一个字都没有照样算失败、会重试 / 退回后备。
+        return ''.join(_stream_llm_once(cfg, messages))
+    if provider in _OPENAI_STYLE:
+        label, build = _OPENAI_STYLE[provider]
+        url, headers, body = build(cfg, messages)
+        return _post_llm(label, url, headers, body, cfg.get('timeout', 60), _openai_extract)
     return call_gemini_llm(cfg, messages)
 
 
@@ -141,11 +192,22 @@ def _post_llm(label, url, headers, body, timeout, extract):
     raise last_error
 
 
+def _chat_messages(messages):
+    return [{'role': m['role'], 'content': m['content']}
+            for m in messages if m.get('role') in ('system', 'user', 'assistant') and m.get('content')]
+
+
+def _openai_extract(data):
+    choice = (data.get('choices') or [{}])[0]
+    return ((choice.get('message') or {}).get('content') or '').strip(), choice.get('finish_reason')
+
+
 def _deepseek_request(cfg, messages):
+    """DeepSeek 官方 API。官方默认开思考，显式关掉才是最快档；
+    response_format=json_object 对应它的 JSON 模式（要求提示词里出现 json 字样）。"""
     body = {
         'model': cfg.get('model') or 'deepseek-flash',
-        'messages': [{'role': m['role'], 'content': m['content']}
-                     for m in messages if m.get('role') in ('system', 'user', 'assistant') and m.get('content')],
+        'messages': _chat_messages(messages),
         'temperature': cfg.get('temperature', 0.3),
         'thinking': {'type': 'disabled'},
     }
@@ -158,19 +220,45 @@ def _deepseek_request(cfg, messages):
     return f'{base}/chat/completions', headers, body
 
 
-def call_deepseek_llm(cfg, messages):
-    """调用 DeepSeek 官方 API（/chat/completions）并返回回复文本。
+def _aihubmix_request(cfg, messages):
+    """AIHubMix。思考档位：模型名后面的 @low / @medium …，没写就看 cfg.reasoning_effort，再没有用 low。"""
+    name, _, effort = (cfg.get('model') or '')[len(AIHUBMIX_PREFIX):].partition('@')
+    body = {
+        'model': name,
+        'messages': _chat_messages(messages),
+        'reasoning_effort': effort or cfg.get('reasoning_effort') or 'low',
+    }
+    if cfg.get('response_format') == 'json_object':
+        body['response_format'] = {'type': 'json_object'}
+    if cfg.get('max_output_tokens'):
+        body['max_completion_tokens'] = cfg['max_output_tokens']   # 这个上限把思考 token 也算在内
+    base = (os.getenv('AIHUBMIX_BASE_URL') or AIHUBMIX_DEFAULT_BASE).rstrip('/')
+    headers = {'Authorization': f"Bearer {os.getenv('AIHUBMIX_API_KEY')}", 'Content-Type': 'application/json'}
+    return f'{base}/chat/completions', headers, body
 
-    官方 API 默认开思考，显式关掉才是最快档（和 llm_context_translator 的 deepseek-flash 一致）。
-    response_format=json_object 对应 DeepSeek 的 JSON 模式，它要求提示词里出现 json 字样；
-    max_output_tokens 对应 max_tokens。
-    """
-    def extract(data):
-        choice = (data.get('choices') or [{}])[0]
-        return ((choice.get('message') or {}).get('content') or '').strip(), choice.get('finish_reason')
 
-    url, headers, body = _deepseek_request(cfg, messages)
-    return _post_llm('DeepSeek', url, headers, body, cfg.get('timeout', 60), extract)
+def _wild_chat_request(cfg, messages):
+    """WildAPI 的 OpenAI 兼容接口。response_format 不发：Claude 走这条路不一定认，
+    认不了就是 400、每次都掉到后备模型；批改提示词本身要求输出 JSON，
+    _parse_ai_json 也会剥掉代码块围栏（2026-11-15 实测 claude-sonnet-5-5 直接输出合法 JSON）。"""
+    body = {
+        'model': (cfg.get('model') or '')[len(WILD_PREFIX):],
+        'messages': _chat_messages(messages),
+        'temperature': cfg.get('temperature', 0.3),
+    }
+    if cfg.get('max_output_tokens'):
+        body['max_tokens'] = cfg['max_output_tokens']
+    base = (os.getenv('WILDAPI_BASE_URL') or WILDAPI_DEFAULT_BASE).rstrip('/')
+    headers = {'Authorization': f"Bearer {os.getenv('WILDAPI_API_KEY')}", 'Content-Type': 'application/json'}
+    return f'{base}/chat/completions', headers, body
+
+
+# 走 OpenAI 兼容 /chat/completions 的几家：provider → (日志名, 请求构造函数)
+_OPENAI_STYLE = {
+    'wild': ('WildAPI', _wild_chat_request),
+    'aihubmix': ('AIHubMix', _aihubmix_request),
+    'deepseek': ('DeepSeek', _deepseek_request),
+}
 
 
 def _gemini_endpoint(model):
@@ -225,16 +313,38 @@ def call_gemini_llm(cfg, messages):
 
 
 def stream_llm(cfg, messages):
-    """流式版 call_llm：边生成边 yield 回复片段。两家都走 SSE（每行 data: {json}）。
+    """流式版 call_llm：边生成边 yield 回复片段。三家都走 SSE（每行 data: {json}）。
 
     Gemini 用 :streamGenerateContent?alt=sse，实测 WildAPI 真的是边生成边发（一次批改十几段）。
     一个字都还没收到就失败的，和 call_llm 一样重试一次；已经吐出一部分再断的直接抛出，
     由调用方整条重来——半截内容没法和重试的结果拼起来。
     超过 STREAM_STALL_SECONDS 没有新内容（心跳不算）按 ReadTimeout 处理。
+    重试也失败、一个字都没吐出来时，有 cfg.fallback_model 就换它整条再来（同 call_llm）。
     """
-    if (cfg.get('model') or '').startswith('deepseek'):
-        label = 'DeepSeek'
-        url, headers, body = _deepseek_request(cfg, messages)
+    primary = _stream_llm_once(cfg, messages)
+    got_text = False
+    try:
+        for piece in primary:
+            got_text = True
+            yield piece
+        return
+    except Exception as exc:
+        fallback = None if got_text else _fallback_cfg(cfg, exc)
+        if fallback is None:
+            raise
+    finally:
+        primary.close()   # 调用方提前 close() 时把上游连接一并断开
+    yield from _stream_llm_once(fallback, messages)
+
+
+def _stream_llm_once(cfg, messages):
+    provider = _provider(cfg.get('model'))
+    # 思考模型先闷头想一阵才出第一个字（hydrogen medium 实测最长 28 秒，期间只有心跳），
+    # 第一个字之前按 cfg.timeout 等；出字之后照旧 STREAM_STALL_SECONDS 没新内容算卡住
+    first_wait = max(STREAM_STALL_SECONDS, cfg.get('timeout', 60)) if provider == 'aihubmix' else STREAM_STALL_SECONDS
+    if provider in _OPENAI_STYLE:
+        label, build = _OPENAI_STYLE[provider]
+        url, headers, body = build(cfg, messages)
         body['stream'] = True
 
         def pieces(event):
@@ -253,13 +363,14 @@ def stream_llm(cfg, messages):
         got_text = False
         try:
             with requests.post(url, headers=headers, json=body, stream=True,
-                               timeout=(cfg.get('timeout', 60), STREAM_STALL_SECONDS)) as resp:
+                               timeout=(cfg.get('timeout', 60), first_wait)) as resp:
                 resp.raise_for_status()
                 last_text_at = time.monotonic()
                 # chunk_size=None：收到多少给多少，不等凑满一块，否则会攒着不发
                 for line in resp.iter_lines(chunk_size=None):
-                    if time.monotonic() - last_text_at > STREAM_STALL_SECONDS:
-                        raise requests.exceptions.ReadTimeout(f'{STREAM_STALL_SECONDS} 秒没有新内容')
+                    wait = STREAM_STALL_SECONDS if got_text else first_wait
+                    if time.monotonic() - last_text_at > wait:
+                        raise requests.exceptions.ReadTimeout(f'{wait} 秒没有新内容')
                     if not line.startswith(b'data:'):
                         continue
                     data = line[5:].strip()

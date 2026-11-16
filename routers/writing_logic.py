@@ -18,11 +18,23 @@ from core import (
 writing_bp = Blueprint('writing', __name__)
 
 
+# 写作批改（思维链 / 小作文 / 模板写作）和 AI 追问、AI 助手用的模型，只在这一处设置。
+# 想临时换：服务器 .env 里写 WRITING_LLM_MODEL=<模型>，重启即生效，删掉那行就回到这里的默认。
+# 能填的值、各自的速度/质量/价格实测见 docs/writing-llm.md。
+WRITING_MODEL = 'wild/claude-sonnet-5-5'
+# 主模型连重试都失败（额度用完、key 没配、上游 5xx / 超时）时自动换它再来一遍；
+# 可用 .env 的 WRITING_LLM_FALLBACK 覆盖
+WRITING_FALLBACK_MODEL = 'gemini-3.8-flash'
+
+
 def _writing_cfg(cfg):
-    """WRITING_LLM_MODEL（如 deepseek-flash）整体覆盖各提示词 yaml 里写的模型，
-    不设时用 yaml 里的；改 .env 重启即可切换或回滚。"""
-    model = os.getenv('WRITING_LLM_MODEL', '').strip()
-    return {**cfg, 'model': model} if model else cfg
+    """给提示词 yaml 的配置（温度、超时……）填上模型和后备模型。"""
+    model = os.getenv('WRITING_LLM_MODEL', '').strip() or WRITING_MODEL
+    fallback = os.getenv('WRITING_LLM_FALLBACK', '').strip() or WRITING_FALLBACK_MODEL
+    out = {**cfg, 'model': model}
+    if fallback != model:
+        out['fallback_model'] = fallback
+    return out
 
 
 def _writing_llm(cfg, messages):
