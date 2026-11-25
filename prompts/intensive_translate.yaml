@@ -3,16 +3,19 @@
 # 变量: items_json —— [{"id": "s0", "en": "..."}]，s 开头是原文句子，q 是题干，o / g 是选项
 #
 # 走 WildAPI 中转的 Gemini 原生接口（core.call_gemini_llm）。
-# 一篇雅思阅读约 30 句 + 13 题，按 batch_size 切批并发，单批约 10 秒，
-# 远离 WildAPI 前面 Cloudflare 约 60 秒的掐断线。
+# 一篇雅思阅读约 30 句 + 13 题，按 batch_size 切批并发。
+# 2026-11-25 线上中转变慢，25 条一批跑了约 70 秒，被 WildAPI 前面的 Cloudflare 回 504，
+# 重试后整次导入要 80–110 秒。所以批切小、并发加大，让单批远离那条线；
+# 单次超时 45 秒（core 里失败会重试一次）：Cloudflare 约 60 秒就掐，超时设得更长也等不到结果，
+# 卡住的请求只会白等。nginx 上 /intensive_import 也要走 300 秒那组 location，否则 60 秒就 504。
 
 model: gemini-3.8-flash
 temperature: 0.2
 response_format: json_object
 max_output_tokens: 16384
-batch_size: 25
-batch_concurrency: 3
-timeout: 90
+batch_size: 12
+batch_concurrency: 5
+timeout: 45
 
 system_prompt: |
   你是资深的雅思阅读中英翻译。用户会给你一组英文条目，来自同一篇雅思阅读文章和它的题目，
