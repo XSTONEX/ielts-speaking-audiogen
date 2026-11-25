@@ -12,7 +12,7 @@ from core import (
     delete_vocab_audio,
     delete_article_vocab_audio, delete_article_audio_files,
     is_safe_path_segment,
-    load_prompt, call_gemini_llm
+    load_prompt, call_gemini_llm, call_llm
 )
 from utils import jiufen_import
 
@@ -41,6 +41,18 @@ def _utf16_len(text):
     return len(text.encode('utf-16-le')) // 2
 
 
+def _question_options(group, q):
+    """这道题要画的选项。九分学长的「选两项 / 选三项」整组只在第一题带选项，其余题借同组第一个有选项的题，
+    每道题都画出完整的选项（和 templates/intensive.html 的 questionOptions 一致）"""
+    own = [o for o in (q.get('options') or []) if isinstance(o, dict)]
+    if own or group.get('kind') != 'choice':
+        return own
+    for other in group.get('questions') or []:
+        if isinstance(other, dict) and other.get('options'):
+            return [o for o in other['options'] if isinstance(o, dict)]
+    return []
+
+
 def _exam_text_blocks(exam):
     """题目栏里能划词的每一段文字：{块名: (文字, 是不是 HTML)}。块名和页面上的 data-hk 一一对应：
     g<组>.q<题号> 题干、g<组>.q<题号>.<选项> 选择题选项、g<组>.o<选项> 题组公共选项、g<组>.layout 原题版式"""
@@ -58,8 +70,8 @@ def _exam_text_blocks(exam):
                 continue
             if q.get('text'):
                 blocks[f"g{gi}.q{q.get('num')}"] = (q['text'], False)
-            for o in q.get('options') or []:
-                if isinstance(o, dict) and o.get('text'):
+            for o in _question_options(g, q):
+                if o.get('text'):
                     blocks[f"g{gi}.q{q.get('num')}.{o.get('key')}"] = (o['text'], False)
     return blocks
 
@@ -505,6 +517,79 @@ def intensive_article(article_id):
         }})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+def _utf16_slice(text, start, end):
+    return text.encode('utf-16-le')[start * 2:end * 2].decode('utf-16-le', errors='replace')
+
+
+def _lookup_context(obj, qk, start, end, word):
+    """三击查词的上下文：正文里是这个词所在的那一行（一行原文 = 一句或一段），题目栏里是那段题目文字。
+    下标越界或和词对不上返回 None。"""
+    if qk:
+        if not _question_range_ok(obj.get('exam'), qk, start, end, word):
+            return None
+        body, is_html = _exam_text_blocks(obj.get('exam')).get(qk)
+        if is_html:
+            body = html.unescape(re.sub(r'<[^>]*>', ' ', body))
+        return ' '.join(body.split())
+    content = obj.get('content_text') or ''
+    if not (0 <= start < end <= _utf16_len(content)) or _utf16_slice(content, start, end) != word:
+        return None
+    before = _utf16_slice(content, 0, start)
+    line_start = before.rfind('\n') + 1
+    line_end = content.find('\n', len(before))
+    line = content[line_start:line_end if line_end >= 0 else len(content)]
+    return ' '.join(line.split())
+
+
+LOOKUP_CONTEXT_CHARS = 600
+LOOKUP_MEANING_CHARS = 60
+
+
+@intensive_reading_bp.route('/intensive_lookup', methods=['POST'])
+def intensive_lookup():
+    """三击查词：拿选中的词和它所在的句子问模型，回一行和用户手写习惯一样的释义（「v. 似乎；显得」）。
+    只查不存，页面拿到释义再走 /intensive_add_highlight。提示词和模型在 prompts/intensive_lookup.yaml。"""
+    data = request.json or {}
+    article_id, qk = data.get('id'), data.get('qk')
+    word = (data.get('text') or '').strip()
+    if not _valid_article_id(article_id) or not word or len(word) > 80:
+        return jsonify({'error': '参数不完整'}), 400
+    if qk is not None and (not isinstance(qk, str) or not qk):
+        return jsonify({'error': '参数不完整'}), 400
+    try:
+        start, end = int(data.get('start')), int(data.get('end'))
+    except (TypeError, ValueError):
+        return jsonify({'error': '选择范围无效'}), 400
+    path = _article_path(article_id)
+    if not os.path.exists(path):
+        return jsonify({'error': '文章不存在'}), 404
+    with open(path, 'r', encoding='utf-8') as f:
+        obj = json.load(f)
+    context = _lookup_context(obj, qk, start, end, word)
+    if context is None:
+        return jsonify({'error': '选择范围无效'}), 400
+    if len(context) > LOOKUP_CONTEXT_CHARS:
+        # 很长的一行（整段没分句）只留这个词前后一截
+        i = max(0, context.find(word))
+        lo = max(0, i - LOOKUP_CONTEXT_CHARS // 2)
+        context = context[lo:lo + LOOKUP_CONTEXT_CHARS]
+
+    cfg = load_prompt('intensive_lookup')
+    try:
+        reply = call_llm(cfg, [
+            {'role': 'system', 'content': cfg['system_prompt']},
+            {'role': 'user', 'content': cfg['user_prompt'].format(word=word, context=context)},
+        ])
+        meaning = json.loads(_strip_code_fence(reply)).get('meaning')
+    except Exception as e:
+        print(f"[intensive_lookup] {word!r}: {e}")
+        return jsonify({'error': 'AI 释义暂时取不到，请自己写一下'}), 502
+    meaning = ' '.join(str(meaning or '').split())[:LOOKUP_MEANING_CHARS]
+    if not meaning:
+        return jsonify({'error': 'AI 没给出释义，请自己写一下'}), 502
+    return jsonify({'success': True, 'meaning': meaning})
+
 
 @intensive_reading_bp.route('/intensive_add_highlight', methods=['POST'])
 def intensive_add_highlight():

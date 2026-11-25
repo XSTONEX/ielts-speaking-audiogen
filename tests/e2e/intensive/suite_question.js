@@ -26,6 +26,17 @@ function examJson() {
     description: 'Match the statement with the correct person, <strong>A or B</strong>.',
     questions: [{ id: '981', qNumber: '8', question: 'suggested painting the railings blue', rightAnswer: 'B', userAnswer: 'B', state: '1', analyses: [], displayOrder: 1, options: [] }],
   });
+  // 选两项：九分学长只在第一题带选项，第二题只有题干和答案
+  const stem = 'Which TWO features of the bridge does the writer mention?';
+  groups.push({
+    id: '940', displayOrder: 5, qRange: 'Questions 9-10', type: 'multiple-choice', contentHtml: null, options: [],
+    description: 'Choose <strong>TWO</strong> letters, <strong>A-E</strong>.',
+    questions: [
+      { id: '991', qNumber: '9', question: stem, rightAnswer: 'A', userAnswer: 'E', state: '2', analyses: [], displayOrder: 1,
+        options: ['a curved deck', 'a toll booth', 'stone towers', 'night lighting', 'a viewing platform'].map((t, i) => ({ displayOrder: i + 1, optionNum: 'ABCDE'[i], option: t })) },
+      { id: '992', qNumber: '10', question: stem, rightAnswer: 'D', userAnswer: 'D', state: '1', analyses: [], displayOrder: 2, options: [] },
+    ],
+  });
   return JSON.stringify(raw);
 }
 
@@ -65,7 +76,7 @@ module.exports = async function suiteQuestion({ cfg, browser, engine, t, lib }) 
   }
   function watchErrors(p) {
     const errs = [];
-    const expected = s => /status of 404/.test(s) || /NotSupportedError|发音/.test(s);
+    const expected = s => /status of (404|502)/.test(s) || /NotSupportedError|发音/.test(s);   // 502：三击查词里故意让 AI 出错的那一次
     p.on('pageerror', e => errs.push(String(e)));
     p.on('console', m => { if (m.type() === 'error' && !expected(m.text())) errs.push('console ' + m.text()); });
     return errs;
@@ -101,6 +112,12 @@ module.exports = async function suiteQuestion({ cfg, browser, engine, t, lib }) 
       // ---- 能划词的题目文字都带上了块名 ----
       const hks = await p.evaluate(() => [...document.querySelectorAll('#examPane [data-hk]')].map(b => b.dataset.hk));
       ok(['g0.q1', 'g1.layout', 'g1.q4', 'g2.q6', 'g2.q6.A', 'g2.q6.B', 'g3.oA', 'g3.oB', 'g3.q8'].every(k => hks.includes(k)), `question text blocks carry data-hk ${JSON.stringify(hks)}`);
+
+      // ---- 选两项：第 10 题也画出整套选项，各题只标自己的对错 ----
+      const multi = await p.evaluate(() => ['9', '10'].map(n => { const q = document.querySelector(`#examPane .ir-q[data-num="${n}"]`); return { opts: [...q.querySelectorAll('.ir-opt')].map(o => o.querySelector('b').textContent + (o.classList.contains('is-answer') ? '+' : '') + (o.classList.contains('is-mine') ? '*' : '')), hk: [...q.querySelectorAll('.ir-opt [data-hk]')].map(b => b.dataset.hk), ans: !!q.querySelector('.ir-ans') }; }));
+      ok(JSON.stringify(multi[0].opts) === JSON.stringify(['A+', 'B', 'C', 'D', 'E*']), `choose-two Q9: A green, E struck red ${JSON.stringify(multi[0])}`);
+      ok(JSON.stringify(multi[1].opts) === JSON.stringify(['A', 'B', 'C', 'D+*', 'E']) && !multi[1].ans, `choose-two Q10 repeats all five options, D green ${JSON.stringify(multi[1])}`);
+      ok(JSON.stringify(multi[1].hk) === JSON.stringify(['g4.q10.A', 'g4.q10.B', 'g4.q10.C', 'g4.q10.D', 'g4.q10.E']), `choose-two Q10 options can be highlighted ${JSON.stringify(multi[1].hk)}`);
 
       // ---- 题干：双击选词 → 浮层 → 写释义 → 保存 ----
       async function highlightIn(hkRe, word, meaning) {
@@ -275,6 +292,67 @@ module.exports = async function suiteQuestion({ cfg, browser, engine, t, lib }) 
       await p.evaluate(() => cancelFloat());
       await p.setViewportSize({ width: 1440, height: 900 }); await sleep(200);
       await p.evaluate(() => { try { localStorage.removeItem('intensiveExamWidth'); } catch (e) {} });
+
+      // ==================== 三击查词 / AI 释义 ====================
+      // /intensive_lookup 在浏览器里拦下（沙盒没有模型 key），按词回一条编的释义；catches 模拟模型出错
+      const lookups = [];
+      await p.route('**/intensive_lookup', async route => {
+        const b = route.request().postDataJSON(); lookups.push(b);
+        await sleep(300);
+        if (b.text === 'catches') return route.fulfill({ status: 502, contentType: 'application/json', body: JSON.stringify({ error: 'AI 释义暂时取不到，请自己写一下' }) });
+        route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, meaning: `e2e ai ${b.text}` }) });
+      });
+      const passBox = word => p.evaluate(word => { const pp = [...document.querySelectorAll('#vContent p.en')].find(p => p.textContent.includes(word)); pp.scrollIntoView({ block: 'center' }); const tw = document.createTreeWalker(pp, NodeFilter.SHOW_TEXT); let tn; while ((tn = tw.nextNode()) && !tn.nodeValue.includes(word)); const i = tn.nodeValue.indexOf(word); const r = document.createRange(); r.setStart(tn, i + 1); r.setEnd(tn, i + word.length - 1); const rc = r.getBoundingClientRect(); return { x: rc.left + rc.width / 2, y: rc.top + rc.height / 2 }; }, word);
+      async function tripleClick(x, y) { await p.mouse.move(x, y); for (const n of [1, 2, 3]) { await p.mouse.down({ clickCount: n }); await p.mouse.up({ clickCount: n }); } }
+      const saved = async word => (await serverHighlights()).find(h => h.text === word);
+      // 原文：三击 fishermen → 等结果时释义框转圈、只读 → 存成高亮，释义就是 AI 给的
+      await p.evaluate(() => { try { cancelFloat(); cancelMeaning(); } catch (e) {} });
+      let w3 = await passBox('fishermen');
+      await tripleClick(w3.x, w3.y); await sleep(80);
+      const busy = await p.evaluate(() => ({ box: document.getElementById('meaningBox').style.display, ro: document.getElementById('meaningInput').readOnly, spin: !!document.querySelector('#meaningBox .ir-pop-ai.is-busy'), sel: selectionRange && selectionRange.text }));
+      ok(busy.box === 'block' && busy.ro && busy.spin && busy.sel === 'fishermen', `triple-click: meaning box waits for AI on the one word ${JSON.stringify(busy)}`);
+      await p.waitForFunction(() => (highlights || []).some(h => h.text === 'fishermen'), null, { timeout: 5000 }).catch(() => {});
+      await sleep(150);
+      const f1 = await saved('fishermen');
+      const f1Page = await p.evaluate(() => ({ marks: [...document.querySelectorAll('#vContent mark.hl')].filter(m => m.firstChild.nodeValue === 'fishermen').length, box: document.getElementById('meaningBox').style.display }));
+      ok(f1 && f1.meaning === 'e2e ai fishermen' && !f1.qk && f1Page.marks === 1 && f1Page.box === 'none', `triple-click in the passage saves the AI meaning ${JSON.stringify({ f1, f1Page })}`);
+      ok(lookups[0] && lookups[0].text === 'fishermen' && !lookups[0].qk && lookups[0].end - lookups[0].start === 9, `lookup sends the word and its range ${JSON.stringify(lookups[0])}`);
+      // 已经划过的词再三击：不再查
+      w3 = await passBox('fishermen');
+      await tripleClick(w3.x, w3.y); await sleep(200);
+      ok(lookups.length === 1, 'triple-click on an existing highlight does not look it up again');
+      await p.evaluate(() => { try { cancelFloat(); cancelMeaning(); } catch (e) {} });
+      // 题目栏：三击题干里的 handrails → 带 qk 存
+      await p.mouse.click(5, 450);
+      const hq = await wordBox(p, /^g2\.q7$/, 'handrails');
+      await tripleClick(hq.x, hq.y);
+      await p.waitForFunction(() => (highlights || []).some(h => h.text === 'handrails'), null, { timeout: 5000 }).catch(() => {});
+      await sleep(150);
+      const f2 = await saved('handrails');
+      ok(f2 && f2.qk === 'g2.q7' && f2.meaning === 'e2e ai handrails' && await p.evaluate(() => [...document.querySelectorAll('#examPane mark.hl')].some(m => m.firstChild.nodeValue === 'handrails')), `triple-click in a question saves with qk ${JSON.stringify(f2)}`);
+      // 释义框里的「AI」：只填进框里，回车才存
+      await p.evaluate(() => { try { cancelFloat(); cancelMeaning(); } catch (e) {} });
+      await p.mouse.click(5, 450);
+      const sw = await passBox('shadows');
+      await p.mouse.dblclick(sw.x, sw.y); await sleep(150);
+      await p.click('#floatBox .ir-pop-main');
+      await p.click('#meaningBox .ir-pop-ai');
+      await p.waitForFunction(() => document.getElementById('meaningInput').value === 'e2e ai shadows', null, { timeout: 5000 }).catch(() => {});
+      const filled = await p.evaluate(() => ({ v: document.getElementById('meaningInput').value, focus: document.activeElement && document.activeElement.id, box: document.getElementById('meaningBox').style.display }));
+      ok(filled.v === 'e2e ai shadows' && filled.focus === 'meaningInput' && filled.box === 'block' && !(await saved('shadows')), `AI button fills the box without saving ${JSON.stringify(filled)}`);
+      await p.press('#meaningInput', 'Enter');
+      await p.waitForFunction(() => (highlights || []).some(h => h.text === 'shadows'), null, { timeout: 5000 }).catch(() => {});
+      ok(((await saved('shadows')) || {}).meaning === 'e2e ai shadows', 'Enter saves the AI meaning');
+      // 模型出错：释义框留着、可以自己写，不存
+      await p.mouse.click(5, 450);
+      const cw = await passBox('catches');
+      await tripleClick(cw.x, cw.y);
+      await p.waitForFunction(() => !document.getElementById('meaningInput').readOnly, null, { timeout: 5000 }).catch(() => {});
+      await sleep(100);
+      const fail = await p.evaluate(() => ({ box: document.getElementById('meaningBox').style.display, ro: document.getElementById('meaningInput').readOnly, v: document.getElementById('meaningInput').value, focus: document.activeElement && document.activeElement.id, hint: document.getElementById('meaningInput').placeholder }));
+      ok(fail.box === 'block' && !fail.ro && fail.v === '' && fail.focus === 'meaningInput' && /自己写/.test(fail.hint) && !(await saved('catches')), `AI failure leaves the box open to write by hand ${JSON.stringify(fail)}`);
+      await p.evaluate(() => { try { cancelMeaning(); } catch (e) {} });
+      await p.unroute('**/intensive_lookup');
 
       ok(audio.paid.length === 0, `no paid audio endpoints called ${JSON.stringify(audio.paid)}`);
       ok(errs.length === 0, `no page errors ${JSON.stringify(errs.slice(0, 5))}`);

@@ -138,6 +138,16 @@ class QuestionHighlightTest(HighlightTestBase):
         items = self.client.get("/intensive_list", headers=self.auth()).get_json()["items"]
         self.assertEqual(items[0]["highlight_count"], 6)
 
+    def test_multi_select_question_shares_the_first_questions_options(self):
+        # 九分学长的「选两项 / 选三项」只在第一题带选项；页面在第 2 题也画出整套选项，那里的选项一样能划
+        r = self.qh("g0.q2.A", "to reduce glare for sailors", "glare")
+        self.assertEqual(r.status_code, 200, r.get_json())
+        self.assertEqual(r.get_json()["highlight"]["qk"], "g0.q2.A")
+        # 配对题、填空题的题没有选项，也不会去借
+        r = self.client.post("/intensive_add_highlight", headers=self.auth(),
+                             json={"id": self.article_id, "qk": "g1.q3.A", "start": 2, "end": 11, "text": "reluctant", "meaning": "m"})
+        self.assertEqual(r.status_code, 400)
+
     def test_passage_highlights_have_no_qk(self):
         r = self.highlight(self.article_id, 4, 12, "lanterns")
         self.assertEqual(r.status_code, 200)

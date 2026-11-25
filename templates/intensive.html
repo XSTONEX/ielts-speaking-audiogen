@@ -328,6 +328,12 @@ html[data-theme="dark"] .reader mark.hl::selection, html[data-theme="dark"] .ir-
 .floating .ir-pop-danger { color: var(--w-err); }
 .floating .ir-pop-danger:hover { background: var(--w-err-soft); color: var(--w-err); }
 .floating button:disabled { color: var(--w-ink3); background: transparent; cursor: not-allowed; }
+/* 写释义框里的「AI」：按语境让 AI 写；等结果时转圈、输入框只读 */
+.floating .ir-pop-ai { display: inline-flex; align-items: center; gap: 4px; padding: 0 10px; color: var(--w-accent); }
+.floating .ir-pop-ai:hover { background: var(--w-accent-soft); color: var(--w-accent); }
+.ir-ai-btn svg { width: 15px; height: 15px; flex: none; }
+.ir-ai-btn.is-busy svg { animation: ir-spin 1s linear infinite; }
+#meaningBox.is-ai textarea { color: var(--w-ink3); }
 #meaningBox { padding: 6px; }
 body.page-intensive #meaningBox textarea {
   display: inline-block; width: 260px; height: 34px; max-height: 150px; padding: 6px 10px; margin: 0 2px 0 0; vertical-align: middle;
@@ -761,6 +767,7 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
   #meaningBox .ir-pop-cancel { display: none; }
   #meaningBox .ir-pill { padding: 0 14px; border: 1px solid var(--w-line); border-radius: 22px; color: var(--w-accent); }
   #meaningBox .ir-x { width: 44px; padding: 0; }
+  #meaningBox .ir-mb-head .ir-pill { padding: 0 12px; }
   /* 触屏上 :hover 会粘在刚点过的按钮上，手机版不要悬停底色 */
   .ir-icon-btn:hover { background: transparent; color: var(--w-ink2); }
   .ir-icon-btn.is-on:hover { color: var(--w-accent); }
@@ -996,8 +1003,8 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
     <div class="ir-fb-row"><span class="ir-pop-word ir-phone" id="popWord"></span><button class="ir-pop-main" onclick="confirmHighlight()">高亮</button><button class="ir-pop-cancel" onclick="cancelFloat()">取消</button><button class="ir-pop-danger" onclick="removeCurrentHighlight()">删除高亮</button></div>
   </div>
   <div class="floating" id="meaningBox" style="display: none;">
-    <div class="ir-mb-head ir-phone"><span class="ir-mb-word" id="mbWord"></span><button type="button" class="ir-pill" onclick="playSelectedWord()" aria-label="听发音"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>发音</button><button type="button" class="ir-x" onclick="cancelMeaning()" aria-label="取消"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
-    <div class="ir-mb-row"><textarea id="meaningInput" rows="1" placeholder="写下中文释义，回车保存" title="回车保存，Shift+回车换行" autocomplete="off" enterkeyhint="done" oninput="fitMeaningInput()" onkeydown="if(event.key==='Enter' && !event.shiftKey && !event.isComposing && event.keyCode!==229){ event.preventDefault(); saveMeaning(); } else if(event.key==='Escape'){ event.preventDefault(); cancelMeaning(); }"></textarea><button class="ir-pop-main" onclick="saveMeaning()">保存</button><button class="ir-pop-cancel" onclick="cancelMeaning()">取消</button></div>
+    <div class="ir-mb-head ir-phone"><span class="ir-mb-word" id="mbWord"></span><button type="button" class="ir-pill" onclick="playSelectedWord()" aria-label="听发音"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>发音</button><button type="button" class="ir-pill ir-ai-btn" onclick="aiFillMeaning(false)" aria-label="AI 释义"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg><span class="ir-ai-lbl">AI 释义</span></button><button type="button" class="ir-x" onclick="cancelMeaning()" aria-label="取消"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <div class="ir-mb-row"><textarea id="meaningInput" rows="1" placeholder="写下中文释义，回车保存" title="回车保存，Shift+回车换行" autocomplete="off" enterkeyhint="done" oninput="fitMeaningInput()" onkeydown="if(event.key==='Enter' && !event.shiftKey && !event.isComposing && event.keyCode!==229){ event.preventDefault(); saveMeaning(); } else if(event.key==='Escape'){ event.preventDefault(); cancelMeaning(); }"></textarea><button type="button" class="ir-pop-ai ir-ai-btn ir-desk" onclick="aiFillMeaning(false)" title="按这句话的语境让 AI 写释义（三击单词会直接标好）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg><span class="ir-ai-lbl">AI</span></button><button class="ir-pop-main" onclick="saveMeaning()">保存</button><button class="ir-pop-cancel" onclick="cancelMeaning()">取消</button></div>
   </div>
 
   <!-- 手机：遮罩、点高亮弹出的单词卡、列表卡片的操作面板 -->
@@ -1610,9 +1617,14 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
     }, true);
     function bindSelection(container){
       const pane = document.getElementById('examPane');
+      // 三击一个词 = 直接标注：第三下不让浏览器扩成整段，选区还是前两下（双击）选中的那个词，
+      // 照常算出下标后交给 aiFillMeaning(true)：AI 按这句话的语境写释义并直接存成高亮
+      [container, pane].forEach(el => el.addEventListener('mousedown', function(e){
+        if(e.detail >= 3 && e.button === 0 && lastPointerType === 'mouse' && !e.target.closest('.floating')) e.preventDefault();
+      }));
       // 写释义的框开着时别处的点击不算重新划词（不然选区被清掉，「保存」就没东西可存）
-      container.addEventListener('mouseup', function(){ if(lastPointerType === 'mouse' && !isVisible('meaningBox')) handleReaderSelection(container); });
-      pane.addEventListener('mouseup', function(){ if(lastPointerType === 'mouse' && !isVisible('meaningBox')) handleExamSelection(); });
+      container.addEventListener('mouseup', function(e){ if(lastPointerType === 'mouse' && !isVisible('meaningBox')){ if(e.detail === 3) selectWordAt(e.clientX, e.clientY); handleReaderSelection(container); if(e.detail === 3) tripleClickAnnotate(); } });
+      pane.addEventListener('mouseup', function(e){ if(lastPointerType === 'mouse' && !isVisible('meaningBox')){ if(e.detail === 3) selectWordAt(e.clientX, e.clientY); handleExamSelection(); if(e.detail === 3) tripleClickAnnotate(); } });
       let timer = null;
       document.addEventListener('selectionchange', function(){
         if(lastPointerType === 'mouse') return;
@@ -1701,6 +1713,64 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
       showFloatAtRect(lastSelectionRect, false, isDuplicate);
     }
 
+    // ===== 三击查词 / AI 释义（后端 /intensive_lookup，提示词在 prompts/intensive_lookup.yaml） =====
+    // 三击时选区要是鼠标下的那一个词：双击已经选好了就用它；选区是空的或不止一个词（第三下点到了别处），按鼠标位置取词
+    function selectWordAt(x, y){
+      const sel = window.getSelection();
+      const cur = sel && sel.rangeCount ? String(sel).trim() : '';
+      if(cur && !/\s/.test(cur)) return;
+      let node = null, off = 0;
+      if(document.caretPositionFromPoint){ const p = document.caretPositionFromPoint(x, y); if(p){ node = p.offsetNode; off = p.offset; } }
+      else if(document.caretRangeFromPoint){ const r = document.caretRangeFromPoint(x, y); if(r){ node = r.startContainer; off = r.startOffset; } }
+      if(!node || node.nodeType !== 3 || (node.parentNode && node.parentNode.closest('.tooltip'))) return;
+      const t = node.nodeValue, isW = c => /[A-Za-z0-9\u00C0-\u024F'’-]/.test(c);
+      let a = off, b = off;
+      while(a > 0 && isW(t[a-1])) a--;
+      while(b < t.length && isW(t[b])) b++;
+      while(a < b && /['’-]/.test(t[a])) a++;
+      while(b > a && /['’-]/.test(t[b-1])) b--;
+      if(b <= a) return;
+      const r = document.createRange(); r.setStart(node, a); r.setEnd(node, b);
+      sel.removeAllRanges(); sel.addRange(r);
+    }
+    function tripleClickAnnotate(){
+      if(!selectionRange || selectionRange.existingHighlight) return;          // 点在已有高亮上：照常给「删除高亮」
+      if(selectionRange.isDuplicate){ showTempTooltip('这个词本文已经划过了', lastSelectionRect || { left: 0, top: 80, width: 0, bottom: 80 }); return; }
+      const t = (selectionRange.text || '').trim();
+      if(!t || t.length > 40 || !/[A-Za-z]/.test(t)){ return; }
+      aiFillMeaning(true);
+    }
+    let aiLookup = null;   // 正在查的那一次；取消释义框或换了词就作废
+    function setAiBusy(on){
+      const box = document.getElementById('meaningBox'), input = document.getElementById('meaningInput');
+      box.classList.toggle('is-ai', on); input.readOnly = on;
+      input.placeholder = on ? 'AI 正在按语境写释义…' : '写下中文释义，回车保存';
+      box.querySelectorAll('.ir-ai-btn').forEach(b => { b.classList.toggle('is-busy', on); b.disabled = on; });
+    }
+    // autoSave：三击时拿到释义直接存；在释义框里点「AI」只填进框里，自己看过再存
+    function aiFillMeaning(autoSave){
+      if(!currentArticle || !selectionRange || selectionRange.existingHighlight || aiLookup) return;
+      if(!isVisible('meaningBox')) confirmHighlight();
+      if(!isVisible('meaningBox')) return;
+      const sr = selectionRange, rect = lastSelectionRect, me = {};
+      aiLookup = me; setAiBusy(true);
+      const body = { id: currentArticle.id, start: sr.start, end: sr.end, text: sr.text };
+      if(sr.qk) body.qk = sr.qk;
+      fetch('/intensive_lookup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        .then(r => r.json().catch(() => ({})).then(d => ({ ok: r.ok, d })))
+        .then(({ ok, d }) => {
+          if(aiLookup !== me) return;
+          aiLookup = null; setAiBusy(false);
+          const input = document.getElementById('meaningInput');
+          if(!ok || !d.meaning){ input.placeholder = d.error || 'AI 释义暂时取不到，请自己写一下'; input.focus(); return; }   // 提示写在输入框里，不挡着框
+          if(selectionRange !== sr || !isVisible('meaningBox')) return;
+          input.value = d.meaning; fitMeaningInput();
+          if(autoSave){ saveMeaning(); if(rect) showTempTooltip(`${sr.text}  ${d.meaning}`, rect); }
+          else { input.focus(); input.setSelectionRange(input.value.length, input.value.length); }
+        })
+        .catch(() => { if(aiLookup !== me) return; aiLookup = null; setAiBusy(false); const input = document.getElementById('meaningInput'); input.placeholder = '网络不通，AI 释义没取到，请自己写一下'; input.focus(); });
+    }
+
     function showFloatAtRect(rect, isExisting = false, isDuplicate = false){
       const box=document.getElementById('floatBox');
       const highlightBtn = box.querySelector('button[onclick="confirmHighlight()"]');
@@ -1755,7 +1825,7 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
       floatPressed = false;
       const mBox=document.getElementById('meaningBox');
       const mInput=document.getElementById('meaningInput');
-      mInput.value=''; mInput.style.height='';
+      mInput.value=''; mInput.style.height=''; mInput.placeholder='写下中文释义，回车保存';
       document.getElementById('floatBox').style.display='none';
       mBox.style.display='block';
       if(isPhone()){ document.getElementById('mbWord').textContent = selectionRange.text || ''; openLayer('meaning', hideMeaning, false); }
@@ -1768,10 +1838,10 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
       if(el.scrollHeight > el.clientHeight) el.style.height=(el.scrollHeight + el.offsetHeight - el.clientHeight)+'px';
       if(lastSelectionRect) positionBoxAtRect(document.getElementById('meaningBox'), lastSelectionRect);
     }
-    function hideMeaning(){ document.getElementById('meaningBox').style.display='none'; cancelFloat(); }
+    function hideMeaning(){ if(aiLookup){ aiLookup = null; setAiBusy(false); } document.getElementById('meaningBox').style.display='none'; cancelFloat(); }
     function cancelMeaning(){ hideMeaning(); closeLayer('meaning'); }
     function playSelectedWord(){ const w = selectionRange && selectionRange.text; if(w && window.playWordPronunciation && currentArticle) window.playWordPronunciation(w.trim(), currentArticle.id); }
-    function saveMeaning(){ const meaning=document.getElementById('meaningInput').value.trim(); if(!meaning){ alert('请先写下释义'); return; } const selTxt=(selectionRange&&selectionRange.text)?selectionRange.text:''; const body={ id: currentArticle.id, start: selectionRange.start, end: selectionRange.end, meaning, text: selTxt }; if(selectionRange.qk) body.qk = selectionRange.qk; fetch('/intensive_add_highlight',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)}).then(r=>r.json()).then(d=>{ if(d.success){ const list=document.getElementById('vContent'); // 防重复：先清理并重绘
+    function saveMeaning(){ if(aiLookup) return; const meaning=document.getElementById('meaningInput').value.trim(); if(!meaning){ alert('请先写下释义'); return; } const selTxt=(selectionRange&&selectionRange.text)?selectionRange.text:''; const body={ id: currentArticle.id, start: selectionRange.start, end: selectionRange.end, meaning, text: selTxt }; if(selectionRange.qk) body.qk = selectionRange.qk; fetch('/intensive_add_highlight',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)}).then(r=>r.json()).then(d=>{ if(d.success){ const list=document.getElementById('vContent'); // 防重复：先清理并重绘
         restoreHighlights(list, {highlights: (function(){ const idx = (highlights||[]).findIndex(h=>h.id===d.highlight.id); if(idx>=0){ highlights[idx]=d.highlight; } else { // 若存在相同范围，替换
             const sameIdx=(highlights||[]).findIndex(h=>hlKey(h)===hlKey(d.highlight));
             if(sameIdx>=0) highlights[sameIdx]=d.highlight; else highlights.push(d.highlight);
@@ -1896,15 +1966,23 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
       (g.questions || []).forEach(q => { h += questionHtml(g, q, gi); });
       return h + `</section>`;
     }
+    // 九分学长的「选两项 / 选三项」整组只在第一题带选项：其余题借同组第一个有选项的题，每道题都画出完整选项，
+    // 各自标自己的对错（对的绿、选错的红色划掉）。和 routers/intensive_reading.py 的 _question_options 一致
+    function questionOptions(g, q){
+      if((q.options || []).length || g.kind !== 'choice') return q.options || [];
+      const src = (g.questions || []).find(x => (x.options || []).length);
+      return src ? src.options : [];
+    }
     function questionHtml(g, q, gi){
       const cls = { right: ' is-right', wrong: ' is-wrong', blank: ' is-blank' }[q.state] || '';
       const answers = (q.answer || '').split('|').map(x => x.trim()).filter(Boolean);
+      const options = questionOptions(g, q);
       let h = `<div class="ir-q${cls}" data-num="${escapeHtml(q.num)}" data-kind="${escapeHtml(g.kind || '')}"><span class="ir-q-num">${escapeHtml(q.num)}</span>`;
       if(q.text) h += `<div class="ir-q-text"${hkAttr(`g${gi}.q${q.num}`)}>${escapeHtml(q.text)}</div>`;
       if(q.zh) h += `<div class="ir-q-zh">${escapeHtml(q.zh)}</div>`;
-      if((q.options || []).length){
+      if(options.length){
         const list = g.kind === 'choice';
-        h += `<ul class="ir-opts${list ? ' is-list' : ''}">` + q.options.map(o => {
+        h += `<ul class="ir-opts${list ? ' is-list' : ''}">` + options.map(o => {
           const c = (answers.includes(o.key) ? ' is-answer' : '') + (q.user_answer && q.user_answer === o.key ? ' is-mine' : '');
           const txt = o.text ? `<span${hkAttr(`g${gi}.q${q.num}.${o.key}`)}>${escapeHtml(o.text)}</span>` : '';
           const body = list ? `<b>${escapeHtml(o.key)}</b><span>${txt}${o.zh ? `<span class="ir-q-zh">${escapeHtml(o.zh)}</span>` : ''}</span>` : (txt || escapeHtml(o.key));
