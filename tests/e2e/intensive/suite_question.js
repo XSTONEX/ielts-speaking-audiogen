@@ -305,22 +305,27 @@ module.exports = async function suiteQuestion({ cfg, browser, engine, t, lib }) 
       const passBox = word => p.evaluate(word => { const pp = [...document.querySelectorAll('#vContent p.en')].find(p => p.textContent.includes(word)); pp.scrollIntoView({ block: 'center' }); const tw = document.createTreeWalker(pp, NodeFilter.SHOW_TEXT); let tn; while ((tn = tw.nextNode()) && !tn.nodeValue.includes(word)); const i = tn.nodeValue.indexOf(word); const r = document.createRange(); r.setStart(tn, i + 1); r.setEnd(tn, i + word.length - 1); const rc = r.getBoundingClientRect(); return { x: rc.left + rc.width / 2, y: rc.top + rc.height / 2 }; }, word);
       async function tripleClick(x, y) { await p.mouse.move(x, y); for (const n of [1, 2, 3]) { await p.mouse.down({ clickCount: n }); await p.mouse.up({ clickCount: n }); } }
       const saved = async word => (await serverHighlights()).find(h => h.text === word);
-      // 原文：三击 fishermen → 等结果时释义框转圈、只读 → 存成高亮，释义就是 AI 给的
+      // 原文：三击 fishermen → 念一遍；不弹释义框，词上扫光 + 「AI 释义」气泡 → 存成高亮，亮一下、露出释义
       await p.evaluate(() => { try { cancelFloat(); cancelMeaning(); } catch (e) {} });
+      const said0 = audio.youdao.length;
       let w3 = await passBox('fishermen');
       await tripleClick(w3.x, w3.y); await sleep(80);
-      const busy = await p.evaluate(() => ({ box: document.getElementById('meaningBox').style.display, ro: document.getElementById('meaningInput').readOnly, spin: !!document.querySelector('#meaningBox .ir-pop-ai.is-busy'), sel: selectionRange && selectionRange.text }));
-      ok(busy.box === 'block' && busy.ro && busy.spin && busy.sel === 'fishermen', `triple-click: meaning box waits for AI on the one word ${JSON.stringify(busy)}`);
+      const busy = await p.evaluate(() => { const w = document.querySelector('#vContent .ir-ai-wait'); const b = document.querySelector('#vContent .ir-ai-badge'); return { box: document.getElementById('meaningBox').style.display, float: document.getElementById('floatBox').style.display, wait: !!w, badge: b && b.textContent, anim: w && getComputedStyle(w).animationName, sel: String(getSelection()) }; });
+      ok(busy.box === 'none' && busy.float === 'none' && busy.wait && /AI 释义/.test(busy.badge || '') && /ir-ai-sweep/.test(busy.anim || '') && busy.sel === '', `triple-click: no box, the word shimmers with an AI badge ${JSON.stringify(busy)}`);
+      ok(audio.youdao.slice(said0).includes('fishermen'), `triple-click pronounces the word ${JSON.stringify(audio.youdao.slice(said0))}`);
       await p.waitForFunction(() => (highlights || []).some(h => h.text === 'fishermen'), null, { timeout: 5000 }).catch(() => {});
       await sleep(150);
       const f1 = await saved('fishermen');
-      const f1Page = await p.evaluate(() => ({ marks: [...document.querySelectorAll('#vContent mark.hl')].filter(m => m.firstChild.nodeValue === 'fishermen').length, box: document.getElementById('meaningBox').style.display }));
-      ok(f1 && f1.meaning === 'e2e ai fishermen' && !f1.qk && f1Page.marks === 1 && f1Page.box === 'none', `triple-click in the passage saves the AI meaning ${JSON.stringify({ f1, f1Page })}`);
+      const f1Page = await p.evaluate(() => { const ms = [...document.querySelectorAll('#vContent mark.hl')].filter(m => m.firstChild.nodeValue === 'fishermen'); const tip = ms[0] && ms[0].querySelector('.tooltip'); return { marks: ms.length, pop: ms.some(m => m.classList.contains('ir-hl-new')), tip: tip && getComputedStyle(tip).display, tipText: tip && tip.textContent, left: document.querySelectorAll('.ir-ai-wait, .ir-ai-badge').length }; });
+      ok(f1 && f1.meaning === 'e2e ai fishermen' && !f1.qk && f1Page.marks === 1 && f1Page.pop && f1Page.tip === 'block' && f1Page.tipText === 'e2e ai fishermen' && f1Page.left === 0, `triple-click in the passage saves the AI meaning and shows it ${JSON.stringify({ f1, f1Page })}`);
+      await sleep(2700);
+      ok(await p.evaluate(() => { const m = [...document.querySelectorAll('#vContent mark.hl')].find(m => m.firstChild.nodeValue === 'fishermen'); return !m.classList.contains('tip-on') && !m.classList.contains('ir-hl-new'); }), 'the meaning bubble goes away by itself');
       ok(lookups[0] && lookups[0].text === 'fishermen' && !lookups[0].qk && lookups[0].end - lookups[0].start === 9, `lookup sends the word and its range ${JSON.stringify(lookups[0])}`);
       // 已经划过的词再三击：不再查
+      await p.mouse.click(5, 450);
       w3 = await passBox('fishermen');
       await tripleClick(w3.x, w3.y); await sleep(200);
-      ok(lookups.length === 1, 'triple-click on an existing highlight does not look it up again');
+      ok(lookups.length === 1 && !(await p.evaluate(() => document.querySelector('.ir-ai-wait'))), 'triple-click on an existing highlight does not look it up again');
       await p.evaluate(() => { try { cancelFloat(); cancelMeaning(); } catch (e) {} });
       // 题目栏：三击题干里的 handrails → 带 qk 存
       await p.mouse.click(5, 450);
@@ -343,15 +348,15 @@ module.exports = async function suiteQuestion({ cfg, browser, engine, t, lib }) 
       await p.press('#meaningInput', 'Enter');
       await p.waitForFunction(() => (highlights || []).some(h => h.text === 'shadows'), null, { timeout: 5000 }).catch(() => {});
       ok(((await saved('shadows')) || {}).meaning === 'e2e ai shadows', 'Enter saves the AI meaning');
-      // 模型出错：释义框留着、可以自己写，不存
+      // 模型出错：扫光变红收掉，提示双击自己写；不弹框、不存
       await p.mouse.click(5, 450);
       const cw = await passBox('catches');
       await tripleClick(cw.x, cw.y);
-      await p.waitForFunction(() => !document.getElementById('meaningInput').readOnly, null, { timeout: 5000 }).catch(() => {});
-      await sleep(100);
-      const fail = await p.evaluate(() => ({ box: document.getElementById('meaningBox').style.display, ro: document.getElementById('meaningInput').readOnly, v: document.getElementById('meaningInput').value, focus: document.activeElement && document.activeElement.id, hint: document.getElementById('meaningInput').placeholder }));
-      ok(fail.box === 'block' && !fail.ro && fail.v === '' && fail.focus === 'meaningInput' && /自己写/.test(fail.hint) && !(await saved('catches')), `AI failure leaves the box open to write by hand ${JSON.stringify(fail)}`);
-      await p.evaluate(() => { try { cancelMeaning(); } catch (e) {} });
+      await p.waitForFunction(() => document.querySelector('.ir-ai-wait.is-fail'), null, { timeout: 5000 }).catch(() => {});
+      const fail = await p.evaluate(() => ({ box: document.getElementById('meaningBox').style.display, red: !!document.querySelector('.ir-ai-wait.is-fail'), toast: [...document.querySelectorAll('.ir-toast')].map(t => t.textContent).join('|') }));
+      await sleep(1000);
+      const gone = await p.evaluate(() => document.querySelectorAll('.ir-ai-wait, .ir-ai-badge').length);
+      ok(fail.box === 'none' && fail.red && /自己写/.test(fail.toast) && gone === 0 && !(await saved('catches')), `AI failure: shimmer turns red and clears, hint to write by hand ${JSON.stringify({ fail, gone })}`);
       await p.unroute('**/intensive_lookup');
 
       ok(audio.paid.length === 0, `no paid audio endpoints called ${JSON.stringify(audio.paid)}`);
