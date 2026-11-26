@@ -70,7 +70,7 @@ module.exports = async function suiteSelect({ cfg, browser, t, lib }) {
       // 1) 已有高亮一个不少、文字一字不差地画回来（同一范围存了两次的只画一个）
       const hl = await page.evaluate(() => {
         const uniq = []; (currentArticle.highlights || []).forEach(h => { if (!uniq.some(x => x.start === h.start && x.end === h.end)) uniq.push(h); });
-        const marks = [...document.querySelectorAll('#vContent mark.hl')];
+        const marks = [...document.querySelectorAll('#vContent mark.hl:not(.hl-echo)')];
         const bad = [];
         marks.forEach(m => { const h = uniq.find(x => x.id === m.getAttribute('data-hid')); const own = [...m.childNodes].filter(n => !(n.classList && n.classList.contains('tooltip'))).map(n => n.textContent).join(''); if (!h || own.trim() !== (h.text || '').trim()) bad.push([own, h && h.text]); });
         return { stored: (currentArticle.highlights || []).length, expected: uniq.length, marks: marks.length, bad };
@@ -122,7 +122,7 @@ module.exports = async function suiteSelect({ cfg, browser, t, lib }) {
       await lib.settle(page); await page.reload();
       await page.waitForFunction(() => typeof openArticle === 'function' && typeof currentArticle !== 'undefined' && currentArticle && document.querySelector('#vContent .reader p'), null, { timeout: 15000 });
       await page.waitForTimeout(300);
-      const back = await page.evaluate(id => { const m = document.querySelector(`#vContent mark.hl[data-hid="${id}"]`); return m ? m.firstChild.nodeValue : null; }, saved.id);
+      const back = await page.evaluate(id => { const m = document.querySelector(`#vContent mark.hl:not(.hl-echo)[data-hid="${id}"]`); return m ? m.firstChild.nodeValue : null; }, saved.id);
       t.ok(saved.text === w.word && back === w.word, `save+reload line-initial "${w.word}": saved=${JSON.stringify(saved.text)} restored=${JSON.stringify(back)}`);
       await page.evaluate(id => fetch('/intensive_delete_highlight', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: currentArticle.id, highlight_id: id }) }), saved.id);
     } catch (e) {

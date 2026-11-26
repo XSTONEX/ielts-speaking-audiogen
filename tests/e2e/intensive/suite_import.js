@@ -70,7 +70,7 @@ module.exports = async function suiteImport({ cfg, browser, engine, t, lib }) {
     await p.evaluate(() => confirmHighlight()); await p.fill('#meaningInput', '第一座玻璃桥'); await p.click('#meaningBox .ir-pop-main');
     await p.waitForFunction(() => (highlights || []).some(h => h.meaning === '第一座玻璃桥'));
     await p.waitForTimeout(200);
-    const hm = await p.evaluate(() => ({ mark: document.querySelector('#vContent mark.hl') && document.querySelector('#vContent mark.hl').firstChild.nodeValue, marks: CSS.highlights.get('jiufen').size, under: [...CSS.highlights.get('jiufen')].some(r => r.toString() === 'glass bridge') }));
+    const hm = await p.evaluate(() => ({ mark: document.querySelector('#vContent mark.hl:not(.hl-echo)') && document.querySelector('#vContent mark.hl:not(.hl-echo)').firstChild.nodeValue, marks: CSS.highlights.get('jiufen').size, under: [...CSS.highlights.get('jiufen')].some(r => r.toString() === 'glass bridge') }));
     ok(sel === 'first glass bridge' && hm.mark === 'first glass bridge' && hm.marks === 5 && hm.under, `own highlight over an underline ${JSON.stringify({ sel, ...hm })}`);
 
     // ---- 题目栏 ----
@@ -133,7 +133,7 @@ module.exports = async function suiteImport({ cfg, browser, engine, t, lib }) {
 
     // ---- 普通旧文章没有题目栏、没有划线，自己的高亮照常 ----
     await lib.openArticle(p, IDS.lighthouse);
-    const old = await p.evaluate(() => ({ exam: document.querySelector('#viewer .ir-body').classList.contains('has-exam'), pane: getComputedStyle(document.getElementById('examPane')).display, tabs: getComputedStyle(document.getElementById('examTabs')).display, marks: CSS.highlights.get('jiufen') ? CSS.highlights.get('jiufen').size : 0, hl: document.querySelectorAll('#vContent mark.hl').length, menu: document.getElementById('jiufenMarksBtn').style.display }));
+    const old = await p.evaluate(() => ({ exam: document.querySelector('#viewer .ir-body').classList.contains('has-exam'), pane: getComputedStyle(document.getElementById('examPane')).display, tabs: getComputedStyle(document.getElementById('examTabs')).display, marks: CSS.highlights.get('jiufen') ? CSS.highlights.get('jiufen').size : 0, hl: document.querySelectorAll('#vContent mark.hl:not(.hl-echo)').length, menu: document.getElementById('jiufenMarksBtn').style.display }));
     ok(!old.exam && old.pane === 'none' && old.tabs === 'none' && old.marks === 0 && old.hl === 8 && old.menu === 'none', `old article unchanged ${JSON.stringify(old)}`);
 
     // ---- 列表卡片显示成绩；粘贴文本模式照样能建、能打开 ----

@@ -786,7 +786,10 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
   #floatBox .ir-pop-main { order: 3; background: var(--w-accent); color: var(--accent-contrast); }
   #floatBox .ir-pop-main:disabled { background: var(--w-sunken); color: var(--w-ink3); }
   #floatBox .ir-pop-danger { order: 3; border: 1px solid var(--w-err-line); }
-  #floatBox .ir-pop-cancel { order: 2; }
+  #floatBox .ir-pop-cancel { order: 1; }
+  /* 取消 · AI · 划线并写释义：AI 放主按钮左边，只写「AI」，给左边的词留地方 */
+  #floatBox .ir-pop-ai { order: 2; padding: 0 12px; border: 1px solid var(--w-accent-line); }
+  #floatBox .ir-pop-ai .ir-phone { display: inline; }
 
   /* 写释义：底部面板贴着键盘 */
   .floating#meaningBox {
@@ -1036,7 +1039,7 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
   </div>
 
   <div class="floating" id="floatBox" style="display: none;">
-    <div class="ir-fb-row"><span class="ir-pop-word ir-phone" id="popWord"></span><button class="ir-pop-main" onclick="confirmHighlight()">高亮</button><button class="ir-pop-cancel" onclick="cancelFloat()">取消</button><button class="ir-pop-danger" onclick="removeCurrentHighlight()">删除高亮</button></div>
+    <div class="ir-fb-row"><span class="ir-pop-word ir-phone" id="popWord"></span><button class="ir-pop-main" onclick="confirmHighlight()">高亮</button><button type="button" class="ir-pop-ai ir-ai-btn ir-fb-ai" onclick="aiAnnotateSelection()" title="让 AI 按这句话的语境写释义，直接标好（单词、短语都行）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg><span class="ir-desk">AI 释义</span><span class="ir-phone">AI</span></button><button class="ir-pop-cancel" onclick="cancelFloat()">取消</button><button class="ir-pop-danger" onclick="removeCurrentHighlight()">删除高亮</button></div>
   </div>
   <div class="floating" id="meaningBox" style="display: none;">
     <div class="ir-mb-head ir-phone"><span class="ir-mb-word" id="mbWord"></span><button type="button" class="ir-pill" onclick="playSelectedWord()" aria-label="听发音"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>发音</button><button type="button" class="ir-pill ir-ai-btn" onclick="aiFillMeaning()" aria-label="AI 释义"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg><span class="ir-ai-lbl">AI 释义</span></button><button type="button" class="ir-x" onclick="cancelMeaning()" aria-label="取消"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
@@ -1214,7 +1217,7 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
       }).catch(() => { alert('保存失败'); paintSegs('menuCatSeg', old); });
     });
     function toggleFullTitle(){ if(isPhone()) document.getElementById('vTitle').classList.toggle('is-full'); }
-    function updateVocabCount(){ const el=document.getElementById('vocabCount'); if(el) el.textContent = new Set((highlights||[]).map(hlKey)).size || ''; }
+    function updateVocabCount(){ const el=document.getElementById('vocabCount'); if(el) el.textContent = new Set((highlights||[]).map(h => (h.text || '').trim().toLowerCase() || hlKey(h))).size || ''; }
     // 一条高亮的位置：正文里的只有 start-end，题目栏里的前面加上是哪一段题目文字（qk）
     function hlKey(h){ return (h.qk ? h.qk + ':' : '') + h.start + '-' + h.end; }
     function checkStoredToken(){
@@ -1462,7 +1465,9 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
       // 同一个范围存了两条（旧版本留下的）只列一次，和正文、词数一致。正文里的词在前，题目里的按题目顺序排在后面
       const qOrder = examBlockOrder();
       const rank = h => h.qk ? 1e9 + (qOrder.has(h.qk) ? qOrder.get(h.qk) : qOrder.size) * 1e5 + h.start : h.start;
-      let list=(highlights||[]).filter((h,i,all)=>all.findIndex(x=>hlKey(x)===hlKey(h))===i).sort((a,b)=>rank(a)-rank(b));
+      const wkey = h => (wordOf(h) || '').trim().toLowerCase() || hlKey(h);
+      // 同一个词只列一条（本文里它出现的地方都已经自动标上了）
+      let list=(highlights||[]).slice().sort((a,b)=>rank(a)-rank(b)).filter((h,i,all)=>all.findIndex(x=>hlKey(x)===hlKey(h) || wkey(x)===wkey(h))===i);
       if(searchVal){ list=list.filter(h=> wordOf(h).toLowerCase().includes(searchVal) || (h.meaning||'').toLowerCase().includes(searchVal)); }
       if(!list.length){ body.innerHTML=`<div class="ir-panel-empty">${searchVal?'没有匹配的词':'还没有高亮。在正文里选中单词或短语，就能记下释义。'}</div>`; return; }
       list.forEach(h=>{
@@ -1486,12 +1491,12 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
     function closeHighlightsPanel(){ hideHighlightsPanel(); closeLayer('vocab'); }
     // --panel-width 也写在 .ir-body 上：821–900px 的题目栏（正文的兄弟元素）要按它让位
     function updatePanelWidth(){ const panel=document.getElementById('highlightsPanel'); const content=document.getElementById('vContent'); if(panel && content){ panel.style.width = panelWidth + 'px'; content.style.setProperty('--panel-width', panelWidth + 'px'); content.parentNode.style.setProperty('--panel-width', panelWidth + 'px'); } }
-    function scrollToHighlight(hid){ try{ const container=document.getElementById('vContent'); const mark=container.querySelector(`mark.hl[data-hid="${CSS.escape(hid)}"]`); if(mark){ mark.scrollIntoView({behavior:'smooth', block:'center'}); flashMarks(container, hid); return; } scrollToExamHighlight(hid); }catch(e){} }
+    function scrollToHighlight(hid){ try{ const container=document.getElementById('vContent'); const mark=container.querySelector(`mark.hl:not(.hl-echo)[data-hid="${CSS.escape(hid)}"]`); if(mark){ mark.scrollIntoView({behavior:'smooth', block:'center'}); flashMarks(container, hid); return; } scrollToExamHighlight(hid); }catch(e){} }
     function flashMarks(root, hid){ const marks = root.querySelectorAll(`mark.hl[data-hid="${CSS.escape(hid)}"]`); marks.forEach(m => m.classList.add('active')); setTimeout(()=>{ marks.forEach(m => m.classList.remove('active')); }, 1200); }
     // 题目里的词：把题目栏翻出来（窄屏切到「题目」，手机升起题目面板），再滚到这个词
     function scrollToExamHighlight(hid){
       const pane = document.getElementById('examPane');
-      const mark = pane.querySelector(`mark.hl[data-hid="${CSS.escape(hid)}"]`); if(!mark) return;
+      const mark = pane.querySelector(`mark.hl:not(.hl-echo)[data-hid="${CSS.escape(hid)}"]`) || pane.querySelector(`mark.hl[data-hid="${CSS.escape(hid)}"]`); if(!mark) return;
       const qEl = mark.closest('.ir-q');
       if(pane.classList.contains('only-wrong') && qEl && !qEl.classList.contains('is-wrong') && !qEl.classList.contains('is-blank')) setOnlyWrong(false);
       const det = mark.closest('details'); if(det) det.open = true;
@@ -1709,12 +1714,9 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
         // 限制只能在同一段落（同一行）内高亮，避免跨块包裹导致错误
         if(text.includes('\n')){ showTempTooltip('请在同一段内进行高亮', range.getBoundingClientRect()); fail(); return; }
 
-        // 检查是否为重复词汇
-        const isDuplicate = (highlights||[]).some(h => h.text && h.text.toLowerCase() === text.toLowerCase());
-
-        selectionRange = { start, end, text, isDuplicate };
+        selectionRange = { start, end, text };
         lastSelectionRect = range.getBoundingClientRect();
-        showFloatAtRect(lastSelectionRect, false, isDuplicate);
+        showFloatAtRect(lastSelectionRect, false);
     }
 
     // 题目栏里划词：只能在同一段题目文字（题干、一个选项、原题版式）里划，存的是这段文字里的下标
@@ -1743,10 +1745,9 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
       if(end <= start){ fail(); return; }
       const text = whole.slice(start, end);
       if(/\n/.test(text)){ showTempTooltip('请在同一句题目里划', range.getBoundingClientRect()); fail(); return; }
-      const isDuplicate = (highlights||[]).some(h => h.text && h.text.toLowerCase() === text.toLowerCase());
-      selectionRange = { qk: b.dataset.hk, start, end, text, isDuplicate };
+      selectionRange = { qk: b.dataset.hk, start, end, text };
       lastSelectionRect = range.getBoundingClientRect();
-      showFloatAtRect(lastSelectionRect, false, isDuplicate);
+      showFloatAtRect(lastSelectionRect, false);
     }
 
     // ===== 三击查词 / AI 释义（后端 /intensive_lookup，提示词在 prompts/intensive_lookup.yaml） =====
@@ -1776,9 +1777,24 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
       const sr = selectionRange, rect = lastSelectionRect, word = (sr.text || '').trim();
       if(!word || word.length > 40 || !/[A-Za-z]/.test(word)) return;
       if(window.playWordPronunciation) window.playWordPronunciation(word, currentArticle.id);
-      if(sr.isDuplicate){ showTempTooltip('这个词本文已经划过了', rect || { left: 0, top: 80, width: 0, bottom: 80 }); return; }
-      const key = hlKey(sr); if(aiPending.has(key)) return;
       const sel = window.getSelection(); const range = sel && sel.rangeCount ? sel.getRangeAt(0).cloneRange() : null;
+      aiAnnotate(sr, rect, range);
+    }
+    // 划词浮层上的「AI 释义」：三击选不全的（短语、带连字符的、半个词）自己划好再点它，和三击一样直接标好
+    function aiAnnotateSelection(){
+      if(!currentArticle || !selectionRange || selectionRange.existingHighlight) return;
+      const sr = selectionRange, rect = lastSelectionRect, text = (sr.text || '').trim();
+      const at = rect || { left: 0, top: 80, width: 0, bottom: 80 };
+      if(!/[A-Za-z]/.test(text)){ showTempTooltip('选中的不是英文，AI 释义只查英文单词和短语', at); return; }
+      if(text.length > 80){ showTempTooltip('选得太长了，AI 释义只查单词和短语', at); return; }
+      // 浮层按钮点下去时系统选区可能已经收起，扫光按存好的下标重新算位置
+      const range = sr.qk ? (hkBlock(sr.qk) && hkDomRange(hkBlock(sr.qk), sr.start, sr.end))
+        : originalToDomRange(document.querySelector('#vContent .reader'), sr.start, sr.end);
+      aiAnnotate(sr, rect, range);
+    }
+    // 三击和浮层「AI 释义」共用：词上扫光 + 「AI 释义 ···」小气泡，AI 写好直接存成高亮
+    function aiAnnotate(sr, rect, range){
+      const key = hlKey(sr); if(aiPending.has(key)){ cancelFloat(); return; }
       cancelFloat();
       const fx = showAiPending(range);
       aiPending.add(key);
@@ -1828,7 +1844,7 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
       const marks = [...document.querySelectorAll(`mark.hl[data-hid="${CSS.escape(hid)}"]`)];
       if(!marks.length) return;
       marks.forEach(m => m.classList.add('ir-hl-new'));
-      const tipMark = marks.find(m => m.querySelector('.tooltip')) || marks[marks.length - 1];
+      const tipMark = marks.find(m => !m.classList.contains('hl-echo') && m.querySelector('.tooltip')) || marks.find(m => m.querySelector('.tooltip')) || marks[marks.length - 1];
       fitTip(tipMark); tipMark.classList.add('tip-on');
       setTimeout(() => { marks.forEach(m => m.classList.remove('ir-hl-new')); tipMark.classList.remove('tip-on'); }, 2600);
     }
@@ -1862,16 +1878,14 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
         .catch(() => { if(aiLookup !== me) return; aiLookup = null; setAiBusy(false); const input = document.getElementById('meaningInput'); input.placeholder = '网络不通，AI 释义没取到，请自己写一下'; input.focus(); });
     }
 
-    function showFloatAtRect(rect, isExisting = false, isDuplicate = false){
+    function showFloatAtRect(rect, isExisting = false){
       const box=document.getElementById('floatBox');
       const highlightBtn = box.querySelector('button[onclick="confirmHighlight()"]');
       const removeBtn = box.querySelector('button[onclick="removeCurrentHighlight()"]');
       highlightBtn.style.display = isExisting ? 'none' : '';
       removeBtn.style.display = isExisting ? '' : 'none';
-      // 本文已经高亮过的词不能再划一次
-      highlightBtn.disabled = !isExisting && isDuplicate;
-      highlightBtn.textContent = highlightBtn.disabled ? '已划过' : (isPhone() ? '划线并写释义' : '高亮');
-      highlightBtn.title = highlightBtn.disabled ? '这个词在本文里已经高亮过了' : '';
+      highlightBtn.textContent = isPhone() ? '划线并写释义' : '高亮';
+      box.querySelector('.ir-fb-ai').style.display = isExisting ? 'none' : '';
       // 手机：底部操作栏左边写出选中的词
       document.getElementById('popWord').textContent = (selectionRange && selectionRange.text) || '';
       box.style.display='block';
@@ -1905,14 +1919,13 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
     function hideFloat(){
       const box=document.getElementById('floatBox');
       const highlightBtn = box.querySelector('button[onclick="confirmHighlight()"]');
-      highlightBtn.disabled = false; highlightBtn.textContent = '高亮'; highlightBtn.title = '';
+      highlightBtn.textContent = '高亮';
       box.style.display='none';
       selectionRange=null;
     }
     function cancelFloat(){ hideFloat(); window.getSelection().removeAllRanges(); }
     function confirmHighlight(){
       if(!currentArticle||!selectionRange){ cancelFloat(); return; }
-      if(selectionRange.isDuplicate){ return; } // 重复词汇不允许高亮
       floatPressed = false;
       const mBox=document.getElementById('meaningBox');
       const mInput=document.getElementById('meaningInput');
@@ -2007,9 +2020,44 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
     function restoreHighlights(container, art){ // 去重并清理已存在的 mark（释义气泡一起删掉，否则会作为孤儿节点留在段落里）
       container.querySelectorAll('mark.hl').forEach(function(n){ const p=n.parentNode; if(!p) return; n.querySelectorAll('.tooltip').forEach(t=>t.remove()); while(n.firstChild) p.insertBefore(n.firstChild, n); p.removeChild(n); p.normalize(); });
       const uniq=[]; (art.highlights||[]).forEach(function(h){ if(h.qk) return; if(!uniq.some(x=>x.start===h.start&&x.end===h.end)){ uniq.push(h); } });
-      uniq.sort((a,b)=>a.start-b.start).forEach(h=>{ applyOneHighlight(container, h); }); paintExamHighlights(art.highlights||[]); updateVocabCount(); paintExamMarks(); }
+      uniq.sort((a,b)=>a.start-b.start).forEach(h=>{ applyOneHighlight(container, h); }); paintExamHighlights(art.highlights||[]); paintEchoes(container, art.highlights||[]); updateVocabCount(); paintExamMarks(); }
     function applyOneHighlight(container, h){ try{ const reader=container.querySelector('.reader'); if(!reader || !(h.end > h.start)) return; // 已存在则跳过
       if(container.querySelector(`mark.hl[data-hid="${h.id}"]`)) return; wrapOriginalRange(reader, h.start, h.end, h); }catch(e){} }
+    // 划过的词，本文里别处一模一样的（不分大小写、整词）也画上，原文和题目栏都算：同一条高亮（同一个 data-hid），
+    // 悬停看同一条释义、点了念、右键删的是那一条（所有地方一起消失）。只在页面上画，不存，下标不受影响。
+    // 长的先画（划了 the fish 又划了 fish，"the fish" 出现处画成整段）；和已有高亮重叠的地方跳过
+    function echoRegex(text){
+      const t = (text || '').trim(); if(!t || !/[A-Za-z]/.test(t)) return null;
+      const body = t.split(/\s+/).map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('[ \\t\\u00A0]+');
+      return new RegExp('(^|[^A-Za-z0-9\\u00C0-\\u024F])(' + body + ')(?![A-Za-z0-9\\u00C0-\\u024F])', 'gi');
+    }
+    function echoMatches(str, re){ const out = []; re.lastIndex = 0; let m; while((m = re.exec(str))){ const s = m.index + m[1].length; out.push([s, s + m[2].length]); re.lastIndex = s + 1; } return out; }
+    function paintEchoes(container, list){
+      const seen = new Set(), src = [];
+      list.forEach(h => { const k = (h.text || '').trim().toLowerCase(); if(k && !seen.has(k)){ seen.add(k); src.push(h); } });
+      src.sort((a, b) => b.text.trim().length - a.text.trim().length);
+      const overlaps = (used, a, b) => used.some(([x, y]) => a < y && b > x);
+      // 原文：按 content_text 下标找，已有高亮的范围先占上
+      const reader = container.querySelector('.reader'), content = (currentArticle && currentArticle.content_text) || '';
+      if(reader && content){
+        const used = list.filter(h => !h.qk).map(h => [h.start, h.end]);
+        src.forEach(h => { const re = echoRegex(h.text); if(!re) return;
+          echoMatches(content, re).forEach(([a, b]) => { if(overlaps(used, a, b)) return; used.push([a, b]); try{ const m = wrapOriginalRange(reader, a, b, h); if(m) m.classList.add('hl-echo'); }catch(e){} }); });
+      }
+      // 题目栏：每段题目文字各自从 0 数
+      if(currentArticle && currentArticle.exam){
+        document.querySelectorAll('#examPane [data-hk]').forEach(b => {
+          const qk = b.dataset.hk, txt = hkText(b);
+          const used = list.filter(h => h.qk === qk).map(h => [h.start, h.end]);
+          src.forEach(h => { const re = echoRegex(h.text); if(!re) return;
+            echoMatches(txt, re).forEach(([a, e]) => { if(overlaps(used, a, e)) return; used.push([a, e]);
+              const pieces = hkPieces(b, a, e); if(!pieces.length || pieces.some(p => p.node.parentNode.closest('mark.hl'))) return;
+              const marks = pieces.reverse().map(p => { const r = document.createRange(); r.setStart(p.node, p.s); r.setEnd(p.node, p.e); const m = document.createElement('mark'); m.className = 'hl hl-echo'; m.setAttribute('data-hid', h.id); r.surroundContents(m); return m; }).reverse();
+              const tip = document.createElement('span'); tip.className = 'tooltip'; tip.textContent = h.meaning || ''; marks[marks.length-1].appendChild(tip);
+              marks.forEach(m => bindMark(m, h, tip)); }); });
+        });
+      }
+    }
     function deleteHighlight(hid){ if(!currentArticle) return; fetch('/intensive_delete_highlight',{method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id: currentArticle.id, highlight_id: hid})}).then(r=>r.json()).then(d=>{ if(d.success){
           // 只把这一个高亮从页面上拿掉，不整篇重载（不然播放条、题目栏滚到的位置、读到的位置都会被重置）
           highlights = (highlights||[]).filter(h => h.id !== hid); restoreHighlights(document.getElementById('vContent'), { highlights, content_text: currentArticle.content_text }); if(document.getElementById('highlightsPanel').classList.contains('active')) renderHighlightsPanel();
@@ -2301,14 +2349,14 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
     function hkText(b){ return hkTextNodes(b).map(n => n.nodeValue).join(''); }
     // 选区在这段文字里真正覆盖到的字符 -> {start, end, mark}，和正文的 selectionToOriginal 一个算法
     function hkSelection(b, range){
-      let start=null, end=null, mark=null, o=0;
+      let start=null, end=null, o=0; const acc={ mark: null, partial: false };
       hkTextNodes(b).forEach(function(n){
         const s = n === range.startContainer ? range.startOffset : 0;
         const e = n === range.endContainer ? range.endOffset : n.length;
-        if(range.intersectsNode(n) && e > s){ if(start === null) start = o + s; end = o + e; if(!mark) mark = n.parentNode.closest('mark.hl'); }
+        if(range.intersectsNode(n) && e > s){ if(start === null) start = o + s; end = o + e; noteMark(acc, n, s, e); }
         o += n.length;
       });
-      return start === null ? null : { start, end, mark };
+      return start === null ? null : { start, end, mark: acc.mark && !(acc.mark.classList.contains('hl-echo') && acc.partial) ? acc.mark : null };
     }
     // 下标 -> 每个文本节点里的一段 [{node, s, e}]（原题版式里一个词可能跨 <b> 之类的标签）
     function hkPieces(b, start, end){ const out=[]; let o=0; hkTextNodes(b).forEach(n => { const s = Math.max(start, o), e = Math.min(end, o + n.length); if(e > s) out.push({ node: n, s: s - o, e: e - o }); o += n.length; }); return out; }
@@ -2376,8 +2424,10 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
     function lineTextNodes(p){ const out=[]; const walker=document.createTreeWalker(p, NodeFilter.SHOW_TEXT, { acceptNode: n => n.parentNode.closest('.tooltip') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT }); let n; while(n=walker.nextNode()) out.push(n); return out; }
     // 选区真正覆盖到的正文字符 -> 原文下标 {start, end, mark}。只看被覆盖的字符，不看端点落在哪个节点上，
     // 所以端点在元素上、在上一行末尾、在下一行开头都不影响结果。mark 是被覆盖到的已有高亮（有的话）。
+    // 选区碰到的高亮：优先报真高亮；只碰到自动标出的（hl-echo）且还选了它外面的字（短语里带着这个词），partial 为真，照常算新划的
+    function noteMark(acc, n, s, e){ const mk = n.parentNode.closest('mark.hl'); if(!mk){ if(/\S/.test(n.nodeValue.slice(s, e))) acc.partial = true; return; } if(!acc.mark || (acc.mark.classList.contains('hl-echo') && !mk.classList.contains('hl-echo'))) acc.mark = mk; }
     function selectionToOriginal(reader, range){
-      let start=null, end=null, mark=null;
+      let start=null, end=null; const acc={ mark: null, partial: false };
       reader.querySelectorAll('p[data-o]').forEach(function(p){
         if(!range.intersectsNode(p)) return;
         let o = Number(p.dataset.o);
@@ -2387,12 +2437,12 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
           if(range.intersectsNode(n) && e > s){
             if(start === null) start = o + s;
             end = o + e;
-            if(!mark) mark = n.parentNode.closest('mark.hl');
+            noteMark(acc, n, s, e);
           }
           o += n.length;
         });
       });
-      return start === null ? null : { start, end, mark };
+      return start === null ? null : { start, end, mark: acc.mark && !(acc.mark.classList.contains('hl-echo') && acc.partial) ? acc.mark : null };
     }
     // 原文下标 -> 页面上的 (文本节点, 偏移)。atEnd 为真时，正好落在两个节点交界处取前一个节点的末尾，
     // 否则取后一个节点的开头，这样新高亮不会和紧挨着的已有 <mark> 搅在一起
@@ -2410,13 +2460,13 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
       return null;
     }
     function originalToDomRange(reader, start, end){ const s=originalToDomPoint(reader, start, false), e=originalToDomPoint(reader, end, true); if(!s || !e) return null; const r=document.createRange(); r.setStart(s.node, s.offset); r.setEnd(e.node, e.offset); return r; }
-    function wrapOriginalRange(reader, start, end, meta){ const r=originalToDomRange(reader, start, end); if(!r || r.collapsed) return; const mark=document.createElement('mark'); mark.className='hl'; mark.setAttribute('data-hid', meta.id); const tip=document.createElement('span'); tip.className='tooltip'; tip.textContent=meta.meaning||''; r.surroundContents(mark); mark.appendChild(tip); bindMark(mark, meta, tip); }
+    function wrapOriginalRange(reader, start, end, meta){ const r=originalToDomRange(reader, start, end); if(!r || r.collapsed) return; const mark=document.createElement('mark'); mark.className='hl'; mark.setAttribute('data-hid', meta.id); const tip=document.createElement('span'); tip.className='tooltip'; tip.textContent=meta.meaning||''; r.surroundContents(mark); mark.appendChild(tip); bindMark(mark, meta, tip); return mark; }
     // 高亮上的交互（正文、题目栏一样）：桌面悬停看释义、右键删除；手机点开单词卡；点一下都会读出来
     function bindMark(mark, meta, tip){
       const tipMark = tip.parentNode;
       mark.addEventListener('mouseenter', function(){ fitTip(tipMark); });
       // 手机长按是在选词，安卓还会顺带触发 contextmenu，这时不能弹删除确认
-      mark.addEventListener('contextmenu', function(ev){ if(lastPointerType !== 'mouse') return; ev.preventDefault(); if(confirm('删除该高亮/笔记？')){ deleteHighlight(meta.id); } });
+      mark.addEventListener('contextmenu', function(ev){ if(lastPointerType !== 'mouse') return; ev.preventDefault(); if(confirm(document.querySelectorAll(`mark.hl[data-hid="${CSS.escape(meta.id)}"]`).length > 1 ? '删除这个词的高亮？本文里所有出现的地方会一起取消。' : '删除该高亮/笔记？')){ deleteHighlight(meta.id); } });
       mark.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation();
         // 手机：底部弹出单词卡（释义、发音、删除）；平板等触屏宽屏：点一下显示释义气泡，再点一下收起
         if(isPhone()){ openWordCard(meta.id); }

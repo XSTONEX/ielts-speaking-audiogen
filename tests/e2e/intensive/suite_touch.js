@@ -13,7 +13,7 @@ module.exports = async function suiteTouch({ cfg, browser, engine, t, lib }) {
   p.on('dialog', d => { dialogs.push(d.message()); d.dismiss(); });
   const ok = (c, what) => t.ok(c, what);
 
-  const st = () => p.evaluate(() => { const f = document.getElementById('floatBox'), m = document.getElementById('meaningBox'); const fr = f.getBoundingClientRect(); return { float: f.style.display, meaning: m.style.display, sel: selectionRange && selectionRange.text, fTop: fr.top, fBottom: fr.bottom, fLeft: fr.left, fRight: fr.right, focus: document.activeElement && document.activeElement.id, btn: [...f.querySelectorAll('button')].filter(x => x.style.display !== 'none').map(x => x.textContent), browserSel: getSelection().toString(), toast: [...document.querySelectorAll('.temp-tooltip')].map(t => t.textContent) }; });
+  const st = () => p.evaluate(() => { const f = document.getElementById('floatBox'), m = document.getElementById('meaningBox'); const fr = f.getBoundingClientRect(); return { float: f.style.display, meaning: m.style.display, sel: selectionRange && selectionRange.text, fTop: fr.top, fBottom: fr.bottom, fLeft: fr.left, fRight: fr.right, focus: document.activeElement && document.activeElement.id, btn: [...f.querySelectorAll('button')].filter(x => x.style.display !== 'none').map(x => x.innerText.trim()), browserSel: getSelection().toString(), toast: [...document.querySelectorAll('.temp-tooltip')].map(t => t.textContent) }; });
   // 第 pi 行里第一个匹配 re 的词，滚到屏幕中间，返回它的位置
   const wordAt = (pi, re) => p.evaluate(([pi, re]) => { const ps = document.querySelectorAll('#vContent .reader p'); const pp = ps[pi]; pp.scrollIntoView({ block: 'center' }); const t = [...pp.childNodes].find(n => n.nodeType === 3); const m = new RegExp(re).exec(t.nodeValue); const r = document.createRange(); r.setStart(t, m.index); r.setEnd(t, m.index + m[0].length); const rc = r.getBoundingClientRect(); return { pi, s: m.index, e: m.index + m[0].length, word: m[0], x: rc.left + rc.width / 2, y: rc.top + rc.height / 2, bottom: rc.bottom }; }, [pi, re]);
   // 点一下这个词，再把选区设成这个词（长按的效果），等页面的 selectionchange 防抖跑完
@@ -44,7 +44,7 @@ module.exports = async function suiteTouch({ cfg, browser, engine, t, lib }) {
     ok(s.float === 'block' && s.sel === w.word, `long-press "${w.word}" shows popover: ${JSON.stringify(s)}`);
     // 手机上是贴在底部工具栏上面的一条操作栏，不在词旁边，挡不到系统的拷贝菜单和选区手柄
     ok(s.fTop >= w.bottom && s.fBottom <= H && s.fLeft >= 0 && s.fRight <= W, `action bar sits below the word and on screen: top=${s.fTop} bottom=${s.fBottom} word.bottom=${w.bottom}`);
-    ok(JSON.stringify(s.btn) === JSON.stringify(['划线并写释义', '取消']), `buttons ${JSON.stringify(s.btn)}`);
+    ok(JSON.stringify(s.btn) === JSON.stringify(['划线并写释义', 'AI', '取消']), `buttons ${JSON.stringify(s.btn)}`);
 
     // 点「高亮」→ 释义框，输入框拿到焦点
     await p.tap('#floatBox .ir-pop-main');
@@ -59,30 +59,30 @@ module.exports = async function suiteTouch({ cfg, browser, engine, t, lib }) {
     await p.tap('#meaningBox .ir-pop-main');
     await p.waitForFunction(() => (highlights || []).some(h => h.meaning === 'touch-e2e-释义'));
     await p.waitForTimeout(300);
-    const saved = await p.evaluate(() => { const h = highlights.find(h => h.meaning === 'touch-e2e-释义'); const m = document.querySelector(`#vContent mark.hl[data-hid="${h.id}"]`); return { id: h.id, text: h.text, mark: m && m.firstChild.nodeValue, count: document.getElementById('vocabCount').textContent, meaning: document.getElementById('meaningBox').style.display }; });
+    const saved = await p.evaluate(() => { const h = highlights.find(h => h.meaning === 'touch-e2e-释义'); const m = document.querySelector(`#vContent mark.hl:not(.hl-echo)[data-hid="${h.id}"]`); return { id: h.id, text: h.text, mark: m && m.firstChild.nodeValue, count: document.getElementById('vocabCount').textContent, meaning: document.getElementById('meaningBox').style.display }; });
     ok(saved.text === w.word && saved.mark === w.word && saved.meaning === 'none', `saved line-initial "${w.word}": ${JSON.stringify(saved)}`);
     ok(Number(saved.count) === before + 1, `vocab count ${before} → ${saved.count}`);
 
     // 点新高亮 → 底部弹出单词卡，写着这个词和释义，在屏幕内
-    const mk = await p.evaluate(id => { const m = document.querySelector(`#vContent mark.hl[data-hid="${id}"]`); m.scrollIntoView({ block: 'center' }); const r = m.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; }, saved.id);
+    const mk = await p.evaluate(id => { const m = document.querySelector(`#vContent mark.hl:not(.hl-echo)[data-hid="${id}"]`); m.scrollIntoView({ block: 'center' }); const r = m.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; }, saved.id);
     await p.touchscreen.tap(mk.x, mk.y);
     await p.waitForTimeout(300);
     const tip = await p.evaluate(() => { const c = document.getElementById('wordCard'); const r = c.getBoundingClientRect(); return { open: !c.hidden, word: document.getElementById('wcWord').textContent, txt: document.getElementById('wcMean').textContent, l: r.left, r: r.right, b: Math.round(r.bottom) }; });
     ok(tip.open && tip.word === w.word && tip.txt === 'touch-e2e-释义' && tip.l >= 0 && tip.r <= W && tip.b <= H, `tap mark shows the word card on screen: ${JSON.stringify(tip)}`);
 
     // 长按高亮不能弹「删除？」确认框（安卓长按会顺带触发 contextmenu）
-    await p.evaluate(id => { lastPointerType = 'touch'; const m = document.querySelector(`#vContent mark.hl[data-hid="${id}"]`); m.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true })); }, saved.id);
+    await p.evaluate(id => { lastPointerType = 'touch'; const m = document.querySelector(`#vContent mark.hl:not(.hl-echo)[data-hid="${id}"]`); m.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true })); }, saved.id);
     await p.waitForTimeout(150);
     ok(dialogs.length === 0, `no confirm dialog on long-press: ${JSON.stringify(dialogs)}`);
 
     // 选中已有高亮 → 「删除高亮」→ 没了
     await p.touchscreen.tap(5, 300); await p.waitForTimeout(400);
-    await p.evaluate(id => { const m = document.querySelector(`#vContent mark.hl[data-hid="${id}"]`); const r = document.createRange(); r.selectNodeContents(m.firstChild); getSelection().removeAllRanges(); getSelection().addRange(r); }, saved.id);
+    await p.evaluate(id => { const m = document.querySelector(`#vContent mark.hl:not(.hl-echo)[data-hid="${id}"]`); const r = document.createRange(); r.selectNodeContents(m.firstChild); getSelection().removeAllRanges(); getSelection().addRange(r); }, saved.id);
     await p.waitForTimeout(600);
     s = await st();
     ok(s.float === 'block' && JSON.stringify(s.btn) === JSON.stringify(['取消', '删除高亮']), `select existing highlight → remove option: ${JSON.stringify(s.btn)} float=${s.float}`);
     await p.tap('#floatBox .ir-pop-danger');
-    await p.waitForFunction(id => !document.querySelector(`#vContent mark.hl[data-hid="${id}"]`) && !(highlights || []).some(h => h.id === id), saved.id);
+    await p.waitForFunction(id => !document.querySelector(`#vContent mark.hl:not(.hl-echo)[data-hid="${id}"]`) && !(highlights || []).some(h => h.id === id), saved.id);
     ok(true, 'removed via 删除高亮');
     await p.waitForTimeout(400);
 

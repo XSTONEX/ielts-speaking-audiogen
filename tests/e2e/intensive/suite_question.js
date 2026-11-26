@@ -92,7 +92,7 @@ module.exports = async function suiteQuestion({ cfg, browser, engine, t, lib }) 
     const r = document.createRange(); r.setStart(node, i); r.setEnd(node, i + word.length); const rc = r.getBoundingClientRect();
     return { hk: b.dataset.hk, x: rc.left + rc.width / 2, y: rc.top + rc.height / 2, x0: rc.left, x1: rc.right };
   }, [hkRe.source, word, !!noScroll]);
-  const state = p => p.evaluate(() => ({ float: document.getElementById('floatBox').style.display, meaning: document.getElementById('meaningBox').style.display, text: selectionRange && selectionRange.text, qk: selectionRange && selectionRange.qk, btn: document.querySelector('#floatBox .ir-pop-main').textContent, disabled: document.querySelector('#floatBox .ir-pop-main').disabled }));
+  const state = p => p.evaluate(() => ({ float: document.getElementById('floatBox').style.display, meaning: document.getElementById('meaningBox').style.display, text: selectionRange && selectionRange.text, qk: selectionRange && selectionRange.qk, btn: document.querySelector('#floatBox .ir-pop-main').textContent, disabled: document.querySelector('#floatBox .ir-pop-main').disabled, existing: selectionRange && selectionRange.existingHighlight }));
 
   // ==================== 桌面 ====================
   {
@@ -140,20 +140,21 @@ module.exports = async function suiteQuestion({ cfg, browser, engine, t, lib }) 
       const k2 = await highlightIn(/^g2\.q6\.B$/, 'glare', 'e2e 强光');
       const k3 = await highlightIn(/^g3\.oA$/, 'reluctant', 'e2e 不情愿的');
       const k4 = await highlightIn(/^g1\.layout$/, 'engineers', 'e2e 工程师');
-      const marks = () => p.evaluate(() => [...document.querySelectorAll('#examPane mark.hl')].map(m => ({ hk: m.closest('[data-hk]').dataset.hk, text: m.firstChild.nodeValue, tip: (m.querySelector('.tooltip') || {}).textContent })));
+      const marks = () => p.evaluate(() => [...document.querySelectorAll('#examPane mark.hl:not(.hl-echo)')].map(m => ({ hk: m.closest('[data-hk]').dataset.hk, text: m.firstChild.nodeValue, tip: (m.querySelector('.tooltip') || {}).textContent })));
       const m1 = await marks();
       ok(JSON.stringify(m1.map(m => m.text).sort()) === JSON.stringify(['engineers', 'glare', 'relocate', 'reluctant']) && m1.every(m => /^e2e /.test(m.tip)), `four marks drawn in the questions ${JSON.stringify(m1)}`);
       ok(Number(await p.textContent('#vocabCount')) === before + 4, 'vocab count +4');
       const sh = await serverHighlights();
       ok(JSON.stringify(sh.filter(h => h.qk).map(h => [h.qk, h.text]).sort()) === JSON.stringify([[k4, 'engineers'], [k3, 'reluctant'], [k1, 'relocate'], [k2, 'glare']].sort()), `saved with qk ${JSON.stringify(sh.map(h => [h.qk, h.text]))}`);
-      ok(await p.evaluate(() => document.querySelectorAll('#vContent mark.hl').length === 0), 'question highlights are not painted into the passage');
+      ok(await p.evaluate(() => document.querySelectorAll('#vContent mark.hl:not(.hl-echo)').length === 0), 'question highlights are not painted into the passage');
 
-      // ---- 题目里的词就算在原文里出现，也算「已划过」；反过来也一样 ----
+      // ---- 题目里划过的词，原文里出现的地方自动标上（同一条高亮、同一条释义，不存新的）；选到它只给「删除高亮」 ----
       await p.evaluate(() => { try { cancelFloat(); } catch (e) {} });
-      const eng = await p.evaluate(() => { const pp = [...document.querySelectorAll('#vContent p.en')].find(p => /Engineers/.test(p.textContent)); pp.scrollIntoView({ block: 'center' }); const tn = [...pp.childNodes].find(n => n.nodeType === 3 && n.nodeValue.includes('Engineers')); const i = tn.nodeValue.indexOf('Engineers'); const r = document.createRange(); r.setStart(tn, i); r.setEnd(tn, i + 9); const rc = r.getBoundingClientRect(); return { x: rc.left + rc.width / 2, y: rc.top + rc.height / 2 }; });
-      await p.mouse.dblclick(eng.x, eng.y); await sleep(150);
+      const echo = await p.evaluate(() => { const h = highlights.find(h => h.text === 'engineers'); const ms = [...document.querySelectorAll('#vContent mark.hl.hl-echo')].filter(m => m.firstChild.nodeValue === 'Engineers'); const m = ms[0]; if (m) m.scrollIntoView({ block: 'center' }); const r = m && m.getBoundingClientRect(); return { n: ms.length, hid: m && m.dataset.hid, want: h && h.id, tip: m && (m.querySelector('.tooltip') || {}).textContent, x: r && r.left + r.width / 2, y: r && r.top + r.height / 2, stored: highlights.filter(h => /^engineers$/i.test(h.text)).length }; });
+      ok(echo.n === 1 && echo.hid === echo.want && echo.tip === 'e2e 工程师' && echo.stored === 1, `"Engineers" in the passage is auto-marked with the question's meaning ${JSON.stringify(echo)}`);
+      await p.mouse.dblclick(echo.x, echo.y); await sleep(150);
       const dup = await state(p);
-      ok(dup.float === 'block' && dup.disabled && dup.btn === '已划过', `"Engineers" in the passage counts as already highlighted ${JSON.stringify(dup)}`);
+      ok(dup.float === 'block' && dup.existing === echo.want, `selecting an auto-marked word offers only 删除高亮 ${JSON.stringify(dup)}`);
 
       // ---- 跨两段题目文字的选区只提示 ----
       await p.evaluate(() => { try { cancelFloat(); } catch (e) {} });
@@ -163,10 +164,10 @@ module.exports = async function suiteQuestion({ cfg, browser, engine, t, lib }) 
       ok(cross.float === 'none' && /同一句题目/.test(cross.tip), `selection across stem + option is refused ${JSON.stringify(cross)}`);
 
       // ---- 悬停看释义；点一下读出来：先有道，没有再退回以前存过的 ----
-      const rel = await p.$('#examPane mark.hl[data-hid]');
+      const rel = await p.$('#examPane mark.hl:not(.hl-echo)[data-hid]');
       const relBox = await wordBox(p, /^g2\.q6$/, 'relocate');
       await p.mouse.move(relBox.x, relBox.y); await sleep(150);
-      const tipShown = await p.evaluate(() => { const m = [...document.querySelectorAll('#examPane mark.hl')].find(m => m.firstChild.nodeValue === 'relocate'); return getComputedStyle(m.querySelector('.tooltip')).display; });
+      const tipShown = await p.evaluate(() => { const m = [...document.querySelectorAll('#examPane mark.hl:not(.hl-echo)')].find(m => m.firstChild.nodeValue === 'relocate'); return getComputedStyle(m.querySelector('.tooltip')).display; });
       ok(tipShown === 'block', `hover shows the meaning bubble (${tipShown})`);
       audio.youdao.length = 0; audio.stored.length = 0;
       await p.mouse.click(relBox.x, relBox.y); await sleep(500);
@@ -178,9 +179,9 @@ module.exports = async function suiteQuestion({ cfg, browser, engine, t, lib }) 
 
       // ---- 刷新：原文和题目里的高亮都画回来；词汇面板列出来，题目里的带「第几题」排在后面 ----
       await lib.settle(p); await p.reload();
-      await p.waitForFunction(() => currentArticle && document.querySelectorAll('#examPane mark.hl').length >= 4); await sleep(300);
+      await p.waitForFunction(() => currentArticle && document.querySelectorAll('#examPane mark.hl:not(.hl-echo)').length >= 4); await sleep(300);
       const m2 = await marks();
-      ok(m2.length === 4 && await p.evaluate(() => document.querySelectorAll('#vContent mark.hl').length === 1), `after reload: 4 question marks + 1 passage mark ${JSON.stringify(m2.map(m => m.text))}`);
+      ok(m2.length === 4 && await p.evaluate(() => document.querySelectorAll('#vContent mark.hl:not(.hl-echo)').length === 1), `after reload: 4 question marks + 1 passage mark ${JSON.stringify(m2.map(m => m.text))}`);
       await p.click('#vocabToggle'); await sleep(300);
       const rows = await p.evaluate(() => [...document.querySelectorAll('#hpBody .ir-vi')].map(r => r.querySelector('.ir-vi-word').textContent));
       ok(JSON.stringify(rows) === JSON.stringify(['bridge', 'engineers题目', 'relocate第 6 题', 'glare第 6 题', 'reluctant题目']), `vocab panel order + tags ${JSON.stringify(rows)}`);
@@ -190,7 +191,7 @@ module.exports = async function suiteQuestion({ cfg, browser, engine, t, lib }) 
       // 跳到题目里的词：题目栏滚过去、闪一下
       await p.evaluate(() => { document.getElementById('examPane').scrollTop = 0; });
       await p.click('#hpBody .ir-vi:nth-child(5) [title="跳到原文"]'); await sleep(250);
-      const jump = await p.evaluate(() => { const m = [...document.querySelectorAll('#examPane mark.hl')].find(m => m.firstChild.nodeValue === 'reluctant'); const r = m.getBoundingClientRect(), pr = document.getElementById('examPane').getBoundingClientRect(); return { active: m.classList.contains('active'), inView: r.top > pr.top && r.bottom < pr.bottom, scrolled: document.getElementById('examPane').scrollTop > 0 }; });
+      const jump = await p.evaluate(() => { const m = [...document.querySelectorAll('#examPane mark.hl:not(.hl-echo)')].find(m => m.firstChild.nodeValue === 'reluctant'); const r = m.getBoundingClientRect(), pr = document.getElementById('examPane').getBoundingClientRect(); return { active: m.classList.contains('active'), inView: r.top > pr.top && r.bottom < pr.bottom, scrolled: document.getElementById('examPane').scrollTop > 0 }; });
       ok(jump.active && jump.inView && jump.scrolled, `jump from the vocab panel scrolls the questions to the word ${JSON.stringify(jump)}`);
       await p.click('#highlightsPanel .ir-panel-head .ir-icon-btn'); await sleep(250);
 
@@ -199,7 +200,7 @@ module.exports = async function suiteQuestion({ cfg, browser, engine, t, lib }) 
       const st0 = await p.evaluate(() => document.getElementById('examPane').scrollTop);
       acceptNext = true;
       await p.mouse.click(gl.x, gl.y, { button: 'right' }); await sleep(600);
-      const del = await p.evaluate(() => ({ marks: [...document.querySelectorAll('#examPane mark.hl')].map(m => m.firstChild.nodeValue).sort(), scroll: document.getElementById('examPane').scrollTop, count: document.getElementById('vocabCount').textContent, text: document.querySelector('#examPane [data-hk="g2.q6.B"]').textContent }));
+      const del = await p.evaluate(() => ({ marks: [...document.querySelectorAll('#examPane mark.hl:not(.hl-echo)')].map(m => m.firstChild.nodeValue).sort(), scroll: document.getElementById('examPane').scrollTop, count: document.getElementById('vocabCount').textContent, text: document.querySelector('#examPane [data-hk="g2.q6.B"]').textContent }));
       ok(JSON.stringify(del.marks) === JSON.stringify(['engineers', 'relocate', 'reluctant']) && Math.abs(del.scroll - st0) < 2 && del.text === 'to reduce glare for passing sailors', `right-click delete removes one mark, keeps scroll ${JSON.stringify({ ...del, st0 })}`);
       ok(!(await serverHighlights()).some(h => h.text === 'glare'), 'deleted on the server');
 
@@ -230,7 +231,7 @@ module.exports = async function suiteQuestion({ cfg, browser, engine, t, lib }) 
       ok(mlSaved && mlSaved.meaning === 'n. e2e 扶手\nv. e2e 装栏杆\nadj. e2e 第三行', `multi-line meaning saved, lines trimmed ${JSON.stringify(mlSaved && mlSaved.meaning)}`);
       const hrBox = await wordBox(p, /^g2\.q7\.A$/, 'complaints');
       await p.mouse.move(hrBox.x, hrBox.y); await sleep(150);
-      const mlTip = await p.evaluate(() => { const m = [...document.querySelectorAll('#examPane mark.hl')].find(m => m.firstChild.nodeValue === 'complaints'); const t = m.querySelector('.tooltip'); const cs = getComputedStyle(t); return { display: cs.display, ws: cs.whiteSpace, lines: Math.round((t.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)) / parseFloat(cs.lineHeight)) }; });
+      const mlTip = await p.evaluate(() => { const m = [...document.querySelectorAll('#examPane mark.hl:not(.hl-echo)')].find(m => m.firstChild.nodeValue === 'complaints'); const t = m.querySelector('.tooltip'); const cs = getComputedStyle(t); return { display: cs.display, ws: cs.whiteSpace, lines: Math.round((t.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)) / parseFloat(cs.lineHeight)) }; });
       ok(mlTip.display === 'block' && mlTip.ws === 'pre-line' && mlTip.lines === 3, `tooltip shows the meaning on 3 lines ${JSON.stringify(mlTip)}`);
       await p.click('#vocabToggle'); await sleep(300);
       const mlRow = await p.evaluate(() => { const r = [...document.querySelectorAll('#hpBody .ir-vi')].find(r => /complaints/.test(r.textContent)); const m = r && r.querySelector('.ir-vi-mean'); return m ? { ws: getComputedStyle(m).whiteSpace, lines: Math.round(m.clientHeight / parseFloat(getComputedStyle(m).lineHeight)) } : null; });
@@ -316,10 +317,10 @@ module.exports = async function suiteQuestion({ cfg, browser, engine, t, lib }) 
       await p.waitForFunction(() => (highlights || []).some(h => h.text === 'fishermen'), null, { timeout: 5000 }).catch(() => {});
       await sleep(150);
       const f1 = await saved('fishermen');
-      const f1Page = await p.evaluate(() => { const ms = [...document.querySelectorAll('#vContent mark.hl')].filter(m => m.firstChild.nodeValue === 'fishermen'); const tip = ms[0] && ms[0].querySelector('.tooltip'); return { marks: ms.length, pop: ms.some(m => m.classList.contains('ir-hl-new')), tip: tip && getComputedStyle(tip).display, tipText: tip && tip.textContent, left: document.querySelectorAll('.ir-ai-wait, .ir-ai-badge').length }; });
+      const f1Page = await p.evaluate(() => { const ms = [...document.querySelectorAll('#vContent mark.hl:not(.hl-echo)')].filter(m => m.firstChild.nodeValue === 'fishermen'); const tip = ms[0] && ms[0].querySelector('.tooltip'); return { marks: ms.length, pop: ms.some(m => m.classList.contains('ir-hl-new')), tip: tip && getComputedStyle(tip).display, tipText: tip && tip.textContent, left: document.querySelectorAll('.ir-ai-wait, .ir-ai-badge').length }; });
       ok(f1 && f1.meaning === 'e2e ai fishermen' && !f1.qk && f1Page.marks === 1 && f1Page.pop && f1Page.tip === 'block' && f1Page.tipText === 'e2e ai fishermen' && f1Page.left === 0, `triple-click in the passage saves the AI meaning and shows it ${JSON.stringify({ f1, f1Page })}`);
       await sleep(2700);
-      ok(await p.evaluate(() => { const m = [...document.querySelectorAll('#vContent mark.hl')].find(m => m.firstChild.nodeValue === 'fishermen'); return !m.classList.contains('tip-on') && !m.classList.contains('ir-hl-new'); }), 'the meaning bubble goes away by itself');
+      ok(await p.evaluate(() => { const m = [...document.querySelectorAll('#vContent mark.hl:not(.hl-echo)')].find(m => m.firstChild.nodeValue === 'fishermen'); return !m.classList.contains('tip-on') && !m.classList.contains('ir-hl-new'); }), 'the meaning bubble goes away by itself');
       ok(lookups[0] && lookups[0].text === 'fishermen' && !lookups[0].qk && lookups[0].end - lookups[0].start === 9, `lookup sends the word and its range ${JSON.stringify(lookups[0])}`);
       // 已经划过的词再三击：不再查
       await p.mouse.click(5, 450);
@@ -334,7 +335,7 @@ module.exports = async function suiteQuestion({ cfg, browser, engine, t, lib }) 
       await p.waitForFunction(() => (highlights || []).some(h => h.text === 'handrails'), null, { timeout: 5000 }).catch(() => {});
       await sleep(150);
       const f2 = await saved('handrails');
-      ok(f2 && f2.qk === 'g2.q7' && f2.meaning === 'e2e ai handrails' && await p.evaluate(() => [...document.querySelectorAll('#examPane mark.hl')].some(m => m.firstChild.nodeValue === 'handrails')), `triple-click in a question saves with qk ${JSON.stringify(f2)}`);
+      ok(f2 && f2.qk === 'g2.q7' && f2.meaning === 'e2e ai handrails' && await p.evaluate(() => [...document.querySelectorAll('#examPane mark.hl:not(.hl-echo)')].some(m => m.firstChild.nodeValue === 'handrails')), `triple-click in a question saves with qk ${JSON.stringify(f2)}`);
       // 释义框里的「AI」：只填进框里，回车才存
       await p.evaluate(() => { try { cancelFloat(); cancelMeaning(); } catch (e) {} });
       await p.mouse.click(5, 450);
@@ -357,6 +358,50 @@ module.exports = async function suiteQuestion({ cfg, browser, engine, t, lib }) 
       await sleep(1000);
       const gone = await p.evaluate(() => document.querySelectorAll('.ir-ai-wait, .ir-ai-badge').length);
       ok(fail.box === 'none' && fail.red && /自己写/.test(fail.toast) && gone === 0 && !(await saved('catches')), `AI failure: shimmer turns red and clears, hint to write by hand ${JSON.stringify({ fail, gone })}`);
+      // 划词浮层上的「AI 释义」：三击选不全的短语，拖选后点它 → 和三击一样扫光、直接存
+      await p.mouse.click(5, 450);
+      const ph = await p.evaluate(phrase => { const pp = [...document.querySelectorAll('#vContent p.en')].find(p => p.textContent.includes(phrase)); pp.scrollIntoView({ block: 'center' }); const tw = document.createTreeWalker(pp, NodeFilter.SHOW_TEXT); let tn; while ((tn = tw.nextNode()) && !tn.nodeValue.includes(phrase)); const i = tn.nodeValue.indexOf(phrase); const ch = k => { const r = document.createRange(); r.setStart(tn, k); r.setEnd(tn, k + 1); return r.getBoundingClientRect(); }; const a = ch(i), b = ch(i + phrase.length - 1); return { x1: a.left + 1, x2: b.right - 1, y: a.top + a.height / 2 }; }, 'scare the fish');
+      await p.mouse.move(ph.x1, ph.y); await p.mouse.down(); await p.mouse.move(ph.x2, ph.y, { steps: 6 }); await p.mouse.up(); await sleep(150);
+      const pop = await p.evaluate(() => ({ float: document.getElementById('floatBox').style.display, text: selectionRange && selectionRange.text, ai: getComputedStyle(document.querySelector('#floatBox .ir-fb-ai')).display, label: document.querySelector('#floatBox .ir-fb-ai').innerText.trim() }));
+      ok(pop.float === 'block' && pop.text === 'scare the fish' && pop.ai !== 'none' && pop.label === 'AI 释义', `selection popover offers AI 释义 for a phrase ${JSON.stringify(pop)}`);
+      await p.click('#floatBox .ir-fb-ai'); await sleep(80);
+      const phBusy = await p.evaluate(() => ({ float: document.getElementById('floatBox').style.display, box: document.getElementById('meaningBox').style.display, wait: document.querySelectorAll('#vContent .ir-ai-wait').length, badge: !!document.querySelector('#vContent .ir-ai-badge') }));
+      ok(phBusy.float === 'none' && phBusy.box === 'none' && phBusy.wait >= 1 && phBusy.badge, `popover AI: popover closes, the phrase shimmers ${JSON.stringify(phBusy)}`);
+      await p.waitForFunction(() => (highlights || []).some(h => h.text === 'scare the fish'), null, { timeout: 5000 }).catch(() => {});
+      await sleep(150);
+      const f3 = await saved('scare the fish');
+      const f3Look = lookups[lookups.length - 1];
+      ok(f3 && f3.meaning === 'e2e ai scare the fish' && f3Look.text === 'scare the fish' && f3Look.end - f3Look.start === 14 && await p.evaluate(() => [...document.querySelectorAll('#vContent mark.hl:not(.hl-echo)')].some(m => m.firstChild.nodeValue === 'scare the fish')) && !(await p.evaluate(() => document.querySelector('.ir-ai-wait, .ir-ai-badge'))), `popover AI saves the phrase with its meaning ${JSON.stringify({ f3, f3Look })}`);
+      // 选到已有高亮：浮层只有「删除高亮」，没有 AI
+      await sleep(2700); await p.mouse.click(5, 450);
+      const fm = await passBox('fishermen');
+      await p.mouse.dblclick(fm.x, fm.y); await sleep(150);
+      const exist = await p.evaluate(() => ({ float: document.getElementById('floatBox').style.display, ai: getComputedStyle(document.querySelector('#floatBox .ir-fb-ai')).display, del: getComputedStyle(document.querySelector('#floatBox .ir-pop-danger')).display }));
+      ok(exist.float === 'block' && exist.ai === 'none' && exist.del !== 'none', `no AI button on an existing highlight ${JSON.stringify(exist)}`);
+      await p.evaluate(() => { try { cancelFloat(); } catch (e) {} });
+      // 同一个词本文里出现的地方都自动标上：三击 chose glass 里的 glass → 原文另外两处 + 题目里的 glass 都画上同一条
+      await p.mouse.click(5, 450);
+      const gw = await passBox('chose glass');
+      const gx = await p.evaluate(() => { const pp = [...document.querySelectorAll('#vContent p.en')].find(p => p.textContent.includes('chose glass')); const tw = document.createTreeWalker(pp, NodeFilter.SHOW_TEXT); let tn; while ((tn = tw.nextNode()) && !tn.nodeValue.includes('chose glass')); const i = tn.nodeValue.indexOf('chose glass') + 6; const r = document.createRange(); r.setStart(tn, i + 1); r.setEnd(tn, i + 4); const rc = r.getBoundingClientRect(); return { x: rc.left + rc.width / 2, y: rc.top + rc.height / 2 }; });
+      await tripleClick(gx.x, gx.y);
+      await p.waitForFunction(() => (highlights || []).some(h => h.text === 'glass'), null, { timeout: 5000 }).catch(() => {});
+      await sleep(200);
+      const glx = await p.evaluate(() => { const h = highlights.find(h => h.text === 'glass'); const all = [...document.querySelectorAll(`mark.hl[data-hid="${h.id}"]`)]; return { stored: highlights.filter(x => /^glass$/i.test(x.text)).length, real: all.filter(m => !m.classList.contains('hl-echo')).length, passEcho: all.filter(m => m.classList.contains('hl-echo') && m.closest('#vContent')).map(m => m.firstChild.nodeValue), examEcho: all.filter(m => m.closest('#examPane')).length, tips: all.every(m => m.querySelector('.tooltip') && m.querySelector('.tooltip').textContent === 'e2e ai glass'), inBridge: !!document.querySelector('mark.hl:not(.hl-echo) mark.hl') }; });
+      ok(glx.stored === 1 && glx.real === 1 && glx.passEcho.length >= 1 && glx.examEcho >= 1 && glx.tips && !glx.inBridge, `every other "glass" in the article is auto-marked with the same meaning ${JSON.stringify(glx)}`);
+      ok(await p.evaluate(() => Number(document.getElementById('vocabCount').textContent) === new Set(highlights.map(h => (h.text || '').trim().toLowerCase())).size), 'vocab count counts each word once');
+      // 选一段带着自动标出的词的短语（the glass is lit）：照常能划，不当成「删除高亮」
+      await p.mouse.click(5, 450);
+      const lit = await p.evaluate(phrase => { const own = p => { const c = p.cloneNode(true); c.querySelectorAll('.tooltip').forEach(t => t.remove()); return c.textContent; }; const pp = [...document.querySelectorAll('#vContent p.en')].find(p => own(p).includes(phrase)); pp.scrollIntoView({ block: 'center' }); const r = document.createRange(); const nodes = []; const tw = document.createTreeWalker(pp, NodeFilter.SHOW_TEXT, { acceptNode: n => n.parentNode.closest('.tooltip') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT }); let tn; while ((tn = tw.nextNode())) nodes.push(tn); let o = 0; const full = nodes.map(n => n.nodeValue).join(''); const a = full.indexOf(phrase), b = a + phrase.length; const at = k => { let acc = 0; for (const n of nodes) { if (k <= acc + n.length) return [n, k - acc]; acc += n.length; } }; r.setStart(...at(a)); r.setEnd(...at(b)); getSelection().removeAllRanges(); getSelection().addRange(r); handleReaderSelection(document.getElementById('vContent')); return { text: selectionRange && selectionRange.text, existing: selectionRange && selectionRange.existingHighlight, float: document.getElementById('floatBox').style.display, main: getComputedStyle(document.querySelector('#floatBox .ir-pop-main')).display }; }, 'the glass is lit');
+      ok(lit.text === 'the glass is lit' && !lit.existing && lit.float === 'block' && lit.main !== 'none', `a phrase containing an auto-marked word can still be highlighted ${JSON.stringify(lit)}`);
+      await p.evaluate(() => { try { cancelFloat(); } catch (e) {} });
+      // 在自动标出的地方右键删除：提示会一起取消，删的是那一条，所有地方一起消失
+      const ge = await p.evaluate(() => { const m = document.querySelector('#vContent mark.hl.hl-echo'); const h = highlights.find(h => h.id === m.dataset.hid); m.scrollIntoView({ block: 'center' }); const r = m.getBoundingClientRect(); return { x: r.left + 3, y: r.top + r.height / 2, hid: h.id, text: h.text }; });
+      dialogs.length = 0; acceptNext = true;
+      await p.mouse.click(ge.x, ge.y, { button: 'right' });
+      await p.waitForFunction(hid => !(highlights || []).some(h => h.id === hid), ge.hid, { timeout: 5000 }).catch(() => {});
+      await sleep(150);
+      const gone2 = await p.evaluate(hid => document.querySelectorAll(`mark.hl[data-hid="${hid}"]`).length, ge.hid);
+      ok(/一起取消/.test(dialogs[0] || '') && gone2 === 0 && !(await serverHighlights()).some(h => h.id === ge.hid), `deleting from an auto-marked spot removes the word everywhere ${JSON.stringify({ dialogs, gone2, text: ge.text })}`);
       await p.unroute('**/intensive_lookup');
 
       ok(audio.paid.length === 0, `no paid audio endpoints called ${JSON.stringify(audio.paid)}`);
@@ -405,7 +450,7 @@ module.exports = async function suiteQuestion({ cfg, browser, engine, t, lib }) 
       await p.fill('#meaningInput', 'e2e 作者');
       await p.tap('#meaningBox .ir-pop-main');
       await p.waitForFunction(() => (highlights || []).some(h => h.meaning === 'e2e 作者')); await sleep(300);
-      const pm = await p.evaluate(() => { const m = document.querySelector('#examPane mark.hl'); return { text: m && m.firstChild.nodeValue, open: document.getElementById('examPane').classList.contains('is-open') }; });
+      const pm = await p.evaluate(() => { const m = document.querySelector('#examPane mark.hl:not(.hl-echo)'); return { text: m && m.firstChild.nodeValue, open: document.getElementById('examPane').classList.contains('is-open') }; });
       ok(pm.text === 'writer' && pm.open, `phone: saved, mark in the sheet, sheet still open ${JSON.stringify(pm)}`);
       // 点高亮：单词卡 + 有道
       audio.youdao.length = 0;
@@ -418,11 +463,11 @@ module.exports = async function suiteQuestion({ cfg, browser, engine, t, lib }) 
       await p.evaluate(() => history.back()); await sleep(400);
       // 词汇面板里跳过去：面板关掉，题目面板升起停在第 6 题，词在面板里看得见
       await p.evaluate(() => fetch('/intensive_add_highlight', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: currentArticle.id, qk: 'g2.q6', start: 'Why did the town council '.length, end: 'Why did the town council '.length + 8, meaning: 'e2e 搬迁', text: 'relocate' }) }));
-      await lib.settle(p); await p.reload(); await p.waitForFunction(() => currentArticle && document.querySelectorAll('#examPane mark.hl').length === 2); await sleep(300);
+      await lib.settle(p); await p.reload(); await p.waitForFunction(() => currentArticle && document.querySelectorAll('#examPane mark.hl:not(.hl-echo)').length === 2); await sleep(300);
       await p.tap('#vocabToggle'); await sleep(400);
       const row = await p.evaluate(() => [...document.querySelectorAll('#hpBody .ir-vi')].findIndex(r => r.querySelector('.ir-vi-word').textContent.startsWith('relocate')));
       await p.tap(`#hpBody .ir-vi:nth-child(${row + 1}) [title="跳到原文"]`); await sleep(900);
-      const j = await p.evaluate(() => { const pane = document.getElementById('examPane'); const m = [...pane.querySelectorAll('mark.hl')].find(m => m.firstChild.nodeValue === 'relocate'); const r = m.getBoundingClientRect(), pr = pane.getBoundingClientRect(); return { panel: document.getElementById('highlightsPanel').classList.contains('active'), open: pane.classList.contains('is-open'), cur: pane.querySelector('.ir-q.is-cur').dataset.num, inView: r.top >= pr.top && r.bottom <= pr.bottom && r.height > 0 }; });
+      const j = await p.evaluate(() => { const pane = document.getElementById('examPane'); const m = [...pane.querySelectorAll('mark.hl:not(.hl-echo)')].find(m => m.firstChild.nodeValue === 'relocate'); const r = m.getBoundingClientRect(), pr = pane.getBoundingClientRect(); return { panel: document.getElementById('highlightsPanel').classList.contains('active'), open: pane.classList.contains('is-open'), cur: pane.querySelector('.ir-q.is-cur').dataset.num, inView: r.top >= pr.top && r.bottom <= pr.bottom && r.height > 0 }; });
       ok(!j.panel && j.open && j.cur === '6' && j.inView, `phone: jump from the vocab panel opens the sheet at question 6 ${JSON.stringify(j)}`);
       await p.screenshot({ path: path.join(shotDir, `${engine}-phone-jump.png`) });
       ok(audio.paid.length === 0, 'phone: no paid audio endpoints');

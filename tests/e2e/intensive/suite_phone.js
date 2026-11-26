@@ -155,10 +155,10 @@ module.exports = async function suitePhone({ cfg, browser, engine, t, lib }) {
       const w = await longPressLine(1);
       const fb = await rect('#floatBox');
       const tools = await rect('#viewer .ir-tools');
-      const btns = await p.evaluate(() => [...document.querySelectorAll('#floatBox button')].filter(b => getComputedStyle(b).display !== 'none').map(b => ({ t: b.textContent, h: Math.round(b.getBoundingClientRect().height) })));
+      const btns = await p.evaluate(() => [...document.querySelectorAll('#floatBox button')].filter(b => getComputedStyle(b).display !== 'none').map(b => ({ t: b.innerText.trim(), h: Math.round(b.getBoundingClientRect().height) })));
       const word = await p.evaluate(() => document.getElementById('popWord').textContent);
       ok(fb.vis && Math.round(fb.b) === Math.round(tools.y) && fb.y > w.bottom, `selection bar docks on the toolbar, away from the word ${JSON.stringify({ fb, toolsTop: tools.y, wordBottom: w.bottom })}`);
-      ok(word === w.word && btns.length === 2 && btns.every(b => b.h >= 44) && btns[0].t === '划线并写释义', `selection bar shows the word and 44px buttons ${JSON.stringify({ word, btns })}`);
+      ok(word === w.word && btns.length === 3 && btns.every(b => b.h >= 44) && btns[0].t === '划线并写释义' && btns[1].t === 'AI', `selection bar shows the word and 44px buttons ${JSON.stringify({ word, btns })}`);
       await shot('11-select-bar');
       // 划线并写释义 → 贴着键盘的面板；输入框 16px，键盘弹起时输入框和保存都看得见
       const h0 = await histLen();
@@ -188,9 +188,9 @@ module.exports = async function suitePhone({ cfg, browser, engine, t, lib }) {
 
     // ==================== 点高亮 → 单词卡 ====================
     await section('word-card', async () => {
-      const tapMark = async () => { const mk = await p.evaluate(() => { const h = highlights.find(h => h.meaning === 'phone-e2e-释义'); const m = document.querySelector(`#vContent mark.hl[data-hid="${h.id}"]`); window.scrollBy(0, m.getBoundingClientRect().top - 200); const r = m.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; }); await p.touchscreen.tap(mk.x, mk.y); await sleep(350); };
+      const tapMark = async () => { const mk = await p.evaluate(() => { const h = highlights.find(h => h.meaning === 'phone-e2e-释义'); const m = document.querySelector(`#vContent mark.hl:not(.hl-echo)[data-hid="${h.id}"]`); window.scrollBy(0, m.getBoundingClientRect().top - 200); const r = m.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; }); await p.touchscreen.tap(mk.x, mk.y); await sleep(350); };
       await tapMark();
-      const wc = await p.evaluate(() => ({ open: !document.getElementById('wordCard').hidden, mean: document.getElementById('wcMean').textContent, tip: [...document.querySelectorAll('#vContent mark.hl .tooltip')].some(t => getComputedStyle(t).display !== 'none') }));
+      const wc = await p.evaluate(() => ({ open: !document.getElementById('wordCard').hidden, mean: document.getElementById('wcMean').textContent, tip: [...document.querySelectorAll('#vContent mark.hl:not(.hl-echo) .tooltip')].some(t => getComputedStyle(t).display !== 'none') }));
       ok(wc.open && wc.mean === 'phone-e2e-释义' && !wc.tip, `tapping a highlight opens the word card (no 13px bubble) ${JSON.stringify(wc)}`);
       const play = await rect('#wordCard .ir-pill'); const del = await rect('#wordCard .is-danger');
       ok(play.h >= 44 && del.h >= 44, `word card: ▶ and 删除 are ≥ 44px ${JSON.stringify([play.h, del.h])}`);
@@ -216,7 +216,7 @@ module.exports = async function suitePhone({ cfg, browser, engine, t, lib }) {
       await p.tap('#wordCard .is-danger');
       await p.waitForFunction(() => !(highlights || []).some(h => h.meaning === 'phone-e2e-释义'), null, { timeout: 5000 });
       await sleep(400);
-      const d = await p.evaluate(() => ({ y: window.scrollY, marks: [...document.querySelectorAll('#vContent mark.hl')].length, card: document.getElementById('wordCard').hidden }));
+      const d = await p.evaluate(() => ({ y: window.scrollY, marks: [...document.querySelectorAll('#vContent mark.hl:not(.hl-echo)')].length, card: document.getElementById('wordCard').hidden }));
       ok(Math.abs(d.y - y0) < 3 && d.card, `deleting removes just that highlight in place ${JSON.stringify({ ...d, y0 })}`);
     });
 
