@@ -57,6 +57,10 @@ body.page-intensive {
   --w-accent: #2F5D9E; --w-accent-soft: #EEF3FA; --w-accent-line: #B7C8E2;
   --w-err: #B3261E;    --w-err-soft: #FBEFEE; --w-err-line: #EFCFCC;
   --w-ok: #2E7D4F;     --w-ok-soft: #EDF6F0;  --w-ok-line: #C9E2D2;
+  /* AI 讲解的划词：定位词蓝、题眼红、特别的字紫、辅助灰、答案绿 */
+  --xp-loc: #2F5D9E; --xp-loc-bg: rgba(47, 93, 158, .13); --xp-eye: #B3261E; --xp-eye-bg: rgba(179, 38, 30, .13);
+  --xp-sp: #6D3FC0;  --xp-sp-bg: rgba(109, 63, 192, .13); --xp-aux: #8A8A85; --xp-ans: #2E7D4F; --xp-ans-bg: rgba(46, 125, 79, .2);
+  --xp-hot: rgba(240, 180, 0, .4);
 
   /* 荧光笔：只用一种黄。比以前浓一档，底下再压一条深一点的黄线，大字号下一眼就能找到划过的词 */
   --w-hl: #FAE39A; --w-hl-hover: #F4D46E; --w-hl-line: #E0B53A;
@@ -114,6 +118,9 @@ html[data-theme="dark"] body.page-intensive {
   --w-accent: #8AB0E6; --w-accent-soft: rgba(138, 176, 230, .13); --w-accent-line: rgba(138, 176, 230, .35);
   --w-err: #EC8379;    --w-err-soft: rgba(236, 131, 121, .12); --w-err-line: rgba(236, 131, 121, .32);
   --w-ok: #7CC293;     --w-ok-soft: rgba(124, 194, 147, .11);  --w-ok-line: rgba(124, 194, 147, .30);
+  --xp-loc: #8AB0E6; --xp-loc-bg: rgba(138, 176, 230, .2); --xp-eye: #EC8379; --xp-eye-bg: rgba(236, 131, 121, .22);
+  --xp-sp: #B79CF0;  --xp-sp-bg: rgba(183, 156, 240, .2);  --xp-aux: #7C7C77; --xp-ans: #7CC293; --xp-ans-bg: rgba(124, 194, 147, .24);
+  --xp-hot: rgba(255, 210, 80, .32);
   --w-hl: rgba(247, 215, 110, .26); --w-hl-hover: rgba(247, 215, 110, .40); --w-hl-line: rgba(247, 215, 110, .70);
   --w-sel: rgba(138, 176, 230, .40);
   --w-tip-bg: #ECECEA; --w-tip-ink: #1F1F1F;
@@ -523,15 +530,117 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
 .ir-q-actions { display: flex; gap: 2px; margin: 6px 0 0 -8px; }
 .ir-q-actions .ir-icon-btn { height: 30px; padding: 0 8px; font-size: 14px; color: var(--w-accent); }
 .ir-q-actions .ir-icon-btn svg { width: 14px; height: 14px; }
-.ir-analysis { margin: 6px 0 2px; padding: 12px 14px; background: var(--w-sunken); border-radius: var(--w-r-sm); font-size: 15px; line-height: 1.7; color: var(--w-ink2); }
-.ir-analysis p { margin: 0; }
-.ir-analysis p + p { margin-top: 6px; }
-.ir-analysis b { color: var(--w-ink); font-weight: 600; margin-right: 4px; }
 .ir-exam.hide-ans .ir-q .ir-q-num { background: var(--w-sunken); color: var(--w-ink2); }
-.ir-exam.hide-ans .ir-ans, .ir-exam.hide-ans .ir-analysis, .ir-exam.hide-ans .ir-q-actions { display: none !important; }
+.ir-exam.hide-ans .ir-ans, .ir-exam.hide-ans .ir-q-actions { display: none !important; }
 .ir-exam.only-wrong .ir-q:not(.is-wrong):not(.is-blank) { display: none; }
 .ir-exam-empty { display: none; padding: 32px 0; text-align: center; font-size: 14px; color: var(--w-ink3); }
 .ir-exam.only-wrong.no-wrong .ir-exam-empty { display: block; }
+
+/* ==================== AI 讲解：题目栏顶上的页签，按 Lewis 方法重讲每道题（数据来自 /intensive_explain，见 utils/reading_explain.py） ====================
+   划词不改 DOM，用 CSS Custom Highlight 画（和九分学长的划线一样），所以自己的高亮、划词下标都不受影响。 */
+.ir-xtabs { display: flex; gap: 2px; margin: 14px 0 0; padding: 3px; border-radius: 10px; background: var(--w-sunken); border: 1px solid var(--w-line); }
+.ir-xtabs button { flex: 1; min-width: 0; height: 32px; padding: 0 4px; border: none; border-radius: 8px; background: transparent; color: var(--w-ink2); font: 500 14px/1 var(--w-cn); white-space: nowrap; cursor: pointer; }
+.ir-xtabs button.is-on { background: var(--w-surface); color: var(--w-ink); font-weight: 600; box-shadow: 0 0 0 1px var(--w-line); }
+.ir-exam.hide-ans .ir-xtabs button:not([data-x="q"]) { opacity: .45; }
+.ir-xp-status { display: none; margin-top: 14px; font-size: 14px; line-height: 1.65; color: var(--w-ink2); }
+.ir-exam:not([data-x="q"]) .ir-xp-status:not(:empty) { display: block; }
+.ir-xp-box { padding: 14px 16px; border-radius: var(--w-r-sm); background: var(--w-sunken); }
+.ir-xp-box p { margin: 0 0 10px; }
+.ir-xp-box p:last-child { margin-bottom: 0; }
+.ir-xp-box .ir-spin { display: inline-block; width: 13px; height: 13px; margin-right: 8px; vertical-align: -2px; }
+.ir-xp-box.is-err { background: var(--w-err-soft); color: var(--w-err-ink, var(--w-ink2)); }
+.ir-xp-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; font-size: 13px; color: var(--w-ink3); }
+.ir-xp-legend span { padding: 0 3px; border-radius: 3px; color: var(--w-ink); }
+.ir-xp-legend .loc { background: var(--xp-loc-bg); box-shadow: inset 0 -2px 0 var(--xp-loc); }
+.ir-xp-legend .eye { background: var(--xp-eye-bg); box-shadow: inset 0 -2px 0 var(--xp-eye); }
+.ir-xp-legend .sp { background: var(--xp-sp-bg); box-shadow: inset 0 -2px 0 var(--xp-sp); }
+.ir-xp-legend .aux { box-shadow: inset 0 -1px 0 var(--xp-aux); }
+.ir-xp-legend .ans { background: var(--xp-ans-bg); color: var(--xp-ans); }
+.ir-xp-legend button { margin-left: auto; padding: 4px 0; border: none; background: none; color: var(--w-ink3); font: 13px/1 var(--w-cn); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.ir-xp-legend button:hover { color: var(--w-accent); }
+
+::highlight(xp-aux) { text-decoration-line: underline; text-decoration-style: dashed; text-decoration-color: var(--xp-aux); text-decoration-thickness: 1.5px; text-underline-offset: 4px; }
+::highlight(xp-loc) { background-color: var(--xp-loc-bg); text-decoration-line: underline; text-decoration-color: var(--xp-loc); text-decoration-thickness: 2px; text-underline-offset: 4px; }
+::highlight(xp-sp) { background-color: var(--xp-sp-bg); text-decoration-line: underline; text-decoration-color: var(--xp-sp); text-decoration-thickness: 2px; text-underline-offset: 4px; }
+::highlight(xp-eye) { background-color: var(--xp-eye-bg); text-decoration-line: underline; text-decoration-color: var(--xp-eye); text-decoration-thickness: 2.5px; text-underline-offset: 4px; }
+::highlight(xp-miss) { text-decoration-line: underline; text-decoration-style: wavy; text-decoration-color: var(--xp-eye); text-decoration-thickness: 1.5px; text-underline-offset: 4px; }
+::highlight(xp-ans) { background-color: var(--xp-ans-bg); color: var(--xp-ans); text-decoration-line: underline; text-decoration-color: var(--xp-ans); text-decoration-thickness: 2.5px; text-underline-offset: 4px; }
+::highlight(xp-hot) { background-color: var(--xp-hot); }
+
+/* 原文：AI 讲解页签下，每句左边露出句号（讲解里的 [14] 指的就是它），是某道题证据的句子末尾带上题号 */
+.ir-viewer.xp-on .reader p[data-s] { position: relative; }
+.ir-viewer.xp-on .reader p[data-s]::before { content: attr(data-s); position: absolute; left: -28px; top: .5em; width: 22px; text-align: right; font: 500 11px/1 var(--w-cn); color: var(--w-ink3); font-variant-numeric: tabular-nums; opacity: .75; }
+.ir-viewer.xp-on .reader p[data-xq]::after { content: '题 ' attr(data-xq); margin-left: 8px; padding: 1px 7px; border-radius: 9px; background: var(--w-accent-soft); color: var(--w-accent); font: 600 11px/1.6 var(--w-cn); white-space: nowrap; vertical-align: 2px; }
+.ir-viewer.xp-on .reader p.ir-ev::before { color: var(--w-accent); opacity: 1; font-weight: 700; }
+.reader p.xp-flash { animation: ir-xp-flash 1.6s ease-out; }
+@keyframes ir-xp-flash { 0%, 35% { background: var(--xp-hot); box-shadow: -10px 0 0 var(--xp-hot), 10px 0 0 var(--xp-hot); } 100% { background: transparent; box-shadow: none; } }
+
+/* 每道题下面的讲解：平时只露一行标签，点开（当前题）才展开 */
+.ir-xp { display: none; }
+.ir-exam[data-x="ai"] .ir-xp:not(:empty) { display: block; }
+.ir-exam.hide-ans .ir-xp { display: none !important; }
+.ir-exam[data-x="ai"] .ir-q { cursor: pointer; }
+.ir-exam[data-x="ai"] .ir-q.is-active { cursor: auto; }
+.ir-exam[data-x="ai"] .ir-q-actions { display: none; }
+.ir-xp-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; font-size: 13px; line-height: 1.5; }
+.ir-xp-chip { padding: 2px 8px; border-radius: 6px; background: var(--w-sunken); color: var(--w-ink2); }
+.ir-xp-chip.is-v { background: var(--w-accent-soft); color: var(--w-accent); font-weight: 600; }
+.ir-xp-body { display: none; margin-top: 12px; cursor: auto; }
+.ir-q.is-active .ir-xp-body { display: block; }
+.ir-xp-pair { display: grid; grid-template-columns: 62px minmax(0, 1fr); gap: 2px 8px; padding: 7px 0; border-top: 1px solid var(--w-line); }
+.ir-xp-pair:hover { background: var(--w-sunken); box-shadow: -8px 0 0 var(--w-sunken), 8px 0 0 var(--w-sunken); }
+.ir-xp-role { align-self: start; margin-top: 3px; font: 600 12px/1.5 var(--w-cn); white-space: nowrap; }
+.ir-xp-role.r-loc { color: var(--xp-loc); } .ir-xp-role.r-eye { color: var(--xp-eye); } .ir-xp-role.r-sp { color: var(--xp-sp); } .ir-xp-role.r-aux { color: var(--w-ink3); }
+.ir-xp-pair .en { font: 16px/1.5 var(--w-en); color: var(--w-ink); overflow-wrap: anywhere; }
+.ir-xp-pair .en i { font-style: normal; color: var(--w-ink3); margin: 0 4px; }
+.ir-xp-pair .en .none { font: 13px/1.5 var(--w-cn); color: var(--xp-eye); }
+.ir-xp-pair .zh { grid-column: 2; font-size: 13.5px; line-height: 1.5; color: var(--w-ink3); }
+.ir-xp-pair .zh b { font-weight: 500; color: var(--w-ink2); margin-right: 6px; }
+.ir-xp-steps { margin: 4px 0 0; padding: 10px 0 2px; list-style: none; border-top: 1px solid var(--w-line); font-size: 15px; line-height: 1.7; color: var(--w-ink2); }
+.ir-xp-steps li b { color: var(--w-ink); font-weight: 600; margin-right: 6px; }
+.ir-xp-note { margin: 8px 0 0; padding: 8px 12px; border-radius: var(--w-r-sm); background: var(--w-sunken); font-size: 14.5px; line-height: 1.65; color: var(--w-ink2); }
+.ir-xp-note b { color: var(--w-ink); font-weight: 600; margin-right: 8px; white-space: nowrap; }
+.ir-xp-note.is-slip { background: var(--w-err-soft); }
+.ir-xp-note.is-slip b { color: var(--w-err); }
+.ir-xp-note.is-gate { background: var(--w-warn-soft, var(--w-sunken)); }
+.ir-xp-note .en { font-family: var(--w-en); font-size: 15.5px; color: var(--w-ink); }
+.ir-xp-wrong { margin: 8px 0 0; padding: 0; list-style: none; font-size: 14.5px; line-height: 1.65; color: var(--w-ink2); }
+.ir-xp-wrong li { padding: 3px 0; }
+.ir-xp-wrong b { display: inline-block; min-width: 22px; color: var(--w-ink); }
+.ir-xp-wrong .t { margin-right: 6px; padding: 1px 6px; border-radius: 5px; background: var(--w-sunken); font-size: 12.5px; color: var(--w-ink2); white-space: nowrap; }
+.ir-xp-ref { display: inline-block; min-width: 20px; margin: 0 1px; padding: 0 5px; border: none; border-radius: 9px; background: var(--w-accent-soft); color: var(--w-accent); font: 600 12px/1.6 var(--w-cn); font-variant-numeric: tabular-nums; cursor: pointer; vertical-align: 1px; }
+.ir-xp-ref:hover { background: var(--w-accent); color: var(--accent-contrast, #fff); }
+
+/* 同替 / 词汇 / 段落：整栏换成一张表 */
+.ir-xp-panel { display: none; padding-top: 16px; }
+.ir-exam[data-x="pairs"] .ir-xp-panel, .ir-exam[data-x="vocab"] .ir-xp-panel, .ir-exam[data-x="para"] .ir-xp-panel { display: block; }
+.ir-exam[data-x="pairs"] .ir-group, .ir-exam[data-x="vocab"] .ir-group, .ir-exam[data-x="para"] .ir-group,
+.ir-exam[data-x="pairs"] .ir-exam-empty, .ir-exam[data-x="vocab"] .ir-exam-empty, .ir-exam[data-x="para"] .ir-exam-empty { display: none !important; }
+.ir-xp-empty { padding: 28px 0; text-align: center; font-size: 14px; color: var(--w-ink3); }
+.ir-xp-h { margin: 18px 0 8px; font-size: 15px; font-weight: 600; color: var(--w-ink); }
+.ir-xp-h:first-child { margin-top: 0; }
+.ir-xp-h small { margin-left: 8px; font-weight: 400; font-size: 13px; color: var(--w-ink3); }
+.ir-xp-row { display: grid; gap: 2px 12px; padding: 10px 0; border-top: 1px solid var(--w-line); font-size: 14px; line-height: 1.55; color: var(--w-ink2); }
+.ir-xp-row[data-jump] { cursor: pointer; }
+.ir-xp-row[data-jump]:hover { background: var(--w-sunken); box-shadow: -8px 0 0 var(--w-sunken), 8px 0 0 var(--w-sunken); }
+.ir-xp-row .en { font: 16.5px/1.5 var(--w-en); color: var(--w-ink); overflow-wrap: anywhere; }
+.ir-xp-row .sub { font-size: 13px; color: var(--w-ink3); }
+.ir-xp-row.is-pair { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.ir-xp-row.is-pair .note { grid-column: 1 / -1; font-size: 13px; color: var(--w-warn, var(--w-ink3)); }
+.ir-xp-row.is-word { grid-template-columns: minmax(0, 1fr) auto; align-items: start; }
+.ir-xp-row.is-word .tier { margin-right: 6px; font-size: 12.5px; font-weight: 600; color: var(--w-err); }
+.ir-xp-row.is-word .tier.lo { color: var(--w-ink3); font-weight: 400; }
+.ir-xp-row.is-word .sub { grid-column: 1; }
+.ir-xp-add { grid-row: 1 / span 3; grid-column: 2; align-self: center; height: 30px; padding: 0 10px; border: 1px solid var(--w-line); border-radius: 15px; background: var(--w-surface); color: var(--w-accent); font: 500 13px/1 var(--w-cn); white-space: nowrap; cursor: pointer; }
+.ir-xp-add:hover { border-color: var(--w-accent-line); background: var(--w-accent-soft); }
+.ir-xp-add:disabled { color: var(--w-ink3); border-color: transparent; background: transparent; cursor: default; }
+.ir-xp-row.is-para { grid-template-columns: 30px minmax(0, 1fr); }
+.ir-xp-row.is-para > b { color: var(--w-ink); }
+.ir-xp-row.is-para .gist { font-size: 15px; color: var(--w-ink); }
+.ir-xp-tip { position: fixed; z-index: 90; max-width: min(340px, calc(100vw - 16px)); padding: 8px 11px; border-radius: 8px; background: var(--w-ink); color: var(--w-surface); font: 13px/1.55 var(--w-cn); pointer-events: none; box-shadow: var(--w-shadow-lg, 0 4px 16px rgba(0, 0, 0, .2)); }
+.ir-xp-tip .en { font: 15px/1.5 var(--w-en); }
+.ir-xp-tip .rel { margin-left: 6px; opacity: .7; }
+.ir-xp-tip i { font-style: normal; opacity: .6; margin: 0 4px; }
 
 /* 桌面窄一点（≤1180px）又有题目栏时，原文一栏只剩五百像素上下：卡片内边距收一收、字号退到 18px，一行 45–65 个字母（嫌窄可以拖分割条） */
 @media (min-width: 901px) and (max-width: 1180px) {
@@ -880,6 +989,15 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
   .ir-qs-nav button[data-act="qs-next"] { justify-self: end; }
   .ir-qs-nav button:disabled { opacity: .4; }
   .ir-exam.hide-ans .ir-qs-nav [data-act="qs-locate"], .ir-exam.hide-ans .ir-qs-nav [data-act="qs-analysis"] { visibility: hidden; }
+  /* AI 讲解（手机）：页签在展开的列表里；只露一题时这一题的讲解整段展开；原文的句号排进行内 */
+  .ir-exam.is-peek .ir-xtabs, .ir-exam.is-peek .ir-xp-status { display: none !important; }
+  .ir-exam:not(.is-full) .ir-xp-panel { display: none !important; }
+  .ir-xtabs { margin: 10px 0 0; }
+  .ir-xtabs button { height: 38px; }
+  .ir-xp { clear: both; }
+  .ir-xp-ref { min-width: 26px; line-height: 2; }
+  .ir-xp-add { height: 38px; }
+  .ir-viewer.xp-on .reader p[data-s]::before { position: static; display: inline-block; width: auto; margin-right: 5px; vertical-align: 1px; }
   /* 只露当前一题：其余题、题组说明都收起来 */
   .ir-exam.is-peek .ir-group:not(.has-cur), .ir-exam.is-peek .ir-group > :not(.ir-q), .ir-exam.is-peek .ir-q:not(.is-cur), .ir-exam.is-peek .ir-exam-empty { display: none !important; }
   .ir-exam.is-peek .ir-group { padding: 4px 0 0; border: none; }
@@ -899,7 +1017,6 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
   .ir-ans b { font-size: 15px; }
   .ir-q-actions { clear: both; margin: 6px 0 0 -6px; gap: 4px; }
   .ir-q-actions .ir-icon-btn { height: 44px; padding: 0 10px; font-size: 15px; }
-  .ir-analysis { clear: both; font-size: 15px; }
   .ir-blank { min-width: 32px; height: 32px; padding: 0 8px; font: 600 14px/30px var(--w-cn); }
   .ir-layout summary { min-height: 44px; display: flex; align-items: center; font-size: 14px; }
 }
@@ -1010,6 +1127,7 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
       <div class="ir-content" id="vContent"></div>
       <div class="ir-split" id="examSplit" role="separator" aria-orientation="vertical" aria-controls="examPane" aria-label="拖动调整原文和题目的宽度" tabindex="0" title="拖动调整宽度，双击恢复默认"><span class="ir-split-grip"></span></div>
       <section class="ir-exam" id="examPane" aria-label="题目"></section>
+      <div class="ir-xp-tip" id="xpTip" hidden></div>
       <aside class="ir-panel" id="highlightsPanel">
         <div class="resize-handle" id="resizeHandle"></div>
         <div class="ir-panel-head">
@@ -2020,7 +2138,7 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
     function restoreHighlights(container, art){ // 去重并清理已存在的 mark（释义气泡一起删掉，否则会作为孤儿节点留在段落里）
       container.querySelectorAll('mark.hl').forEach(function(n){ const p=n.parentNode; if(!p) return; n.querySelectorAll('.tooltip').forEach(t=>t.remove()); while(n.firstChild) p.insertBefore(n.firstChild, n); p.removeChild(n); p.normalize(); });
       const uniq=[]; (art.highlights||[]).forEach(function(h){ if(h.qk) return; if(!uniq.some(x=>x.start===h.start&&x.end===h.end)){ uniq.push(h); } });
-      uniq.sort((a,b)=>a.start-b.start).forEach(h=>{ applyOneHighlight(container, h); }); paintExamHighlights(art.highlights||[]); paintEchoes(container, art.highlights||[]); updateVocabCount(); paintExamMarks(); }
+      uniq.sort((a,b)=>a.start-b.start).forEach(h=>{ applyOneHighlight(container, h); }); paintExamHighlights(art.highlights||[]); paintEchoes(container, art.highlights||[]); updateVocabCount(); paintExamMarks(); paintXp(); }
     function applyOneHighlight(container, h){ try{ const reader=container.querySelector('.reader'); if(!reader || !(h.end > h.start)) return; // 已存在则跳过
       if(container.querySelector(`mark.hl[data-hid="${h.id}"]`)) return; wrapOriginalRange(reader, h.start, h.end, h); }catch(e){} }
     // 划过的词，本文里别处一模一样的（不分大小写、整词）也画上，原文和题目栏都算：同一条高亮（同一个 data-hid），
@@ -2076,9 +2194,12 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
       if(hasLayer('qs')) closeLayer('qs'); else hideQuestionsSheet();
       examSentenceAt = {};
       pane.classList.remove('only-wrong', 'no-wrong');
-      if(!exam){ pane.innerHTML = ''; if(window.CSS && CSS.highlights) CSS.highlights.delete('jiufen'); return; }
+      clearTimeout(xpPollTimer); examExplain = (exam && art.explain) || null; examXtab = 'q'; xpActive = null; pane.dataset.x = 'q';
+      viewer.classList.remove('xp-on');
+      if(!exam){ pane.innerHTML = ''; if(window.CSS && CSS.highlights) CSS.highlights.delete('jiufen'); paintXp(); return; }
       (exam.paragraphs || []).forEach(p => (p.sentences || []).forEach(s => { examSentenceAt[s.i] = s.o; }));
       pane.innerHTML = examHtml(exam);
+      xpFill(); xpRenderStatus(); xpPoll();
       pane.scrollTop = 0; examPaneScroll = 0;
       let hide = false; try{ hide = localStorage.getItem('intensiveHideAnswers') === '1'; }catch(e){}
       setAnswersHidden(hide, true);
@@ -2102,7 +2223,10 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
       h += `</div><div class="ir-exam-tools">`;
       if(a) h += `<button class="ir-icon-btn" data-act="only-wrong">只看错题${missed ? ' ' + missed : ''}</button>`;
       h += `<button class="ir-icon-btn is-on" data-act="answers" title="隐藏答案可以重新做一遍">答案</button></div></div>`;
+      h += `<div class="ir-xtabs" id="examXtabs" role="tablist">` + XP_TABS.map(([x, name]) => `<button type="button" role="tab" data-act="xtab" data-x="${x}"${x === 'q' ? ' class="is-on"' : ''}>${name}</button>`).join('') + `</div>`;
+      h += `<div class="ir-xp-status" id="xpStatus"></div>`;
       (exam.groups || []).forEach((g, gi) => { h += groupHtml(g, gi); });
+      h += `<div class="ir-xp-panel" id="xpPanel"></div>`;
       h += `<div class="ir-exam-empty">这一篇没有错题</div>`;
       return h + `<div class="ir-qs-nav"><button type="button" data-act="qs-prev">‹ 上一题</button><button type="button" data-act="qs-locate">定位</button><button type="button" data-act="qs-analysis">解析</button><button type="button" data-act="qs-next">下一题 ›</button></div>`;
     }
@@ -2154,16 +2278,11 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
         if(answers.length && q.state !== 'right') ans += `<span class="right">正确答案 <b>${answers.map(show).join(' / ')}</b></span>`;
         if(ans) h += `<div class="ir-ans">${ans}</div>`;
       }
-      const an = q.analysis || {};
-      const hasAnalysis = an.explain || an.trap || (an.extra || []).length;
-      if(q.evidence || hasAnalysis){
-        h += `<div class="ir-q-actions">`;
-        if(q.evidence) h += `<button class="ir-icon-btn" data-act="locate">${IC.jump}定位原文</button>`;
-        if(hasAnalysis) h += `<button class="ir-icon-btn" data-act="analysis">解析</button>`;
-        h += `</div>`;
-        if(hasAnalysis) h += `<div class="ir-analysis" hidden>` + (an.explain ? `<p><b>解析</b>${escapeHtml(an.explain)}</p>` : '') + (an.trap ? `<p><b>易错</b>${escapeHtml(an.trap)}</p>` : '') + (an.extra || []).map(x => `<p><b>${escapeHtml(x.label || '')}</b>${escapeHtml(x.text)}</p>`).join('') + `</div>`;
-      }
-      return h + `</div>`;
+      // 解析一律用自己生成的 AI 讲解（九分学长带的那份不再显示）：「解析」切到 AI 讲解页签并展开这一题
+      h += `<div class="ir-q-actions">`;
+      if(q.evidence || xpEntry(q.num)) h += `<button class="ir-icon-btn" data-act="locate">${IC.jump}定位原文</button>`;
+      h += `<button class="ir-icon-btn" data-act="analysis">解析</button></div>`;
+      return h + `<div class="ir-xp"></div></div>`;
     }
     function onExamClick(e){
       const pane = document.getElementById('examPane');
@@ -2171,21 +2290,33 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
       if(blank){ const q = pane.querySelector(`.ir-q[data-num="${CSS.escape(blank.dataset.q || '')}"]`); if(q){ q.scrollIntoView({ behavior: 'smooth', block: 'center' }); markActiveQuestion(q); if(isPhone()) setCurrentQuestion(q); } return; }
       const btn = e.target.closest('[data-act]');
       // 手机：展开的题目列表里点一道题，它就是「当前题」，收起后面板露的就是它
-      if(!btn){ const q = e.target.closest('.ir-q'); if(q && isPhone()) setCurrentQuestion(q); return; }
+      if(!btn){
+        const row = e.target.closest('[data-jump]'); if(row){ xpJump(row.dataset.jump); return; }
+        const q = e.target.closest('.ir-q'); if(q && isPhone()) setCurrentQuestion(q);
+        // AI 讲解：点一道题就展开它，原文跟着亮出证据句。等一小会儿再展开：双击 / 三击是在选词，
+        // 这时候展开会让上一题的讲解收起、版面一窜，第二下就点到别处去了
+        clearTimeout(xpClickTimer);
+        if(q && examXtab === 'ai' && xpActive !== q.dataset.num) xpClickTimer = setTimeout(() => { if((window.getSelection() || {}).isCollapsed !== false && q.isConnected && examXtab === 'ai') xpActivate(q, !isPhone()); }, 280);
+        return;
+      }
       const qEl = btn.closest('.ir-q');
       switch(btn.dataset.act){
         case 'answers': case 'qs-answers': setAnswersHidden(!pane.classList.contains('hide-ans')); break;
         case 'only-wrong': setOnlyWrong(!pane.classList.contains('only-wrong')); break;
         case 'qs-all': setOnlyWrong(false); break;
         case 'qs-wrong': setOnlyWrong(true); break;
-        case 'analysis': { const box = qEl.querySelector('.ir-analysis'); box.hidden = !box.hidden; btn.classList.toggle('is-on', !box.hidden); paintQuestionsHead(); break; }
+        case 'analysis': setExamXtab('ai'); xpActivate(qEl, true); if(!xpEntry(qEl.dataset.num)) pane.scrollTop = 0; /* 还没有讲解：露出顶上的「生成」 */ break;
+        case 'xtab': setExamXtab(btn.dataset.x); break;
+        case 'xp-gen': xpGenerate(); break;
+        case 'xp-ref': xpJump(btn.dataset.s); break;
+        case 'xp-add': xpAddWord(btn); break;
         case 'locate': locateEvidence(qEl); break;
         case 'qs-toggle': setQuestionsFull(!pane.classList.contains('is-full')); break;
         case 'qs-close': closeQuestionsSheet(); break;
         case 'qs-prev': stepQuestion(-1); break;
         case 'qs-next': stepQuestion(1); break;
         case 'qs-locate': { const q = currentQuestionEl(); if(q) locateEvidence(q); break; }
-        case 'qs-analysis': { const q = currentQuestionEl(); const box = q && q.querySelector('.ir-analysis'); if(box){ box.hidden = !box.hidden; const b = q.querySelector('[data-act="analysis"]'); if(b) b.classList.toggle('is-on', !box.hidden); } paintQuestionsHead(); break; }
+        case 'qs-analysis': if(examXtab === 'ai') setExamXtab('q'); else { setExamXtab('ai'); xpActivate(currentQuestionEl(), false); } break;
       }
     }
     // 只看错题：桌面的按钮和手机的「全部 / 只看错题」分段一起变
@@ -2206,29 +2337,33 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
       const btn = pane.querySelector('[data-act="answers"]'); if(btn) btn.classList.toggle('is-on', !hide);
       pane.querySelectorAll('[data-act="qs-answers"]').forEach(b => b.setAttribute('aria-checked', String(!hide)));
       if(!silent){ try{ localStorage.setItem('intensiveHideAnswers', hide ? '1' : '0'); }catch(e){} }
+      if(hide && examXtab !== 'q') setExamXtab('q');   // 讲解里全是答案，隐藏答案时回到「题目」
     }
     function markActiveQuestion(qEl){ document.querySelectorAll('#examPane .ir-q.is-active').forEach(x => x.classList.remove('is-active')); qEl.classList.add('is-active'); }
     function locateEvidence(qEl){
       const exam = currentArticle && currentArticle.exam; if(!exam) return;
-      const q = examQuestions(exam).find(x => x.num === qEl.dataset.num); if(!q || !q.evidence) return;
+      const sents = evidenceSentences(exam, qEl.dataset.num); if(!sents.length) return;
       markActiveQuestion(qEl);
+      if(examXtab === 'ai') xpActive = qEl.dataset.num;
       const reader = document.querySelector('#vContent .reader');
       reader.querySelectorAll('p.ir-ev').forEach(p => p.classList.remove('ir-ev'));
-      const ps = [];
-      for(let i = q.evidence[0]; i <= q.evidence[1]; i++){ const p = reader.querySelector(`p[data-s="${i}"]`); if(p) ps.push(p); }
+      const ps = sents.map(i => reader.querySelector(`p[data-s="${i}"]`)).filter(Boolean);
       if(!ps.length) return;
       ps.forEach(p => p.classList.add('ir-ev'));
+      if(examXtab === 'ai') paintXp();
+      // 证据有两句时先看主证据句（AI 讲解排在第一个的那句）
+      const x = xpEntry(qEl.dataset.num); const main = (x && ps.find(p => p.dataset.s === String((x.e.evidence || [])[0]))) || ps[0];
       if(isPhone()){
         // 手机：题目面板收成只露这一题，原文滚到面板上方的可见区域里，题和证据句同时看得见
         setCurrentQuestion(qEl);
         const pane = document.getElementById('examPane');
         if(pane.classList.contains('is-full')) setQuestionsFull(false);
         else if(!pane.classList.contains('is-open')) openQuestionsSheet();
-        requestAnimationFrame(() => scrollPassageTo(ps));
+        requestAnimationFrame(() => scrollPassageTo(main === ps[0] ? ps : [main]));
         return;
       }
       if(window.innerWidth <= 900) showExamTab('text');
-      ps[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      main.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
     // 把证据句滚到「顶栏以下、题目面板以上」那块的中间；太长就让开头贴着顶栏
     function scrollPassageTo(ps){
@@ -2253,6 +2388,8 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
       if(!qEl) return;
       examQuestionEls().forEach(q => q.classList.toggle('is-cur', q === qEl));
       document.querySelectorAll('#examPane .ir-group').forEach(g => g.classList.toggle('has-cur', g.contains(qEl)));
+      // 手机的 AI 讲解：面板里露着哪一题，原文就亮哪一题的证据
+      if(examXtab === 'ai' && isPhone() && xpActive !== qEl.dataset.num) xpActivate(qEl, false);
       paintQuestionsHead();
     }
     function paintQuestionsHead(){
@@ -2265,9 +2402,9 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
       const nav = pane.querySelector('.ir-qs-nav'); if(!nav) return;
       nav.querySelector('[data-act="qs-prev"]').disabled = i <= 0;
       nav.querySelector('[data-act="qs-next"]').disabled = i < 0 || i >= vis.length - 1;
-      const loc = q && q.querySelector('[data-act="locate"]'), an = q && q.querySelector('.ir-analysis');
+      const loc = q && q.querySelector('[data-act="locate"]');
       nav.querySelector('[data-act="qs-locate"]').disabled = !loc;
-      const anBtn = nav.querySelector('[data-act="qs-analysis"]'); anBtn.disabled = !an; anBtn.classList.toggle('is-on', !!an && !an.hidden);
+      const anBtn = nav.querySelector('[data-act="qs-analysis"]'); anBtn.disabled = !q; anBtn.classList.toggle('is-on', examXtab === 'ai');
     }
     function stepQuestion(d){
       const vis = visibleQuestions(); const i = vis.indexOf(currentQuestionEl());
@@ -2339,6 +2476,265 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
       (exam.marks || []).forEach(m => { const base = examSentenceAt[m.s]; if(base == null) return; const r = originalToDomRange(reader, base + m.start, base + m.end); if(r && !r.collapsed) ranges.push(r); });
       if(ranges.length) CSS.highlights.set('jiufen', new Highlight(...ranges));
     }
+
+
+    // ===== AI 讲解：题目栏的页签（题目 / AI 讲解 / 同替 / 词汇 / 段落） =====
+    // examExplain 是 /intensive_explain 给的那份：{status, done, total, groups: {题组下标: {type, questions: {题号: 讲解}}}, overview, errors}。
+    // 一道题的讲解里 marks 是题目上要划的词（in: stem / opt / layout，role: 定位词 / 题眼 / 特别的字 / 辅助），
+    // 带 p、s 的是它在原文第 s 句里对应的词。页面按文字去找位置（和后端校验同一套找法），不依赖存下来的下标。
+    const XP_TABS = [['q', '题目'], ['ai', 'AI 讲解'], ['pairs', '同替'], ['vocab', '词汇'], ['para', '段落']];
+    const XP_ROLE = { '定位词': 'loc', '题眼': 'eye', '特别的字': 'sp', '辅助': 'aux' };
+    const XP_VERDICT = { T: '同向', F1: '方向相反', F2: '换了对象', NG: '题眼无对应' };
+    const XP_HL = ['xp-aux', 'xp-loc', 'xp-sp', 'xp-eye', 'xp-miss', 'xp-ans', 'xp-hot'];   // 后面的盖在前面的上面
+    let examExplain = null, examXtab = 'q', xpActive = null, xpHits = [], xpPollTimer = 0, xpClickTimer = 0, xpBusy = false, xpGenError = '';
+    function xpHas(){ return !!(examExplain && examExplain.groups && Object.keys(examExplain.groups).length); }
+    function xpEntry(num){
+      const gs = examExplain && examExplain.groups; if(!gs) return null;
+      for(const gi of Object.keys(gs)){ const e = (gs[gi].questions || {})[num]; if(e && !e.missing) return { gi, type: gs[gi].type, e }; }
+      return null;
+    }
+    // 这道题的证据句（句号数组）：AI 讲解给的一两句，没有才退回九分学长给的那个范围
+    function evidenceSentences(exam, num){
+      const x = xpEntry(num); if(x && (x.e.evidence || []).length) return x.e.evidence.slice().sort((a, b) => a - b);
+      const q = examQuestions(exam).find(q => q.num === num); if(!q || !q.evidence) return [];
+      const out = []; for(let i = q.evidence[0]; i <= q.evidence[1]; i++) out.push(i); return out;
+    }
+    // 在一段文字里找一个词：大小写、弯引号、破折号不计较，先按整词找（on 不该对上 presented 里的 on）
+    const XP_NORM = { '‘': "'", '’': "'", '‚': "'", '′': "'", '“': '"', '”': '"', '″': '"', '–': '-', '—': '-', '‑': '-', ' ': ' ', ' ': ' ', ' ': ' ' };
+    function xpNorm(t){ return (t || '').replace(/[‘’‚′“”″–—‑   ]/g, c => XP_NORM[c]).toLowerCase(); }
+    function xpFind(hay, needle){
+      const h = xpNorm(hay), quote = t => t.replace(/[.*+?^$()|[\]\\{}]/g, '\\$&');
+      const trimmed = (needle || '').trim();
+      for(const cand of [trimmed, trimmed.replace(/^[.,;:!?"'()\[\]…]+|[.,;:!?"'()\[\]…]+$/g, '')]){
+        const n = xpNorm(cand); if(!n) continue;
+        let m = null;
+        try{ m = new RegExp('(?<![a-z0-9])' + quote(n) + '(?![a-z0-9])').exec(h); }catch(e){}
+        m = m || new RegExp(quote(n)).exec(h) || new RegExp(n.split(/\s+/).map(quote).join('\\s+')).exec(h);
+        if(m) return [m.index, m.index + m[0].length];
+      }
+      return null;
+    }
+    // 讲解文字里的 [14] 变成能点的句号：点一下原文滚到那一句
+    function xpText(t){ return escapeHtml(t).replace(/\[(\d+)\]/g, (m, n) => examSentenceAt[n] != null ? `<button type="button" class="ir-xp-ref" data-act="xp-ref" data-s="${n}" title="看原文第 ${n} 句">${n}</button>` : m); }
+    function xpDetailHtml(num){
+      const x = xpEntry(num); if(!x) return '';
+      const e = x.e, chips = [];
+      if(e.verdict) chips.push(`<span class="ir-xp-chip is-v">${escapeHtml(e.verdict)}${XP_VERDICT[e.verdict] ? ' · ' + XP_VERDICT[e.verdict] : ''}</span>`);
+      if(e.eye_type) chips.push(`<span class="ir-xp-chip">题眼 · ${escapeHtml(e.eye_type)}</span>`);
+      if(e.predict) chips.push(`<span class="ir-xp-chip">预测 · ${escapeHtml(e.predict)}</span>`);
+      if((e.evidence || []).length) chips.push(`<span class="ir-xp-chip">证据 ${e.evidence.map(s => xpText('[' + s + ']')).join('')} · ${e.pairs || 0} 组对应</span>`);
+      let h = `<div class="ir-xp-chips">${chips.join('')}</div><div class="ir-xp-body">`;
+      h += (e.marks || []).map((m, k) => `<div class="ir-xp-pair" data-k="${k}"><span class="ir-xp-role r-${XP_ROLE[m.role] || 'aux'}">${escapeHtml(m.role)}</span>`
+        + `<div class="en">${escapeHtml(m.text)}${m.p ? `<i>⇄</i>${escapeHtml(m.p)}` : `<i>⇄</i><span class="none">原文里没有对应</span>`}</div>`
+        + (m.rel || m.zh ? `<div class="zh">${m.rel ? `<b>${escapeHtml(m.rel)}</b>` : ''}${escapeHtml(m.zh || '')}</div>` : '') + `</div>`).join('');
+      if((e.steps || []).length) h += `<ol class="ir-xp-steps">` + e.steps.map(st => { const i = st.indexOf('：'); return i > 0 && i < 5 ? `<li><b>${escapeHtml(st.slice(0, i))}</b>${xpText(st.slice(i + 1))}</li>` : `<li>${xpText(st)}</li>`; }).join('') + `</ol>`;
+      if(e.slip) h += `<p class="ir-xp-note is-slip"><b>你偏在哪</b>${xpText(e.slip)}</p>`;
+      if(e.rule) h += `<p class="ir-xp-note"><b>规则</b>${xpText(e.rule)}</p>`;
+      if(e.trap) h += `<p class="ir-xp-note"><b>易错</b>${xpText(e.trap)}</p>`;
+      if(e.vocab_gate) h += `<p class="ir-xp-note is-gate"><b>词汇关</b><span class="en">${escapeHtml(e.vocab_gate)}</span> —— 这个词不认识，技巧救不了，得背</p>`;
+      if((e.wrong_options || []).length) h += `<ul class="ir-xp-wrong">` + e.wrong_options.map(w => `<li><b>${escapeHtml(w.key)}</b><span class="t">${escapeHtml(w.type)}</span>${xpText(w.why)}</li>`).join('') + `</ul>`;
+      return h + `</div>`;
+    }
+    function xpFill(){ document.querySelectorAll('#examPane .ir-q').forEach(q => { const box = q.querySelector('.ir-xp'); if(box) box.innerHTML = xpDetailHtml(q.dataset.num); }); }
+    function xpRenderStatus(){
+      const el = $id('xpStatus'); if(!el) return;
+      const x = examExplain; let h = '';
+      const genBtn = label => `<button type="button" class="ir-btn ir-btn-primary" data-act="xp-gen"${xpBusy ? ' disabled' : ''}>${label}</button>`;
+      if(xpGenError) h += `<div class="ir-xp-box is-err"><p>${escapeHtml(xpGenError)}</p></div>`;
+      if(!x) h += `<div class="ir-xp-box"><p>这一篇还没有 AI 讲解。它会按 Lewis 方法把每道题重讲一遍：题目上划哪些词、证据是原文哪一句、题目的词和原文的词怎么对应、你偏在哪一步。生成一次大约两分钟，之后一直留着。</p>${genBtn('生成 AI 讲解')}</div>`;
+      else if(x.status === 'running') h += `<div class="ir-xp-box"><p>${IC.spin}正在生成：讲完 ${Math.min(x.done || 0, x.total || 0)} / ${x.total || 0} 块，讲完一组显示一组，全部大约两分钟。可以先看别的，不用守着这一页。</p></div>`;
+      else {
+        if((x.errors || []).length) h += `<div class="ir-xp-box is-err">` + x.errors.map(m => `<p>${escapeHtml(m)}</p>`).join('') + genBtn('重新生成') + `</div>`;
+        if(xpHas() && examXtab === 'ai') h += `<div class="ir-xp-legend" style="margin-top:${(x.errors || []).length ? 12 : 0}px"><span class="loc">定位词</span><span class="eye">题眼</span><span class="sp">特别的字</span><span class="aux">辅助</span><span class="ans">答案</span>点一道题看证据句`
+          + ((x.errors || []).length ? '' : `<button type="button" data-act="xp-gen" title="${escapeHtml(x.model || '')}">重新生成</button>`) + `</div>`;
+      }
+      el.innerHTML = h;
+    }
+    function xpRenderPanel(){
+      const el = $id('xpPanel'); if(!el) return;
+      const o = examExplain && examExplain.overview;
+      if(examXtab === 'q' || examXtab === 'ai'){ el.innerHTML = ''; return; }
+      if(!o){ el.innerHTML = examExplain ? `<div class="ir-xp-empty">${examExplain.status === 'running' ? '全篇分析排在最后，题目讲完才出来' : '这一份里没有全篇分析，可以重新生成'}</div>` : ''; return; }
+      let h = '';
+      if(examXtab === 'pairs'){
+        h += `<div class="ir-xp-h">题目和原文的同义替换<small>左边是题目里的说法，右边是原文里的</small></div>`;
+        h += (o.pairs || []).map(p => `<div class="ir-xp-row is-pair"><div><div class="en">${escapeHtml(p.q)}</div><div class="sub">${escapeHtml(p.q_zh)}</div></div><div><div class="en">${escapeHtml(p.p)}</div><div class="sub">${escapeHtml(p.p_zh)}</div></div>${p.note ? `<div class="note">${escapeHtml(p.note)}</div>` : ''}</div>`).join('') || `<div class="ir-xp-empty">没有</div>`;
+      } else if(examXtab === 'vocab'){
+        const have = new Set((highlights || []).map(x => (x.text || '').trim().toLowerCase()));
+        const must = (o.vocab || []).filter(v => v.tier === '必背').length;
+        h += `<div class="ir-xp-h">这一篇值得记的词<small>必背 ${must} · 眼熟 ${(o.vocab || []).length - must}</small></div>`;
+        h += (o.vocab || []).map((v, i) => { const got = have.has((v.word || '').toLowerCase());
+          return `<div class="ir-xp-row is-word" data-jump="${v.s}"><div class="en">${escapeHtml(v.word)}${v.lemma && v.lemma.toLowerCase() !== (v.word || '').toLowerCase() ? ` <span class="sub">${escapeHtml(v.lemma)}</span>` : ''}</div>`
+            + `<div><span class="tier${v.tier === '必背' ? '' : ' lo'}">${v.tier === '必背' ? '必背' : '眼熟'}</span>${escapeHtml(v.meaning)}</div>`
+            + `<div class="sub">${escapeHtml([v.why, v.family].filter(Boolean).join(' · '))}</div>`
+            + `<button type="button" class="ir-xp-add" data-act="xp-add" data-i="${i}"${got ? ' disabled' : ''}>${got ? '已在生词本' : '加入生词本'}</button></div>`; }).join('') || `<div class="ir-xp-empty">没有</div>`;
+      } else {
+        h += `<div class="ir-xp-h">段落主旨<small>段内反复出现的概念，小标题题就考它</small></div>`;
+        h += (o.paragraphs || []).map(p => `<div class="ir-xp-row is-para"><b>${escapeHtml(p.label)}</b><div><div class="gist">${escapeHtml(p.gist)}</div>${p.repeat ? `<div class="en" style="font-size:15px">${escapeHtml(p.repeat)}</div>` : ''}</div></div>`).join('');
+        if((o.hard || []).length) h += `<div class="ir-xp-h">证据句里的长难句</div>` + o.hard.map(x => `<div class="ir-xp-row" data-jump="${x.s}"><div class="en">${xpText('[' + x.s + ']')} ${escapeHtml(x.core)}</div><div>${escapeHtml(x.note)}</div></div>`).join('');
+      }
+      el.innerHTML = h;
+    }
+    function setExamXtab(x){
+      const pane = $id('examPane'); if(!pane || !currentArticle || !currentArticle.exam) return;
+      if(x !== 'q' && pane.classList.contains('hide-ans')) setAnswersHidden(false);
+      const was = examXtab; examXtab = x; pane.dataset.x = x;
+      pane.querySelectorAll('.ir-xtabs button').forEach(b => { const on = b.dataset.x === x; b.classList.toggle('is-on', on); b.setAttribute('aria-selected', String(on)); });
+      if(x !== 'ai' && was === 'ai'){ xpActive = null; document.querySelectorAll('#vContent .reader p.ir-ev').forEach(p => p.classList.remove('ir-ev')); }
+      xpRefresh();
+      if(x === 'ai' && isPhone() && currentQuestionEl()) xpActivate(currentQuestionEl(), false);
+    }
+    // 讲解数据变了（切页签、轮询到新的一组、生成完）：题目下的讲解、状态、表、划词一起重画
+    function xpRefresh(){
+      xpFill(); xpRenderStatus(); xpRenderPanel();
+      $id('viewer').classList.toggle('xp-on', examXtab === 'ai' && xpHas());
+      paintXp(); paintQuestionsHead();
+    }
+    function xpActivate(qEl, scroll){
+      if(!qEl) return;
+      // 上一道题的讲解收起后版面会窜：刚点的这道题留在原来的位置（已经滚出去了就拉回题目栏顶上）
+      const pane = $id('examPane'); const was = qEl.getBoundingClientRect().top;
+      xpActive = qEl.dataset.num; markActiveQuestion(qEl);
+      if(scroll && evidenceSentences(currentArticle.exam, xpActive).length) locateEvidence(qEl); else paintXp();
+      if(!isPhone() && pane.scrollHeight > pane.clientHeight){
+        pane.scrollTop += qEl.getBoundingClientRect().top - was;
+        const pr = pane.getBoundingClientRect(), r = qEl.getBoundingClientRect();
+        if(r.top < pr.top + 8 || r.top > pr.bottom - 160) pane.scrollTop += r.top - pr.top - 12;
+      }
+    }
+    function xpBlock(gi, num, m){
+      if(m.in === 'layout') return hkBlock(`g${gi}.layout`);
+      if(m.in === 'opt') return hkBlock(`g${gi}.q${num}.${m.key}`) || hkBlock(`g${gi}.o${m.key}`);
+      return hkBlock(`g${gi}.q${num}`) || hkBlock(`g${gi}.layout`);
+    }
+    function xpPassageRange(reader, s, text){
+      const p = reader.querySelector(`p[data-s="${s}"]`); if(!p || !text) return null;
+      const sp = xpFind(lineTextNodes(p).map(n => n.nodeValue).join(''), text); if(!sp) return null;
+      const o = Number(p.dataset.o); return originalToDomRange(reader, o + sp[0], o + sp[1]);
+    }
+    // 把划词画出来：题目上每道题的都画；原文里只画当前这一题的（证据句整句铺底色，对应的词按角色上色，答案标绿）
+    function paintXp(){
+      xpHits = []; xpHideTip();
+      const can = window.CSS && CSS.highlights && typeof Highlight !== 'undefined';
+      if(can) XP_HL.forEach(n => CSS.highlights.delete(n));
+      const reader = document.querySelector('#vContent .reader');
+      if(reader) reader.querySelectorAll('p[data-xq]').forEach(p => p.removeAttribute('data-xq'));
+      if(examXtab !== 'ai' || !xpHas() || !reader || !currentArticle || !currentArticle.exam) return;
+      const sets = {}; XP_HL.forEach(n => sets[n] = []);
+      const add = (name, range, hit) => { if(!range || range.collapsed) return; sets[name].push(range); xpHits.push(Object.assign({ range }, hit)); };
+      const byS = {};
+      Object.keys(examExplain.groups).forEach(gi => { const qs = examExplain.groups[gi].questions || {}; Object.keys(qs).forEach(num => {
+        const e = qs[num]; if(e.missing) return;
+        if((e.evidence || []).length) (byS[e.evidence[0]] = byS[e.evidence[0]] || []).push(num);
+        (e.marks || []).forEach((m, k) => {
+          const b = xpBlock(gi, num, m); if(!b) return;
+          const sp = xpFind(hkText(b), m.text); if(!sp) return;
+          add(!m.p && m.role === '题眼' ? 'xp-miss' : 'xp-' + (XP_ROLE[m.role] || 'aux'), hkDomRange(b, sp[0], sp[1]), { num, k, side: 'q' });
+        });
+        if(num !== xpActive) return;
+        (e.marks || []).forEach((m, k) => { if(m.p != null && m.s != null) add('xp-' + (XP_ROLE[m.role] || 'aux'), xpPassageRange(reader, m.s, m.p), { num, k, side: 'p' }); });
+        if(e.answer_text) for(const s of e.evidence || []){ const r = xpPassageRange(reader, s, e.answer_text); if(r){ add('xp-ans', r, { num, k: -1, side: 'p' }); break; } }
+      }); });
+      Object.keys(byS).forEach(s => { const p = reader.querySelector(`p[data-s="${s}"]`); if(p) p.dataset.xq = byS[s].join(' · '); });
+      reader.querySelectorAll('p.ir-ev').forEach(p => p.classList.remove('ir-ev'));
+      if(xpActive) evidenceSentences(currentArticle.exam, xpActive).forEach(s => { const p = reader.querySelector(`p[data-s="${s}"]`); if(p) p.classList.add('ir-ev'); });
+      if(can) XP_HL.forEach(n => { if(sets[n].length) CSS.highlights.set(n, new Highlight(...sets[n])); });
+    }
+    // 原文滚到第 s 句并闪一下（讲解里的句号、词汇表、长难句都走这里）
+    function xpJump(s){
+      const p = document.querySelector(`#vContent .reader p[data-s="${CSS.escape(String(s))}"]`); if(!p) return;
+      if(isPhone()){
+        const pane = $id('examPane');
+        if(pane.classList.contains('is-full')) setQuestionsFull(false);
+        requestAnimationFrame(() => scrollPassageTo([p]));
+      } else { if(window.innerWidth <= 900) showExamTab('text'); p.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+      clearTimeout(p._xpFlash); p.classList.remove('xp-flash'); void p.offsetWidth; p.classList.add('xp-flash'); p._xpFlash = setTimeout(() => p.classList.remove('xp-flash'), 1700);
+    }
+    // 词汇表里的词一键进生词本：就是在原文那个词上划一条高亮，释义用 AI 给的
+    function xpAddWord(btn){
+      const v = ((examExplain && examExplain.overview && examExplain.overview.vocab) || [])[Number(btn.dataset.i)]; if(!v || btn.disabled) return;
+      const reader = document.querySelector('#vContent .reader'); const p = reader && reader.querySelector(`p[data-s="${v.s}"]`); if(!p) return;
+      const line = lineTextNodes(p).map(n => n.nodeValue).join(''); const sp = xpFind(line, v.word); if(!sp) return;
+      const o = Number(p.dataset.o);
+      btn.disabled = true; btn.textContent = '正在加…';
+      storeHighlight({ start: o + sp[0], end: o + sp[1], text: line.slice(sp[0], sp[1]) }, v.meaning || v.word)
+        .then(() => xpRenderPanel())
+        .catch(err => { btn.disabled = false; btn.textContent = '加入生词本'; showTempTooltip(err.message || '没加上', btn.getBoundingClientRect()); });
+    }
+    function xpGenerate(){
+      if(!currentArticle || xpBusy) return;
+      if(xpHas() && !confirm('重新生成会覆盖现在这份讲解，大约两分钟。继续吗？')) return;
+      const id = currentArticle.id; xpBusy = true; xpGenError = ''; xpRenderStatus();
+      fetch('/intensive_explain', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) })
+        .then(r => r.json().catch(() => ({ error: `服务器返回 ${r.status}` })))
+        .then(d => { xpBusy = false; if(!currentArticle || currentArticle.id !== id) return;
+          if(!d.success){ xpGenError = d.error || '没能开始生成'; xpRenderStatus(); return; }
+          examExplain = d.explain; xpActive = null; xpRefresh(); xpPoll(); })
+        .catch(() => { xpBusy = false; xpGenError = '网络不通，没能开始生成'; xpRenderStatus(); });
+    }
+    // 生成中每 4 秒问一次进度：讲完一组就多显示一组
+    function xpPoll(){
+      clearTimeout(xpPollTimer);
+      if(!currentArticle || !examExplain || examExplain.status !== 'running') return;
+      const id = currentArticle.id;
+      xpPollTimer = setTimeout(() => {
+        fetch(`/intensive_explain/${encodeURIComponent(id)}`).then(r => r.json()).then(d => {
+          if(!currentArticle || currentArticle.id !== id) return;
+          if(d.explain){ examExplain = d.explain; xpRefresh(); }
+          xpPoll();
+        }).catch(() => xpPoll());
+      }, 4000);
+    }
+    // 悬停（手机上是点一下）一处划词：弹出这组对应，题目和原文两边的词一起加深
+    function xpHitAt(x, y){
+      for(const h of xpHits){ for(const r of h.range.getClientRects()){ if(x >= r.left - 1 && x <= r.right + 1 && y >= r.top && y <= r.bottom) return { hit: h, rect: r }; } }
+      return null;
+    }
+    let xpTipKey = '', xpTipTimer = 0;
+    function xpHideTip(){ const tip = $id('xpTip'); if(tip) tip.hidden = true; xpTipKey = ''; if(window.CSS && CSS.highlights) CSS.highlights.delete('xp-hot'); }
+    function xpHot(num, k){
+      if(!(window.CSS && CSS.highlights && typeof Highlight !== 'undefined')) return;
+      const rs = xpHits.filter(h => h.num === num && h.k === k).map(h => h.range);
+      if(rs.length){ const hl = new Highlight(...rs); hl.priority = 5; CSS.highlights.set('xp-hot', hl); } else CSS.highlights.delete('xp-hot');
+    }
+    function xpShowTip(found){
+      const { hit, rect } = found; const key = hit.num + ':' + hit.k + ':' + hit.side;
+      const tip = $id('xpTip'); const x = xpEntry(hit.num); if(!tip || !x) return;
+      if(key !== xpTipKey){
+        xpTipKey = key;
+        const m = hit.k < 0 ? null : x.e.marks[hit.k];
+        tip.innerHTML = m ? `<b>${escapeHtml(m.role)}</b><span class="rel">${escapeHtml(m.rel || '')} · 第 ${escapeHtml(hit.num)} 题</span><br><span class="en">${escapeHtml(m.text)}<i>⇄</i>${m.p ? escapeHtml(m.p) : '原文里没有对应'}</span>${m.zh ? '<br>' + escapeHtml(m.zh) : ''}`
+          : `<b>答案</b><span class="rel">第 ${escapeHtml(hit.num)} 题</span><br><span class="en">${escapeHtml(x.e.answer_text || '')}</span>`;
+        xpHot(hit.num, hit.k);
+      }
+      tip.hidden = false;
+      tip.style.left = Math.max(8, Math.min(window.innerWidth - tip.offsetWidth - 8, rect.left)) + 'px';
+      tip.style.top = (rect.bottom + 8 + tip.offsetHeight > window.innerHeight ? rect.top - tip.offsetHeight - 8 : rect.bottom + 8) + 'px';
+    }
+    function xpPointer(x, y){
+      if(!xpHits.length){ return null; }
+      const el = document.elementFromPoint(x, y);
+      if(!el || !el.closest('#vContent .reader, #examPane') || el.closest('.tooltip, .ir-xp')) return null;
+      return xpHitAt(x, y);
+    }
+    let xpMoveRaf = 0;
+    document.addEventListener('mousemove', function(e){
+      if(!xpHits.length || xpMoveRaf) return;
+      const x = e.clientX, y = e.clientY;
+      xpMoveRaf = requestAnimationFrame(() => { xpMoveRaf = 0; const f = xpPointer(x, y); if(f) xpShowTip(f); else if(xpTipKey && !xpTipTimer) xpHideTip(); });
+    });
+    document.addEventListener('click', function(e){
+      if(!xpHits.length || !window.matchMedia('(hover: none)').matches) return;
+      const f = xpPointer(e.clientX, e.clientY); clearTimeout(xpTipTimer); xpTipTimer = 0;
+      if(f){ xpTipKey = ''; xpShowTip(f); xpTipTimer = setTimeout(() => { xpTipTimer = 0; xpHideTip(); }, 3200); } else xpHideTip();
+    });
+    // 对应表里指着一行，两边的词一起加深
+    document.addEventListener('mouseover', function(e){
+      const row = e.target.closest && e.target.closest('.ir-xp-pair'); if(!row) return;
+      const q = row.closest('.ir-q'); if(q) xpHot(q.dataset.num, Number(row.dataset.k));
+    });
+    document.addEventListener('mouseout', function(e){ if(e.target.closest && e.target.closest('.ir-xp-pair') && !xpTipKey && window.CSS && CSS.highlights) CSS.highlights.delete('xp-hot'); });
+    window.addEventListener('scroll', function(){ if(xpTipKey) xpHideTip(); }, true);
 
     // ===== 题目栏里的高亮：每段题目文字（data-hk）各自从 0 数下标 =====
     function hkBlock(qk){ return document.querySelector(`#examPane [data-hk="${CSS.escape(qk)}"]`); }

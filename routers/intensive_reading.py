@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, send_file, send_from_directory
-import os, json, re, uuid, shutil, time, requests, html
+import os, json, re, uuid, shutil, time, requests, html, threading, logging
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from pydub import AudioSegment
@@ -12,9 +12,10 @@ from core import (
     delete_vocab_audio,
     delete_article_vocab_audio, delete_article_audio_files,
     is_safe_path_segment,
-    load_prompt, call_gemini_llm, call_llm
+    load_prompt, call_gemini_llm, call_llm, stream_llm
 )
-from utils import jiufen_import
+from utils import jiufen_import, reading_explain
+from utils.json_store import load_json, save_json_atomic
 
 intensive_reading_bp = Blueprint('intensive_reading', __name__)
 
@@ -492,6 +493,9 @@ def intensive_import():
         except Exception as e:
             return jsonify({'error': str(e), 'ids': ids}), 500
         ids.append(article_id)
+        # AI 讲解在后台生成（一篇两分多钟），页面打开文章后自己轮询进度；页面没要求就不生成
+        if data.get('explain') and _explain_ready()[0]:
+            _start_explain(article_id, obj['exam'])
     return jsonify({'success': True, 'ids': ids, 'warnings': warnings})
 
 @intensive_reading_bp.route('/intensive_article/<article_id>', methods=['GET'])
@@ -513,10 +517,109 @@ def intensive_article(article_id):
             'content_text': data.get('content_text'),
             'highlights': data.get('highlights') or [],
             'images': data.get('images') or [],
-            'exam': data.get('exam')
+            'exam': data.get('exam'),
+            'explain': _load_explain(article_id) if data.get('exam') else None,
         }})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+# ===== AI 讲解：按 Lewis 方法把每道题重讲一遍（utils/reading_explain.py，提示词 prompts/intensive_explain.yaml） =====
+# 生成在后台线程里跑：一个题组调一次模型，讲完一块存一次盘，页面轮询 /intensive_explain/<id> 边生成边看。
+# 结果单独存在 intensive_articles/explain/<id>.json，不和文章 JSON 抢写（页面随时在往文章 JSON 里存高亮）；
+# 文章列表只认 intensive_articles/ 下一层的 .json，不会把它当成文章。
+EXPLAIN_JOBS = {}                               # 文章 id -> 正在生成的那份的快照
+EXPLAIN_LOCK = threading.Lock()
+EXPLAIN_SLOTS = threading.BoundedSemaphore(3)   # 2026-11-26 实测：WildAPI 同时来 10 个请求，握手阶段全部断开；3 个没事
+
+
+def _explain_path(article_id):
+    if not _valid_article_id(article_id):
+        raise ValueError(f'无效的文章ID: {article_id!r}')
+    return os.path.join(INTENSIVE_DIR, 'explain', f'{article_id}.json')
+
+
+def _explain_ready():
+    """(能不能生成, 不能的原因)。"""
+    model = load_prompt('intensive_explain').get('model') or ''
+    env = 'AIHUBMIX_API_KEY' if model.startswith('aihubmix/') else 'DEEPSEEK_API_KEY' if model.startswith('deepseek') else 'WILDAPI_API_KEY'
+    return (True, '') if os.getenv(env) else (False, f'服务器没有配置 {env}')
+
+
+def _explain_llm(cfg, messages):
+    with EXPLAIN_SLOTS:
+        return ''.join(stream_llm(cfg, messages))
+
+
+def _load_explain(article_id):
+    """这篇的 AI 讲解：正在生成就给当前进度，否则读存盘的；没有返回 None。"""
+    with EXPLAIN_LOCK:
+        job = EXPLAIN_JOBS.get(article_id)
+    if job:
+        return job
+    data = load_json(_explain_path(article_id), None)
+    if isinstance(data, dict) and data.get('status') == 'running':
+        # 存盘里还是「生成中」但没有在跑的任务：服务重启把它打断了
+        data['status'] = 'partial' if data.get('groups') else 'error'
+        data.setdefault('errors', []).append('生成到一半被打断了（服务重启），可以重新生成')
+    return data if isinstance(data, dict) else None
+
+
+def _start_explain(article_id, part):
+    """后台开始生成；这篇已经在生成就不重复开。返回是不是新开的。"""
+    with EXPLAIN_LOCK:
+        if article_id in EXPLAIN_JOBS:
+            return False
+        EXPLAIN_JOBS[article_id] = {'status': 'running', 'done': 0, 'total': len(part.get('groups') or []) + 1,
+                                    'groups': {}, 'overview': None, 'errors': []}
+    path = _explain_path(article_id)
+
+    def on_update(state):
+        snap = json.loads(json.dumps(state, ensure_ascii=False))   # 题组下标变成字符串，和读盘回来的一样
+        with EXPLAIN_LOCK:
+            EXPLAIN_JOBS[article_id] = snap
+        save_json_atomic(path, snap)
+
+    def work():
+        try:
+            reading_explain.generate(part, load_prompt('intensive_explain'), _explain_llm, on_update)
+        except Exception as exc:
+            logging.exception('AI 讲解生成失败：%s', article_id)
+            save_json_atomic(path, {'status': 'error', 'done': 0, 'total': 0, 'groups': {}, 'overview': None,
+                                    'errors': [f'{type(exc).__name__}: {str(exc)[:200]}']})
+        finally:
+            with EXPLAIN_LOCK:
+                EXPLAIN_JOBS.pop(article_id, None)
+
+    threading.Thread(target=work, name=f'explain-{article_id}', daemon=True).start()
+    return True
+
+
+@intensive_reading_bp.route('/intensive_explain/<article_id>', methods=['GET'])
+def intensive_explain_status(article_id):
+    if not _valid_article_id(article_id):
+        return jsonify({'error': '无效的文章ID'}), 400
+    return jsonify({'success': True, 'explain': _load_explain(article_id)})
+
+
+@intensive_reading_bp.route('/intensive_explain', methods=['POST'])
+def intensive_explain_start():
+    """生成（或重新生成）一篇的 AI 讲解。立刻返回，页面自己轮询进度。"""
+    article_id = (request.json or {}).get('id')
+    if not _valid_article_id(article_id):
+        return jsonify({'error': '无效的文章ID'}), 400
+    path = _article_path(article_id)
+    if not os.path.exists(path):
+        return jsonify({'error': '文章不存在'}), 404
+    with open(path, 'r', encoding='utf-8') as f:
+        exam = json.load(f).get('exam')
+    if not exam or not exam.get('groups'):
+        return jsonify({'error': '这篇文章没有题目，讲不了'}), 400
+    ok, why = _explain_ready()
+    if not ok:
+        return jsonify({'error': why}), 503
+    _start_explain(article_id, exam)
+    return jsonify({'success': True, 'explain': _load_explain(article_id)})
+
 
 def _utf16_slice(text, start, end):
     return text.encode('utf-16-le')[start * 2:end * 2].decode('utf-16-le', errors='replace')
@@ -740,6 +843,8 @@ def intensive_delete_article():
 
         # 删除文章文件
         os.remove(path)
+        if os.path.exists(_explain_path(article_id)):
+            os.remove(_explain_path(article_id))
 
         # 删除文章相关的所有词汇音频
         delete_article_vocab_audio(article_id)

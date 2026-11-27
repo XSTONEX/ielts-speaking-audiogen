@@ -44,7 +44,7 @@ class LookupTest(HighlightTestBase):
         self.assertEqual(r.get_json()["meaning"], "v. 似乎；显得")
         cfg, messages = self.calls[0]
         user = messages[-1]["content"]
-        self.assertIn("单词：appear", user)
+        self.assertIn("单词或短语：appear", user)
         self.assertIn("上下文句子：The harbour lights appear brighter in winter.", user)
         self.assertNotIn("港口", user)                       # 只给这一行，不带译文
         self.assertEqual(messages[0]["role"], "system")

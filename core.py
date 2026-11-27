@@ -341,7 +341,9 @@ def _stream_llm_once(cfg, messages):
     provider = _provider(cfg.get('model'))
     # 思考模型先闷头想一阵才出第一个字（hydrogen medium 实测最长 28 秒，期间只有心跳），
     # 第一个字之前按 cfg.timeout 等；出字之后照旧 STREAM_STALL_SECONDS 没新内容算卡住
+    # cfg.first_token_wait：别的模型在长提示词上第一个字也可能慢，精读讲解这种后台任务宁可多等
     first_wait = max(STREAM_STALL_SECONDS, cfg.get('timeout', 60)) if provider == 'aihubmix' else STREAM_STALL_SECONDS
+    first_wait = max(first_wait, cfg.get('first_token_wait') or 0)
     if provider in _OPENAI_STYLE:
         label, build = _OPENAI_STYLE[provider]
         url, headers, body = build(cfg, messages)

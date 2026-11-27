@@ -324,7 +324,10 @@ module.exports = async function suitePhone({ cfg, browser, engine, t, lib }) {
       ok(loc.s === '2,3' && loc.top >= loc.bar && loc.bottom <= loc.paneTop && loc.open && loc.cur === '2', `定位 shows the evidence between the top bar and the question ${JSON.stringify(loc)}`);
       await shot('30-questions-located');
       await p.tap('.ir-qs-nav [data-act="qs-analysis"]'); await sleep(250);
-      ok(await p.evaluate(() => !document.querySelector('#examPane .ir-q.is-cur .ir-analysis').hidden), '解析 opens the analysis in the peek');
+      // 解析：面板切到 AI 讲解（这篇还没生成，题目照常露着），再点一下切回来
+      ok(await p.evaluate(() => document.getElementById('examPane').dataset.x === 'ai' && document.querySelector('.ir-qs-nav [data-act="qs-analysis"]').classList.contains('is-on') && !!document.querySelector('#examPane .ir-q.is-cur')), '解析 switches the peek to AI 讲解');
+      await p.tap('.ir-qs-nav [data-act="qs-analysis"]'); await sleep(250);
+      ok(await p.evaluate(() => document.getElementById('examPane').dataset.x === 'q' && !document.querySelector('.ir-qs-nav [data-act="qs-analysis"]').classList.contains('is-on')), '解析 again goes back to 题目');
       // 划词时操作栏贴在面板上面
       await longPressLine(4);
       const fb = await rect('#floatBox'), pane = await rect('#examPane');

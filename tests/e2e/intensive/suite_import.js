@@ -80,8 +80,12 @@ module.exports = async function suiteImport({ cfg, browser, engine, t, lib }) {
     ok(JSON.stringify(loc.s) === '["1"]' && loc.inView && loc.active === '4', `locate Q4 → sentence 1 ${JSON.stringify(loc)}`);
     await p.click('#examPane .ir-q[data-num="2"] [data-act="locate"]'); await p.waitForTimeout(500);
     ok((await evS()) === '2,3', 'locate Q2 → sentences 2–3, previous cleared');
-    await p.click('#examPane .ir-q[data-num="2"] [data-act="analysis"]');
-    ok(await p.isVisible('#examPane .ir-q[data-num="2"] .ir-analysis') && /worried at first/.test(await p.textContent('#examPane .ir-q[data-num="2"] .ir-analysis')), 'analysis opens');
+    // 解析：九分学长带的解析不再显示，统一换成自己生成的 AI 讲解。这篇还没生成 → 切到「AI 讲解」页签，给出「生成」
+    await p.click('#examPane .ir-q[data-num="2"] [data-act="analysis"]'); await p.waitForTimeout(300);
+    const ai = await p.evaluate(() => ({ x: document.getElementById('examPane').dataset.x, tabs: [...document.querySelectorAll('#examXtabs button')].map(b => b.textContent).join(), status: document.getElementById('xpStatus').textContent, gen: !!document.querySelector('#xpStatus [data-act="xp-gen"]'), old: !!document.querySelector('#examPane .ir-analysis'), jiufen: /worried at first/.test(document.getElementById('examPane').textContent) }));
+    ok(ai.x === 'ai' && ai.tabs === '题目,AI 讲解,同替,词汇,段落' && /还没有 AI 讲解/.test(ai.status) && ai.gen && !ai.old && !ai.jiufen, `解析 opens the AI 讲解 tab and offers to generate; the 九分 analysis is gone ${JSON.stringify(ai)}`);
+    await p.click('#examXtabs [data-x="q"]'); await p.waitForTimeout(150);
+    ok((await p.evaluate(() => document.getElementById('examPane').dataset.x)) === 'q', 'back to 题目');
     // 填空：答错的写出你的和正确答案；没作答的写「（空）」
     const ans4 = await p.textContent('#examPane .ir-q[data-num="4"] .ir-ans');
     ok(/你的答案\s*water/.test(ans4) && /正确答案\s*river \/ river below/.test(ans4), `Q4 answers ${ans4}`);

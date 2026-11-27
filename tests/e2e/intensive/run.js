@@ -1,5 +1,5 @@
 // 文章精读（/intensive、/intensive/new）浏览器端到端测试，Chromium + WebKit 各跑一遍。
-// 用法见 README.md：node run.js [select|touch|import|misc ...] [chromium|webkit ...]
+// 用法见 README.md：node run.js [select|touch|import|misc|phone|question|explain ...] [chromium|webkit ...]
 const lib = require('./lib');
 
 const SUITE_FILES = {
@@ -9,6 +9,7 @@ const SUITE_FILES = {
   misc: './suite_misc',       // 删除确认、图片条和大图、改标题、改分类、朗读音频条
   phone: './suite_phone',     // 手机版式：列表、阅读页、划词、单词卡、各种底部面板、题目面板、添加文章，系统返回关最上面一层
   question: './suite_question', // 题目栏划词（桌面 / 手机）、原文和题目栏之间的分割条、单词发音走有道
+  explain: './suite_explain',   // AI 讲解页签：生成进度、题目和原文上的划词、悬停、同替 / 词汇 / 段落、手机
 };
 
 (async () => {

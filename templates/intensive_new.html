@@ -250,6 +250,7 @@ body.page-intensive-new .ir-part .ir-input { font: 600 16px var(--w-en); backgro
         </select>
         <div class="ir-segs ir-phone" data-for="jsonCategory"><button type="button" data-cat="Reading">Reading</button><button type="button" data-cat="Listening">Listening</button><button type="button" data-cat="Writing">Writing</button></div>
         <label class="ir-check"><input type="checkbox" id="translate" checked>逐句翻译成中文 <small>导入时翻一次，约半分钟</small></label>
+        <label class="ir-check"><input type="checkbox" id="explain" checked>生成 AI 讲解 <small>按 Lewis 方法逐题讲，后台生成约两分钟</small></label>
       </div>
       <div class="ir-actions">
         <button class="ir-btn ir-btn-primary" id="importBtn" onclick="importJson(true)" disabled><span class="ir-l-def">导入</span><span class="ir-l-retry">重试翻译</span></button>
@@ -413,7 +414,7 @@ body.page-intensive-new .ir-part .ir-input { font: 600 16px var(--w-en); backgro
       btn.innerHTML = `<span class="ir-spin"></span>${translate ? '正在翻译' : '正在导入'}`;
       setMsg('importMsg', translate ? '逐句翻译要半分钟左右，别关页面' : '');
       fetch('/intensive_import', { method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ raw, titles, translate, category: document.getElementById('jsonCategory').value }) })
+        body: JSON.stringify({ raw, titles, translate, explain: document.getElementById('explain').checked, category: document.getElementById('jsonCategory').value }) })
         .then(r => r.json().catch(() => ({ error: `服务器返回 ${r.status}` })))
         .then(d => {
           if(d.success){
