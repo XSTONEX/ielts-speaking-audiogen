@@ -612,7 +612,7 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
 .ir-xp-ref:hover { background: var(--w-accent); color: var(--accent-contrast, #fff); }
 
 /* 同替 / 词汇 / 段落：整栏换成一张表 */
-.ir-xp-panel { display: none; padding-top: 16px; }
+.ir-xp-panel { display: none; position: relative; padding-top: 16px; }
 .ir-exam[data-x="pairs"] .ir-xp-panel, .ir-exam[data-x="vocab"] .ir-xp-panel, .ir-exam[data-x="para"] .ir-xp-panel { display: block; }
 .ir-exam[data-x="pairs"] .ir-group, .ir-exam[data-x="vocab"] .ir-group, .ir-exam[data-x="para"] .ir-group,
 .ir-exam[data-x="pairs"] .ir-exam-empty, .ir-exam[data-x="vocab"] .ir-exam-empty, .ir-exam[data-x="para"] .ir-exam-empty { display: none !important; }
@@ -1863,7 +1863,13 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
       if(end <= start){ fail(); return; }
       const text = whole.slice(start, end);
       if(/\n/.test(text)){ showTempTooltip('请在同一句题目里划', range.getBoundingClientRect()); fail(); return; }
-      selectionRange = { qk: b.dataset.hk, start, end, text };
+      if(b.dataset.hk.startsWith('xp.')){
+        // AI 讲解里的文字：存到这个词在原文 / 题目里的位置上（at 记着眼前选的这一处，浮层跟着它）
+        if(!/[A-Za-z]/.test(text)){ fail(); return; }
+        const qEl = b.closest('.ir-q'); const at = xpResolve(text, qEl && qEl.dataset.num);
+        if(!at){ showTempTooltip('这个词不在原文和题目里，存不进生词本', range.getBoundingClientRect()); fail(); return; }
+        selectionRange = Object.assign(at, { at: range.cloneRange() });
+      } else selectionRange = { qk: b.dataset.hk, start, end, text };
       lastSelectionRect = range.getBoundingClientRect();
       showFloatAtRect(lastSelectionRect, false);
     }
@@ -1906,8 +1912,8 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
       if(!/[A-Za-z]/.test(text)){ showTempTooltip('选中的不是英文，AI 释义只查英文单词和短语', at); return; }
       if(text.length > 80){ showTempTooltip('选得太长了，AI 释义只查单词和短语', at); return; }
       // 浮层按钮点下去时系统选区可能已经收起，扫光按存好的下标重新算位置
-      const range = sr.qk ? (hkBlock(sr.qk) && hkDomRange(hkBlock(sr.qk), sr.start, sr.end))
-        : originalToDomRange(document.querySelector('#vContent .reader'), sr.start, sr.end);
+      const range = sr.at || (sr.qk ? (hkBlock(sr.qk) && hkDomRange(hkBlock(sr.qk), sr.start, sr.end))
+        : originalToDomRange(document.querySelector('#vContent .reader'), sr.start, sr.end));
       aiAnnotate(sr, rect, range);
     }
     // 三击和浮层「AI 释义」共用：词上扫光 + 「AI 释义 ···」小气泡，AI 写好直接存成高亮
@@ -1934,7 +1940,7 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
       const nop = { done(){}, fail(){} };
       if(!range) return nop;
       const startEl = range.startContainer.nodeType === 1 ? range.startContainer : range.startContainer.parentNode;
-      const host = startEl && startEl.closest('.reader, .ir-q, .ir-gopts, .ir-layout-body');
+      const host = startEl && startEl.closest('.reader, .ir-q, .ir-gopts, .ir-layout-body, .ir-xp-panel');
       if(!host) return nop;
       const hr = host.getBoundingClientRect(), els = [];
       const rects = [...range.getClientRects()].filter(r => r.width > 0 && r.height > 0);
@@ -2118,6 +2124,7 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
     function repositionFloating(){ if(!selectionRange || !currentArticle || (!isVisible('floatBox') && !isVisible('meaningBox'))) return; const rect = computeRectFromSelectionRange(); if(!rect) return; lastSelectionRect = rect; if(isVisible('floatBox')) positionBoxAtRect(document.getElementById('floatBox'), rect); if(isVisible('meaningBox')) positionBoxAtRect(document.getElementById('meaningBox'), rect); }
     function isVisible(id){ const el=document.getElementById(id); return el && el.style.display!== 'none'; }
     function computeRectFromSelectionRange(){ try{ if(selectionRange.start==null) return null;
+      if(selectionRange.at){ const r = selectionRange.at.getBoundingClientRect(); return r.width || r.height ? r : null; }   // 在 AI 讲解里选的词：浮层跟着选的那一处
       if(selectionRange.qk){ const b = hkBlock(selectionRange.qk); const r = b && hkDomRange(b, selectionRange.start, selectionRange.end); return r ? r.getBoundingClientRect() : null; }
       const reader=document.querySelector('#vContent .reader'); if(!reader) return null; const r=originalToDomRange(reader, selectionRange.start, selectionRange.end); return r ? r.getBoundingClientRect() : null; }catch(e){ return null; } }
     window.addEventListener('scroll', function(){ repositionFloating(); }, true);
@@ -2138,7 +2145,7 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
     function restoreHighlights(container, art){ // 去重并清理已存在的 mark（释义气泡一起删掉，否则会作为孤儿节点留在段落里）
       container.querySelectorAll('mark.hl').forEach(function(n){ const p=n.parentNode; if(!p) return; n.querySelectorAll('.tooltip').forEach(t=>t.remove()); while(n.firstChild) p.insertBefore(n.firstChild, n); p.removeChild(n); p.normalize(); });
       const uniq=[]; (art.highlights||[]).forEach(function(h){ if(h.qk) return; if(!uniq.some(x=>x.start===h.start&&x.end===h.end)){ uniq.push(h); } });
-      uniq.sort((a,b)=>a.start-b.start).forEach(h=>{ applyOneHighlight(container, h); }); paintExamHighlights(art.highlights||[]); paintEchoes(container, art.highlights||[]); updateVocabCount(); paintExamMarks(); paintXp(); }
+      uniq.sort((a,b)=>a.start-b.start).forEach(h=>{ applyOneHighlight(container, h); }); paintExamHighlights(art.highlights||[]); paintEchoes(container, art.highlights||[]); updateVocabCount(); paintExamMarks(); paintXp(); if(examXtab === 'vocab') xpRenderPanel(); }
     function applyOneHighlight(container, h){ try{ const reader=container.querySelector('.reader'); if(!reader || !(h.end > h.start)) return; // 已存在则跳过
       if(container.querySelector(`mark.hl[data-hid="${h.id}"]`)) return; wrapOriginalRange(reader, h.start, h.end, h); }catch(e){} }
     // 划过的词，本文里别处一模一样的（不分大小写、整词）也画上，原文和题目栏都算：同一条高亮（同一个 data-hid），
@@ -2162,9 +2169,14 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
         src.forEach(h => { const re = echoRegex(h.text); if(!re) return;
           echoMatches(content, re).forEach(([a, b]) => { if(overlaps(used, a, b)) return; used.push([a, b]); try{ const m = wrapOriginalRange(reader, a, b, h); if(m) m.classList.add('hl-echo'); }catch(e){} }); });
       }
-      // 题目栏：每段题目文字各自从 0 数
-      if(currentArticle && currentArticle.exam){
-        document.querySelectorAll('#examPane [data-hk]').forEach(b => {
+      // 题目栏：每段题目文字各自从 0 数（AI 讲解里的文字也是一段段 data-hk，一起画）
+      if(currentArticle && currentArticle.exam) paintEchoBlocks(document.querySelectorAll('#examPane [data-hk]'), list, src);
+    }
+    function paintEchoBlocks(blocks, list, src){
+      if(!src){ const seen = new Set(); src = []; list.forEach(h => { const k = (h.text || '').trim().toLowerCase(); if(k && !seen.has(k)){ seen.add(k); src.push(h); } }); src.sort((a, b) => b.text.trim().length - a.text.trim().length); }
+      const overlaps = (used, a, b) => used.some(([x, y]) => a < y && b > x);
+      if(src.length){
+        blocks.forEach(b => {
           const qk = b.dataset.hk, txt = hkText(b);
           const used = list.filter(h => h.qk === qk).map(h => [h.start, h.end]);
           src.forEach(h => { const re = echoRegex(h.text); if(!re) return;
@@ -2291,11 +2303,12 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
       const btn = e.target.closest('[data-act]');
       // 手机：展开的题目列表里点一道题，它就是「当前题」，收起后面板露的就是它
       if(!btn){
-        const row = e.target.closest('[data-jump]'); if(row){ xpJump(row.dataset.jump); return; }
+        clearTimeout(xpClickTimer);
+        const row = e.target.closest('[data-jump]');
+        if(row){ if(!e.target.closest('mark.hl')) xpClickTimer = setTimeout(() => { if((window.getSelection() || {}).isCollapsed !== false && row.isConnected) xpJump(row.dataset.jump); }, 280); return; }
         const q = e.target.closest('.ir-q'); if(q && isPhone()) setCurrentQuestion(q);
         // AI 讲解：点一道题就展开它，原文跟着亮出证据句。等一小会儿再展开：双击 / 三击是在选词，
         // 这时候展开会让上一题的讲解收起、版面一窜，第二下就点到别处去了
-        clearTimeout(xpClickTimer);
         if(q && examXtab === 'ai' && xpActive !== q.dataset.num) xpClickTimer = setTimeout(() => { if((window.getSelection() || {}).isCollapsed !== false && q.isConnected && examXtab === 'ai') xpActivate(q, !isPhone()); }, 280);
         return;
       }
@@ -2516,6 +2529,10 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
     }
     // 讲解文字里的 [14] 变成能点的句号：点一下原文滚到那一句
     function xpText(t){ return escapeHtml(t).replace(/\[(\d+)\]/g, (m, n) => examSentenceAt[n] != null ? `<button type="button" class="ir-xp-ref" data-act="xp-ref" data-s="${n}" title="看原文第 ${n} 句">${n}</button>` : m); }
+    // 讲解里每一小段文字都带 data-hk="xp.N"：和题目文字一样能划词、三击查词，划过的词在这里也自动画上。
+    // 这些块名只在页面上用、不存：在这里选中的词会换算成它在原文 / 题目里的位置再存（见 xpResolve）
+    let xpHkSeq = 0;
+    const xk = () => ` data-hk="xp.${xpHkSeq++}"`;
     function xpDetailHtml(num){
       const x = xpEntry(num); if(!x) return '';
       const e = x.e, chips = [];
@@ -2525,17 +2542,42 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
       if((e.evidence || []).length) chips.push(`<span class="ir-xp-chip">证据 ${e.evidence.map(s => xpText('[' + s + ']')).join('')} · ${e.pairs || 0} 组对应</span>`);
       let h = `<div class="ir-xp-chips">${chips.join('')}</div><div class="ir-xp-body">`;
       h += (e.marks || []).map((m, k) => `<div class="ir-xp-pair" data-k="${k}"><span class="ir-xp-role r-${XP_ROLE[m.role] || 'aux'}">${escapeHtml(m.role)}</span>`
-        + `<div class="en">${escapeHtml(m.text)}${m.p ? `<i>⇄</i>${escapeHtml(m.p)}` : `<i>⇄</i><span class="none">原文里没有对应</span>`}</div>`
-        + (m.rel || m.zh ? `<div class="zh">${m.rel ? `<b>${escapeHtml(m.rel)}</b>` : ''}${escapeHtml(m.zh || '')}</div>` : '') + `</div>`).join('');
-      if((e.steps || []).length) h += `<ol class="ir-xp-steps">` + e.steps.map(st => { const i = st.indexOf('：'); return i > 0 && i < 5 ? `<li><b>${escapeHtml(st.slice(0, i))}</b>${xpText(st.slice(i + 1))}</li>` : `<li>${xpText(st)}</li>`; }).join('') + `</ol>`;
-      if(e.slip) h += `<p class="ir-xp-note is-slip"><b>你偏在哪</b>${xpText(e.slip)}</p>`;
-      if(e.rule) h += `<p class="ir-xp-note"><b>规则</b>${xpText(e.rule)}</p>`;
-      if(e.trap) h += `<p class="ir-xp-note"><b>易错</b>${xpText(e.trap)}</p>`;
-      if(e.vocab_gate) h += `<p class="ir-xp-note is-gate"><b>词汇关</b><span class="en">${escapeHtml(e.vocab_gate)}</span> —— 这个词不认识，技巧救不了，得背</p>`;
-      if((e.wrong_options || []).length) h += `<ul class="ir-xp-wrong">` + e.wrong_options.map(w => `<li><b>${escapeHtml(w.key)}</b><span class="t">${escapeHtml(w.type)}</span>${xpText(w.why)}</li>`).join('') + `</ul>`;
+        + `<div class="en"><span${xk()}>${escapeHtml(m.text)}</span>${m.p ? `<i>⇄</i><span${xk()}>${escapeHtml(m.p)}</span>` : `<i>⇄</i><span class="none">原文里没有对应</span>`}</div>`
+        + (m.rel || m.zh ? `<div class="zh">${m.rel ? `<b>${escapeHtml(m.rel)}</b>` : ''}<span${xk()}>${escapeHtml(m.zh || '')}</span></div>` : '') + `</div>`).join('');
+      if((e.steps || []).length) h += `<ol class="ir-xp-steps">` + e.steps.map(st => { const i = st.indexOf('：'); return i > 0 && i < 5 ? `<li><b>${escapeHtml(st.slice(0, i))}</b><span${xk()}>${xpText(st.slice(i + 1))}</span></li>` : `<li${xk()}>${xpText(st)}</li>`; }).join('') + `</ol>`;
+      if(e.slip) h += `<p class="ir-xp-note is-slip"><b>你偏在哪</b><span${xk()}>${xpText(e.slip)}</span></p>`;
+      if(e.rule) h += `<p class="ir-xp-note"><b>规则</b><span${xk()}>${xpText(e.rule)}</span></p>`;
+      if(e.trap) h += `<p class="ir-xp-note"><b>易错</b><span${xk()}>${xpText(e.trap)}</span></p>`;
+      if(e.vocab_gate) h += `<p class="ir-xp-note is-gate"><b>词汇关</b><span class="en"${xk()}>${escapeHtml(e.vocab_gate)}</span> —— 这个词不认识，技巧救不了，得背</p>`;
+      if((e.wrong_options || []).length) h += `<ul class="ir-xp-wrong">` + e.wrong_options.map(w => `<li><b>${escapeHtml(w.key)}</b><span class="t">${escapeHtml(w.type)}</span><span${xk()}>${xpText(w.why)}</span></li>`).join('') + `</ul>`;
       return h + `</div>`;
     }
-    function xpFill(){ document.querySelectorAll('#examPane .ir-q').forEach(q => { const box = q.querySelector('.ir-xp'); if(box) box.innerHTML = xpDetailHtml(q.dataset.num); }); }
+    function xpFill(){
+      document.querySelectorAll('#examPane .ir-q').forEach(q => { const box = q.querySelector('.ir-xp'); if(box) box.innerHTML = xpDetailHtml(q.dataset.num); });
+      paintEchoBlocks(document.querySelectorAll('#examPane .ir-xp [data-hk]'), highlights || []);
+    }
+    // 讲解里选中的词 → 它在原文 / 题目里的位置（讲解里的英文基本都是从那儿抄来的）。存高亮、AI 查词都落在那个位置上，
+    // 存好以后靠「同词自动标注」在讲解里画出来。先找这道题的证据句，再找原文别处，最后找题目；都没有返回 null
+    function xpResolve(text, num){
+      const re = echoRegex(text); const exam = currentArticle && currentArticle.exam; if(!re || !exam) return null;
+      const content = currentArticle.content_text || '';
+      const free = (list, a, b) => !list.some(h => a < h.end && b > h.start);
+      const inText = (highlights || []).filter(h => !h.qk);
+      const sents = []; (exam.paragraphs || []).forEach(p => (p.sentences || []).forEach(s => { if(s.o != null) sents.push({ i: s.i, a: s.o, b: s.o + (s.en || '').length }); }));
+      const ev = num ? evidenceSentences(exam, num) : [];
+      const found = echoMatches(content, re).filter(([a, b]) => free(inText, a, b)).map(([a, b]) => ({ a, b, s: sents.find(s => a >= s.a && b <= s.b) })).filter(x => x.s);
+      const hit = found.find(x => ev.includes(x.s.i)) || found[0];
+      if(hit) return { start: hit.a, end: hit.b, text: content.slice(hit.a, hit.b) };
+      const blocks = [...document.querySelectorAll('#examPane [data-hk]')].filter(b => !b.dataset.hk.startsWith('xp.'));
+      const own = new RegExp('^g\\d+\\.q' + String(num || '').replace(/[^\w-]/g, '') + '(\\.|$)');
+      blocks.sort((x, y) => (own.test(y.dataset.hk) ? 1 : 0) - (own.test(x.dataset.hk) ? 1 : 0));
+      for(const b of blocks){
+        const txt = hkText(b), mine = (highlights || []).filter(h => h.qk === b.dataset.hk);
+        const m = echoMatches(txt, re).find(([a, e]) => free(mine, a, e));
+        if(m) return { qk: b.dataset.hk, start: m[0], end: m[1], text: txt.slice(m[0], m[1]) };
+      }
+      return null;
+    }
     function xpRenderStatus(){
       const el = $id('xpStatus'); if(!el) return;
       const x = examExplain; let h = '';
@@ -2558,22 +2600,23 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
       let h = '';
       if(examXtab === 'pairs'){
         h += `<div class="ir-xp-h">题目和原文的同义替换<small>左边是题目里的说法，右边是原文里的</small></div>`;
-        h += (o.pairs || []).map(p => `<div class="ir-xp-row is-pair"><div><div class="en">${escapeHtml(p.q)}</div><div class="sub">${escapeHtml(p.q_zh)}</div></div><div><div class="en">${escapeHtml(p.p)}</div><div class="sub">${escapeHtml(p.p_zh)}</div></div>${p.note ? `<div class="note">${escapeHtml(p.note)}</div>` : ''}</div>`).join('') || `<div class="ir-xp-empty">没有</div>`;
+        h += (o.pairs || []).map(p => `<div class="ir-xp-row is-pair"><div><div class="en"${xk()}>${escapeHtml(p.q)}</div><div class="sub">${escapeHtml(p.q_zh)}</div></div><div><div class="en"${xk()}>${escapeHtml(p.p)}</div><div class="sub">${escapeHtml(p.p_zh)}</div></div>${p.note ? `<div class="note"${xk()}>${escapeHtml(p.note)}</div>` : ''}</div>`).join('') || `<div class="ir-xp-empty">没有</div>`;
       } else if(examXtab === 'vocab'){
         const have = new Set((highlights || []).map(x => (x.text || '').trim().toLowerCase()));
         const must = (o.vocab || []).filter(v => v.tier === '必背').length;
         h += `<div class="ir-xp-h">这一篇值得记的词<small>必背 ${must} · 眼熟 ${(o.vocab || []).length - must}</small></div>`;
         h += (o.vocab || []).map((v, i) => { const got = have.has((v.word || '').toLowerCase());
-          return `<div class="ir-xp-row is-word" data-jump="${v.s}"><div class="en">${escapeHtml(v.word)}${v.lemma && v.lemma.toLowerCase() !== (v.word || '').toLowerCase() ? ` <span class="sub">${escapeHtml(v.lemma)}</span>` : ''}</div>`
+          return `<div class="ir-xp-row is-word" data-jump="${v.s}"><div class="en"><span${xk()}>${escapeHtml(v.word)}</span>${v.lemma && v.lemma.toLowerCase() !== (v.word || '').toLowerCase() ? ` <span class="sub"${xk()}>${escapeHtml(v.lemma)}</span>` : ''}</div>`
             + `<div><span class="tier${v.tier === '必背' ? '' : ' lo'}">${v.tier === '必背' ? '必背' : '眼熟'}</span>${escapeHtml(v.meaning)}</div>`
-            + `<div class="sub">${escapeHtml([v.why, v.family].filter(Boolean).join(' · '))}</div>`
+            + `<div class="sub"${xk()}>${escapeHtml([v.why, v.family].filter(Boolean).join(' · '))}</div>`
             + `<button type="button" class="ir-xp-add" data-act="xp-add" data-i="${i}"${got ? ' disabled' : ''}>${got ? '已在生词本' : '加入生词本'}</button></div>`; }).join('') || `<div class="ir-xp-empty">没有</div>`;
       } else {
         h += `<div class="ir-xp-h">段落主旨<small>段内反复出现的概念，小标题题就考它</small></div>`;
-        h += (o.paragraphs || []).map(p => `<div class="ir-xp-row is-para"><b>${escapeHtml(p.label)}</b><div><div class="gist">${escapeHtml(p.gist)}</div>${p.repeat ? `<div class="en" style="font-size:15px">${escapeHtml(p.repeat)}</div>` : ''}</div></div>`).join('');
-        if((o.hard || []).length) h += `<div class="ir-xp-h">证据句里的长难句</div>` + o.hard.map(x => `<div class="ir-xp-row" data-jump="${x.s}"><div class="en">${xpText('[' + x.s + ']')} ${escapeHtml(x.core)}</div><div>${escapeHtml(x.note)}</div></div>`).join('');
+        h += (o.paragraphs || []).map(p => `<div class="ir-xp-row is-para"><b>${escapeHtml(p.label)}</b><div><div class="gist">${escapeHtml(p.gist)}</div>${p.repeat ? `<div class="en" style="font-size:15px"${xk()}>${escapeHtml(p.repeat)}</div>` : ''}</div></div>`).join('');
+        if((o.hard || []).length) h += `<div class="ir-xp-h">证据句里的长难句</div>` + o.hard.map(x => `<div class="ir-xp-row" data-jump="${x.s}"><div class="en">${xpText('[' + x.s + ']')} <span${xk()}>${escapeHtml(x.core)}</span></div><div${xk()}>${escapeHtml(x.note)}</div></div>`).join('');
       }
       el.innerHTML = h;
+      paintEchoBlocks(el.querySelectorAll('[data-hk]'), highlights || []);
     }
     function setExamXtab(x){
       const pane = $id('examPane'); if(!pane || !currentArticle || !currentArticle.exam) return;
@@ -2581,12 +2624,13 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
       const was = examXtab; examXtab = x; pane.dataset.x = x;
       pane.querySelectorAll('.ir-xtabs button').forEach(b => { const on = b.dataset.x === x; b.classList.toggle('is-on', on); b.setAttribute('aria-selected', String(on)); });
       if(x !== 'ai' && was === 'ai'){ xpActive = null; document.querySelectorAll('#vContent .reader p.ir-ev').forEach(p => p.classList.remove('ir-ev')); }
-      xpRefresh();
+      xpRefresh(true);
       if(x === 'ai' && isPhone() && currentQuestionEl()) xpActivate(currentQuestionEl(), false);
     }
     // 讲解数据变了（切页签、轮询到新的一组、生成完）：题目下的讲解、状态、表、划词一起重画
-    function xpRefresh(){
-      xpFill(); xpRenderStatus(); xpRenderPanel();
+    function xpRefresh(keepCards){
+      if(!keepCards) xpFill();
+      xpRenderStatus(); xpRenderPanel();
       $id('viewer').classList.toggle('xp-on', examXtab === 'ai' && xpHas());
       paintXp(); paintQuestionsHead();
     }
@@ -2680,7 +2724,8 @@ body.ir-splitting, body.ir-splitting * { cursor: col-resize !important; -webkit-
       xpPollTimer = setTimeout(() => {
         fetch(`/intensive_explain/${encodeURIComponent(id)}`).then(r => r.json()).then(d => {
           if(!currentArticle || currentArticle.id !== id) return;
-          if(d.explain){ examExplain = d.explain; xpRefresh(); }
+          if(d.explain && JSON.stringify(d.explain) !== JSON.stringify(examExplain)){ examExplain = d.explain; xpRefresh(); }
+          else if(d.explain) examExplain = d.explain;
           xpPoll();
         }).catch(() => xpPoll());
       }, 4000);

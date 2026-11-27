@@ -158,6 +158,38 @@ module.exports = async function suiteExplain({ cfg, browser, engine, t, lib }) {
       await p.click('#examXtabs [data-x="para"]');
       ok(await p.evaluate(() => document.querySelectorAll('#xpPanel .ir-xp-row.is-para').length === 3 && /长难句/.test(document.getElementById('xpPanel').textContent)), '段落: one gist per paragraph, then the hard sentences');
 
+      // ---- 讲解里的英文和原文、题目里的一样：划过的词自动标上，能双击划词、三击查词 ----
+      ok(await p.evaluate(() => { document.querySelector('#examXtabs [data-x="vocab"]').click(); const m = document.querySelector('#xpPanel .ir-xp-row[data-jump="5"] .en mark.hl.hl-echo'); return !!m && m.firstChild.nodeValue === 'attraction' && m.getAttribute('data-hid') === highlights.find(h => h.text === 'attraction').id; }), 'a word already in the 生词本 is marked in the vocab table too (same highlight)');
+      const wordAt = (sel, word) => p.evaluate(([sel, word]) => { const root = document.querySelector(sel); root.scrollIntoView({ block: 'center' }); const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode())) { if (n.parentNode.closest('.tooltip')) continue; const i = n.nodeValue.indexOf(word); if (i >= 0) { const r = document.createRange(); r.setStart(n, i); r.setEnd(n, i + word.length); const b = r.getBoundingClientRect(); return { x: b.left + b.width / 2, y: b.top + b.height / 2 }; } } return null; }, [sel, word]);
+      // 讲解里没有、原文和题目里也没有的词（词族里的 attractive）：存不了，给个说明
+      let at = await wordAt('#xpPanel .ir-xp-row[data-jump="5"]', 'attractive');
+      await p.mouse.dblclick(at.x, at.y); await p.waitForTimeout(400);
+      ok(await p.evaluate(() => document.getElementById('floatBox').style.display === 'none' && /不在原文和题目里/.test(document.body.textContent)), 'a word that is nowhere in the passage or the questions cannot be saved, and says so');
+      await p.click('#examXtabs [data-x="ai"]'); await p.click('#examPane .ir-q[data-num="2"] .ir-q-text'); await p.waitForTimeout(600);
+      // 双击讲解里的 worried → 存到原文第 2 句的 worried 上，讲解里出现的地方都自动标上
+      at = await wordAt('#examPane .ir-q[data-num="2"] .ir-xp-pair[data-k="1"]', 'worried');
+      await p.mouse.dblclick(at.x, at.y); await p.waitForTimeout(400);
+      const picked = await p.evaluate(() => ({ float: document.getElementById('floatBox').style.display, text: selectionRange && selectionRange.text, qk: selectionRange && selectionRange.qk, inS2: selectionRange && selectionRange.start >= examSentenceAt[2] && selectionRange.end <= examSentenceAt[2] + 60 }));
+      ok(picked.float !== 'none' && picked.text === 'worried' && !picked.qk && picked.inS2, `double-clicking a word in the explanation offers 高亮, anchored to the passage ${JSON.stringify(picked)}`);
+      await p.click('#floatBox .ir-pop-main'); await p.fill('#meaningInput', 'adj. e2e 担心的'); await p.press('#meaningInput', 'Enter'); await p.waitForTimeout(600);
+      const saved = await p.evaluate(() => { const h = highlights.find(h => h.text === 'worried'); const xp = [...document.querySelectorAll('#examPane .ir-q[data-num="2"] .ir-xp mark.hl')]; const real = document.querySelector('#vContent p[data-s="2"] mark.hl:not(.hl-echo)');
+        return { h: !!h && !h.qk, real: real && real.firstChild.nodeValue, echoes: xp.length, allEcho: xp.every(m => m.classList.contains('hl-echo') && m.getAttribute('data-hid') === (h && h.id)), tip: xp[0] && xp[0].closest('.ir-xp').querySelector('mark.hl .tooltip').textContent, font: xp[0] && getComputedStyle(xp[0]).backgroundColor === getComputedStyle(real).backgroundColor }; });
+      ok(saved.h && saved.real === 'worried' && saved.echoes >= 2 && saved.allEcho && /e2e 担心/.test(saved.tip) && saved.font, `saved on the passage word; every "worried" in the explanation is marked with the same meaning and colour ${JSON.stringify(saved)}`);
+      // 三击讲解里的 supported（原文里没有，在题干里）→ AI 释义存到题干那个词上
+      await p.route('**/intensive_lookup', route => route.fulfill({ json: { success: true, meaning: 'v. e2e 支持' } }));
+      at = await wordAt('#examPane .ir-q[data-num="2"] .ir-xp-note.is-slip', 'supported');
+      await p.mouse.move(at.x, at.y); for (const n of [1, 2, 3]) { await p.mouse.down({ clickCount: n }); await p.mouse.up({ clickCount: n }); }
+      await p.waitForTimeout(900);
+      const looked = await p.evaluate(() => { const h = highlights.find(h => h.text === 'supported'); return { qk: h && h.qk, meaning: h && h.meaning, stem: [...document.querySelectorAll('#examPane .ir-q[data-num="2"] .ir-q-text mark.hl:not(.hl-echo)')].map(m => m.firstChild.nodeValue).join(), echoes: document.querySelectorAll('#examPane .ir-q[data-num="2"] .ir-xp mark.hl-echo[data-hid="' + (h && h.id) + '"]').length, box: document.getElementById('meaningBox').style.display }; });
+      ok(looked.qk === 'g0.q2' && looked.meaning === 'v. e2e 支持' && looked.stem === 'supported' && looked.echoes >= 2 && looked.box === 'none', `triple-clicking a word in the explanation looks it up and saves it where it is in the question ${JSON.stringify(looked)}`);
+      // 切走再回来、换一道题再回来，讲解里标上的词都还在
+      await p.click('#examXtabs [data-x="pairs"]'); await p.waitForTimeout(150);
+      ok(await p.evaluate(() => [...document.querySelectorAll('#xpPanel mark.hl-echo')].map(m => m.firstChild.nodeValue).sort().join() === 'supported,worried'), 'the 同替 table marks them too');
+      await p.click('#examXtabs [data-x="ai"]'); await p.waitForTimeout(150);
+      ok(await p.evaluate(() => document.querySelectorAll('#examPane .ir-q[data-num="2"] .ir-xp mark.hl-echo').length >= 4), 'coming back to AI 讲解 they are still marked');
+      await p.unroute('**/intensive_lookup');
+      await p.click('#examXtabs [data-x="para"]');
+
       // ---- 回到 AI 讲解：划词重新画上；隐藏答案回到「题目」 ----
       await p.click('#examXtabs [data-x="ai"]'); await p.waitForTimeout(200);
       if (can) ok((await hl(p))['xp-eye'] === 3, 'back on AI 讲解 the marks are painted again (after a highlight changed the passage)');
